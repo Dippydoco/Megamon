@@ -157,7 +157,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .logo { text-align: center; margin-bottom: 18px; }
 .logo .t1 { font-size: 46px; font-weight: 700; line-height: 1; color: var(--gold);
   text-shadow: 3px 3px 0 #a55f00, 6px 6px 0 var(--shadow); letter-spacing: 1px; }
-.logo .t2 { font-size: 18px; color: #fff; margin-top: 6px; letter-spacing: 3px; text-transform: uppercase; }
+.logo .t2 { font-size: 16px; color: #fff; margin-top: 6px; letter-spacing: 2px; line-height: 1.35; text-transform: uppercase; }
 
 /* ---------- test de personalidad ---------- */
 .test-box { width: min(620px, 100%); }

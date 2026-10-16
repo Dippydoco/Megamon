@@ -11,6 +11,8 @@ G.CHANGELOG = [
      'New "Code" tab in Settings: enter a code to win tickets or coins. Each code can be redeemed once per account.']
   ], chg: [
     ['Los Pokémon que todavía tenían el nombre en español (como Colmilargo o Ferropúas) ahora usan su nombre en inglés.',
-     'The Pokémon that still had Spanish names (such as Great Tusk and Iron Thorns) now use their English names.']
+     'The Pokémon that still had Spanish names (such as Great Tusk and Iron Thorns) now use their English names.'],
+    ['El texto bajo el título ahora dice "Five Nights at the Chinese Parliament".',
+     'The text under the title now reads "Five Nights at the Chinese Parliament".']
   ] }
 ];
