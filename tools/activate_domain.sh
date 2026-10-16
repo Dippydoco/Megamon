@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Paso final del dominio pokesurvivor.com (ver docs/DOMINIO.md).
-#   DRY=1 bash tools/activar_dominio.sh   ensayo: prepara todo, enseña qué se subiría y lo deja como estaba
-#   bash tools/activar_dominio.sh         prepara y hace el commit (el push y GitHub Pages, aparte)
+# Paso final del dominio pokesurvivor.com (ver docs/DOMAIN.md).
+#   DRY=1 bash tools/activate_domain.sh   ensayo: prepara todo, enseña qué se subiría y lo deja como estaba
+#   bash tools/activate_domain.sh         prepara y hace el commit (el push y GitHub Pages, aparte)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 DOMAIN=pokesurvivor.com
@@ -16,7 +16,7 @@ echo "$DOMAIN" > CNAME
 
 FILES=(CNAME .gitignore index.html js/app.min.js 404.html robots.txt sitemap.xml assets/og-image.jpg
        apoyar en guia legendarios logros movimientos novedades objetos pokedex shinies tipos
-       docs/SEO.md docs/DOMINIO.md tools/export_data.js tools/make_seo_pages.py tools/activar_dominio.sh)
+       docs/SEO.md docs/DOMAIN.md tools/export_data.js tools/make_seo_pages.py tools/activate_domain.sh)
 git add "${FILES[@]}"
 echo "--- se subiría:"
 git diff --cached --stat | tail -5
@@ -25,7 +25,7 @@ git diff --cached --name-only | grep -c . | xargs echo "archivos:"
 deshacer() { git reset -q; rm -f CNAME; node tools/build.js --sin-seo; }
 
 # Nunca datos privados (este script no cuenta: contiene las palabras que busca).
-if git diff --cached -- . ':(exclude)tools/activar_dominio.sh' | grep -qiE "jonathanclase78|assesingamerxd|CONTACTOS_CREADORES"; then
+if git diff --cached -- . ':(exclude)tools/activate_domain.sh' | grep -qiE "jonathanclase78|assesingamerxd|CONTACTOS_CREADORES"; then
   echo "ERROR: hay datos privados en lo que se va a subir"; deshacer; exit 1
 fi
 

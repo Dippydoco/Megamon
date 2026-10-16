@@ -26,7 +26,7 @@ cambian los Pokémon o las características).
 ## 1. Dominio
 
 Los pasos para poner en marcha pokesurvivor.com (DNS en Cloudflare, GitHub Pages,
-Firebase y el paso final) están en [DOMINIO.md](DOMINIO.md).
+Firebase y el paso final) están en [DOMAIN.md](DOMAIN.md).
 
 ## 2. Google Search Console (lo más importante)
 

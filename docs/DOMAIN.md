@@ -11,7 +11,7 @@ Estado a 10-10-2026:
       autorizados (el inicio de sesión con Google funcionará desde el primer día).
 - [x] Páginas en español e inglés, sitemap, robots, 404 e imagen para compartir,
       generadas y probadas (Lighthouse: SEO 100, accesibilidad 100).
-- [x] Script del paso final ensayado: `tools/activar_dominio.sh`.
+- [x] Script del paso final ensayado: `tools/activate_domain.sh`.
 - [x] Paso 1 · DNS en Cloudflare (**TÚ**)
 - [x] Paso 2 · Verificar el dominio en GitHub (**TÚ**, recomendado)
 - [x] Paso 3 · Paso final (**YO**): hecho el 10-10-2026, con HTTPS
@@ -71,7 +71,7 @@ Protege el dominio: impide que otra cuenta de GitHub pueda usar pokesurvivor.com
 
 Cuando el DNS funcione, lo hago todo yo:
 
-1. `bash tools/activar_dominio.sh`: compila el juego con el SEO, regenera las
+1. `bash tools/activate_domain.sh`: compila el juego con el SEO, regenera las
    páginas, crea el archivo `CNAME` y prepara el commit (comprueba que no se cuela
    ningún dato privado).
 2. Lo subo a GitHub y en GitHub Pages pongo el dominio `pokesurvivor.com`.
