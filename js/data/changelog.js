@@ -15,6 +15,8 @@ G.CHANGELOG = [
     ['Al aprender un movimiento nuevo, el juego ya no cambia solo a él: sigues con el movimiento que tenías elegido.',
      'When you learn a new move, the game no longer switches to it automatically: you keep the move you had selected.']
   ], fix: [
+    ['If you accept a room invite in the middle of a run, the game now asks whether you want to leave the run first, and only then do you join the room.',
+     'If you accept a room invite in the middle of a run, the game now asks whether you want to leave the run first, and only then do you join the room.'],
     ['Varios textos que salían en español con el juego en inglés ahora se ven bien en inglés: "Elegir de compañero", "Ver su perfil", "Buscar por nombre", las personalidades de los compañeros, el precio "/ mes" y la ayuda para recuperar la cuenta con Gmail.',
      'Several texts that showed up in Spanish when the game was in English now display correctly: "Choose as partner", "View profile", "Search by name", the partners\' personality traits, the "/ month" price and the Gmail account-recovery help.'],
     ['Los avisos de Pokémon shiny (aparece uno salvaje, te espera en la grieta) y la lista de jugadores que faltan por elegir carta ya se leen bien en inglés.',

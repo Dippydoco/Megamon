@@ -277,10 +277,20 @@
     function init() {
       $('inv-yes').onclick = async () => {
         if (!cur) return;
-        const from = cur.from;
-        hide();
+        const from = cur.from, who = cur.name;
+        // En plena partida: se pregunta si quieres dejarla; si sí, se cierra (se guarda
+        // lo ganado, como al abandonar) y sólo entonces te unes a la sala.
+        const st = G.Game.state;
+        if (st !== 'ui') {
+          if (st !== 'over' && !confirm('You are in the middle of a run. Leave it to join ' + who + "'s room? What you have earned so far will be saved.")) return;
+          hide();
+          G.Game.quit();
+          G.UI.hideAll();
+          G.Game.toUI();
+          G.Audio.music('village');
+        } else hide();
         const r = await G.Social.acceptInvite(from);
-        if (!r.ok) { G.UI.toast(r.error, 3000); return; }
+        if (!r.ok) { G.UI.toast(r.error, 3000); if (G.Game.state === 'ui') G.Flow.goMenu(); return; }
         G.LobbyUI.open();
       };
       $('inv-no').onclick = () => { if (cur) G.Social.declineInvite(cur.from); hide(); };
@@ -289,11 +299,11 @@
 
     function hide() { cur = null; $('invite-pop').classList.add('hidden'); }
 
-    /** Enseña la invitación más antigua si estás en los menús (no en plena partida). */
+    /** Enseña la invitación más antigua (también en plena partida: al aceptar se pregunta si dejas la run). */
     function refresh() {
       const room = G.Social.room;
       const list = G.Social.invites.filter(i => !room || i.room !== room.id).sort((a, b) => a.at - b.at);
-      if (!list.length || G.Game.state !== 'ui' || !G.DB.loggedIn) { hide(); return; }
+      if (!list.length || !G.DB.loggedIn) { hide(); return; }
       if (cur && cur.from === list[0].from) return;
       cur = list[0];
       $('inv-text').innerHTML = `${G.Icons.html('friends', 22)} <b class="gold" translate="no">${esc(cur.name)}</b> te invita a jugar en su sala`;
