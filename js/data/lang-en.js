@@ -579,6 +579,20 @@ G.I18n.add({
   '¿Reportar la marca de {x} como trampa?': "Report {x}'s record as cheating?", 'Gracias: la revisaremos': 'Thanks: we will review it',
 
   // ---------------- códigos canjeables ----------------
+  // ---------------- revisión de textos que salían en español ----------------
+  'Elegir de compañero': 'Choose as partner', 'Ver su perfil': 'View profile', 'Buscar por nombre': 'Search by name',
+  '{x} / mes': '{x} / month',
+  'Si vinculaste tu Gmail, pulsa': 'If you linked your Gmail, press',
+  ': es tu misma cuenta. Si no lo vinculaste, no se puede recuperar: crea una cuenta nueva (y esta vez vincula tu Gmail desde el aviso que sale al entrar).':
+    ': it is the same account. If you did not link it, it cannot be recovered: create a new account (and this time link your Gmail from the prompt that appears when you sign in).',
+  'Vincula tu Gmail: si un día olvidas la contraseña, pulsas': 'Link your Gmail: if you ever forget your password, press',
+  'y es tu misma cuenta, con todo lo tuyo.': 'and it is the same account, with everything of yours.',
+  'No se pudo cargar {x}': 'Could not load {x}',
+  // personalidades de los compañeros
+  'leal': 'loyal', 'paciente': 'patient', 'valiente': 'brave', 'impulsivo': 'impulsive', 'prudente': 'cautious', 'dulce': 'sweet',
+  'tímido': 'shy', 'travieso': 'mischievous', 'sereno': 'calm', 'astuto': 'cunning', 'alegre': 'cheerful', 'tenaz': 'tenacious',
+  'orgulloso': 'proud', 'solitario': 'solitary', 'tranquilo': 'laid-back', 'caótico': 'chaotic',
+
   'Código': 'Code', 'Canjear': 'Redeem',
   'Mover con el ratón': 'Move with the mouse',
   'Mantén pulsado el botón izquierdo y arrastra: aparece un joystick donde pulsas. Suelta para parar.': 'Hold the left mouse button and drag: a joystick appears where you press. Let go to stop.',

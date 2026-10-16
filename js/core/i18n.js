@@ -38,13 +38,15 @@ G.I18n = (() => {
       if (!en || es === en) continue;
       if (es.includes('{x}')) {
         const parts = es.split('{x}').map(reEsc);
-        patterns.push({ re: new RegExp('^' + parts.join('(.+?)') + '$', 'u'), reI: new RegExp('^' + parts.join('(.+?)') + '$', 'iu'), en });
+        patterns.push({ lit: es.replace(/\{x\}/g, '').length, re: new RegExp('^' + parts.join('(.+?)') + '$', 'u'), reI: new RegExp('^' + parts.join('(.+?)') + '$', 'iu'), en });
       } else {
         exact.set(es, en);
         exactLow.set(es.toLowerCase(), en);
         if (es.length >= 4 || /\s/.test(es)) { fr.push(es); fragMap.set(es.toLowerCase(), en); }
       }
     }
+    // Los patrones con más texto fijo primero (más específicos): '¡{x} shiny salvaje apareció!' antes que '¡{x} salvaje apareció!'.
+    patterns.sort((a, b) => b.lit - a.lit);
     // Una sola expresión con todos los trozos (los más largos primero), sólo palabras enteras.
     const all = [...fragMap.keys()].sort((a, b) => b.length - a.length).map(reEsc).join('|');
     frag = all ? new RegExp(`(?<![${L}])(${all})(?![${L}])`, 'giu') : null;

@@ -11,6 +11,11 @@ G.CHANGELOG = [
      'You can now move with the mouse: hold the left button and drag, and a joystick appears where you press. You can turn it off in Settings > Controls.'],
     ['Nuevo ajuste "Joystick del ratón fijo": el joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.',
      'New "Locked mouse joystick" setting: the joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.']
+  ], fix: [
+    ['Varios textos que salían en español con el juego en inglés ahora se ven bien en inglés: "Elegir de compañero", "Ver su perfil", "Buscar por nombre", las personalidades de los compañeros, el precio "/ mes" y la ayuda para recuperar la cuenta con Gmail.',
+     'Several texts that showed up in Spanish when the game was in English now display correctly: "Choose as partner", "View profile", "Search by name", the partners\' personality traits, the "/ month" price and the Gmail account-recovery help.'],
+    ['Los avisos de Pokémon shiny (aparece uno salvaje, te espera en la grieta) y la lista de jugadores que faltan por elegir carta ya se leen bien en inglés.',
+     'Shiny Pokémon messages (a wild one appears, one is waiting in the rift) and the list of players still choosing a card now read correctly in English.']
   ] },
   { d: '2026-10-16', title: ['Códigos canjeables y nombres', 'Redeem codes and names'], new: [
     ['Nueva pestaña "Código" en Ajustes: escribe un código para ganar tickets o monedas. Cada código se puede canjear una vez por cuenta.',

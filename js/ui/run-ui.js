@@ -76,10 +76,10 @@ G.RunUI = (() => {
   function setWaiting(names) {
     const me = G.Social.me ? G.Social.me.name : '';
     const others = names.filter(n => n !== me);
-    const list = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' y ' + a[a.length - 1] : a[0];
+    const list = a => a.length > 1 ? a.slice(0, -1).join(', ') + (G.I18n.lang === 'en' ? ' and ' : ' y ') + a[a.length - 1] : a[0];
     $('lvl-wait').textContent = !names.length ? ''
       : !others.length ? 'Elige tu carta'
-      : names.includes(me) ? 'Faltan por elegir: ' + list([...others, 'tú'])
+      : names.includes(me) ? 'Faltan por elegir: ' + list([...others, G.I18n.lang === 'en' ? 'you' : 'tú'])
       : 'Esperando a ' + list(others) + '…';
   }
 
