@@ -8,10 +8,18 @@
  *
  * Si se pone a null, el juego funciona en modo local (sólo en el navegador).
  */
-// FORK PERSONAL: sin Firebase. El juego va en modo local (la partida se guarda
-// sólo en este navegador) y no toca los servidores del proyecto original.
-// Para usar tu propio Firebase, pega aquí tu config (ver el ejemplo de abajo).
-G.FIREBASE_CONFIG = null;
+// Proyecto Firebase propio de Megamon (megamon-2164e). Estos datos no son secretos:
+// Firebase los diseña para ir en la web; lo que protege las partidas son las
+// reglas de Firestore y de Realtime Database.
+G.FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyD5cjBD5L7Bbnu0QTV-MUjNaTrrZZs9cEk',
+  authDomain: 'megamon-2164e.firebaseapp.com',
+  projectId: 'megamon-2164e',
+  storageBucket: 'megamon-2164e.firebasestorage.app',
+  messagingSenderId: '4975853875',
+  appId: '1:4975853875:web:0151426f89d9a9ea843e46',
+  databaseURL: 'https://megamon-2164e-default-rtdb.europe-west1.firebasedatabase.app'
+};
 
 /* Ejemplo de cómo debe quedar:
 G.FIREBASE_CONFIG = {
