@@ -103,6 +103,8 @@ G.SettingsUI = (() => {
            </div>`;
     } else if (tab === 'acc') {
       renderAccount(box);
+    } else if (tab === 'code') {
+      renderCode(box);
     } else {
       box.innerHTML = `<div class="about-logo">Megamon</div><p class="sub center">Versión ${esc(VERSION)}</p>`
         + `<p class="sub">Juego de fans <b>gratuito y sin ánimo de lucro</b>: sin anuncios ni compras. Pokémon y sus personajes son propiedad de Nintendo, Creatures y GAME FREAK; este proyecto no está afiliado a ellos.</p>`
@@ -122,6 +124,31 @@ G.SettingsUI = (() => {
            </div>`;
     }
     wire(box);
+  }
+
+  /** Canjear un código (js/systems/redeem.js): tickets y/o monedas, una vez por cuenta. */
+  function renderCode(box) {
+    if (G.DB.guest) {
+      box.innerHTML = section('Código', 'Como <b>invitado</b> no se guarda el progreso, así que no se pueden canjear códigos. Crea una cuenta o entra con la tuya.')
+        + `<button class="btn gold" id="set-login">Crear cuenta o entrar</button>`;
+      return;
+    }
+    box.innerHTML = section('Código', 'Escribe un código para canjearlo. Cada código se puede usar una vez por cuenta.')
+      + `<div class="row wrap" style="gap:8px;align-items:center">
+           <input class="field" id="code-in" type="text" maxlength="40" placeholder="Código" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:180px">
+           <button class="btn gold" id="code-go">Canjear</button>
+         </div><p class="note" id="code-msg"></p>`;
+    const input = $('code-in'), msg = $('code-msg');
+    const go = () => {
+      const r = G.Redeem.redeem(input.value);
+      if (!r.ok) { G.Audio.sfx('error'); msg.textContent = r.error; return; }
+      G.Audio.sfx('confirm');
+      input.value = '';
+      msg.innerHTML = '¡Canjeado! Has recibido: ' + G.Progress.rewardText(r.reward);
+      G.UI.toast('¡Código canjeado!');
+    };
+    $('code-go').onclick = go;
+    input.onkeydown = e => { if (e.key === 'Enter') go(); };
   }
 
   function renderAccount(box) {

@@ -576,5 +576,14 @@ G.I18n.add({
   // ---------------- reportar marcas del ranking ----------------
   'Reportar marca sospechosa': 'Report suspicious record', 'Ya la has reportado': 'You already reported it',
   'Ya has reportado esta marca': 'You already reported this record',
-  '¿Reportar la marca de {x} como trampa?': "Report {x}'s record as cheating?", 'Gracias: la revisaremos': 'Thanks: we will review it'
+  '¿Reportar la marca de {x} como trampa?': "Report {x}'s record as cheating?", 'Gracias: la revisaremos': 'Thanks: we will review it',
+
+  // ---------------- códigos canjeables ----------------
+  'Código': 'Code', 'Canjear': 'Redeem',
+  'Escribe un código para canjearlo. Cada código se puede usar una vez por cuenta.': 'Enter a code to redeem it. Each code can be used once per account.',
+  'Como <b>invitado</b> no se guarda el progreso, así que no se pueden canjear códigos. Crea una cuenta o entra con la tuya.': 'As a <b>guest</b> your progress is not saved, so codes cannot be redeemed. Create an account or sign in.',
+  'Entra con tu cuenta para canjear códigos (como invitado no se guardaría).': 'Sign in to redeem codes (as a guest it would not be saved).',
+  'Escribe un código.': 'Enter a code.', 'Ese código no existe.': 'That code does not exist.',
+  'Ese código ha caducado.': 'That code has expired.', 'Ya has canjeado ese código.': 'You have already redeemed that code.',
+  '¡Canjeado! Has recibido:': 'Redeemed! You received:', '¡Código canjeado!': 'Code redeemed!'
 });

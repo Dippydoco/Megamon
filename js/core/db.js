@@ -82,6 +82,7 @@ G.DB = (() => {
       upgrades: {},           // (antiguo) mejoras de la cuenta; ahora van por Pokémon
       pupg: {},               // dex -> { id -> nivel }: mejoras de cada Pokémon
       tickets: { t1: 0, t10: 0 },   // tickets del gacha (x1 y x10)
+      codes: {},              // huella del código -> fecha: códigos canjeados (js/systems/redeem.js)
       pity: {},               // generación del banner -> tiradas sin ★5
       legends: {},            // dex -> fecha: legendarios vencidos en grietas
       arenas: {},             // tipo -> fecha: arenas de grieta ganadas
