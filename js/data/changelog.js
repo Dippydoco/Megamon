@@ -11,6 +11,9 @@ G.CHANGELOG = [
      'You can now move with the mouse: hold the left button and drag, and a joystick appears where you press. You can turn it off in Settings > Controls.'],
     ['Nuevo ajuste "Joystick del ratón fijo": el joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.',
      'New "Locked mouse joystick" setting: the joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.']
+  ], chg: [
+    ['Al aprender un movimiento nuevo, el juego ya no cambia solo a él: sigues con el movimiento que tenías elegido.',
+     'When you learn a new move, the game no longer switches to it automatically: you keep the move you had selected.']
   ], fix: [
     ['Varios textos que salían en español con el juego en inglés ahora se ven bien en inglés: "Elegir de compañero", "Ver su perfil", "Buscar por nombre", las personalidades de los compañeros, el precio "/ mes" y la ayuda para recuperar la cuenta con Gmail.',
      'Several texts that showed up in Spanish when the game was in English now display correctly: "Choose as partner", "View profile", "Search by name", the partners\' personality traits, the "/ month" price and the Gmail account-recovery help.'],

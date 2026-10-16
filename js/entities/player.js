@@ -104,8 +104,8 @@ G.Player = class Player {
     const group = [m];
     this.slots.push(group);
     this.arrange();
-    // Se cambia al nuevo, salvo si estás usando un vínculo (no te quita el grupo).
-    if (!(this.slots[this.active] && this.slots[this.active].length > 1)) this.setActive(this.slots.indexOf(group));
+    // Al aprender uno nuevo NO se cambia de movimiento: sigues con el que tenías elegido
+    // (arrange() ya mantiene el hueco activo aunque se reordenen).
     return true;
   }
 
