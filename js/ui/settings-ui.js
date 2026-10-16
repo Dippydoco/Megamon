@@ -95,6 +95,7 @@ G.SettingsUI = (() => {
              <button class="btn small" id="set-layout">Colocar</button></div>`
         + section('En PC')
         + toggle('mouseStick', 'Mover con el ratón', 'Mantén pulsado el botón izquierdo y arrastra: aparece un joystick donde pulsas. Suelta para parar.')
+        + toggle('mouseLock', 'Joystick del ratón fijo', 'El joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.')
         + `<div class="keys">
              <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas</div><span>moverse</span>
              <div><kbd>1</kbd>–<kbd>4</kbd> o clic en el icono</div><span>elegir ataque</span>

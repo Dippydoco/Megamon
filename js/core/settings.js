@@ -9,6 +9,7 @@
  *   stick       0.8 | 1 | 1.25                    tamaño del joystick táctil
  *   stickMode   'float' | 'fixed'                 joystick donde pones el dedo, o siempre en su sitio
  *   mouseStick  true/false                        mover con el ratón: botón izquierdo y arrastrar (joystick flotante)
+ *   mouseLock   true/false                        el joystick del ratón no sigue al cursor: se queda donde pulsaste
  *   pad         { bar, pause, stick } | null      dónde van los botones en móvil (centro, en
  *                                                 proporción a la pantalla); lo pone layout-ui.js
  *
@@ -17,7 +18,7 @@
  */
 G.Settings = (() => {
   const KEY = 'ps.settings';
-  const DEF = { quality: 'auto', dmgNumbers: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, pad: null };
+  const DEF = { quality: 'auto', dmgNumbers: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: false, pad: null };
   let s = Object.assign({}, DEF);
   try { Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nada */ }
   const fns = new Set();

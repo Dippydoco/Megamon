@@ -12,7 +12,8 @@
  *
  * Ratón: mantener pulsado el botón izquierdo y arrastrar hace de joystick
  * flotante (como el táctil). Se puede quitar en Ajustes > Controles > Mover
- * con el ratón (G.Settings 'mouseStick').
+ * con el ratón (G.Settings 'mouseStick'). Con 'mouseLock' el joystick del ratón
+ * se queda donde pulsaste (no sigue al cursor); para recolocarlo, suelta y vuelve a pulsar.
  */
 G.Touch = (() => {
   let cv = null, stick = null;
@@ -91,7 +92,8 @@ G.Touch = (() => {
       stick = { id: e.pointerId, fixed: true, ox: b0.x, oy: b0.y, x: e.clientX, y: e.clientY };
     } else {
       e.preventDefault();
-      stick = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: e.clientX, y: e.clientY };
+      stick = { id: e.pointerId, ox: e.clientX, oy: e.clientY, x: e.clientX, y: e.clientY,
+                lock: mouseStick && !!G.Settings.get('mouseLock') };
     }
     try { cv.setPointerCapture(e.pointerId); } catch (err) { /* nada */ }
   }
@@ -99,7 +101,7 @@ G.Touch = (() => {
   function move(e) {
     if (!stick || e.pointerId !== stick.id) return;
     stick.x = e.clientX; stick.y = e.clientY;
-    if (stick.fixed) return;
+    if (stick.fixed || stick.lock) return;
     const dx = stick.x - stick.ox, dy = stick.y - stick.oy, d = Math.hypot(dx, dy), r = R();
     if (d > r) { stick.ox = stick.x - dx / d * r; stick.oy = stick.y - dy / d * r; }
   }
