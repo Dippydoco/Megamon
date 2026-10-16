@@ -9,6 +9,10 @@
  *
  * Joystick fijo (Ajustes > Controles > Colocar los botones): siempre en el
  * mismo sitio; sólo se coge tocando cerca de él.
+ *
+ * Ratón: mantener pulsado el botón izquierdo y arrastrar hace de joystick
+ * flotante (como el táctil). Se puede quitar en Ajustes > Controles > Mover
+ * con el ratón (G.Settings 'mouseStick').
  */
 G.Touch = (() => {
   let cv = null, stick = null;
@@ -76,8 +80,10 @@ G.Touch = (() => {
     if (touchy && !active) { active = true; document.body.classList.add('touch'); }
     const b = hit(e.clientX, e.clientY);
     if (b) { e.preventDefault(); press(b); return; }
-    if (!touchy || stick || !G.Game || G.Game.state !== 'playing') return;
-    if (fixed()) {
+    // Ratón: botón izquierdo = joystick flotante (si el ajuste está activo).
+    const mouseStick = !touchy && e.button === 0 && G.Settings.get('mouseStick') !== false;
+    if (!(touchy || mouseStick) || stick || !G.Game || G.Game.state !== 'playing') return;
+    if (!mouseStick && fixed()) {
       // Fijo: sólo si el dedo cae cerca del joystick (si no, no hace nada).
       const b0 = stickBase();
       if (Math.hypot(e.clientX - b0.x, e.clientY - b0.y) > R() * 2.2) return;

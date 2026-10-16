@@ -6,6 +6,10 @@
  * Cada línea en español y en inglés.
  */
 G.CHANGELOG = [
+  { d: '2026-10-17', title: ['Mover con el ratón', 'Move with the mouse'], new: [
+    ['Ahora puedes moverte con el ratón: mantén pulsado el botón izquierdo y arrastra, y aparece un joystick donde pulsas. Se puede quitar en Ajustes > Controles.',
+     'You can now move with the mouse: hold the left button and drag, and a joystick appears where you press. You can turn it off in Settings > Controls.']
+  ] },
   { d: '2026-10-16', title: ['Códigos canjeables y nombres', 'Redeem codes and names'], new: [
     ['Nueva pestaña "Código" en Ajustes: escribe un código para ganar tickets o monedas. Cada código se puede canjear una vez por cuenta.',
      'New "Code" tab in Settings: enter a code to win tickets or coins. Each code can be redeemed once per account.']

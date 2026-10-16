@@ -94,6 +94,7 @@ G.SettingsUI = (() => {
         + `<div class="set-row"><div class="grow"><b>Colocar los botones</b><small>Pon los ataques, la pausa y el joystick (fijo, si quieres) donde quieras de la pantalla.</small></div>
              <button class="btn small" id="set-layout">Colocar</button></div>`
         + section('En PC')
+        + toggle('mouseStick', 'Mover con el ratón', 'Mantén pulsado el botón izquierdo y arrastra: aparece un joystick donde pulsas. Suelta para parar.')
         + `<div class="keys">
              <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas</div><span>moverse</span>
              <div><kbd>1</kbd>–<kbd>4</kbd> o clic en el icono</div><span>elegir ataque</span>

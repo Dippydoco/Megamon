@@ -580,6 +580,8 @@ G.I18n.add({
 
   // ---------------- códigos canjeables ----------------
   'Código': 'Code', 'Canjear': 'Redeem',
+  'Mover con el ratón': 'Move with the mouse',
+  'Mantén pulsado el botón izquierdo y arrastra: aparece un joystick donde pulsas. Suelta para parar.': 'Hold the left mouse button and drag: a joystick appears where you press. Let go to stop.',
   'Escribe un código para canjearlo. Cada código se puede usar una vez por cuenta.': 'Enter a code to redeem it. Each code can be used once per account.',
   'Como <b>invitado</b> no se guarda el progreso, así que no se pueden canjear códigos. Crea una cuenta o entra con la tuya.': 'As a <b>guest</b> your progress is not saved, so codes cannot be redeemed. Create an account or sign in.',
   'Entra con tu cuenta para canjear códigos (como invitado no se guardaría).': 'Sign in to redeem codes (as a guest it would not be saved).',
