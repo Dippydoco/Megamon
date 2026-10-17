@@ -88,7 +88,7 @@ G.Player = class Player {
   // ---------------- stats efectivos ----------------
   get atk() { return this.baseAtk * this.atkMul * (1 + this.buffs.atk.n * this.buffs.atk.amount); }
   get spd() {
-    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1);
+    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
     const w = G.Weather.speedFor(this.mon.types);
     const slow = this.inLiquid ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
     return s * slow * w;
@@ -160,6 +160,10 @@ G.Player = class Player {
   // solo hueco y se lanzan a la vez. Sólo crece un grupo (hasta BOND_MAX); si
   // no hay ninguno a medias, el vínculo une dos movimientos sueltos.
   static get BOND_MAX() { return 4; }
+  // Al ser revivido: segundos sin daño, y segundos de velocidad extra (×1,3).
+  static get REVIVE_SAFE() { return 3; }
+  static get REVIVE_BOOST_T() { return 4; }
+  static get REVIVE_BOOST() { return 1.3; }
 
   /** Lo que se puede hacer ahora con un vínculo: añadir a un grupo o unir dos sueltos. */
   bondOptions() {
@@ -316,6 +320,7 @@ G.Player = class Player {
     this.anim.update(dt);
     if (this.dead) return;
     if (this.invuln > 0) this.invuln -= dt;
+    if (this.reviveBoostT > 0) this.reviveBoostT -= dt;
     if (this.flash > 0) this.flash -= dt;
     if (this.attackFace > 0) this.attackFace -= dt;
 
@@ -399,7 +404,8 @@ G.Player = class Player {
   revive(frac = 0.5) {
     this.dead = false;
     this.hp = Math.max(1, this.maxHp * frac);
-    this.invuln = 2;
+    this.invuln = Player.REVIVE_SAFE;               // unos segundos sin daño para no caer otra vez enseguida
+    this.reviveBoostT = Player.REVIVE_BOOST_T;      // y un poco más de velocidad para salir de en medio
     this.reviveT = 0;
     this.anim._start('Idle', false);
     G.FX.ring(this.x, this.y, 6, 70, '#5fe08a', 0.5, 4);
