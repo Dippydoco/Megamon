@@ -580,6 +580,7 @@ G.I18n.add({
 
   // ---------------- códigos canjeables ----------------
   // ---------------- revisión de textos que salían en español ----------------
+  'recogidas': 'Collected', 'Shinies conseguidos': 'Shinies caught',
   'Elegir de compañero': 'Choose as partner', 'Ver su perfil': 'View profile', 'Buscar por nombre': 'Search by name',
   '{x} / mes': '{x} / month',
   'Si vinculaste tu Gmail, pulsa': 'If you linked your Gmail, press',
