@@ -256,7 +256,7 @@ G.Game = (() => {
     lost(msg) { G.UI.toast(msg, 3600); endRun(false); },
     item(id) { offerItem(id); },
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
-    armoury() { if (pl && !pl.dead) offerItem(G.Items.rollMany(3, pl.item)); },
+    armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
     mateLeft() {},
     /** Grupo: quién está eligiendo fusión. Mientras haya alguien, todo parado. */
     hold(names) {
@@ -479,7 +479,7 @@ G.Game = (() => {
   /** Has cogido un objeto: si no llevas ninguno te lo pones; si no, eliges. */
   function offerItem(id) {
     const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
-    if (!pl || (list ? !list.length || pl.dead : !G.Items.BY[id])) return;
+    if (!pl || (list ? !list.length : !G.Items.BY[id])) return;
     if (state === 'levelup' || G.UI.isOpen('scr-levelup')) { laterItems.push(id); return; }
     let mine = false;            // esta elección es la que ha parado el juego
     const take = got => {
@@ -490,7 +490,7 @@ G.Game = (() => {
         G.Progress.event('item', { id: got });
         // Choice Band locks you into one move: pick which one now, before the game goes on.
         if (got === 'choiceband' && pl.slots.length > 1) {
-          if (!mine && (state === 'playing' || state === 'held')) {
+          if (!mine && !pl.dead && (state === 'playing' || state === 'held')) {
             mine = true; state = 'choice';
             if (G.Coop.active) G.Coop.holdStart();
           }
@@ -511,7 +511,8 @@ G.Game = (() => {
       afterLevelUp();
     };
     if (list) {
-      if (state === 'playing' || state === 'held') {
+      // A downed player chooses without freezing the game for everyone else.
+      if ((state === 'playing' || state === 'held') && !pl.dead) {
         mine = true;
         state = 'choice';
         if (G.Coop.active) G.Coop.holdStart();
@@ -1296,7 +1297,7 @@ G.Game = (() => {
 
   return {
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
-    armoury() { if (pl && !pl.dead) offerItem(G.Items.rollMany(3, pl.item)); },
+    armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
     init, startRun, everyone, levelXp, flash, offerBond,
     /** Para pruebas: salta el reloj de la run. */
     debugTime(t) { tampered = true; time = t; },

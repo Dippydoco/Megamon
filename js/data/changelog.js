@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Downed players can pick from the Armoury'), fix: [
+    T('Players who have been downed can now choose an item from the Aegislash Armoury too (they keep it if a teammate revives them). The game does not pause for their choice.')
+  ] },
   { d: '2026-10-17', title: T('Substitute lasts longer'), chg: [
     T('Substitute\'s doll now stays for 10 seconds instead of 7 before the duration upgrade, so it is more likely to break (and explode) than fade away.')
   ] },
