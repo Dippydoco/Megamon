@@ -1015,3 +1015,9 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .dup { position: relative; width: 70px; text-align: center; padding: 2px 0; border-radius: 8px; background: rgba(255, 255, 255, .05); }
 .dup small { display: block; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
 .dup i { position: absolute; top: 0; right: 2px; font-style: normal; font-size: 11px; font-weight: 700; color: #ffd23f; text-shadow: 0 1px 2px #000; }
+
+/* Small text in the regular weight: the bold Pixelify "C" nearly closes and reads like an "O" at small sizes.
+   (Canvas text does the same in js/core/fontweight.js. Titles and big text stay bold.) */
+.btn, .menu-item, .tab, .gen-tab b, .chip, kbd, .tag-chip, .owned-chip, .hist-tag,
+.grow > b, .sub b, .cell b, .fr-row b, .lob-card b, .rk-row .who b, .hist-main b, .hist-grid b, .hist-t,
+.pcard b, .pcard .new, .dup small, .killer-main small { font-weight: 400; }

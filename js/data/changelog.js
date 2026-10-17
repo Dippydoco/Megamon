@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Easier to read small text'), chg: [
+    T('Small text (buttons, tabs, labels, arrow names, in-run text) now uses the regular letter weight instead of bold, so letters like C no longer look like an O. Titles and big announcements stay bold.')
+  ] },
   { d: '2026-10-17', title: T('Friends: which Pokémon they are playing'), new: [
     T('When a friend is in a run, the friends list now also shows which Pokémon they are playing, e.g. "In a run · Pikachu · 12:05". It follows the same "Show what I\'m doing" setting.')
   ] },
