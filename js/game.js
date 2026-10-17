@@ -686,6 +686,8 @@ G.Game = (() => {
     fpsAcc += real; fpsN++;
     if (fpsAcc >= 0.5) { fpsShown = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
     frameDt = state === 'playing' ? dt : 0;
+    // The full-screen flash fades in real time, also while the game is paused (a teammate choosing a Bond used to freeze it at full strength).
+    if (flashT > 0) flashT -= Math.min(1 / 30, real);
 
     handleKeys();
 
@@ -702,7 +704,6 @@ G.Game = (() => {
 
   function update(dt) {
     const coop = G.Coop.active;
-    if (flashT > 0) flashT -= dt;
     // La Sentencia de Arceus: mientras dura la animación, todo lo demás se para.
     if (G.Judgment.cinematic) {
       G.Judgment.cineTick(dt);

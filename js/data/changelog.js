@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Pink screen while a teammate bonds'), fix: [
+    T('Fixed the whole screen turning solid purple/pink for everyone when a teammate chose a Bond at the same moment as a rift flash. The flash now always fades out, even while the game is paused.')
+  ] },
   { d: '2026-10-17', title: T('Revive progress bar'), new: [
     T('When you are reviving a downed teammate, a progress bar with their name and a percentage now shows above you, along with the ring that fills around them.')
   ] },
