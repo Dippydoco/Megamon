@@ -229,6 +229,29 @@ G.HUD = (() => {
       ctx.restore();
     }
 
+    // Grupo: alguien está eligiendo vínculo u objeto y la partida está parada para todos.
+    const choosers = G.Coop.active ? G.Game.waitingChoosers : [];
+    if (choosers.length) {
+      const names = choosers.length > 2 ? choosers.slice(0, 2).join(', ') + ' +' + (choosers.length - 2) : choosers.join(' & ');
+      const txt = names + (choosers.length > 1 ? ' are choosing…' : ' is choosing…');
+      const sub = 'Game paused';
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
+      ctx.save();
+      ctx.font = F(800, 14);
+      const tw = Math.max(ctx.measureText(txt).width, 90) + 56, ph = 44, pxx = w / 2 - tw / 2, pyy = 70;
+      roundRect(ctx, pxx, pyy, tw, ph, 14);
+      ctx.fillStyle = 'rgba(30,8,32,.82)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,138,216,' + (0.55 + 0.4 * pulse) + ')'; ctx.lineWidth = 2; ctx.stroke();
+      G.Icons.draw(ctx, 'bond', pxx + 12, pyy + 10, 24);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#ffd3f2';
+      ctx.fillText(txt, pxx + 44, pyy + 19);
+      ctx.font = F(700, 10);
+      ctx.fillStyle = '#c9a0bb';
+      ctx.fillText(sub, pxx + 44, pyy + 34);
+      ctx.restore();
+    }
+
     const ban = G.Spawner.banner();
     if (ban) {
       const a = Math.min(1, ban.t * 1.6);

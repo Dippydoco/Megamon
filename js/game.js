@@ -234,9 +234,9 @@ G.Game = (() => {
       if (holdBy.length) {
         if (state === 'playing') state = 'held';
         if (pl && pl.bonds > 0) offerBond(true);      // si tú también tienes vínculo, eliges a la vez
-        const others = holdBy.filter(n => n !== (G.Social.me && G.Social.me.name) && n !== 'Tú');
-        if (!mine && others.length) G.Spawner.say('Pausa: ' + others.join(', ') + ' ' + (others.length > 1 ? 'están eligiendo…' : 'está eligiendo…'), 999, true);
-        else if (!others.length) G.Spawner.say(awayBy ? awayText() : '', awayBy ? 999 : 0, true);   // sólo tú: sin aviso viejo
+        // Quién está eligiendo lo enseña ahora el cartel fijo del HUD (waitingChoosers);
+        // aquí sólo se quita un aviso viejo (o se deja el de "esperando al anfitrión").
+        G.Spawner.say(awayBy ? awayText() : '', awayBy ? 999 : 0, true);
       } else {
         if (state === 'held' && !awayBy) state = 'playing';
         G.Spawner.say(awayBy ? awayText() : '', awayBy ? 999 : 0, true);
@@ -875,6 +875,11 @@ G.Game = (() => {
     /** Para grabar vídeos: abre las cartas de subir de nivel. */
     debugLevelUp() { tampered = true; pl.level++; pendingLevels++; },
     toUI() { state = 'ui'; Backdrop.restore(); },
+    /** Grupo: los OTROS jugadores que están eligiendo (vínculo u objeto) y tienen la partida parada. */
+    get waitingChoosers() {
+      const me = G.Social.me && G.Social.me.name;
+      return holdBy.filter(n => n !== me && n !== 'Tú');
+    },
     get state() { return state; }, get player() { return pl; }, st
   };
 })();
