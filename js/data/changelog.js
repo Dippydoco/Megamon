@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Use all tickets: every pull is shown'), fix: [
+    T('"Use all tickets" only showed full cards for new, shiny and Rare-or-better pulls, so it looked like most tickets had disappeared. The rest of your pulls (duplicates) are now listed underneath, grouped, with the coins they gave you.')
+  ] },
   { d: '2026-10-17', title: T('Friends: what they are doing'), new: [
     T('The friends list now shows what online friends are up to: in the menu, opening gacha packs, browsing upgrades or the Pokédex, in a lobby, in a run or group run (with a live timer showing how long it has lasted) or facing Arceus.'),
     T('Prefer to keep it private? Settings > Account > "Show what I\'m doing". When it is off, friends only see that you are online.')

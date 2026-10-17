@@ -196,6 +196,31 @@ G.GachaUI = (() => {
       await wait(fast ? 0 : step);
     }
     fx.removeEventListener('click', speedUp);
+    if (many) {
+      // Everything else you pulled (plain duplicates), grouped, so no pull seems to be missing.
+      const rest = res.filter(r => !list.includes(r)), groups = new Map();
+      for (const r of rest) {
+        const k = r.dex + (r.shiny ? 's' : '');
+        const g = groups.get(k) || { r, n: 0, coins: 0 };
+        g.n++; g.coins += r.refund; groups.set(k, g);
+      }
+      if (groups.size) {
+        const box = document.createElement('div');
+        box.className = 'pull-dups';
+        box.innerHTML = `<div class="pull-dups-h">Also pulled: ${rest.length} duplicates, turned into <span class="coin"></span> +${rest.reduce((a, r) => a + r.refund, 0)}</div><div class="pull-dups-row"></div>`;
+        const row = box.querySelector('.pull-dups-row');
+        for (const g of [...groups.values()].sort((a, b) => b.r.rarity - a.r.rarity || b.n - a.n)) {
+          const mon = G.DEX_BY[g.r.dex];
+          const chip = document.createElement('div');
+          chip.className = 'dup r' + g.r.rarity;
+          chip.title = mon.name + (g.n > 1 ? ' ×' + g.n : '') + ' · +' + g.coins + ' coins';
+          chip.appendChild(G.UI.spriteCanvas(g.r.dex, 56, 50, { shiny: g.r.shiny }));
+          chip.insertAdjacentHTML('beforeend', `<small>${mon.name}</small>${g.n > 1 ? `<i>×${g.n}</i>` : ''}`);
+          row.appendChild(chip);
+        }
+        out.appendChild(box);
+      }
+    }
     $('pull-close').classList.remove('hidden');
     busy = false;
   }
