@@ -12,6 +12,8 @@
 G.CODES = [
   // CHINESEPARLIAMENT  ->  433 tickets normales (los amarillos)
   { h: '6b96515e2b085a96c6f147e0bc6993c056cd2e30443e5de7aaef476399136b24', t1: 433 },
+  // 200-ticket code (given out in chat; remove this line to deactivate)
+  { h: 'fee993e5ebbb5f9e2b43dcd9e119e5d627ad495d624f84f66c2a74776481a8a9', t1: 200 },
   // Demo-mode code (multi-use, never spent): turns the gacha's dummy pulls on/off on this device.
   { h: '0f08f16718b5fd451156c1deb691ea1a88a38ecc2926ab0e9fb3f2a178ae8d93', demo: true },
 ];
