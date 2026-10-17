@@ -551,6 +551,12 @@ G.Game = (() => {
     }
     if (G.Input.tap('escape') || G.Input.tap('keyp')) { togglePause(); return; }
     if (state !== 'playing' || !pl) return;
+    // Caído en grupo: Q / E (o flechas, o Tab) cambian a quién miras.
+    if (pl.dead && G.Coop.active) {
+      if (G.Input.tap('keyq') || G.Input.tap('arrowleft')) cycleSpectate(-1);
+      if (G.Input.tap('keye') || G.Input.tap('arrowright') || G.Input.tap('tab')) cycleSpectate(1);
+      return;
+    }
     for (let i = 0; i < 4; i++) {
       if (G.Input.tap('digit' + (i + 1)) || G.Input.tap('numpad' + (i + 1))) pl.setActive(i);
     }
@@ -650,7 +656,8 @@ G.Game = (() => {
       for (const p of G.Coop.puppets()) { p.netUpdate(dt); G.Combat.ghostOrbit(p, dt, time); }
       if (pl.dead) reviveTick(dt);
     }
-    G.Camera.follow(pl.x, pl.y, dt);
+    const spec = spectated();
+    G.Camera.follow(spec ? spec.pl.x : pl.x, spec ? spec.pl.y : pl.y, dt);
     G.World.update(dt, G.Camera);
 
     const all = everyone();
@@ -675,6 +682,25 @@ G.Game = (() => {
     if (!coop || G.Coop.isHost) maybeLevelUp();
     if (pl.bonds > 0) offerBond(true);
     if (G.Coop.isHost) checkAllDown(dt);
+  }
+
+  // ---------------- espectador (caído en grupo) ----------------
+  // Mientras estás caído, la cámara sigue a un compañero vivo; Q / E (o los botones de
+  // la pantalla) pasan al anterior / siguiente. Al levantarte vuelve a ti sola.
+  let specUid = null;
+  function specList() { return G.Coop.active ? G.Coop.mates.filter(m => m.connected && !m.pl.dead) : []; }
+  function spectated() {
+    if (!pl || !pl.dead || !G.Coop.active) return null;
+    const list = specList();
+    if (!list.length) return null;
+    return list.find(m => m.uid === specUid) || (specUid = list[0].uid, list[0]);
+  }
+  function cycleSpectate(dir) {
+    const list = specList();
+    if (list.length < 2 || !pl || !pl.dead) return;
+    const i = Math.max(0, list.findIndex(m => m.uid === specUid));
+    specUid = list[(i + dir + list.length) % list.length].uid;
+    G.Audio.sfx('select');
   }
 
   /** Caído en grupo: un compañero a tu lado te va levantando. */
@@ -880,6 +906,14 @@ G.Game = (() => {
       const me = G.Social.me && G.Social.me.name;
       return holdBy.filter(n => n !== me && n !== 'Tú');
     },
+    /** Caído en grupo: a quién miras ({ name, color, index, count }) o null. */
+    get spectating() {
+      const m = spectated();
+      if (!m) return null;
+      const list = specList();
+      return { name: m.name, color: m.color, index: list.indexOf(m) + 1, count: list.length };
+    },
+    cycleSpectate,
     get state() { return state; }, get player() { return pl; }, st
   };
 })();

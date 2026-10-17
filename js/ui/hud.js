@@ -177,6 +177,40 @@ G.HUD = (() => {
       }
     }
 
+    // ---------- espectador: caído en grupo, miras a un compañero ----------
+    const spec = G.Game.spectating;
+    if (spec) {
+      const cx = w / 2, cy = h - 130, bs = 40;
+      ctx.save();
+      ctx.font = F(800, 16);
+      const label = 'Spectating: ' + spec.name;
+      const tw = Math.max(ctx.measureText(label).width, 150);
+      roundRect(ctx, cx - tw / 2 - 64, cy - 24, tw + 128, 48, 16);
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
+      ctx.strokeStyle = spec.color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+      ctx.strokeText(label, cx, cy - 3); ctx.fillStyle = spec.color; ctx.fillText(label, cx, cy - 3);
+      ctx.font = F(700, 11); ctx.fillStyle = '#c9d4ea';
+      ctx.fillText(spec.count > 1 ? spec.index + ' / ' + spec.count + ' · Q / E to switch' : 'Waiting for a teammate to revive you', cx, cy + 15);
+      if (spec.count > 1) {
+        // Botones ◀ ▶ (ratón o toque)
+        for (const [dir, bx] of [[-1, cx - tw / 2 - 64 - bs - 8], [1, cx + tw / 2 + 64 + 8]]) {
+          roundRect(ctx, bx, cy - bs / 2, bs, bs, 12);
+          ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
+          ctx.strokeStyle = spec.color; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          const mx = bx + bs / 2, my = cy;
+          if (dir < 0) { ctx.moveTo(mx + 6, my - 9); ctx.lineTo(mx - 7, my); ctx.lineTo(mx + 6, my + 9); }
+          else { ctx.moveTo(mx - 6, my - 9); ctx.lineTo(mx + 7, my); ctx.lineTo(mx - 6, my + 9); }
+          ctx.closePath(); ctx.fill();
+          G.Touch.addButton(bx, cy - bs / 2, bs, bs, () => G.Game.cycleSpectate(dir), 6);
+        }
+      }
+      ctx.restore();
+    }
+
     // ---------- aviso ----------
     // ---------- shinies fuera de pantalla: destello en el borde ----------
     const cam = G.Camera, pulse = 0.6 + Math.sin(performance.now() / 160) * 0.4;
