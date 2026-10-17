@@ -203,6 +203,29 @@ G.RunUI = (() => {
       el.onclick = () => { G.UI.hide('scr-item'); cb(id); };
       box.appendChild(el);
     });
+    $('item-title').textContent = 'An item!';
+    $('item-sub').innerHTML = 'You can only carry one · <kbd>1</kbd> <kbd>2</kbd>';
+    G.UI.show('scr-item');
+  }
+
+  /** Choice Band just equipped: which move do you want to be locked into? */
+  function showMoveChoice(pl, cb) {
+    const box = $('item-cards');
+    box.innerHTML = '';
+    pl.slots.forEach((g, i) => {
+      const m = g[0];
+      if (!m) return;
+      const nm = g.length > 1 ? m.name + ' +' + (g.length - 1) : m.name;
+      const el = document.createElement('div');
+      el.className = 'card' + (i === pl.active ? ' evo' : '');
+      el.innerHTML = `<div class="ico">${G.Icons.html('move:' + m.id, 36)}</div>
+        <div class="txt"><div class="nm">${nm}</div><div class="ds">${m.def.desc || ''}</div></div>
+        <div class="key">${i + 1}</div>`;
+      el.onclick = () => { G.UI.hide('scr-item'); cb(i); };
+      box.appendChild(el);
+    });
+    $('item-title').textContent = 'Choice Band: pick your move';
+    $('item-sub').innerHTML = 'You will be locked into it while you hold the band · <kbd>1</kbd>–<kbd>' + pl.slots.length + '</kbd>';
     G.UI.show('scr-item');
   }
 
@@ -282,5 +305,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, showItemChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, showItemChoice, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

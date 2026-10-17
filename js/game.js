@@ -472,7 +472,23 @@ G.Game = (() => {
         pl.equip(got);
         G.Spawner.say('¡Llevas ' + G.Items.BY[got].name + '!', 2.6, true);
         G.Progress.event('item', { id: got });
+        // Choice Band locks you into one move: pick which one now, before the game goes on.
+        if (got === 'choiceband' && pl.slots.length > 1) {
+          if (!mine && (state === 'playing' || state === 'held')) {
+            mine = true; state = 'choice';
+            if (G.Coop.active) G.Coop.holdStart();
+          }
+          G.RunUI.showMoveChoice(pl, i => {
+            if (i !== pl.active) { pl.active = i; G.Projectiles.clearOrbs(pl); }
+            G.Audio.sfx('confirm');
+            finish();
+          });
+          return;
+        }
       }
+      finish();
+    };
+    const finish = () => {
       if (!mine) { afterLevelUp(); return; }
       if (state === 'choice') state = holdBy.length ? 'held' : 'playing';
       if (G.Coop.active) G.Coop.holdEnd();
@@ -566,8 +582,8 @@ G.Game = (() => {
       return;
     }
     if (G.UI.isOpen('scr-item')) {
-      for (let i = 0; i < 2; i++) {
-        if (G.Input.tap('digit' + (i + 1)) || G.Input.tap('numpad' + (i + 1))) document.querySelectorAll('#item-cards .card')[i].click();
+      for (let i = 0; i < 6; i++) {
+        if (G.Input.tap('digit' + (i + 1)) || G.Input.tap('numpad' + (i + 1))) { const c = document.querySelectorAll('#item-cards .card')[i]; if (c) c.click(); }
       }
       return;
     }
