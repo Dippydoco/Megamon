@@ -221,8 +221,19 @@
 
     function close() { G.UI.hide('scr-lobby'); }
 
+    /** What a guest sees about the link to the host: { cls: 'wait' | 'ok' | 'bad', text, hint, short }. */
+    function guestLink(room) {
+      const host = (room.members.find(m => m.uid === room.host) || {}).name || 'the host';
+      switch (G.Net.mode(room.host)) {
+        case 'direct': return { cls: 'ok', text: 'Connected to ' + host, hint: 'Waiting for ' + host + ' to start the game.', short: 'Host · Connected' };
+        case 'relay': return { cls: 'ok', text: 'Connected to ' + host + ' (through the server)', hint: 'Your network blocks a direct link, so the game goes through the server. Waiting for ' + host + ' to start.', short: 'Host · Connected (server)' };
+        case 'failed': return { cls: 'bad', text: "Couldn't connect to " + host, hint: 'Retrying automatically. If it keeps failing, check your internet connection.', short: 'Host · Not connected' };
+        default: return { cls: 'wait', text: 'Connecting to ' + host + '…', hint: 'Setting up the link. This can take up to 15 seconds.', short: 'Host · Connecting…' };
+      }
+    }
+
     function connText(m, room) {
-      if (m.uid === room.host) return 'Anfitrión';
+      if (m.uid === room.host) return room.isHost ? 'Anfitrión' : guestLink(room).short;
       if (!room.isHost) return m.uid === G.Social.uid ? 'Tú' : 'En la sala';
       const mode = G.Net.mode(m.uid);
       return mode === 'direct' ? 'Conectado' : mode === 'relay' ? 'Conectado (por servidor)' : mode === 'failed' ? 'No se pudo conectar (reintentando…)' : 'Conectando…';
@@ -260,7 +271,8 @@
         if (!m) return;
         const t = connText(m, room);
         el.textContent = t;
-        el.className = 'conn' + (t === 'Conectando…' ? ' wait' : '');
+        const gl = !room.isHost && m.uid === room.host ? guestLink(room) : null;
+        el.className = 'conn' + (gl ? (gl.cls === 'ok' ? '' : ' ' + gl.cls) : t === 'Conectando…' ? ' wait' : '');
       });
 
       // Invitar (sólo el anfitrión y si queda sitio).
@@ -284,13 +296,22 @@
         }
       }
 
+      // Guests: a clear status line about the link to the host.
+      const st = $('lobby-status');
+      st.classList.toggle('hidden', room.isHost);
+      if (!room.isHost) {
+        const gl = guestLink(room);
+        st.className = 'lobby-status ' + gl.cls;
+        $('lobby-status-text').textContent = gl.text;
+        $('lobby-status-hint').textContent = gl.hint;
+      }
       const btn = $('lobby-start');
       btn.classList.toggle('hidden', !room.isHost);
       const connecting = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'connecting');
       const failed = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'failed');
       btn.disabled = !room.isHost || ms.length < 2 || connecting || failed;
       btn.textContent = 'Empezar partida (' + ms.length + '/' + G.Social.MAX_PLAYERS + ')';
-      $('lobby-note').textContent = !room.isHost ? 'Cuando el anfitrión empiece, entraréis todos a la vez.'
+      $('lobby-note').textContent = !room.isHost ? ''
         : ms.length < 2 ? 'Necesitas al menos un amigo en la sala.'
         : failed ? 'No se puede conectar con algún amigo: su red (o la tuya) no deja jugar en grupo. Probad con otra wifi o datos móviles; se reintenta solo.'
         : connecting ? 'Conectando con tus amigos…' : 'La partida empieza para todos a la vez.';
@@ -335,6 +356,7 @@
           G.Game.toUI();
           G.Audio.music('village');
         } else hide();
+        G.UI.toast('Joining ' + who + "'s room…", 2500);
         const r = await G.Social.acceptInvite(from);
         if (!r.ok) { G.UI.toast(r.error, 3000); if (G.Game.state === 'ui') G.Flow.goMenu(); return; }
         G.LobbyUI.open();

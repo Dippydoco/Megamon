@@ -980,3 +980,18 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .diag { margin-top: 10px; font-size: 14px; color: var(--muted); }
 .diag summary { cursor: pointer; }
 .diag textarea { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 8px; font: 12px/1.4 ui-monospace, Consolas, monospace; color: #dfe9ff; background: rgba(0,0,0,.35); border: 2px solid rgba(244,248,255,.18); border-radius: 8px; resize: vertical; }
+
+/* Guest's connection status in the room */
+.lobby-status { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; padding: 8px 12px; border-radius: 8px; background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.18); }
+.lobby-status b { display: block; font-size: 16px; }
+.lobby-status small { display: block; color: var(--muted); font-size: 13px; }
+.lobby-status .dot { width: 12px; height: 12px; flex: 0 0 12px; }
+.lobby-status.wait { border-color: rgba(255,210,63,.5); }
+.lobby-status.wait .dot { background: var(--gold); animation: lobby-pulse 1s ease-in-out infinite; }
+.lobby-status.ok { border-color: rgba(95,224,138,.5); }
+.lobby-status.ok .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.lobby-status.bad { border-color: rgba(255,107,122,.6); }
+.lobby-status.bad .dot { background: #ff6b7a; }
+.lob-card .conn.bad { color: #ff8a96; }
+@keyframes lobby-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
+@media (prefers-reduced-motion: reduce) { .lobby-status.wait .dot { animation: none; } }
