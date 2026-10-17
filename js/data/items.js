@@ -52,5 +52,12 @@ G.Items = (() => {
     return G.U.pick(pool).id;
   }
 
-  return { LIST, BY, roll };
+  /** n different items (none of them `except`), for the Armoury choice. */
+  function rollMany(n, except) {
+    const pool = LIST.filter(i => i.id !== except).map(i => i.id);
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    return pool.slice(0, n);
+  }
+
+  return { LIST, BY, roll, rollMany };
 })();

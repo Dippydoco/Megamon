@@ -10,6 +10,12 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('New event: Aegislash and its Armoury'), new: [
+    T('Every so often "An Aegislash appears with an Armoury of Items!" It slowly hunts you down and swaps between Shield Forme (takes far less damage) and Blade Forme (takes full damage, but is fast and dangerous). An arrow shows where it is.'),
+    T('Defeat it and everyone chooses one of 3 items, or skips if nothing is worth taking. Taking one replaces your current item. It leaves after 75 seconds if you cannot beat it, and up to 3 can show up per run.')
+  ], fix: [
+    T('An item picked up while the level-up cards were open (solo) could be lost instead of coming back afterwards.')
+  ] },
   { d: '2026-10-17', title: T('Random partner'), new: [
     T('A new "Random partner" button under your partner on the main menu picks a random Pokémon from the ones you own and makes it your partner, with a shuffling-silhouette animation. If you own its shiny too, it can come out shiny. Spin again as many times as you like.')
   ] },

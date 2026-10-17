@@ -232,6 +232,32 @@ G.RunUI = (() => {
     G.UI.show('scr-item');
   }
 
+  /** Aegislash's Armoury: pick one of the offered items, or skip. */
+  function showArmoury(cur, ids, cb) {
+    const box = $('item-cards');
+    box.innerHTML = '';
+    ids.forEach((id, i) => {
+      const it = G.Items.BY[id];
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `<div class="ico">${G.Icons.html(id, 36)}</div>
+        <div class="txt"><div class="nm">Take ${it.name}</div><div class="ds">${it.desc}</div></div>
+        <div class="key">${i + 1}</div>`;
+      el.onclick = () => { G.UI.hide('scr-item'); cb(id); };
+      box.appendChild(el);
+    });
+    const skip = document.createElement('div');
+    skip.className = 'card';
+    skip.innerHTML = `<div class="ico">${G.Icons.html('ban', 36)}</div>
+      <div class="txt"><div class="nm">Skip</div><div class="ds">${cur ? 'Take nothing and keep ' + G.Items.BY[cur].name + '.' : 'Take nothing and carry on without an item.'}</div></div>
+      <div class="key">${ids.length + 1}</div>`;
+    skip.onclick = () => { G.UI.hide('scr-item'); cb(null); };
+    box.appendChild(skip);
+    $('item-title').textContent = 'An Armoury of Items!';
+    $('item-sub').innerHTML = (cur ? 'Taking one replaces ' + G.Items.BY[cur].name + ' · ' : 'You can only carry one · ') + 'keys <kbd>1</kbd>-<kbd>' + (ids.length + 1) + '</kbd>';
+    G.UI.show('scr-item');
+  }
+
   /** Choice Band just equipped: which move do you want to be locked into? */
   function showMoveChoice(pl, cb) {
     const box = $('item-cards');
@@ -329,5 +355,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, skip, showItemChoice, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, skip, showItemChoice, showArmoury, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

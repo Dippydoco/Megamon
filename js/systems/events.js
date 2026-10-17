@@ -21,15 +21,18 @@
 G.Events = (() => {
   const EVERY = [240, 300], DUR = 30, LOST_TIME = 120;
   const THIEF_FIRST = [120, 240], THIEF_NEXT = [240, 360], THIEF_LIFE = 15;
+  // Aegislash and its Armoury of items: kill it (it leaves after AEGIS_LIFE s) and everyone picks 1 of 3 items, or skips.
+  const AEGIS_FIRST = [330, 450], AEGIS_NEXT = [420, 600], AEGIS_LIFE = 75, AEGIS_MAX = 3, AEGIS_DEX = 681;
   const authority = () => !G.Coop.active || G.Coop.isHost;
 
-  let nextT = 0, cur = null, last = null, thiefT = 0, thieves = 0;
+  let nextT = 0, cur = null, last = null, thiefT = 0, thieves = 0, aegisT = 0, aegises = 0;
   let lost = null;      // { dex, name, x, y, hp, maxHp, state, follow, tx, ty, t, anim, r, hitCd, netT, grant }
 
   function reset() {
     nextT = G.U.rand(EVERY[0], EVERY[1]);
     cur = null; last = null; lost = null;
     thiefT = G.U.rand(THIEF_FIRST[0], THIEF_FIRST[1]); thieves = 0;
+    aegisT = G.U.rand(AEGIS_FIRST[0], AEGIS_FIRST[1]); aegises = 0;
   }
 
   // ---------------- ciclo ----------------
@@ -47,6 +50,14 @@ G.Events = (() => {
       if (thiefT <= 0) {
         if (G.EnemyMgr.bossAlive()) thiefT = 8;
         else { spawnThief(players, time); thieves++; thiefT = G.U.rand(THIEF_NEXT[0], THIEF_NEXT[1]); }
+      }
+    }
+
+    if (aegises < AEGIS_MAX) {
+      aegisT -= dt;
+      if (aegisT <= 0) {
+        if (G.EnemyMgr.bossAlive()) aegisT = 8;
+        else { if (spawnAegis(players, time)) aegises++; aegisT = G.U.rand(AEGIS_NEXT[0], AEGIS_NEXT[1]); }
       }
     }
 
@@ -123,6 +134,38 @@ G.Events = (() => {
       G.Audio.sfx('shiny');
       return;
     }
+  }
+
+  // ---------------- Aegislash y su arsenal ----------------
+
+  function spawnAegis(players, time) {
+    const mon = G.DEX_BY[AEGIS_DEX];
+    if (!mon || !G.SPRITE_META[AEGIS_DEX]) return false;
+    const alive = players.filter(p => !p.dead);
+    const pl = G.U.pick(alive.length ? alive : players);
+    G.Sprites.preload([AEGIS_DEX]);
+    const n = players.length;
+    const def = { dex: AEGIS_DEX, name: mon.name, behavior: 'aegis', hp: Math.round((420 + time * 4) * G.Coop.scaleHp(n)),
+                  spd: 66, dmg: Math.round(22 + time / 25), xp: Math.round(120 + time / 3) };
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * 6.2832, d = G.U.rand(260, 330);
+      const x = pl.x + Math.cos(a) * d, y = pl.y + Math.sin(a) * d * 0.8;
+      if (!G.World.isFree(x, y, 18)) continue;
+      const e = new G.Enemy(def, x, y, { hp: 1, spd: 1, dmg: 1 });
+      e.life = AEGIS_LIFE;
+      G.EnemyMgr.add(e);
+      G.FX.ring(x, y, 4, 60, '#9fb4ff', 0.6, 4);
+      G.Spawner.say('An Aegislash appears with an Armoury of Items!', 3.6);
+      G.Audio.sfx('legend');
+      return true;
+    }
+    return false;
+  }
+
+  /** The Aegislash fell (host or solo): everyone chooses an item. */
+  function armoury() {
+    G.Game.armoury();
+    if (G.Coop.isHost) G.Coop.broadcast(['ev', 'arm']);
   }
 
   // ---------------- Pokémon perdido ----------------
@@ -235,6 +278,7 @@ G.Events = (() => {
     switch (ev[1]) {
       case 's': cur = { id: ev[2], t: 0, dur: ev[2] === 'lost' ? Infinity : DUR, type: ev[3] || null }; break;
       case 'e': cur = null; break;
+      case 'arm': G.Game.armoury(); break;
       case 'lp': {
         const [, , dex, x, y, hp, follow, tx, ty, dir, moving] = ev;
         if (!lost || lost.dex !== dex) makeLost({ dex, x, y, tx, ty, hp, state: follow ? 'follow' : 'wait' });
@@ -307,6 +351,7 @@ G.Events = (() => {
     }
     for (const e of G.EnemyMgr.all()) {
       if (e.behavior === 'thief' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#ffd23f', e.name, F);
+      if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + ' · ' + Math.max(0, Math.ceil(e.life)) + ' s', F);
     }
     if (cur && cur.id !== 'lost') {
       const left = Math.max(0, Math.ceil(cur.dur - cur.t));
@@ -347,12 +392,13 @@ G.Events = (() => {
   }
 
   return {
-    reset, update, bag, onNet, drawables, drawHud,
+    reset, update, bag, onNet, drawables, drawHud, armoury,
     get golden() { return !!cur && cur.id === 'gold'; },
     get current() { return cur ? cur.id : null; },
     /** Para pruebas. */
     debugStart(id) { start(id, G.Game.st.time, G.Game.everyone()); },
     debugThief() { spawnThief(G.Game.everyone(), G.Game.st.time); },
+    debugAegis() { return spawnAegis(G.Game.everyone(), G.Game.st.time); },
     _dbg() { return lost && { x: lost.x, y: lost.y, tx: lost.tx, ty: lost.ty, state: lost.state, hp: lost.hp }; }
   };
 })();

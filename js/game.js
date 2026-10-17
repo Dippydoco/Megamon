@@ -252,6 +252,8 @@ G.Game = (() => {
     },
     lost(msg) { G.UI.toast(msg, 3600); endRun(false); },
     item(id) { offerItem(id); },
+    /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
+    armoury() { if (pl && !pl.dead) offerItem(G.Items.rollMany(3, pl.item)); },
     mateLeft() {},
     /** Grupo: quién está eligiendo fusión. Mientras haya alguien, todo parado. */
     hold(names) {
@@ -409,6 +411,7 @@ G.Game = (() => {
       G.Audio.sfx('confirm');
       card.apply(pl);
       state = 'playing';
+      afterLevelUp();       // an item/armoury picked up meanwhile comes back now
     });
   }
 
@@ -462,7 +465,7 @@ G.Game = (() => {
     if (openItem && !G.UI.isOpen('scr-item')) {
       const o = openItem;
       if (o.mine) { state = 'choice'; if (G.Coop.active) G.Coop.holdStart(); }
-      G.RunUI.showItemChoice(o.cur, o.next, o.take);
+      if (o.list) G.RunUI.showArmoury(o.cur, o.list, o.take); else G.RunUI.showItemChoice(o.cur, o.next, o.take);
       return;
     }
     if (laterItems.length) offerItem(laterItems.shift());
@@ -470,7 +473,8 @@ G.Game = (() => {
 
   /** Has cogido un objeto: si no llevas ninguno te lo pones; si no, eliges. */
   function offerItem(id) {
-    if (!pl || !G.Items.BY[id]) return;
+    const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
+    if (!pl || (list ? !list.length || pl.dead : !G.Items.BY[id])) return;
     if (state === 'levelup' || G.UI.isOpen('scr-levelup')) { laterItems.push(id); return; }
     let mine = false;            // esta elección es la que ha parado el juego
     const take = got => {
@@ -501,6 +505,16 @@ G.Game = (() => {
       if (G.Coop.active) G.Coop.holdEnd();
       afterLevelUp();
     };
+    if (list) {
+      if (state === 'playing' || state === 'held') {
+        mine = true;
+        state = 'choice';
+        if (G.Coop.active) G.Coop.holdStart();
+      }
+      openItem = { cur: pl.item || null, next: null, list, take, get mine() { return mine; } };
+      G.RunUI.showArmoury(pl.item || null, list, take);
+      return;
+    }
     // De momento la Vidasfera no se pone sola: si es lo primero que encuentras, eliges aceptarla o descartarla.
     if (!pl.item && id !== 'lifeorb') { take(id); return; }
     if (pl.item === id) { G.Spawner.say('Ya llevas ' + G.Items.BY[id].name, 2, true); return; }
@@ -1275,6 +1289,8 @@ G.Game = (() => {
   })();
 
   return {
+    /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
+    armoury() { if (pl && !pl.dead) offerItem(G.Items.rollMany(3, pl.item)); },
     init, startRun, everyone, levelXp, flash, offerBond,
     /** Para pruebas: salta el reloj de la run. */
     debugTime(t) { tampered = true; time = t; },

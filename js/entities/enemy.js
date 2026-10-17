@@ -71,6 +71,8 @@
       this.sc = sc;                       // escala de la run (para sus invocaciones)
       this.shield = 0; this.shieldT = 0;  // escudo que absorbe daño
       this.skillCd = G.U.rand(1, 4);      // escudos / saltos
+      // Aegislash event (events.js): Shield Forme (takes ~85% less damage, slow) <-> Blade Forme (full damage, fast).
+      this.aegisShield = def.behavior === 'aegis'; this.formT = 5;
       this.minions = [];
       this.jump = null;                   // { sx, sy, tx, ty, t, dur }
       // Rezagados: si se quedan atrás, fuera de la vista, mientras huyes,
@@ -89,9 +91,22 @@
       G.Sprites.preload([this.dex], 4000, true);
     }
 
+    /** Aegislash: alternates Shield Forme (5 s) and Blade Forme (4 s). → speed factor for this form. */
+    aegisTick(dt) {
+      if ((this.formT -= dt) <= 0) {
+        this.aegisShield = !this.aegisShield;
+        this.formT = this.aegisShield ? 5 : 4;
+        const col = this.aegisShield ? '#8fb4ff' : '#ff5f6d';
+        G.FX.ring(this.x, this.y - this.bodyH * 0.4, this.r, this.r * 3.2, col, 0.45, 4);
+        G.FX.burst(this.x, this.y - this.bodyH * 0.5, col, 14, 170);
+        if (G.Camera.sees(this.x, this.y, 0)) G.Audio.sfx(this.aegisShield ? 'select' : 'surge');
+      }
+      return this.aegisShield ? 0.5 : 1.7;
+    }
+
     /** Hora dorada (events.js): doble de experiencia y a veces monedas. */
     makeGolden() {
-      if (this.golden || this.boss || this.behavior === 'thief') return;
+      if (this.golden || this.boss || this.behavior === 'thief' || this.behavior === 'aegis') return;
       this.golden = true;
       this.xp *= 2;
     }
@@ -99,6 +114,8 @@
     /** @param eff  'super' | 'weak' | null (tabla de tipos, sólo para enseñarlo) */
     hurt(amount, color = '#fff', dirX = 0, dirY = 0, knock = 0, eff = null) {
       if (this.dead) return;
+      // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
+      if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }
       const d = Math.max(1, Math.round(amount));
       // Copia de un enemigo del anfitrión: el golpe se le manda a él, que es
       // quien decide si cae. Aquí sólo se ve (número, destello y animación).
@@ -190,6 +207,12 @@
         for (let i = 0; i < n; i++) G.Pickups.drop('coin', this.x + G.U.rand(-36, 36), this.y + G.U.rand(-26, 26), 5);
         if (this.def.loot === 'ticket10') G.Pickups.drop('ticket10', this.x, this.y - 12, 1);
         G.FX.ring(this.x, this.y, this.r, this.r * 5, '#ffd23f', 0.6, 4);
+      }
+      // Aegislash: coins and the Armoury (everyone picks one of 3 items, or skips).
+      if (this.behavior === 'aegis') {
+        for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-40, 40), this.y + G.U.rand(-28, 28), 5);
+        G.FX.ring(this.x, this.y, this.r, this.r * 5, '#9fb4ff', 0.6, 4);
+        G.Events.armoury();
       }
       if (this.legend) {
         // El legendario de la grieta: tickets sueltos y monedas (el ×10, como
@@ -289,7 +312,7 @@
         } else if (le.slow) terrainMul = le.slow < 0.5 ? 0.45 : 0.55;
       }
 
-      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types);
+      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1);
       let [dx, dy] = G.U.norm(pl.x - this.x, pl.y - this.y);
       const dist = G.U.dist(this.x, this.y, pl.x, pl.y);
       // Duende del tesoro: huye de ti (en zigzag) en cuanto te acercas.
@@ -722,6 +745,17 @@
         ctx.restore();
       }
 
+      // Aegislash: blue bubble + shield icon in Shield Forme, red aura + fist in Blade Forme.
+      if (this.behavior === 'aegis') {
+        const sh = this.remote ? !!(this.net && this.net.st & 16) : this.aegisShield;
+        ctx.save();
+        ctx.globalAlpha = 0.3 + Math.sin(this.bob) * 0.06;
+        ctx.fillStyle = sh ? '#8fb4ff' : '#ff5f6d';
+        ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.5, this.bodyH * 0.62, 0, 0, 6.2832); ctx.fill();
+        ctx.restore();
+        G.Icons.draw(ctx, sh ? 'shield' : 'fist', Math.round(this.x - 7), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 30 : 22)), 14);
+      }
+
       if (this.freezeT > 0 || (this.net && this.net.st & 8)) {
         ctx.save();
         ctx.globalAlpha = 0.28 + Math.sin(this.bob * 0.5) * 0.05;
@@ -939,9 +973,10 @@
         }
         const near = nearestPlayer(players, e.x, e.y) || pl;
         // El duende del tesoro se escapa si no lo atrapas a tiempo.
-        if (e.behavior === 'thief' && (e.life -= dt) <= 0) {
-          G.FX.burst(e.x, e.y - 10, '#ffd23f', 16, 140);
-          G.Spawner.say('¡' + e.name + ' se ha escapado!', 2.4);
+        if (e.behavior === 'aegis' && e.life < 16 && !e.warned) { e.warned = true; G.Spawner.say('The Aegislash is about to leave!', 2.4); }
+        if ((e.behavior === 'thief' || e.behavior === 'aegis') && (e.life -= dt) <= 0) {
+          G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
+          G.Spawner.say(e.behavior === 'aegis' ? 'The Aegislash left with its armoury!' : '¡' + e.name + ' se ha escapado!', 2.4);
           list.splice(i, 1); byId.delete(e.id);
           if (G.Coop.isHost) G.Coop.enemyGone(e, false);
           continue;
