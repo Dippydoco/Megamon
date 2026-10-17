@@ -88,6 +88,7 @@ G.SettingsUI = (() => {
         + `<div class="set-row"><div class="grow"><b>Damage number colours</b><small>Colours show how effective a hit was. "White" keeps every number plain.</small></div></div>`
         + choice('dmgColor', [['type', 'Coloured'], ['white', 'White']])
         + toggle('calm', 'Menos sacudidas y destellos', 'La cámara tiembla menos y los fogonazos son suaves.')
+        + toggle('moveTags', 'Move kind tags', 'Shows the attack kind (Projectile, Beam, Aura...) on level-up and Bond cards.')
         + toggle('fps', 'Mostrar FPS', 'Fotogramas por segundo, en la esquina de abajo.')
         + (canFull() ? `<div class="set-row"><div class="grow"><b>Pantalla completa</b><small>Sin barras del navegador.</small></div>
              <button class="btn small" id="set-full">${isFull() ? 'Salir' : 'Activar'}</button></div>`

@@ -43,7 +43,7 @@ G.LevelUp = (() => {
         out.push({
           w: 10, type: 'new', key: 'new:' + id,
           icon: 'move:' + id, color: G.U.TYPE_COLOR[d.type],
-          tag: G.U.TYPE_NAME[d.type],
+          tag: G.U.TYPE_NAME[d.type], kind: d.kind,
           title: d.name, desc: d.desc,
           apply: p => p.addMove(id)
         });
@@ -58,7 +58,7 @@ G.LevelUp = (() => {
       if (!ev.ready) { waiting[ev.needs] = m; continue; }
       out.push({
         w: 40, type: 'evo', key: 'evo:' + m.id,
-        icon: 'move:' + m.id, color: '#ffd23f', tag: 'EVOLUCIÓN',
+        icon: 'move:' + m.id, color: '#ffd23f', tag: 'EVOLUCIÓN', kind: m.kind,
         title: m.name + ' → ' + ev.name, desc: ev.text,
         apply: p => {
           G.Moves.evolve(m);
@@ -77,7 +77,7 @@ G.LevelUp = (() => {
       out.push({
         w: 8, type: 'up', key: 'up:' + m.id,
         icon: 'move:' + m.id, color: G.U.TYPE_COLOR[m.type],
-        tag: 'Nv.' + m.lvl + ' > ' + (m.lvl + 1),
+        tag: 'Nv.' + m.lvl + ' > ' + (m.lvl + 1), kind: m.kind,
         title: m.name, desc: txt,
         apply: () => G.Moves.levelUp(m)
       });

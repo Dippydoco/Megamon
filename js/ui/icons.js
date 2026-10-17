@@ -400,6 +400,18 @@ G.Icons = (() => {
     return w * Math.max(1, Math.round(size / w));
   }
 
+  const KIND_NAME = { projectile: 'Projectile', melee: 'Melee', beam: 'Beam', orbit: 'Orbit', nova: 'Nova', aura: 'Aura', buff: 'Buff',
+    boomerang: 'Boomerang', chain: 'Chain', mine: 'Mine', meteor: 'Meteor', turret: 'Turret', dash: 'Dash', trail: 'Trail', cone: 'Cone' };
+
+  /** Small "attack kind" tag (symbol + name) for cards. Empty if the player turned it off in Settings. */
+  function kindTag(kind) {
+    const g = KIND_GLYPH[kind];
+    if (!g || !G.Settings || G.Settings.get('moveTags') === false) return '';
+    let r = '';
+    g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') r += `<rect x="${x}" y="${y}" width="1" height="1" fill="#ffd23f"/>`; }));
+    return `<span class="kind-chip" translate="no"><img class="pix" src="${svgDoc(5, 5, r)}" width="10" height="10" alt="" draggable="false">${KIND_NAME[kind]}</span>`;
+  }
+
   /** <img> pixelado para el DOM. */
   function html(name, size = 20, cls = '') {
     const cv = canvas(name), w = snap(name, size), h = w * cv.height / cv.width;
@@ -451,5 +463,5 @@ G.Icons = (() => {
     r.setProperty('--ico-cursor', `url("${url('cursor')}")`);
   }
 
-  return { canvas, url, html, draw, twinkle, rarity, RARITY_BALL, installCss, UI, TYPE_GLYPH };
+  return { canvas, url, html, kindTag, KIND_NAME, draw, twinkle, rarity, RARITY_BALL, installCss, UI, TYPE_GLYPH };
 })();
