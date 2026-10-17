@@ -350,6 +350,7 @@ G.Social = (() => {
       // El anfitrión siempre primero; el resto por orden de llegada.
       room.members = Object.keys(m).map(k => Object.assign({ uid: k }, m[k]))
         .sort((a, b) => (a.uid === room.host ? -1 : b.uid === room.host ? 1 : (a.at || 0) - (b.at || 0)));
+      healMember();
       emit('room');
     }, () => closedRoom());
     const href = fb.rtdb.ref('rooms/' + id + '/host');
@@ -404,8 +405,25 @@ G.Social = (() => {
 
   /** Actualiza tu Pokémon en la sala (si cambias de compañero). */
   function refreshMember() {
-    if (room && me) fb.rtdb.ref('rooms/' + room.id + '/m/' + uid).update(
+    if (!room || !me) return Promise.resolve();
+    return fb.rtdb.ref('rooms/' + room.id + '/m/' + uid).update(
       { dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }).catch(() => {});
+  }
+
+  /**
+   * Si lo que ven los demás de tu compañero no coincide con el tuyo (cambiaste de
+   * Pokémon fuera de la sala, o falló la subida), se corrige solo. Sólo un intento a la
+   * vez, para no repetir mientras llega la respuesta.
+   */
+  let healing = false;
+  function healMember() {
+    if (healing || !room || !me || !G.DB.save) return;
+    const mine = room.members.find(m => m.uid === uid);
+    if (!mine) return;
+    const dex = G.DB.save.partner, shiny = !!G.DB.save.partnerShiny && G.DB.ownsShiny(dex);
+    if (mine.dex === dex && !!mine.shiny === shiny) return;
+    healing = true;
+    refreshMember().then(() => { setTimeout(() => { healing = false; }, 1500); });
   }
 
   // ---------------- invitaciones ----------------

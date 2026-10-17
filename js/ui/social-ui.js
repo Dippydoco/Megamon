@@ -269,7 +269,11 @@
       if (!room || !room.isHost || room.members.length < 2) return;
       const cfg = {
         k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,
-        members: room.members.map(m => ({ uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny }))
+        // Tu propio compañero se toma de tu partida guardada (lo más reciente), no de lo que
+        // ya haya llegado de vuelta de la sala.
+        members: room.members.map(m => m.uid === G.Social.uid
+          ? { uid: m.uid, name: m.name, dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }
+          : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny })
       };
       G.Social.setOpen(false);
       G.Net.broadcast(cfg);
