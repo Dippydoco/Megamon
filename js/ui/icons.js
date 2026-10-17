@@ -73,6 +73,9 @@ G.Icons = (() => {
     berry: { pal: { r: '#ff7a9e', s: '#c23a6b', w: '#ffd3e0', g: '#5fe08a', d: '#2f9a52' }, rows: [
       '............', '.....kkk....', '....kgggk...', '..kkkgdkkk..', '.krrrkkrrrk.', 'krwwrrrrrrsk',
       'krwrrrrrrrsk', 'krrrrrrrrrsk', 'krrrrrrrrssk', '.krrrrrrssk.', '..kkssssskk.', '....kkkkk...'] },
+    stopwatch: { pal: { c: '#8fe3ff', d: '#4aa8d8', w: '#f4fbff', r: '#ff5f6d' }, rows: [
+      '....kkkk....', '....kddk....', '..kkkkkkkk..', '.kcwwwwwwck.', 'kcwwwwrwwwck', 'kcwwwwrwwwck',
+      'kcwwwwrrrwck', 'kcwwwwwwwwck', 'kcwwwwwwwwck', '.kcwwwwwwck.', '..kkdcccdkk.', '....kkkk....'] },
     bomb: { pal: { b: '#3a3a4a', w: '#8a8aa0', f: '#ffd23f', r: '#ff7b3d' }, rows: [
       '........r...', '.......rfr..', '......kfr...', '.....kfk....', '...kkkkkk...', '..kbbbbbbk..',
       '.kbwwbbbbbk.', '.kbwbbbbbbk.', '.kbbbbbbbbk.', '.kbbbbbbbbk.', '..kbbbbbbk..', '...kkkkkk...'] },

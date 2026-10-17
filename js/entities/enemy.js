@@ -54,7 +54,7 @@
       this.poison = 0; this.poisonT = 0; this.poisonTick = 0;
       this.lavaTick = 0;
       this.kx = 0; this.ky = 0;
-      this.touchCd = 0;
+      this.touchCd = 0; this.freezeT = 0;
       this.dead = false;
       this.fade = 0;             // tiempo de desvanecimiento tras caer
 
@@ -136,6 +136,12 @@
       G.FX.spark(this.x, this.y - this.bodyH * 0.5, color, dirX, dirY, 3);
       if (!this.anim.busy() && this.phase !== 'dash') this.anim.play('Hurt');
       G.Audio.sfx('hit');
+    }
+
+    /** Stopwatch: se queda quieto (no se mueve, ataca ni anima) unos segundos. */
+    freeze(dur) {
+      if (this.remote || this.judge) return;
+      this.freezeT = Math.max(this.freezeT || 0, dur);
     }
 
     applySlow(factor, dur = 1.2) {
@@ -237,7 +243,7 @@
     update(dt, pl) {
       // Fuera de pantalla no hace falta animar (sí moverse y pensar).
       const seen = G.Camera.sees(this.x, this.y, 120);
-      if (seen || this.dead) this.anim.update(dt);
+      if ((seen || this.dead) && !(this.freezeT > 0)) this.anim.update(dt);
       if (this.flash > 0) this.flash -= dt;
       if (this.dead) { this.fade -= dt; return; }
       if (this.shiny && seen) {
@@ -263,6 +269,12 @@
         if (this.poisonT <= 0) this.poison = 0;
       }
       if (this.dead) return;
+      if (this.freezeT > 0) {
+        this.freezeT -= dt;
+        this.kx *= Math.pow(0.001, dt); this.ky *= Math.pow(0.001, dt);
+        if (seen && Math.random() < dt * 5) G.FX.px(this.x + G.U.rand(-this.r, this.r), this.y - G.U.rand(2, this.bodyH), '#bfefff', { vy: -10, life: 0.5 });
+        return;
+      }
 
       // --- terreno ---
       let terrainMul = 1;
@@ -707,6 +719,15 @@
         ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.5, this.bodyH * 0.65, 0, 0, 6.2832);
         ctx.fill(); ctx.stroke();
         ctx.restore();
+      }
+
+      if (this.freezeT > 0 || (this.net && this.net.st & 8)) {
+        ctx.save();
+        ctx.globalAlpha = 0.28 + Math.sin(this.bob * 0.5) * 0.05;
+        ctx.fillStyle = '#9fe6ff';
+        ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.2, this.bodyH * 0.6, 0, 0, 6.2832); ctx.fill();
+        ctx.restore();
+        G.Icons.draw(ctx, 'stopwatch', Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18)), 12);
       }
 
       if (this.burn > 0 || this.poison > 0 || (this.net && this.net.st & 3)) {

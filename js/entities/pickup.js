@@ -18,6 +18,7 @@ G.Pickups = (() => {
     heal:  { color: '#5fe08a', glow: '#1f8f4d', r: 6.5 },
     magnet:{ color: '#ff9ed8', glow: '#b03d84', r: 6.5 },
     bomb:  { color: '#ff7b3d', glow: '#b03d10', r: 6.5 },
+    stopwatch: { color: '#8fe3ff', glow: '#2f7fa8', r: 6.5 },
     coin:  { color: '#ffd23f', glow: '#b8860b', r: 5.5 },
     ticket:   { color: '#ffd23f', glow: '#c08a10', r: 7 },
     ticket10: { color: '#c47bff', glow: '#8a3fd0', r: 8 },
@@ -80,6 +81,7 @@ G.Pickups = (() => {
       if (plain) return;
       push(orb('heal', x + 24, y, 0));
       push(orb('magnet', x - 24, y, 0));
+      if (!legend && Math.random() < 0.5) push(orb('stopwatch', x, y + 24, 0));
       // Ticket ×10: siempre el legendario de la grieta; un jefe normal, 1 de cada 3 veces.
       // (Hasta el 12-10-2026 el legendario de la grieta daba siempre 2: salían demasiados.)
       if (Math.random() < (legend ? LEGEND_T10 : BOSS_T10)) push(orb('ticket10', x, y - 20, 1));
@@ -93,6 +95,7 @@ G.Pickups = (() => {
     if (r < 0.012) push(orb('heal', x + G.U.rand(-8, 8), y, 0));
     else if (r < 0.020) push(orb('magnet', x, y, 0));
     else if (r < 0.026) push(orb('bomb', x, y, 0));
+    else if (r < 0.031) push(orb('stopwatch', x, y, 0));
   }
 
   /** Suelta un objeto suelto: 'heal' | 'magnet' | 'bomb' | 'coin'. */
@@ -182,7 +185,7 @@ G.Pickups = (() => {
         ctx.beginPath(); ctx.ellipse(p.x, y, r * sx * 0.5, r * 0.5, 0, 0, 6.2832); ctx.fill();
       } else {
         // Baya, imán y bomba: su icono pixel art.
-        const ICON = { heal: 'berry', magnet: 'magnet', bomb: 'bomb', ticket: 'ticket', ticket10: 'ticket10' };
+        const ICON = { heal: 'berry', magnet: 'magnet', bomb: 'bomb', stopwatch: 'stopwatch', ticket: 'ticket', ticket10: 'ticket10' };
         const sz = p.kind === 'ticket10' || p.kind === 'item' ? 24 : 18;
         if (p.kind === 'item') {
           // Objeto: brillo dorado latiendo, para que se vea desde lejos.

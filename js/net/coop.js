@@ -169,7 +169,7 @@ G.Coop = (() => {
       if (e.dead || G.U.dist2(e.x, e.y, near.x, near.y) > r2n) continue;
       const a = ANIMS.indexOf(e.anim.cur);
       out.push([e.id, r1(e.x), r1(e.y), Math.ceil(e.hp), a < 0 ? 0 : a, e.anim.dir,
-                (e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0)]);
+                (e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0) | (e.freezeT > 0 ? 8 : 0)]);
     }
     return out;
   }
@@ -277,7 +277,14 @@ G.Coop = (() => {
           G.Combat.ghostCast(m.pl, ev[1], ev[2], ev[3], ev[4]);
           emit(['c', from, ev[1], ev[2], ev[3], ev[4]], from);
           break;
-        case 'pb':
+        case 'sw': {
+        const R = G.Camera.outerRadius();
+        G.FX.swirl(ev[1], ev[2], R * 0.55);
+        G.FX.ring(ev[1], ev[2], 10, R * 0.6, '#8fe3ff', 0.6, 4);
+        G.Audio.sfx('confirm');
+        break;
+      }
+      case 'pb':
           G.World.breakAt(ev[1], ev[2]);
           emit(['pb', ev[1], ev[2]], from);
           break;
@@ -422,6 +429,7 @@ G.Coop = (() => {
   function collected(p, who) {
     emit(['pc', p.id]);
     if (p.kind === 'magnet') emit(['mag']);
+    if (p.kind === 'stopwatch') emit(['sw', r1(who.x), r1(who.y)]);
     if (p.kind === 'bomb') emit(['bomb', r1(who.x), r1(who.y)]);
     if ((p.kind === 'heal' || p.kind === 'item') && who !== local) {
       const m = mates.get(who.uid);

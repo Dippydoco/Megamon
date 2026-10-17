@@ -439,7 +439,7 @@ G.Game = (() => {
 
   // ---------------- recogida ----------------
 
-  const PICK_SFX = { xp: 'xp', xpBig: 'xp', coin: 'coin', heal: 'heal', bomb: 'break', magnet: 'confirm', ticket: 'shiny', ticket10: 'legend', item: 'legend' };
+  const PICK_SFX = { xp: 'xp', xpBig: 'xp', coin: 'coin', heal: 'heal', bomb: 'break', stopwatch: 'confirm', magnet: 'confirm', ticket: 'shiny', ticket10: 'legend', item: 'legend' };
 
   /*
    * Cooperativo: la elección de objeto y las cartas de nivel no pueden taparse.
@@ -547,6 +547,17 @@ G.Game = (() => {
     if (p.kind === 'magnet') {
       G.Pickups.pullAll();
       G.FX.ring(who.x, who.y, 10, 420, '#ff9ed8', 0.6, 4);
+      return;
+    }
+    if (p.kind === 'stopwatch') {
+      const R = G.Camera.outerRadius();
+      G.FX.swirl(who.x, who.y, R * 0.55);
+      G.FX.ring(who.x, who.y, 10, R * 0.6, '#8fe3ff', 0.6, 4);
+      for (const e of G.EnemyMgr.all()) {
+        if (e.dead || e.judge || G.U.dist2(e.x, e.y, who.x, who.y) > R * R * 0.36) continue;
+        if (e.boss) e.applySlow(0.5, 8);
+        else e.freeze(5);
+      }
       return;
     }
     if (p.kind === 'bomb') {

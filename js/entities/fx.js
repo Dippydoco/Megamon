@@ -11,9 +11,9 @@ G.FX = (() => {
   // Topes según la calidad (Ajustes → Gráficos): bajo, medio, alto.
   const CAP_PARTS = [350, 800, 1400], CAP_SPRITES = [110, 210, 320], CAP_TEXTS = [25, 45, 70], DENS = [0.35, 0.65, 1];
   const q = () => G.Settings.fx;
-  let parts = [], sprites = [], texts = [], rings = [], slashes = [], beams = [];
+  let parts = [], sprites = [], texts = [], rings = [], slashes = [], beams = [], swirls = [];
 
-  function clear() { parts = []; sprites = []; texts = []; rings = []; slashes = []; beams = []; }
+  function clear() { parts = []; sprites = []; texts = []; rings = []; slashes = []; beams = []; swirls = []; }
 
   const snap = v => Math.round(v / PX) * PX;
 
@@ -87,6 +87,11 @@ G.FX = (() => {
     rings.push({ x, y, r0, r1, color, life, t: 0, width });
   }
 
+  /** Remolino de tiempo: brazos en espiral que se cierran hacia el centro (Stopwatch). */
+  function swirl(x, y, R, color = '#8fe3ff', life = 0.9) {
+    swirls.push({ x, y, R, color, life, t: 0 });
+  }
+
   /** Golpe cuerpo a cuerpo. fx: { pal, melee } (ver G.VFX.forMove). */
   function slash(x, y, angle, radius, arc, color, fx = {}) {
     const pal = fx.pal || 'normal';
@@ -140,7 +145,7 @@ G.FX = (() => {
       if (t.t >= t.life) { texts.splice(i, 1); continue; }
       t.y += t.vy * dt; t.vy *= 0.94;
     }
-    for (const arr of [rings, slashes, beams]) {
+    for (const arr of [rings, slashes, beams, swirls]) {
       for (let i = arr.length - 1; i >= 0; i--) {
         arr[i].t += dt;
         if (arr[i].t >= arr[i].life) arr.splice(i, 1);
@@ -232,6 +237,20 @@ G.FX = (() => {
     for (const b of beams) drawBeam(ctx, b);
     for (const s of slashes) drawSlash(ctx, s);
     for (const r of rings) drawRing(ctx, r);
+    for (const s of swirls) {
+      const k = s.t / s.life, rad = s.R * (1 - k * 0.85);
+      ctx.fillStyle = s.color;
+      for (let arm = 0; arm < 4; arm++) {
+        for (let i = 0; i < 26; i++) {
+          const f = i / 26, rr = rad * (0.15 + 0.85 * f);
+          const a = arm * 1.5708 + k * 9 - f * 4.2;
+          ctx.globalAlpha = step(Math.min(1 - k, 1 - f * 0.6));
+          const sz = f > 0.6 ? PX : PX * 2;
+          ctx.fillRect(snap(s.x + Math.cos(a) * rr), snap(s.y + Math.sin(a) * rr * 0.75), sz, sz);
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
 
     for (const p of parts) {
       ctx.globalAlpha = step(1 - p.t / p.life);
@@ -265,6 +284,6 @@ G.FX = (() => {
     }
   }
 
-  return { clear, px, burst, spark, sp, twinkle, trail, dmgText, ring, slash, beam, update, draw,
+  return { clear, px, burst, spark, sp, twinkle, trail, dmgText, ring, swirl, slash, beam, update, draw,
            get count() { return parts.length + sprites.length + texts.length; } };
 })();
