@@ -78,8 +78,12 @@ G.FX = (() => {
     // grandes, como "¡Muy eficaz!" o los de jefe, siempre entran).
     // Ajustes → "Números de daño": los números se ocultan; los avisos de texto no.
     if ((typeof value === 'number' || /^-\d/.test(value)) && !G.Settings.get('dmgNumbers')) return;
+    // Your hits on enemies are plain numbers; damage you take is a string ("-12"), and the texts are words.
+    const hit = typeof value === 'number';
+    if (hit && !big && G.Settings.get('dmgShow') === 'big') return;           // "only important hits"
+    if (hit && G.Settings.get('dmgColor') === 'white') color = '#ffffff';
     if (texts.length >= CAP_TEXTS[q()]) { if (!big) return; texts.shift(); }
-    texts.push({ x: x + G.U.rand(-6, 6), y, vy: -46, t: 0, life: big ? 0.95 : 0.62, s: value, color, big });
+    texts.push({ x: x + G.U.rand(-6, 6), y, vy: -46, t: 0, life: big ? 0.95 : 0.62, s: value, color, big, sc: hit ? (+G.Settings.get('dmgSize') || 1) : 1 });
   }
 
   /** Anillo de onda (puntos de píxel). */
@@ -273,7 +277,7 @@ G.FX = (() => {
       const k = 1 - t.t / t.life;
       ctx.save();
       ctx.globalAlpha = Math.min(1, k * 2.2);
-      ctx.font = (t.big ? '700 20px' : '700 13px') + ' Pixelify,"Segoe UI",sans-serif';
+      ctx.font = '700 ' + Math.round((t.big ? 20 : 13) * (t.sc || 1)) + 'px' + ' Pixelify,"Segoe UI",sans-serif';
       ctx.textAlign = 'center';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(0,0,0,.75)';

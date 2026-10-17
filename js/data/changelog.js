@@ -10,6 +10,15 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Profile banner and border'), new: [
+    T('Profile tab: pick a banner (behind your name) and a border for your public profile. A few are unlocked by playing: Legendary (beat a legendary in a rift), Shiny shimmer and the Rainbow border (catch a shiny), and Arceus (reach Arceus).')
+  ] },
+  { d: '2026-10-17', title: T('Chat name colour'), new: [
+    T('Profile tab: choose the colour your name has in room chat and friend chat.')
+  ] },
+  { d: '2026-10-17', title: T('Damage number options'), new: [
+    T('Settings > Screen: choose the size of damage numbers (small, normal, large), show only important hits (critical, super effective and boss hits, plus the damage you take), and switch them to plain white.')
+  ] },
   { d: '2026-10-17', title: T('Easier to spot new updates'), chg: [
     T('The "What\'s new" button now glows gold with a pulsing red dot while there is something you have not read yet.')
   ] },

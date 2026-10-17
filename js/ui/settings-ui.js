@@ -81,6 +81,12 @@ G.SettingsUI = (() => {
         + choice('quality', [['auto', 'Auto'], ['high', 'Alta'], ['mid', 'Media'], ['low', 'Baja']])
         + section('Pantalla')
         + toggle('dmgNumbers', 'Números de daño', 'Los números que salen al golpear y al recibir daño.')
+        + `<div class="set-row"><div class="grow"><b>Damage number size</b><small>How big the numbers are when you hit enemies.</small></div></div>`
+        + choice('dmgSize', [[0.8, 'Small'], [1, 'Normal'], [1.35, 'Large']])
+        + `<div class="set-row"><div class="grow"><b>Which hits show a number</b><small>"Important only" hides the small hits and keeps critical, super effective and boss hits (and the damage you take).</small></div></div>`
+        + choice('dmgShow', [['all', 'All hits'], ['big', 'Important only']])
+        + `<div class="set-row"><div class="grow"><b>Damage number colours</b><small>Colours show how effective a hit was. "White" keeps every number plain.</small></div></div>`
+        + choice('dmgColor', [['type', 'Coloured'], ['white', 'White']])
         + toggle('calm', 'Menos sacudidas y destellos', 'La cámara tiembla menos y los fogonazos son suaves.')
         + toggle('fps', 'Mostrar FPS', 'Fotogramas por segundo, en la esquina de abajo.')
         + (canFull() ? `<div class="set-row"><div class="grow"><b>Pantalla completa</b><small>Sin barras del navegador.</small></div>

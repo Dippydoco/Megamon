@@ -23,6 +23,7 @@
       row.className = 'cm ' + (l.mine ? 'me' : 'them');
       const who = document.createElement('b');
       who.textContent = l.name;
+      if (l.c) who.style.color = l.c;
       const txt = document.createElement('span');
       txt.className = 'cm-t';
       txt.textContent = l.t;
@@ -102,7 +103,7 @@
       const me = G.Social.me ? G.Social.me.name : 'You';
       const lines = G.Chat.history(other)
         .filter(m => !(muted && m.f === other))
-        .map(m => ({ mine: m.f !== other, name: m.f === other ? f.name : me, t: String(m.t || ''), at: m.at }));
+        .map(m => ({ mine: m.f !== other, name: m.f === other ? f.name : me, t: String(m.t || ''), at: m.at, c: G.Cosmetics.validColor(m.c) }));
       renderLines($('chat-log'), lines, { time: true, stick, empty: 'No messages yet. Say hi!' });
     }
 
@@ -116,7 +117,7 @@
     let runKey = '';
 
     const inRun = () => G.Coop.active && G.Game.state !== 'ui';
-    const lines = () => G.Chat.roomLog().map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t, at: l.at }));
+    const lines = () => G.Chat.roomLog().map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t, at: l.at, c: l.c }));
 
     function init() {
       // Sala de espera.
@@ -188,7 +189,7 @@
       const key = recent.map(l => l.at + l.t).join('|');
       if (key === runKey) return;            // nothing new: don't rebuild
       runKey = key;
-      renderLines($('chat-run-log'), recent.map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t })), { stick: true });
+      renderLines($('chat-run-log'), recent.map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t, c: l.c })), { stick: true });
     }
 
     function tick() {

@@ -72,12 +72,14 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create, update: if signedIn()
         && me() == uid
-        && request.resource.data.keys().hasOnly(['name', 'lower', 'at', 'favs', 'title', 'best', 'medals'])
+        && request.resource.data.keys().hasOnly(['name', 'lower', 'at', 'favs', 'title', 'banner', 'frame', 'best', 'medals'])
         && request.resource.data.name is string
         && request.resource.data.lower == request.resource.data.name.lower()
         && request.resource.data.at == request.time
         && (!('favs' in request.resource.data) || (request.resource.data.favs is list && request.resource.data.favs.size() <= 3))
         && (!('title' in request.resource.data) || (request.resource.data.title is string && request.resource.data.title.size() <= 40))
+        && (!('banner' in request.resource.data) || (request.resource.data.banner is string && request.resource.data.banner.size() <= 16))
+        && (!('frame' in request.resource.data) || (request.resource.data.frame is string && request.resource.data.frame.size() <= 16))
         && (!('best' in request.resource.data) || request.resource.data.best is map)
         && (!('medals' in request.resource.data) || (request.resource.data.medals is list && request.resource.data.medals.size() <= 8))
         && getAfter(/databases/$(database)/documents/names/$(request.resource.data.lower)).data.uid == me();
@@ -129,7 +131,8 @@ service cloud.firestore {
         || (d.msgs[d.msgs.size() - 1].f == me()
             && d.msgs[d.msgs.size() - 1].t is string
             && d.msgs[d.msgs.size() - 1].t.size() <= 140
-            && d.msgs[d.msgs.size() - 1].at is number);
+            && d.msgs[d.msgs.size() - 1].at is number
+            && (!('c' in d.msgs[d.msgs.size() - 1]) || (d.msgs[d.msgs.size() - 1].c is string && d.msgs[d.msgs.size() - 1].c.size() <= 7)));
     }
     match /chats/{pid} {
       allow read: if signedIn() && (resource == null || me() in resource.data.users);

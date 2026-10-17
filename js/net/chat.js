@@ -62,10 +62,10 @@ G.Chat = (() => {
     return f ? f.name : '???';
   }
 
-  function addRoom(u, text) {
+  function addRoom(u, text, c) {
     text = clean(text);
     if (!text) return null;
-    const line = { u, name: u === G.Social.uid ? (G.Social.me ? G.Social.me.name : 'You') : nameOf(u), t: text, at: Date.now() };
+    const line = { c: G.Cosmetics.validColor(c), u, name: u === G.Social.uid ? (G.Social.me ? G.Social.me.name : 'You') : nameOf(u), t: text, at: Date.now() };
     roomLog.push(line);
     if (roomLog.length > ROOM_KEEP) roomLog.shift();
     emit('room', line);
@@ -80,9 +80,10 @@ G.Chat = (() => {
     if (!text) return { ok: false, error: '' };
     if (Date.now() - lastRoomSend < ROOM_GAP) return { ok: false, error: 'Slow down a little.' };
     lastRoomSend = Date.now();
-    addRoom(G.Social.uid, text);
-    if (G.Net.isHost) G.Net.broadcast({ k: 'ch', u: G.Social.uid, t: text });
-    else G.Net.toHost({ k: 'ch', t: text });
+    const c = G.Cosmetics.chatColor();
+    addRoom(G.Social.uid, text, c);
+    if (G.Net.isHost) G.Net.broadcast({ k: 'ch', u: G.Social.uid, t: text, c });
+    else G.Net.toHost({ k: 'ch', t: text, c });
     return { ok: true };
   }
 
@@ -95,11 +96,12 @@ G.Chat = (() => {
       if (!room.members.some(m => m.uid === from)) return;
       const text = clean(msg.t);
       if (!text) return;
-      if (!isMuted(from)) addRoom(from, text);      // (silenciado: no lo ves, pero se reparte a los demás)
-      G.Net.broadcast({ k: 'ch', u: from, t: text }, from);
+      const c = G.Cosmetics.validColor(msg.c);
+      if (!isMuted(from)) addRoom(from, text, c);      // (silenciado: no lo ves, pero se reparte a los demás)
+      G.Net.broadcast({ k: 'ch', u: from, t: text, c }, from);
     } else if (from === room.host && typeof msg.u === 'string' && msg.u !== G.Social.uid) {
       if (isMuted(msg.u)) return;
-      addRoom(msg.u, msg.t);
+      addRoom(msg.u, msg.t, msg.c);
     }
   }
   G.Net.on(onNet);
@@ -169,6 +171,8 @@ G.Chat = (() => {
     const uid = G.Social.uid, fs = G.DB.fb.fs;
     const ref = fs.collection('chats').doc(pidOf(uid, other));
     const msg = { f: uid, t: text, at: Math.round(G.Social.now()) };
+    const col = G.Cosmetics.chatColor();
+    if (col) msg.c = col;
     try {
       await fs.runTransaction(async tx => {
         const s = await tx.get(ref);

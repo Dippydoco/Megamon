@@ -509,6 +509,8 @@ G.Social = (() => {
       name: me ? me.name : G.DB.user,
       favs: (prof.favs || []).slice(0, 3).map(f => ({ dex: f.dex | 0, shiny: !!f.shiny })),
       title: prof.title || '',
+      banner: prof.banner || '',
+      frame: prof.frame || '',
       best: { solo: st.bestTime | 0, group: st.bestGroupTime | 0, level: st.bestLevel | 0, bosses: st.bossesTotal | 0,
               legends: Object.keys(s.legends || {}).length, kills: st.totalKills | 0, medals: unlocked.length },
       medals

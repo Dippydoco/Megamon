@@ -249,6 +249,48 @@
       box.appendChild(sel);
       if (!titles.length) box.insertAdjacentHTML('beforeend', '<p class="note">Consigue logros para desbloquear títulos.</p>');
 
+      // Banner, border and chat name colour.
+      const C = G.Cosmetics;
+      const pick = (title, list, key, swatch) => {
+        box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">${title}</h3>`);
+        const row = document.createElement('div');
+        row.className = 'cos-row';
+        for (const it of list) {
+          const ok = C.unlocked(it);
+          const b = document.createElement('button');
+          b.className = 'cos-sw' + ((P[key] || '') === it.id ? ' on' : '') + (ok ? '' : ' locked');
+          b.type = 'button';
+          swatch(b, it);
+          b.title = it.name + (ok ? '' : ' (locked): ' + C.hint(it));
+          b.insertAdjacentHTML('beforeend', `<small>${esc(it.name)}</small>`);
+          b.onclick = () => {
+            if (!ok) { G.UI.toast(C.hint(it), 2600); G.Audio.sfx('error'); return; }
+            P[key] = it.id; save(); render();
+          };
+          row.appendChild(b);
+        }
+        box.appendChild(row);
+      };
+      pick('Profile banner', C.BANNERS, 'banner', (b, it) => { b.style.setProperty('--bg', it.bg); b.classList.add('bn'); });
+      pick('Profile border', C.FRAMES, 'frame', (b, it) => { b.classList.add('fr'); b.dataset.frame = it.id; if (it.color) b.style.setProperty('--fc', it.color); });
+      box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Chat name colour</h3>`);
+      const cr = document.createElement('div');
+      cr.className = 'cos-row';
+      for (const c of C.NAME_COLORS) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cos-col' + ((P.chatColor || '') === c ? ' on' : '');
+        b.style.background = c || 'linear-gradient(135deg, #ffd23f 50%, #9fd4ff 50%)';
+        b.title = c ? 'Use this colour' : 'Default (gold for you, blue for others)';
+        b.onclick = () => { P.chatColor = c; save(); render(); };
+        cr.appendChild(b);
+      }
+      box.appendChild(cr);
+      const sample = document.createElement('p');
+      sample.className = 'cm cos-sample'; sample.setAttribute('translate', 'no');
+      sample.innerHTML = `<b style="${C.chatColor() ? 'color:' + C.chatColor() : ''}">${esc(G.Social.me ? G.Social.me.name : 'You')}</b> <span class="cm-t">This is how your name looks in chat</span>`;
+      box.appendChild(sample);
+
       const prev = document.createElement('button');
       prev.className = 'btn gold'; prev.style.marginTop = '16px';
       prev.textContent = 'Ver mi perfil público';
@@ -333,7 +375,7 @@
       const b = d.best || {};
       const body = $('prof-body');
       body.innerHTML = `
-        <div class="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(d.title)}</span>` : ''}</div>
+        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(d.title)}</span>` : ''}</div>
         <div class="fav-slots view" id="prof-favs"></div>
         <div class="prof-marks">
           <div><span>Mejor tiempo</span><b>${fmt(b.solo || 0)}</b></div>
@@ -345,6 +387,7 @@
         </div>
         <h3>Medallas <span class="sub">${b.medals || 0}</span></h3>
         <div class="prof-medals" id="prof-medals"></div>`;
+      G.Cosmetics.apply($('scr-profile').querySelector('.profile-box'), $('prof-head'), d);
       const favs = $('prof-favs');
       for (const f of (d.favs || []).slice(0, 3)) {
         if (!G.DEX_BY[f.dex]) continue;

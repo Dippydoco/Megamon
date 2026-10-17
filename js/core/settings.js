@@ -4,6 +4,9 @@
  *
  *   quality     'auto' | 'high' | 'mid' | 'low'   efectos y partículas
  *   dmgNumbers  true/false                        números de daño
+ *   dmgSize     0.8 | 1 | 1.35                    tamaño de los números de daño
+ *   dmgShow     'all' | 'big'                     todos los golpes, o sólo los importantes (críticos, muy eficaces, jefes)
+ *   dmgColor    'type' | 'white'                  números de daño de colores (por eficacia) o blancos
  *   calm        true/false                        menos sacudidas y destellos
  *   fps         true/false                        contador de FPS
  *   stick       0.8 | 1 | 1.25                    tamaño del joystick táctil
@@ -18,7 +21,7 @@
  */
 G.Settings = (() => {
   const KEY = 'ps.settings';
-  const DEF = { quality: 'auto', dmgNumbers: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: false, pad: null };
+  const DEF = { quality: 'auto', dmgNumbers: true, dmgSize: 1, dmgShow: 'all', dmgColor: 'type', calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: false, pad: null };
   let s = Object.assign({}, DEF);
   try { Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nada */ }
   const fns = new Set();
