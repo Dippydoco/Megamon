@@ -77,25 +77,28 @@ G.Gacha = (() => {
    * Devuelve null si no hay monedas, o la lista de resultados:
    *   { dex, rarity, shiny, isNew, refund }
    */
-  function pull(save, n, gen = 1, use = 't1') {
+  function pull(save, n, gen = 1, use = 't1', surprise = false) {
     const cost = costOf(save, n, use);
     if (!cost) return null;
     save.tickets.t1 -= cost.t1;
     save.tickets.t10 -= cost.t10;
     save.pity = save.pity || {};
     save.shiny = save.shiny || {};
-    save.pity[gen] = save.pity[gen] || 0;
+    // "Surprise me": every roll picks a random generation. It has its own pity counter ('x').
+    const pk = surprise ? 'x' : gen;
+    save.pity[pk] = save.pity[pk] || 0;
 
     const out = [];
     for (let i = 0; i < n; i++) {
-      save.pity[gen]++;
+      const g = surprise ? G.U.pick(BANNERS).gen : gen;
+      save.pity[pk]++;
       let want;
-      if (save.pity[gen] >= PITY_5) want = 5;
+      if (save.pity[pk] >= PITY_5) want = 5;
       else if (n === 10 && i === n - 1 && !out.some(r => r.rarity >= 4)) want = rollRarity(4);
       else want = rollRarity();
 
-      const { rarity, list } = poolNear(want, gen);
-      if (rarity === 5) save.pity[gen] = 0;
+      const { rarity, list } = poolNear(want, g);
+      if (rarity === 5) save.pity[pk] = 0;
       let mon = G.U.pick(list);
       let shiny = G.Sprites.hasShiny(mon.dex) && (forceShiny > 0 ? (forceShiny--, true) : Math.random() < SHINY_RATE);
       // Los shiny no se repiten: si ya tienes ese, sale otro de la misma rareza
@@ -118,7 +121,7 @@ G.Gacha = (() => {
         else refund = REFUND[rarity];
       }
       save.coins += refund;
-      out.push({ dex: mon.dex, rarity, shiny, isNew, refund });
+      out.push({ dex: mon.dex, rarity, shiny, isNew, refund, gen: mon.gen });
     }
     save.stats.pulls = (save.stats.pulls || 0) + n;
     return out;

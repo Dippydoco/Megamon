@@ -312,6 +312,9 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
   margin: 8px -10px -18px; height: 190px; overflow: hidden;
 }
 .banner .feat canvas { flex: 0 0 auto; }
+.mystery { position: relative; flex: 0 0 auto; }
+.mystery span { position: absolute; left: 0; right: 0; top: 38%; text-align: center; font-size: 56px; font-weight: 800; color: #ffd23f; text-shadow: 3px 3px 0 #2a0f55; animation: mys 2.4s ease-in-out infinite; }
+@keyframes mys { 50% { transform: translateY(-6px); opacity: .7; } }
 .rates { font-size: 14px; }
 .rates div { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed rgba(244,248,255,.15); }
 
