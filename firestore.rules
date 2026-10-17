@@ -140,10 +140,10 @@ service cloud.firestore {
         && d.dex is list && d.dex.size() == d.uids.size()
         && d.shiny is list && d.shiny.size() == d.uids.size()
         && d.at == request.time
-        && (board.matches('s_.*')
+        && (board.matches('s_.*|sk_.*')
               ? (d.uids.size() == 1 && id == me())
               : (d.uids.size() >= 2 && d.uids.size() <= 4 && id == d.uids.join('_')))
-        && (resource == null || d.t > resource.data.t);
+        && (resource == null || (board.matches('sk_.*|gk_.*') ? d.kills > resource.data.kills : d.t > resource.data.t));
     }
 
     match /lb/{board}/e/{id} {
@@ -177,7 +177,8 @@ service cloud.firestore {
       return me() in e.uids
         && changed.hasOnly([d.me, d.ev])
         && row.t == e.t && row.uids == e.uids && row.names == e.names && row.dex == e.dex
-        && (d.ev == '' || (!(d.ev in d.top) && d.ev in old && old[d.ev].t <= e.t));
+        && (d.ev == '' || (!(d.ev in d.top) && d.ev in old
+            && (board.matches('sk_.*|gk_.*') ? old[d.ev].kills <= e.kills : old[d.ev].t <= e.t)));
     }
     function removeMine(d, old, changed) {
       return d.ev in old && me() in old[d.ev].uids && !(d.ev in d.top) && changed.hasOnly([d.ev]);

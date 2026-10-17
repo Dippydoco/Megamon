@@ -85,7 +85,7 @@ G.Ranking = (() => {
 
   /** El filtro por Pokémon sólo existe en el histórico. */
   function board(mode, period, dex) {
-    return mode + '_' + boardIds()[period] + (dex && period === 'a' ? '_p' + dex : '');
+    return mode + '_' + boardIds()[period] + (dex && period === 'a' && mode.length === 1 ? '_p' + dex : '');
   }
 
   const col = b => fbx().fs.collection('lb').doc(b).collection('e');
@@ -145,7 +145,8 @@ G.Ranking = (() => {
   function noteTop(b, top) {
     const vals = Object.values(top || {});
     if (vals.length < TOP) return;
-    const low = Math.min(...vals.map(v => v.t));
+    const vk = vkOf(b);
+    const low = Math.min(...vals.map(v => v[vk] || 0));
     const t = thresholds();
     if ((t[b] || 0) >= low) return;
     t[b] = low;
@@ -157,8 +158,10 @@ G.Ranking = (() => {
 
   // ---------------- guardar ----------------
 
+  // Kills tables ('sk_' solo, 'gk_' group) rank by `kills`; the time tables by `t`.
+  const vkOf = b => /^[sg]k_/.test(b) ? 'kills' : 't';
   const rowOf = (id, v) => ({ id, t: v.t, uids: v.uids || [], names: v.names || [], dex: v.dex || [], shiny: v.shiny || [], lv: v.lv, kills: v.kills });
-  const sorted = top => Object.entries(top || {}).map(([id, v]) => rowOf(id, v)).sort((a, b) => b.t - a.t);
+  const sorted = (top, vk = 't') => Object.entries(top || {}).map(([id, v]) => rowOf(id, v)).sort((a, b) => (b[vk] || 0) - (a[vk] || 0));
   const now = () => firebase.firestore.FieldValue.serverTimestamp();
 
   // ---------------- anti-trampas ----------------
@@ -193,27 +196,28 @@ G.Ranking = (() => {
     const known = bests();
     await Promise.all(boards.map(async ([b, period]) => {
       const key = b + ':' + id;
+      const vk = vkOf(b), v = entry[vk];
       try {
         const topOnly = TOP_ONLY.has(period);
         // Si no llegas a la 50.ª marca que conoce este navegador, no entras: en
         // diario, semanal, mensual y por Pokémon no hay nada que hacer (ni leer).
         const thr = thresholds()[b] || 0;
-        if (topOnly && thr && entry.t <= thr) return;
+        if (topOnly && thr && v <= thr) return;
         // ¿Ya tenías una marca mejor? En el histórico, si este navegador no lo
         // sabe, se mira una vez tu marca (pequeña). En las demás lo dice el
         // resumen, que se lee igualmente dentro de la transacción de abajo.
         if (known[key] === undefined && !topOnly) {
           const old = await col(b).doc(id).get();
-          known[key] = old.exists ? old.data().t : 0;
+          known[key] = old.exists ? (old.data()[vk] || 0) : 0;
         }
-        if ((known[key] || 0) >= entry.t) return;
+        if ((known[key] || 0) >= v) return;
         const data = Object.assign({}, entry, { at: firebase.firestore.FieldValue.serverTimestamp() });
         // Si la tabla ya está llena y no llegas al top 50, no hace falta tocar el resumen
         // (y en diario, semanal y mensual, ni siquiera se guarda la marca).
         const cached = cacheGet('s:' + b);
-        if (thr && entry.t <= thr && !(cached && id in cached)) {
+        if (thr && v <= thr && !(cached && id in cached)) {
           if (!topOnly) await col(b).doc(id).set(data);
-          else { known[key] = entry.t; return; }
+          else { known[key] = v; return; }
         } else {
           let entered = true;
           let newTop = null;
@@ -225,10 +229,10 @@ G.Ranking = (() => {
             if (entry.shiny.some(Boolean)) mine.shiny = entry.shiny;
             let ev = '';
             // Ya estabas con una marca mejor (otro ordenador): nada que escribir.
-            if (id in top && top[id].t >= entry.t) { entered = false; newTop = top; return; }
+            if (id in top && (top[id][vk] || 0) >= v) { entered = false; newTop = top; return; }
             if (!(id in top) && Object.keys(top).length >= TOP) {
-              const low = sorted(top).pop();
-              if (low.t >= entry.t) {                                // no entra en el top
+              const low = sorted(top, vk).pop();
+              if ((low[vk] || 0) >= v) {                                // no entra en el top
                 if (!topOnly) tx.set(col(b).doc(id), data);
                 entered = false; newTop = top; return;
               }
@@ -240,12 +244,12 @@ G.Ranking = (() => {
             newTop = top;
           });
           if (newTop) { cacheSet('s:' + b, newTop); noteTop(b, newTop); }
-          if (topOnly && !entered) { known[key] = entry.t; return; }
+          if (topOnly && !entered) { known[key] = v; return; }
         }
-        known[key] = entry.t;
-        if (b.startsWith('g_')) known[b + ':*'] = Math.max(known[b + ':*'] || 0, entry.t);
+        known[key] = v;
+        if (/^g/.test(b)) known[b + ':*'] = Math.max(known[b + ':*'] || 0, v);
         mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nada */ }
-        if (period && period !== 'p' && !better.includes(period)) better.push(period);
+        if (vk === 't' && period && period !== 'p' && !better.includes(period)) better.push(period);
       } catch (e) { console.warn('[Ranking] no se pudo guardar en', b, e.code || e.message); }
     }));
     saveBests(known);
@@ -267,6 +271,7 @@ G.Ranking = (() => {
     const entry = { t: r.t, uids: [fb.uid], names: [G.Social.me.name], dex: [r.dex], shiny: [!!r.shiny], lv: r.lv, kills: r.kills };
     const boards = PERIODS.map(([p]) => ['s_' + ids[p], p]);
     boards.push(['s_' + ALL + '_p' + r.dex, 'p']);
+    if (r.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);       // most-kills tables
     const better = await store(boards, fb.uid, entry);
     announce(better);
     return better;
@@ -284,6 +289,7 @@ G.Ranking = (() => {
     const ids = boardIds();
     const boards = PERIODS.map(([p]) => ['g_' + ids[p], p]);
     for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d, 'p']);
+    if (r.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p], p]);       // most-kills tables
     const better = await store(boards, id, entry);
     announce(better);
     return better;
@@ -314,8 +320,9 @@ G.Ranking = (() => {
   async function top(mode, period, dex, friendsOnly) {
     const fb = fbx();
     if (!fb) return [];
-    const b = board(mode, period, dex);
-    const rows = sorted(await summary(b));
+    if (mode.length > 1) dex = null;                      // no per-Pokémon filter on kills tables
+    const b = board(mode, period, dex), vk = vkOf(b);
+    const rows = sorted(await summary(b), vk);
     if (!friendsOnly) return rows.slice(0, TOP);
     const circle = [fb.uid, ...G.Social.friends.filter(f => f.status === 'ok').map(f => f.uid)].slice(0, 30);
     const inTop = rows.filter(r => r.uids.some(u => circle.includes(u)));
@@ -325,7 +332,7 @@ G.Ranking = (() => {
     const ck = 'f:' + b + ':' + circle.slice().sort().join(',');
     let extra = cacheGet(ck);
     if (extra === undefined) {
-      if (mode === 's') {
+      if (mode[0] === 's') {
         const missing = circle.filter(u => !inTop.some(r => r.id === u));
         const docs = await Promise.all(missing.map(u => col(b).doc(u).get().catch(() => null)));
         extra = docs.filter(d => d && d.exists).map(d => rowOf(d.id, d.data()));
@@ -337,37 +344,38 @@ G.Ranking = (() => {
     }
     const all = new Map();
     for (const r of [...inTop, ...extra]) all.set(r.id, r);
-    return [...all.values()].sort((a, c) => c.t - a.t).slice(0, TOP);
+    return [...all.values()].sort((a, c) => (c[vk] || 0) - (a[vk] || 0)).slice(0, TOP);
   }
 
   /** Tu puesto en la tabla (aunque no salgas en el top). → { pos, t, row } | null */
   async function myRank(mode, period, dex) {
     const fb = fbx();
     if (!fb) return null;
-    const b = board(mode, period, dex);
+    if (mode.length > 1) dex = null;
+    const b = board(mode, period, dex), vk = vkOf(b);
     // ¿Estás en el top 50? Entonces el puesto sale del resumen, sin gastar nada.
-    const rows = sorted(await summary(b));
+    const rows = sorted(await summary(b), vk);
     const i = rows.findIndex(r => r.uids.includes(fb.uid));
-    if (i >= 0) return { pos: i + 1, t: rows[i].t, row: rows[i] };
+    if (i >= 0) return { pos: i + 1, t: rows[i][vk], row: rows[i] };
     if (TOP_ONLY.has(period) || dex) return { out: true };
     const ck = 'r:' + b;
     const c = cacheGet(ck);
     if (c !== undefined) return c;
     // Si este navegador ya sabe que no tienes marca en esta tabla, no se mira.
-    const kb = bests(), mk = b + ':' + (mode === 's' ? fb.uid : '*');
+    const kb = bests(), mk = b + ':' + (mode[0] === 's' ? fb.uid : '*');
     if (kb[mk] === 0) { cacheSet(ck, null); return null; }
     let mine = null;
-    if (mode === 's') {
+    if (mode[0] === 's') {
       const d = await col(b).doc(fb.uid).get();
       if (d.exists) mine = rowOf(d.id, d.data());
     } else {
       const s = await col(b).where('uids', 'array-contains', fb.uid).get();
-      for (const d of s.docs) { const r = rowOf(d.id, d.data()); if (!mine || r.t > mine.t) mine = r; }
+      for (const d of s.docs) { const r = rowOf(d.id, d.data()); if (!mine || r[vk] > mine[vk]) mine = r; }
     }
-    kb[mk] = mine ? mine.t : 0;
+    kb[mk] = mine ? mine[vk] : 0;
     saveBests(kb);
     let res = null;
-    if (mine) res = { pos: (await countAbove(b, mine.t)) + 1, t: mine.t, row: mine };
+    if (mine) res = { pos: (await countAbove(b, mine[vk], vk)) + 1, t: mine[vk], row: mine };
     cacheSet(ck, res);
     return res;
   }
@@ -377,7 +385,7 @@ G.Ranking = (() => {
    * count(), así que se usa la API REST de agregación (1 lectura por cada
    * 1.000 entradas, en vez de leerlas todas). Sólo se usa si no estás en el top 50.
    */
-  async function countAbove(b, t) {
+  async function countAbove(b, t, vk = 't') {
     const fb = fbx();
     const cfg = G.FIREBASE_CONFIG;
     const base = fb.emulator ? 'http://127.0.0.1:8080/v1' : 'https://firestore.googleapis.com/v1';
@@ -385,7 +393,7 @@ G.Ranking = (() => {
     const token = await fb.auth.currentUser.getIdToken();
     const body = { structuredAggregationQuery: {
       structuredQuery: { from: [{ collectionId: 'e' }],
-        where: { fieldFilter: { field: { fieldPath: 't' }, op: 'GREATER_THAN', value: { integerValue: String(t) } } } },
+        where: { fieldFilter: { field: { fieldPath: vk }, op: 'GREATER_THAN', value: { integerValue: String(t) } } } },
       aggregations: [{ alias: 'n', count: {} }] } };
     try {
       const r = await fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -404,7 +412,7 @@ G.Ranking = (() => {
     if (!fb) return;
     const ids = boardIds();
     const boards = new Set();
-    for (const m of ['s', 'g']) for (const [p] of PERIODS) boards.add(m + '_' + ids[p]);
+    for (const m of ['s', 'g', 'sk', 'gk']) for (const [p] of PERIODS) boards.add(m + '_' + ids[p]);
     for (const k of Object.keys(bests())) boards.add(k.split(':')[0]);
     await Promise.all([...boards].map(b => fb.fs.runTransaction(async tx => {
       const s = await tx.get(sumRef(b));
@@ -480,7 +488,7 @@ G.Ranking = (() => {
   /** Admin: quita la marca de un jugador o equipo de todas las tablas de ahora (y de `also`). */
   async function removeEverywhere(e, mode, dexes = [], also = null) {
     const ids = boardIds();
-    const boards = new Set(PERIODS.map(([p]) => mode + '_' + ids[p]));
+    const boards = new Set(PERIODS.flatMap(([p]) => [mode + '_' + ids[p], mode + 'k_' + ids[p]]));
     for (const d of dexes) boards.add(mode + '_' + ALL + '_p' + d);
     if (also) boards.add(also);
     await Promise.all([...boards].map(b => removeEntry(b, e)));

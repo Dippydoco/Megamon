@@ -6,7 +6,8 @@
 G.RankingUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let mode = 's', period = 'w', scope = 'all', dex = null;
+  let mode = 's', period = 'w', scope = 'all', dex = null, metric = 't';      // metric: 't' time survived · 'k' most kills
+  const eff = () => mode + (metric === 'k' ? 'k' : '');
   let token = 0;
 
   function init() {
@@ -26,7 +27,7 @@ G.RankingUI = (() => {
   /** El filtro por Pokémon sólo existe en el histórico: al elegir uno se pasa a esa pestaña. */
   function setDex(d) {
     dex = d;
-    if (d && period !== 'a') period = 'a';
+    if (d) { metric = 't'; if (period !== 'a') period = 'a'; }
     $('rk-clear').classList.toggle('hidden', !d);
     tabs(); load();
   }
@@ -53,6 +54,12 @@ G.RankingUI = (() => {
     };
     mk($('rk-mode'), [['s', `<b>${G.Icons.html('user', 16)} Solo</b>`], ['g', `<b>${G.Icons.html('friends', 16)} Grupo</b>`]],
        mode, k => { mode = k; }, 'gen-tab');
+    mk($('rk-metric'), [['t', 'Longest time survived'], ['k', 'Most kills']], metric, k => {
+      metric = k;
+      if (k === 'k' && dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); }
+    }, 'chip');
+    $('rk-sub').textContent = metric === 'k' ? '· most kills' : '· tiempo aguantado';
+    $('rk-poke').classList.toggle('hidden', metric === 'k');
     mk($('rk-period'), G.Ranking.PERIODS, period, k => {
       period = k;
       if (k !== 'a' && dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); }
@@ -60,6 +67,7 @@ G.RankingUI = (() => {
     mk($('rk-scope'), [['all', 'Todos'], ['friends', 'Sólo amigos']], scope, k => { scope = k; }, 'chip');
   }
 
+  const fmtK = n => (n || 0).toLocaleString('en-GB') + ' kills';
   const fmt = t => t >= 3600 ? Math.floor(t / 3600) + ':' + G.U.mmss(t % 3600).padStart(5, '0') : G.U.mmss(t);
 
   async function load() {
@@ -70,8 +78,8 @@ G.RankingUI = (() => {
     let rows = [], me = null;
     try {
       [rows, me] = await Promise.all([
-        G.Ranking.top(mode, period, dex, scope === 'friends'),
-        G.Social.me ? G.Ranking.myRank(mode, period, dex) : Promise.resolve(null)
+        G.Ranking.top(eff(), period, dex, scope === 'friends'),
+        G.Social.me ? G.Ranking.myRank(eff(), period, dex) : Promise.resolve(null)
       ]);
     } catch (e) {
       if (my !== token) return;
@@ -84,8 +92,9 @@ G.RankingUI = (() => {
       list.innerHTML = '<p class="sub">Todavía no hay marcas aquí. ¡Sé el primero!</p>';
     }
     const uid = G.Social.uid;
-    const b = G.Ranking.board(mode, period, dex), done = G.Ranking.reported();
+    const b = G.Ranking.board(eff(), period, dex), done = G.Ranking.reported();
     rows.forEach((r, i) => list.appendChild(rowEl(r, i + 1, r.uids.includes(uid), b, done)));
+    const val = metric === 'k' ? fmtK : fmt;
 
     // La frase se monta en cada idioma (traducirla por trozos sale rara).
     const en = G.I18n.lang === 'en';
@@ -97,12 +106,13 @@ G.RankingUI = (() => {
     $('rk-me').innerHTML = !G.Social.me ? 'Elige un apodo (en Amigos) para salir en el ranking.'
       : me && me.out ? (en ? `<span translate="no">You're not in the top 50 ${where} ${pn} yet. Your exact rank is in All-time.</span>`
                            : `Aún no estás en el top 50 ${pn} ${where}. Tu puesto exacto está en Histórico.`)
-      : me ? (en ? `<span translate="no">Your best ${where} rank ${pn}: <b class="gold">#${me.pos}</b> · ${fmt(me.t)}</span>`
-                 : `Tu mejor puesto ${pn} ${where}: <b class="gold">#${me.pos}</b> · ${fmt(me.t)}`)
+      : me ? (en ? `<span translate="no">Your best ${where} rank ${pn}: <b class="gold">#${me.pos}</b> · ${val(me.t)}</span>`
+                 : `Tu mejor puesto ${pn} ${where}: <b class="gold">#${me.pos}</b> · ${val(me.t)}`)
       : (en ? `<span translate="no">You don't have a ${where} record ${pn} yet.</span>` : `Aún no tienes marca ${pn} ${where}.`);
   }
 
   function rowEl(r, pos, mine, b, done) {
+    const kills = metric === 'k';
     const el = document.createElement('div');
     el.className = 'rk-row' + (mine ? ' mine' : '') + (pos <= 3 ? ' top' + pos : '');
     el.insertAdjacentHTML('beforeend', `<span class="pos">${pos <= 3 ? G.Icons.html('trophy', 20) : ''}${pos}</span>`);
@@ -111,8 +121,8 @@ G.RankingUI = (() => {
     r.dex.forEach((d, i) => { if (G.DEX_BY[d]) mons.appendChild(G.UI.spriteCanvas(d, 44, 40, { scale: 1, shiny: !!r.shiny[i] })); });
     el.appendChild(mons);
     el.insertAdjacentHTML('beforeend',
-      `<span class="who"><b translate="no">${r.names.map((n, i) => `<a href="#" class="plink" data-u="${esc(r.uids[i] || '')}">${esc(n)}</a>`).join(' · ')}</b><small>Nv. ${r.lv || 1} · ${(r.kills || 0).toLocaleString('es')} derrotados</small></span>
-       <span class="time">${fmt(r.t)}</span>`);
+      `<span class="who"><b translate="no">${r.names.map((n, i) => `<a href="#" class="plink" data-u="${esc(r.uids[i] || '')}">${esc(n)}</a>`).join(' · ')}</b><small>Nv. ${r.lv || 1} · ${kills ? fmt(r.t) + ' survived' : (r.kills || 0).toLocaleString('es') + ' derrotados'}</small></span>
+       <span class="time">${kills ? (r.kills || 0).toLocaleString('en-GB') : fmt(r.t)}</span>`);
     el.querySelectorAll('.plink').forEach(a => { a.onclick = e => { e.preventDefault(); G.ProfileUI.show(a.dataset.u); }; });
     // Reportar una marca sospechosa (no la tuya). Lo revisa el admin (mod-ui.js).
     if (!mine && G.Social.me) {
