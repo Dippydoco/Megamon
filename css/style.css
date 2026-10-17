@@ -854,3 +854,8 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   #dex-detail .btn { position: sticky; bottom: 0; order: 9; margin-top: auto; padding: 8px 6px; font-size: 15px;
     box-shadow: 0 -6px 10px rgba(5,10,25,.6); }
 }
+
+/* Etiqueta "NEW" de los Pokémon añadidos hace poco (menu.js, NEW_DEX) */
+.tag-new { position: absolute; bottom: 4px; left: 4px; z-index: 2; font-size: 9px; font-weight: 800; letter-spacing: .5px;
+  padding: 1px 4px; border-radius: 3px; background: #ff5f6d; color: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.4); }
+.tag-new.inline { position: static; display: inline-block; vertical-align: middle; font-size: 11px; padding: 2px 6px; margin-left: 6px; }

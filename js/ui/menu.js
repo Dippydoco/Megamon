@@ -123,7 +123,7 @@ G.MenuUI = (() => {
       tabs.appendChild(b);
     });
 
-    const F = [['all', 'Todos'], ['own', 'Tengo'], ['miss', 'Me faltan'], ['shiny', 'Shiny'],
+    const F = [['all', 'Todos'], ['own', 'Tengo'], ['miss', 'Me faltan'], ['shiny', 'Shiny'], ['new', 'New'],
                ['5', 5], ['4', 4], ['3', 3], ['2', 2], ['1', 1]];
     const fb = $('dex-filters');
     fb.innerHTML = '';
@@ -139,21 +139,27 @@ G.MenuUI = (() => {
     showDetail(dexSel);
   }
 
+  // Pokémon añadidos hace poco: llevan una etiqueta "NEW" en el Pokédex.
+  // (Para quitarla, borra el número de aquí. Añadidos el 17-10-2026.)
+  const NEW_DEX = new Set([593, 865, 879, 948, 1025]);
+
   function renderGrid() {
     const s = G.DB.save;
     const grid = $('dex-grid');
     grid.innerHTML = '';
     for (const p of G.DEX) {
-      if (p.gen !== dexGen) continue;
+      if (p.gen !== dexGen && dexFilter !== 'new') continue;      // el filtro New enseña todas las generaciones
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
       if (dexFilter === 'own' && !own) continue;
       if (dexFilter === 'miss' && own) continue;
       if (dexFilter === 'shiny' && !sh) continue;
+      if (dexFilter === 'new' && !NEW_DEX.has(p.dex)) continue;
       if (/^\d$/.test(dexFilter) && p.rarity !== +dexFilter) continue;
 
       const cell = document.createElement('div');
       cell.className = 'cell' + (own ? '' : ' locked') + (p.dex === dexSel ? ' on' : '');
       cell.insertAdjacentHTML('beforeend', `<span class="no">${String(p.dex).padStart(3, '0')}</span>`);
+      if (NEW_DEX.has(p.dex)) cell.insertAdjacentHTML('beforeend', '<span class="tag-new">NEW</span>');
       if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Compañero">${G.Icons.html('crown', 14)}</span>`);
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Tienes su shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
@@ -196,7 +202,7 @@ G.MenuUI = (() => {
           <button class="${viewShiny ? 'on' : ''}" data-v="1">${G.Icons.html('shiny', 12)} Shiny</button></div>` : ''}
       <div class="center">
         <div style="color:var(--muted);font-size:13px">Nº ${String(p.dex).padStart(3, '0')} · ${GEN_NAMES[p.gen - 1]}</div>
-        <h3>${own ? p.name : '???'}</h3>
+        <h3>${own ? p.name : '???'}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
         <div style="color:${G.Gacha.RARITY_COLOR[p.rarity]}">${G.UI.stars(p.rarity, 24)} ${G.Gacha.RARITY_NAME[p.rarity]}</div>
         <div style="margin:6px 0">${own ? G.UI.typeChips(p.types) : ''}</div>
       </div>

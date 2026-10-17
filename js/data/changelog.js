@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('NEW tag in the Pokédex'), new: [
+    T('The five newly added Pokémon (Jellicent, Sirfetch\'d, Copperajah, Toedscool and Pecharunt) now have a red NEW tag in the Pokédex, and there is a New filter to show only them.')
+  ] },
   { d: '2026-10-17', title: T('Five new Pokémon'), new: [
     T('Jellicent, Sirfetch\'d, Copperajah, Toedscool and Pecharunt are now in the game. They can be pulled in the gacha, picked as your partner and show up as enemies like the others (Pecharunt is a mythical, so it only appears in rifts and the Judgment pool, like the other legendaries).'),
     T('Their sprites have no dedicated attack animation yet, so they reuse their swing or idle animation when attacking.')
