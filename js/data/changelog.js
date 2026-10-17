@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Favourites list shows every Pokémon'), fix: [
+    T('Picking a favourite Pokémon on your profile only listed your first 120 Pokémon, so later generations were cut off. It now lists everything you own.')
+  ] },
   { d: '2026-10-17', title: T('Run history'), new: [
     T('A new History tab on the Missions screen keeps your last 100 runs: Pokémon, date, time survived, level, kills, moves, held item, damage, coins and bosses.'),
     T('Group runs also list your teammates and their Pokémon. Click a run to see its full details.')
