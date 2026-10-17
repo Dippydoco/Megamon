@@ -112,6 +112,22 @@
         const inRoom = room && room.members.some(m => m.uid === f.uid);
         el.innerHTML = `<i class="dot ${dot}"></i><b translate="no"><a href="#" class="plink" title="Ver su perfil">${esc(f.name)}</a></b><span class="st">${inRoom ? 'En tu sala' : stateText(f)}</span><span class="grow"></span>`;
         if (f.status === 'ok') el.querySelector('.plink').onclick = e => { e.preventDefault(); G.ProfileUI.show(f.uid); };
+        if (f.status === 'ok') {
+          // Favourite Pokémon (up to 3) next to the name; profile comes from the 10-min cache.
+          const favs = document.createElement('span');
+          favs.className = 'fr-favs';
+          el.querySelector('.st').before(favs);
+          Promise.resolve(G.Social.getProfile(f.uid)).then(pr => {
+            if (!pr || !favs.isConnected) return;
+            for (const fv of (pr.favs || []).slice(0, 3)) {
+              const d = G.DEX_BY[fv.dex];
+              if (!d) continue;
+              const cv = G.UI.spriteCanvas(fv.dex, 36, 36, { shiny: !!fv.shiny });
+              cv.title = (fv.shiny ? 'Shiny ' : '') + d.name;
+              favs.appendChild(cv);
+            }
+          }).catch(() => {});
+        }
         else el.querySelector('.plink').onclick = e => e.preventDefault();
         const btn = (txt, cls, fn) => {
           const b = document.createElement('button');

@@ -497,6 +497,8 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
   background: rgba(0,0,0,.22); border: 2px solid rgba(244,248,255,.14);
 }
 .fr-row b { font-size: 17px; }
+.fr-favs { display: inline-flex; gap: 2px; flex: 0 0 auto; }
+.fr-favs canvas { width: 36px; height: 36px; margin: -6px 0; image-rendering: pixelated; }
 .fr-row .st { color: var(--muted); font-size: 13px; }
 .dot { width: 10px; height: 10px; border-radius: 2px; background: #6b7a94; flex: 0 0 10px; }
 .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }

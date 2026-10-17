@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Favourites in the friends list'), new: [
+    T('Each friend\'s three favourite Pokémon now show next to their name in the friends list.')
+  ] },
   { d: '2026-10-17', title: T('Spectate your teammates'), new: [
     T('When you are down in a group run, the camera now follows a living teammate. Press Q / E (or the arrow keys, or the on-screen arrows) to switch between teammates. When you are revived the camera returns to you.')
   ] },
