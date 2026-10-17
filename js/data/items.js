@@ -40,7 +40,7 @@ G.Items = (() => {
     { id: 'kingsrock', name: "King's Rock", desc: 'Your hits have a 6% chance to freeze the enemy for 1.2 s (not bosses).', on: () => {}, off: () => {} },
     { id: 'bindingband', name: 'Binding Band', desc: 'Your hits slow enemies by 25% for 1.5 s.', on: () => {}, off: () => {} },
     { id: 'brightpowder', name: 'Bright Powder', desc: '10% chance to dodge any hit.', on: () => {}, off: () => {} },
-    { id: 'heavyboots', name: 'Heavy-Duty Boots', desc: 'You ignore lava damage and the slowing and sliding of water, mud and ice.', on: () => {}, off: () => {} },
+    { id: 'heavyboots', name: 'Heavy-Duty Boots', desc: 'You ignore lava damage, the slowing and sliding of water, mud and ice, and all ground traps (poison, sticky and explosive).', on: () => {}, off: () => {} },
     { id: 'lightclay', name: 'Light Clay', desc: 'Shrine powers (Fury, Thunderbolt, Magnet, Haste, Guardian) last 50% longer.', on: () => {}, off: () => {} }
   ];
   const BY = {};

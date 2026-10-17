@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Heavy-Duty Boots block traps'), chg: [
+    T('Heavy-Duty Boots now also make you immune to all ground traps (poison, sticky and explosive). The trap still goes off and hurts nearby enemies, it just does nothing to you.')
+  ] },
   { d: '2026-10-17', title: T('Eight new held items'), new: [
     T('Scope Lens: +20% critical hit chance.'),
     T('Flame Orb and Toxic Orb: your hits have a 30% chance to burn or poison the enemy.'),
