@@ -21,11 +21,12 @@
 G.Net = (() => {
   const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   const DIRECT_TIMEOUT = 9000;     // ms para conseguir canal directo antes de usar el relé
-  // Relé por la Realtime Database APAGADO (12-10-2026): a 1 $ el GB era lo que más
-  // costaba del cooperativo. Sin conexión directa, esa pareja no puede jugar
-  // junta ('failed') y el anfitrión lo reintenta cada RETRY_MS. Por la base de datos
-  // sólo pasa la señalización (unos pocos mensajes pequeños para conectarse).
-  const ALLOW_RELAY = false, RETRY_MS = 15000;
+  // Relé por la Realtime Database ENCENDIDO otra vez en Megamon (17-10-2026): el proyecto está en el
+  // plan gratuito (Spark), así que no cuesta nada, y sin él dos jugadores en la misma wifi (o con
+  // routers que no dejan la conexión directa) no podían jugar juntos. Sólo se usa si el canal
+  // directo no se consigue; si luego se consigue, se pasa a él. (El original lo apagó: a 1 $ el GB.)
+  // Si el proyecto pasa a un plan de pago, mira el gasto de la Realtime Database.
+  const ALLOW_RELAY = true, RETRY_MS = 15000;
 
 
   // Si una conexión directa que ya iba bien se cae, se intenta rehacer durante este
