@@ -11,7 +11,7 @@ G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
   { d: '2026-10-17', title: T('Bigger move and item bar'), chg: [
-    T('The move slots and held item at the bottom of the screen are larger (on phones and narrow screens they stay the same size).')
+    T('The move slots and held item at the bottom of the screen are larger (on phones and narrow screens they stay the same size). The move name, item name and slot numbers are bigger, brighter and outlined so they are easier to read.')
   ] },
   { d: '2026-10-17', title: T('Tooltips for moves and items'), new: [
     T('Hover over a move or your held item at the bottom of the screen to see what it does (on a computer; there is no tooltip on touch screens).')

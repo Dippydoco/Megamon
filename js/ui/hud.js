@@ -434,17 +434,20 @@ G.HUD = (() => {
       }
 
       // tecla
-      ctx.font = F(800, Math.round(9 * K));
-      ctx.fillStyle = fused ? BOND : on ? col : 'rgba(180,200,230,.6)';
+      ctx.font = F(800, Math.round(11 * K));
+      ctx.fillStyle = fused ? BOND : on ? col : 'rgba(200,215,240,.85)';
       ctx.textAlign = 'left';
-      ctx.fillText(String(i + 1), x + 3, y + 10 * K);
+      ctx.fillText(String(i + 1), x + 4, y + 12 * K);
 
       // nombre encima del activo (con un vínculo: "Ascuas +2")
       if (on) {
-        ctx.font = F(700, Math.round(10 * K));
+        ctx.font = F(800, Math.round(13 * K));
         ctx.textAlign = 'center';
-        ctx.fillStyle = fused ? BOND : col;
-        ctx.fillText(fused ? m.name + ' +' + (g.length - 1) : m.name, x + S / 2, y - 7);
+        const nm = fused ? m.name + ' +' + (g.length - 1) : m.name;
+        ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+        ctx.strokeText(nm, x + S / 2, y - 8);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(nm, x + S / 2, y - 8);
       }
     }
 
@@ -471,10 +474,12 @@ G.HUD = (() => {
       ctx.stroke();
       if (pl.item) {
         G.Icons.draw(ctx, pl.item, ix + (S - 36 * K) / 2, iy + (S - 36 * K) / 2, 36 * K);
-        ctx.font = F(700, Math.round(9 * K));
+        ctx.font = F(800, Math.round(12 * K));
         ctx.textAlign = 'center';
+        ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+        ctx.strokeText(G.Items.BY[pl.item].name, ix + S / 2, iy - 8);
         ctx.fillStyle = '#ffd23f';
-        ctx.fillText(G.Items.BY[pl.item].name, ix + S / 2, iy - 6);
+        ctx.fillText(G.Items.BY[pl.item].name, ix + S / 2, iy - 8);
         tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.BY[pl.item].desc] });
       }
     }
@@ -501,7 +506,7 @@ G.HUD = (() => {
         ctx.font = F(800, 15);
         const bw = Math.min(MW, Math.max(ctx.measureText(title).width, ...body.map(l => { ctx.font = F(500, FS); return ctx.measureText(l).width; }))) + 20;
         const bh = 14 + 20 + body.length * LH;
-        const bx = G.U.clamp(tp.x + tp.w / 2 - bw / 2, 6, w - bw - 6), by = tp.y - bh - 14;
+        const bx = G.U.clamp(tp.x + tp.w / 2 - bw / 2, 6, w - bw - 6), by = tp.y - bh - 32;
         roundRect(ctx, bx, by, bw, bh, 8);
         ctx.fillStyle = 'rgba(8,12,22,.95)'; ctx.fill();
         ctx.lineWidth = 2; ctx.strokeStyle = tp.col; ctx.stroke();
