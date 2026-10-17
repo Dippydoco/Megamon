@@ -357,9 +357,29 @@ G.Social = (() => {
     href.on('value', s => { if (room && room.id === id && !s.val()) closedRoom(); }, () => closedRoom());
     const oref = fb.rtdb.ref('rooms/' + id + '/open');
     oref.on('value', s => { if (room && room.id === id) { room.open = s.val() === true; emit('room'); } }, () => {});
-    roomRefs = [mref, href, oref];
+    // Si se corta la conexión con la base de datos, el servidor borra tu plaza (onDisconnect).
+    // Al volver la conexión se vuelve a poner, para que un corte corto no te saque de la sala.
+    const cref = fb.rtdb.ref('.info/connected');
+    let wasOn = false;
+    cref.on('value', s => {
+      const on = s.val() === true;
+      if (on && wasOn && room && room.id === id && !room.isHost) rejoinSpot(id);
+      wasOn = on;
+    });
+    roomRefs = [mref, href, oref, cref];
     writeStatus();
     emit('room');
+  }
+
+  /** Vuelve a ponerte en la sala tras un corte de la base de datos (si la sala sigue). */
+  async function rejoinSpot(id) {
+    try {
+      const host = (await fb.rtdb.ref('rooms/' + id + '/host').get()).val();
+      if (!host || !room || room.id !== id) return;
+      const ref = fb.rtdb.ref('rooms/' + id + '/m/' + uid);
+      if (!(await ref.get()).exists()) { await ref.set(memberInfo()); console.warn('[Social] plaza recuperada tras un corte'); }
+      watchRoomDisconnect();        // el aviso de desconexión se gasta al saltar: se vuelve a armar
+    } catch (e) { console.warn('[Social] no se pudo recuperar la plaza:', e.code || e.message); }
   }
 
   /** Si se cierra el navegador, la sala (anfitrión) o tu plaza (invitado) se borran solas. */

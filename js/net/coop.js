@@ -235,7 +235,7 @@ G.Coop = (() => {
   G.Net.onPeer((u, mode) => {
     if (!active || (mode !== 'closed' && mode !== 'failed')) return;
     if (host) mateGone(u);
-    else if (u === hostUid) { const cb = api.lost; end(); if (cb) cb('Se ha perdido la conexión con el anfitrión.'); }
+    else if (u === hostUid) { const cb = api.lost, why = G.Net.why(u); end(); if (cb) cb('Lost connection to the host' + (why ? ' (' + why + ')' : '') + '.'); }
   });
 
   function mateGone(u) {

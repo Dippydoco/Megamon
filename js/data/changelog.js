@@ -10,6 +10,11 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Fewer random disconnects in groups'), fix: [
+    T('A short network blip (Wi-Fi hiccup, brief signal drop) no longer drops you from a group. The game now spends up to 25 s trying to reconnect before giving up, and the host keeps you in the game while the link is still alive.'),
+    T('If your connection to the room server blinks, your spot in the room is now restored automatically instead of staying deleted.'),
+    T('If you do get disconnected, the message now says why (for example "ice-failed"), so it is easier to track down.')
+  ] },
   { d: '2026-10-17', title: T('Stopwatch freezes everyone, for longer'), chg: [
     T('The Stopwatch now freezes every Pokémon on the map, not just nearby ones, and the freeze lasts 7 s instead of 5 s. Bosses are still only slowed by 50%, and Arceus is still unaffected.')
   ] },
