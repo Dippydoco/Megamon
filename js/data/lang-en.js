@@ -126,7 +126,7 @@ G.I18n.add({
   '-20% de recarga en todos tus movimientos.': '-20% cooldown on all your moves.',
   'Un golpe que te dejaría KO te deja con 1 de vida (cada 60 s).': 'A hit that would knock you out leaves you at 1 HP (every 60 s).',
   'Recuperas vida con el daño que haces.': 'You heal from the damage you deal.', '+50% de Pokémonedas al acabar la run.': '+50% PokéCoins at the end of the run.',
-  '+30% de experiencia.': '+30% experience.', '+30% de daño, pero cada ataque te quita un poco de vida.': '+30% damage, but each attack costs a little HP.',
+  '+30% de experiencia.': '+30% experience.', '+50% de daño, pero cada ataque te quita un poco de vida.': '+50% damage, but each attack costs a little HP.',
   '+35% de velocidad.': '+35% speed.', 'Los que te golpean cuerpo a cuerpo reciben daño.': 'Foes that hit you in melee take damage.',
   '+20% de reducción de daño recibido.': '+20% damage reduction.',
   '¡Un objeto!': 'An item!', 'Sólo puedes llevar uno ·': 'You can only hold one ·', 'Quedarme con': 'Keep', 'Cambiar a': 'Switch to',

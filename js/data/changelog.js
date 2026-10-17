@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Life Orb buffed'), chg: [
+    T('Life Orb now gives +50% damage (was +30%). It still costs a little HP with each attack.')
+  ] },
   { d: '2026-10-17', title: T('Heavy-Duty Boots block traps'), chg: [
     T('Heavy-Duty Boots now also make you immune to all ground traps (poison, sticky and explosive). The trap still goes off and hurts nearby enemies, it just does nothing to you.')
   ] },
