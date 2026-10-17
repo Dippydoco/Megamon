@@ -243,8 +243,10 @@ G.Player = class Player {
     // estar encima de los enemigos para pegar (iban muy por detrás).
     const close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
     const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close);
+    // En la estadística sólo cuenta la vida que de verdad se pierde (el golpe de gracia de los
+    // legendarios de la arena de Arceus, que se duplican sin tope, no suma billones de daño de sobra).
+    this.dmgTaken += Math.min(d, Math.max(0, this.hp));
     this.hp -= d;
-    this.dmgTaken += d;
     this.invuln = 0.45;
     this.flash = 0.14;
     G.Audio.sfx('hurt');
