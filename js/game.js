@@ -579,6 +579,7 @@ G.Game = (() => {
         if (e.boss) e.applySlow(0.5, 8);
         else e.freeze(7);
       }
+      G.EnemyMgr.timeStop(7);          // new arrivals are frozen too while it lasts
       return;
     }
     if (p.kind === 'bomb') {

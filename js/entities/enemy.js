@@ -799,9 +799,13 @@
     const grid = new Map();
 
     const byId = new Map();
-    function clear() { list = []; corpses = []; grid.clear(); byId.clear(); }
+    // Stopwatch: while it lasts, enemies that appear are frozen too (bosses are slowed), for the time that is left.
+    let stopLeft = 0;
+    function timeStop(dur) { stopLeft = Math.max(stopLeft, dur); }
+    function clear() { list = []; corpses = []; grid.clear(); byId.clear(); stopLeft = 0; }
     function all() { return list; }
     function add(e) {
+      if (stopLeft > 0 && !e.judge && !e.remote) { if (e.boss) e.applySlow(0.5, stopLeft); else e.freeze(stopLeft); }
       list.push(e);
       byId.set(e.id, e);
       if (G.Coop.isHost) G.Coop.enemyAdded(e);
@@ -941,6 +945,7 @@
     const LAG_T = 2.5;
 
     function update(dt, players) {
+      if (stopLeft > 0) stopLeft = Math.max(0, stopLeft - dt);
       if (!Array.isArray(players)) players = [players];
       const pl = players[0];
       // Velocidad suavizada de cada jugador (vale también para los compañeros).
@@ -1015,7 +1020,7 @@
     function bossAlive() { return list.some(e => e.boss && !e.dead); }
     function shinies() { return list.filter(e => e.shiny && !e.dead); }
 
-    return { clear, all, add, get, addRemote, removeRemote, stash, restore, clearRemote, update, drawables, queryCircle, rebuildGrid, bossAlive, shinies, nearestPlayer,
+    return { timeStop, clear, all, add, get, addRemote, removeRemote, stash, restore, clearRemote, update, drawables, queryCircle, rebuildGrid, bossAlive, shinies, nearestPlayer,
              get count() { return list.length; } };
   })();
 })();
