@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Team stats on the end screen'), fix: [
+    T('In groups of three or more, some players could only see part of the team on the end screen\'s Stats tab (other players\' numbers were shown under the wrong person, and your own could go missing). Everyone\'s stats now show correctly.')
+  ] },
   { d: '2026-10-17', title: T('Clearer move descriptions'), chg: [
     T('Rewrote the English descriptions of all moves so they read naturally and say plainly what each one does.')
   ] },

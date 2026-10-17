@@ -135,6 +135,7 @@ G.RunUI = (() => {
     if (!r || !box) return;
     let list = r.team ? r.team() : [];
     if (!list.length) list = [r.mine];
+    else if (r.mine && !list.some(p => p.u === r.mine.u)) list = [r.mine, ...list];     // you are always in your own table
     const rank = u => { const i = (r.order || []).indexOf(u); return i < 0 ? 99 : i; };
     list = list.slice().sort((a, b) => rank(a.u) - rank(b.u));
     const n = x => Math.round(x).toLocaleString('en-GB');

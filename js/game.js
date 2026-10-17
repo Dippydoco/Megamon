@@ -180,7 +180,10 @@ G.Game = (() => {
     statsHooked = true;
     G.Net.on((from, msg) => {
       if (!msg || msg.k !== 'rs' || !msg.s) return;
-      teamStats.set(from, Object.assign({}, msg.s, { u: from }));
+      // The host relays everyone's stats, so on a guest `from` is the host: the real owner travels in `s.u`.
+      // (On the host, never trust s.u: the sender is `from`.)
+      const owner = G.Net.isHost ? from : (msg.s.u || from);
+      teamStats.set(owner, Object.assign({}, msg.s, { u: owner }));
       if (G.Net.isHost) G.Net.broadcast({ k: 'rs', s: Object.assign({}, msg.s, { u: from }) }, from);
       if (state === 'over' && G.RunUI.refreshTeam) G.RunUI.refreshTeam();
     });
