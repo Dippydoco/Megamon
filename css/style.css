@@ -1022,3 +1022,11 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .btn, .menu-item, .tab, .gen-tab b, .chip, kbd, .tag-chip, .owned-chip, .hist-tag,
 .grow > b, .sub b, .cell b, .fr-row b, .lob-card b, .rk-row .who b, .hist-main b, .hist-grid b, .hist-t,
 .pcard b, .pcard .new, .dup small, .killer-main small { font-weight: 400; }
+
+/* Hover tooltip for moves in the menu (Pokémon tab, ban picker) */
+#mv-tip { position: fixed; z-index: 100000; display: none; max-width: 270px; padding: 8px 10px; border: 2px solid #9fb1c9; border-radius: 8px; background: rgba(8, 12, 22, .96); color: #fff; font-size: 13px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+#mv-tip .mt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+#mv-tip .mt-head b { font-size: 15px; }
+#mv-tip .mt-type { font-size: 11px; padding: 1px 6px; border-radius: 5px; color: #10131a; font-weight: 400; }
+#mv-tip .mt-kind { font-size: 11px; color: #ffd23f; font-weight: 400; }
+#mv-tip .mt-desc { color: #d6e0f2; font-weight: 400; }

@@ -4,6 +4,30 @@ G.MenuUI = (() => {
   const GEN_NAMES = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Teselia', 'Kalos', 'Alola', 'Galar', 'Paldea'];
   let dexFilter = 'all', dexGen = 1, dexSel = null;
 
+  // ---- hover tooltip for moves (Pokémon tab and the ban picker): name, type, kind and what it does ----
+  function moveTip() {
+    let el = document.getElementById('mv-tip');
+    if (!el) { el = document.createElement('div'); el.id = 'mv-tip'; document.body.appendChild(el); }
+    return el;
+  }
+  function showMoveTip(id, ev) {
+    const m = G.Moves.BY_ID[id];
+    if (!m) return;
+    const T = G.T || (s => s), col = G.U.TYPE_COLOR[m.type] || '#9fb1c9', el = moveTip();
+    el.style.borderColor = col;
+    el.innerHTML = `<div class="mt-head"><b>${T(m.name)}</b> <span class="mt-type" style="background:${col}">${T(G.U.TYPE_NAME[m.type] || m.type)}</span>
+      <span class="mt-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div><div class="mt-desc">${T(m.desc || '')}</div>`;
+    el.style.display = 'block';
+    const w = el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX + 14)) + 'px';
+    el.style.top = Math.max(6, Math.min(innerHeight - h - 6, ev.clientY + 16)) + 'px';
+  }
+  function hideMoveTip() { const el = document.getElementById('mv-tip'); if (el) el.style.display = 'none'; }
+  document.addEventListener('mouseover', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); else hideMoveTip(); });
+  document.addEventListener('mousemove', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); });
+  document.addEventListener('scroll', hideMoveTip, true);
+  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); else hideMoveTip(); });
+
   function init() {
     const ICON = { play: 'ball', dex: 'book', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
@@ -245,8 +269,8 @@ G.MenuUI = (() => {
         ${bar('Ataque', p.atk, max.atk, '×' + p.atk.toFixed(2))}
         ${bar('Velocidad', p.spd, max.spd, p.spd)}
         <p style="font-size:14px;margin:10px 0 4px">Empieza con <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
-        <p class="move-icons" title="Movimientos que puede aprender">
-          ${G.Moves.poolFor(p).map(id => `<span title="${G.Moves.BY_ID[id].name}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
+        <p class="move-icons">
+          ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
         ${usingThis
           ? '<button class="btn grow" disabled style="width:100%">Es tu compañero</button>'
           : `<button id="dex-pick" class="btn gold" data-sfx="confirm" style="width:100%">Elegir de compañero${viewShiny ? ' (shiny)' : ''}</button>`}
@@ -465,7 +489,7 @@ G.MenuUI = (() => {
     el.className = 'panel ban-picker';
     el.innerHTML = `<p class="sub" style="margin:0 0 8px">Toca los movimientos que no quieres que te salgan en las cartas (${list.length}/${max}). El movimiento de inicio no se puede vetar.</p>
       <div class="ban-moves">${ids.map(id => { const d = G.Moves.BY_ID[id]; const on = list.includes(id);
-        return `<button class="chip ${on ? 'on ban' : ''}" data-id="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${on ? ' ' + G.Icons.html('ban', 14) : ''}</button>`; }).join('')}</div>`;
+        return `<button class="chip ${on ? 'on ban' : ''}" data-id="${id}" data-mv="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${on ? ' ' + G.Icons.html('ban', 14) : ''}</button>`; }).join('')}</div>`;
     el.querySelectorAll('[data-id]').forEach(b => {
       b.onclick = () => {
         const l = banList(), id = b.dataset.id, i = l.indexOf(id);
