@@ -95,11 +95,11 @@ G.Events = (() => {
     if (!cur) return;
     if (cur.id === 'horde') say('¡Horda de tipo ' + G.U.TYPE_NAME[cur.type] + '!', 3, G.U.TYPE_COLOR[cur.type]);
     else if (cur.id === 'gold') say('¡Hora dorada! Doble de experiencia', 3, '#ffd23f');
-    else if (lost) say('¡Un ' + lost.name + ' se ha perdido! Búscalo y llévalo a la marca', 3.4, '#7dffb0');
+    else if (lost) say('¡Un ' + lost.name + ' se ha perdido! Búscalo y llévalo a la marca', 3.4, '#7dffb0', lost.dex);
     G.Audio.sfx(cur.id === 'gold' ? 'shiny' : 'surge');
   }
 
-  function say(text, secs) { G.Spawner.say(text, secs, true); }
+  function say(text, secs, _col, dex) { G.Spawner.say(text, secs, true, dex); }
 
   function end() {
     if (!cur) return;
@@ -130,7 +130,7 @@ G.Events = (() => {
       G.EnemyMgr.add(e);
       G.FX.ring(x, y, 4, 40, '#ffd23f', 0.5, 3);
       G.Spawner.say(gold ? '¡Un ' + mon.name + ' con un ticket ×10! ¡Atrápalo antes de que huya!'
-                         : '¡Un ' + mon.name + ' cargado de monedas! ¡Atrápalo antes de que huya!', 3.2);
+                         : '¡Un ' + mon.name + ' cargado de monedas! ¡Atrápalo antes de que huya!', 3.2, false, dex);
       G.Audio.sfx('shiny');
       return;
     }
@@ -155,7 +155,7 @@ G.Events = (() => {
       e.life = AEGIS_LIFE;
       G.EnemyMgr.add(e);
       G.FX.ring(x, y, 4, 60, '#9fb4ff', 0.6, 4);
-      G.Spawner.say('An Aegislash appears with an Armoury of Items!', 5);
+      G.Spawner.say('An Aegislash appears with an Armoury of Items!', 5, false, AEGIS_DEX);
       G.Audio.sfx('legend');
       return true;
     }
@@ -206,7 +206,7 @@ G.Events = (() => {
 
     if (L.state === 'wait') {
       const p = players.find(o => !o.dead && G.U.dist2(o.x, o.y, L.x, L.y) < (o.r + L.r + 18) ** 2);
-      if (p) { L.state = 'follow'; L.follow = p; say('¡' + L.name + ' te sigue! Llévalo a la marca verde', 3, '#7dffb0'); G.Audio.sfx('confirm'); }
+      if (p) { L.state = 'follow'; L.follow = p; say('¡' + L.name + ' te sigue! Llévalo a la marca verde', 3, '#7dffb0', L.dex); G.Audio.sfx('confirm'); }
       L.moving = false;
     } else {
       const p = L.follow && !L.follow.dead ? L.follow : players.find(o => !o.dead) || L.follow;
@@ -347,11 +347,11 @@ G.Events = (() => {
     if (lost) {
       const L = lost, to = L.state === 'wait' ? [L.x, L.y - 10] : [L.tx, L.ty];
       edgeArrow(ctx, w, h, cam, to[0], to[1], '#7dffb0', (L.state === 'wait' ? L.name : 'Marca') + ' · ' +
-                Math.round(G.U.dist(pl.x, pl.y, to[0], to[1]) / 32) + ' m', F);
+                Math.round(G.U.dist(pl.x, pl.y, to[0], to[1]) / 32) + ' m', F, L.state === 'wait' ? { key: 'lost', dex: L.dex } : null);
     }
     for (const e of G.EnemyMgr.all()) {
-      if (e.behavior === 'thief' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#ffd23f', e.name, F);
-      if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + ' · ' + Math.max(0, Math.ceil(e.life)) + ' s', F);
+      if (e.behavior === 'thief' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#ffd23f', e.name, F, { key: 't' + e.id, dex: e.dex, shiny: e.shiny });
+      if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + ' · ' + Math.max(0, Math.ceil(e.life)) + ' s', F, { key: 'a' + e.id, dex: e.dex });
     }
     if (cur && cur.id !== 'lost') {
       const left = Math.max(0, Math.ceil(cur.dur - cur.t));
@@ -366,9 +366,10 @@ G.Events = (() => {
     }
   }
 
-  function edgeArrow(ctx, w, h, cam, x, y, col, label, F) {
+  function edgeArrow(ctx, w, h, cam, x, y, col, label, F, mon) {
     const sx = (x - cam.left()) * cam.scale, sy = (y - cam.top()) * cam.scale;
     if (sx > 0 && sx < w && sy > 0 && sy < h) return;
+    if (mon && mon.dex && G.HUD) return badgeArrow(ctx, w, h, sx, sy, col, label, F, mon);
     const K = w < 640 ? 1.35 : 1.7;                       // bigger arrows (and labels) so they are easy to spot
     const M = 40 + 14 * K, ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 80);
     const a = Math.atan2(sy - ey, sx - ex), ca = Math.cos(a), sa = Math.sin(a);
@@ -389,6 +390,41 @@ G.Events = (() => {
     ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
     ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.88)';
     const lx = -ca * 26 * K, ly = -sa * 24 * K + 4 * K;
+    ctx.strokeText(label, lx, ly);
+    ctx.fillStyle = col; ctx.fillText(label, lx, ly);
+    ctx.restore();
+  }
+
+  /** Like the boss arrows: a round badge with the event Pokémon, an arrow pointing to it and the label opposite. */
+  function badgeArrow(ctx, w, h, sx, sy, col, label, F, mon) {
+    const M = 64, ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 110, h - M - 90);
+    const a = Math.atan2(sy - ey, sx - ex), ca = Math.cos(a), sa = Math.sin(a);
+    const beat = 0.5 + 0.5 * Math.sin(performance.now() / 160);
+    ctx.save();
+    ctx.translate(ex, ey);
+    ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.arc(0, 0, 27, 0, 6.2832);
+    ctx.fillStyle = 'rgba(10,12,24,.9)'; ctx.fill();
+    ctx.globalAlpha = 0.65 + 0.35 * beat;
+    ctx.strokeStyle = col; ctx.lineWidth = 3.5; ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.save();
+    ctx.beginPath(); ctx.arc(0, 0, 24, 0, 6.2832); ctx.clip();
+    G.HUD.portraitBox(ctx, 'ev-' + mon.key, mon, -24, -24, 48);
+    ctx.restore();
+    ctx.globalAlpha = 0.8 + 0.2 * beat;
+    ctx.beginPath();
+    ctx.moveTo(ca * 54, sa * 54);
+    ctx.lineTo(Math.cos(a + 0.62) * 31, Math.sin(a + 0.62) * 31);
+    ctx.lineTo(Math.cos(a - 0.62) * 31, Math.sin(a - 0.62) * 31);
+    ctx.closePath();
+    ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.stroke();
+    ctx.fillStyle = col; ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.font = F(800, 15);
+    ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
+    const lx = -ca * 36, ly = -sa * 36 + (Math.abs(sa) > 0.6 ? (sa > 0 ? -4 : 14) : 4);
+    ctx.lineWidth = 4.5; ctx.strokeStyle = 'rgba(0,0,0,.88)';
     ctx.strokeText(label, lx, ly);
     ctx.fillStyle = col; ctx.fillText(label, lx, ly);
     ctx.restore();

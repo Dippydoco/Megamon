@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Event Pokémon icons'), chg: [
+    T('Events now show their Pokémon: the arrows pointing to an off-screen Treasure Thief (Meowth or Gholdengo), Aegislash or lost Pokémon have a round badge with its picture, and the announcement banner shows the Pokémon next to the text.')
+  ] },
   { d: '2026-10-17', title: T('Shell Bell description'), chg: [
     T('The Shell Bell now says exactly what it does: you heal for 4% of the damage you deal, up to 4 HP per second.')
   ] },

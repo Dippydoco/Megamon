@@ -367,18 +367,30 @@ G.HUD = (() => {
       // ej. la flecha de un duende del tesoro, y salía descolocado).
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       let size = w < 640 ? 24 : 34;
+      const ic = ban.dex && G.DEX_BY[ban.dex] ? 60 : 0;          // room for the event Pokémon's badge
       ctx.font = F(800, size);
       const mw = ctx.measureText(ban.text).width;
-      if (mw > w - 56) { size = Math.max(14, Math.floor(size * (w - 56) / mw)); ctx.font = F(800, size); }
-      const tw = ctx.measureText(ban.text).width, by = h * 0.3;
+      if (mw > w - 56 - ic) { size = Math.max(14, Math.floor(size * (w - 56 - ic) / mw)); ctx.font = F(800, size); }
+      const tw = ctx.measureText(ban.text).width, by = h * 0.3, cw = tw + ic;
       ctx.translate(w / 2, by); ctx.scale(pop, pop);
-      roundRect(ctx, -tw / 2 - 18, -size * 0.85, tw + 36, size * 1.7, size * 0.5);
+      roundRect(ctx, -cw / 2 - 18, -Math.max(size * 0.85, ic ? 36 : 0), cw + 36, Math.max(size * 1.7, ic ? 72 : 0), Math.max(size, ic ? 36 : 0) * 0.5);
       ctx.fillStyle = 'rgba(8,10,20,.62)'; ctx.fill();
+      if (ic) {
+        // The Pokémon of the event, in a round badge on the left.
+        const cx = -cw / 2 + 26;
+        ctx.beginPath(); ctx.arc(cx, 0, 29, 0, 6.2832);
+        ctx.fillStyle = 'rgba(10,12,24,.9)'; ctx.fill();
+        ctx.strokeStyle = '#ffcb3d'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, 0, 26, 0, 6.2832); ctx.clip();
+        portraitBox(ctx, 'banner-ev', { dex: ban.dex }, cx - 26, -26, 52);
+        ctx.restore();
+      }
       ctx.lineJoin = 'round';
       ctx.fillStyle = '#ffcb3d';
       ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineWidth = Math.max(4, size / 6);
-      ctx.strokeText(ban.text, 0, 1);
-      ctx.fillText(ban.text, 0, 1);
+      ctx.strokeText(ban.text, ic / 2, 1);
+      ctx.fillText(ban.text, ic / 2, 1);
       ctx.restore();
     }
 
@@ -748,5 +760,5 @@ G.HUD = (() => {
     }
   }
 
-  return { draw, roundRect, bar };
+  return { draw, roundRect, bar, portraitBox };
 })();
