@@ -97,6 +97,8 @@ G.LevelUp = (() => {
         type: 'stat', key: 'stat:' + s.id,
         icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? 'Evoluciona ' + evoFor.name : 'Mejora',
         title: s.title, desc: s.desc,
+        // How many you have taken so far this run (shown on the card); the healing berry is not a stack.
+        owned: s.id === 'heal' ? null : (pl.statsTaken[s.id] || 0), cap: s.max || 0,
         apply: p => { s.apply(p); p.statsTaken[s.id] = (p.statsTaken[s.id] || 0) + 1; }
       });
     }

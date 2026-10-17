@@ -72,9 +72,11 @@ G.RunUI = (() => {
           ? `<span class="tag-chip" style="background:${c.color}">${c.tag}</span>`
           : `<span class="tag-chip" style="background:${c.color === '#ffd23f' ? '#ffd23f' : '#9fb1c9'}">${c.tag}</span>`;
       if (c.type === 'evo') el.classList.add('evo');
+      const owned = c.type === 'stat' && c.owned != null
+        ? ` <span class="owned-chip${c.owned ? '' : ' none'}" translate="no">Owned ${c.owned}${c.cap ? '/' + c.cap : ''}</span>` : '';
       el.innerHTML =
         `<div class="ico" style="background:${c.color}33">${G.Icons.html(c.icon, 32)}</div>
-         <div class="txt"><div class="nm">${c.title} ${tag}</div><div class="ds">${c.desc}</div></div>
+         <div class="txt"><div class="nm">${c.title} ${tag}${owned}</div><div class="ds">${c.desc}</div></div>
          <div class="key">${i + 1}</div>`;
       el.dataset.sfx = 'none';             // el juego pone su propio sonido al elegir
       el.onclick = () => pick(i);

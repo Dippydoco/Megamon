@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Owned counter on level-up stats'), new: [
+    T('Level-up stat cards (Vigor, Reflexes, Armour and the rest) now show how many of that upgrade you have taken this run, e.g. "Owned 3", or "Owned 3/10" when it has a limit.')
+  ] },
   { d: '2026-10-17', title: T('Defeated by'), new: [
     T('When you faint, the run summary now shows what defeated you: who it was, the attack, its type and how much damage the final hit did, plus the hits just before it. It is also saved in your match history.')
   ] },
