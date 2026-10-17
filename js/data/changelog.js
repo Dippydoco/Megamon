@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Chest targeting range'), chg: [
+    T('Your Pokémon now only prioritises a chest over enemies when the chest is a little closer than before, so it no longer aims at chests that are out of range of the attack.')
+  ] },
   { d: '2026-10-17', title: T('Connection status for joining players'), new: [
     T('When you join a friend\'s room, a status bar now shows whether you are connecting, connected (directly or through the server) or having trouble, and the host\'s card shows the same. A short "Joining…" message appears as soon as you accept an invite.')
   ] },

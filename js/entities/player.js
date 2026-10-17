@@ -393,7 +393,8 @@ G.Player = class Player {
     // los enemigos: así no hace falta ponerse entre un Pokémon y el cofre para romperlo.
     let chest = null;
     if (m) {
-      const cr = Math.min(G.Combat.reach(m), 260);
+      // (reach() includes a margin for starting an attack; take it off, and cap it lower, so you don't aim at chests you can't actually hit)
+      const cr = Math.max(40, Math.min(G.Combat.reach(m) - 25, 225));
       let bd = cr * cr;
       for (const p of G.World.propsInCircle(this.x, this.y, cr)) {
         if (p.type !== 'chest' || p.dead) continue;
