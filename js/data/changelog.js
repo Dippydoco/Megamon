@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Clearer arrows to teammates'), chg: [
+    T('The arrows pointing to off-screen teammates are bigger and now sit on a round badge showing the Pokémon they are playing, with a larger name and distance label. They flash red when a teammate is downed.')
+  ] },
   { d: '2026-10-17', title: T('Spectator bar moved up'), fix: [
     T('The "Spectating" bar now sits higher so it no longer touches the move bar and the selected move\'s name.')
   ] },

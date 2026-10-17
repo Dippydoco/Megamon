@@ -714,39 +714,50 @@ G.HUD = (() => {
     }
     ctx.restore();
 
-    // Flechas hacia los compañeros fuera de la vista.
+    // Arrows to teammates who are off screen: a round badge with the Pokémon they play, a big arrow and a label.
     for (const m of G.Coop.mates) {
       if (!m.connected) continue;
       const o = m.pl;
       const sx = (o.x - cam.left()) * cam.scale, sy = (o.y - o.bodyH * 0.5 - cam.top()) * cam.scale;
       if (sx > 0 && sx < w && sy > 0 && sy < h) continue;
-      const M = 42;
-      const ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 80);
-      const a = Math.atan2(sy - ey, sx - ex);
+      const M = 64;
+      const ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 100);
+      const a = Math.atan2(sy - ey, sx - ex), ca = Math.cos(a), sa = Math.sin(a);
       const metres = Math.round(G.U.dist(pl.x, pl.y, o.x, o.y) / 32);
-      const col = o.dead ? (Math.sin(t * 8) > 0 ? '#ff5f6d' : '#ffd0d5') : m.color;
+      const flash = o.dead && Math.sin(t * 8) > 0;
+      const col = o.dead ? (flash ? '#ff5f6d' : '#ffd0d5') : m.color;
       ctx.save();
       ctx.translate(ex, ey);
-      // Flecha
-      ctx.fillStyle = 'rgba(0,0,0,.55)';
-      ctx.beginPath(); ctx.arc(0, 0, 17, 0, 6.2832); ctx.fill();
-      ctx.fillStyle = col;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * 28, Math.sin(a) * 28);
-      ctx.lineTo(Math.cos(a + 2.4) * 14, Math.sin(a + 2.4) * 14);
-      ctx.lineTo(Math.cos(a - 2.4) * 14, Math.sin(a - 2.4) * 14);
-      ctx.closePath(); ctx.fill();
-      // Inicial del compañero dentro del círculo
-      ctx.font = F(800, 14);
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#fff';
-      ctx.fillText(m.name.charAt(0).toUpperCase(), 0, 5);
-      // Nombre y distancia: al lado contrario de la flecha, para que no se salga
-      const lx = -Math.cos(a) * 30, ly = -Math.sin(a) * 26 + 4;
-      ctx.font = F(800, 12);
-      const label = (o.dead ? '¡' + m.name + ' necesita ayuda! ' : m.name + ' ') + '· ' + metres + ' m';
-      ctx.textAlign = Math.cos(a) > 0.3 ? 'right' : Math.cos(a) < -0.3 ? 'left' : 'center';
-      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+      ctx.lineJoin = 'round';
+      // Badge with the teammate's Pokémon.
+      ctx.beginPath(); ctx.arc(0, 0, 27, 0, 6.2832);
+      ctx.fillStyle = 'rgba(10,14,28,.92)'; ctx.fill();
+      ctx.strokeStyle = col; ctx.lineWidth = 3.5; ctx.stroke();
+      if (G.DEX_BY[o.dex]) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(0, 0, 24, 0, 6.2832); ctx.clip();
+        portraitBox(ctx, 'mate-arrow:' + m.uid, o, -24, -24, 48);
+        ctx.restore();
+      } else {
+        ctx.font = F(800, 20); ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+        ctx.fillText(m.name.charAt(0).toUpperCase(), 0, 7);
+      }
+      // Big arrow outside the badge.
+      const tri = k => {
+        ctx.beginPath();
+        ctx.moveTo(ca * 52 * k, sa * 52 * k);
+        ctx.lineTo(Math.cos(a + 0.62) * 30 * k, Math.sin(a + 0.62) * 30 * k);
+        ctx.lineTo(Math.cos(a - 0.62) * 30 * k, Math.sin(a - 0.62) * 30 * k);
+        ctx.closePath();
+      };
+      tri(1.12); ctx.fillStyle = 'rgba(0,0,0,.85)'; ctx.fill();
+      tri(1); ctx.fillStyle = col; ctx.fill();
+      // Name and distance, opposite the arrow so it stays on screen.
+      const lx = -ca * 36, ly = -sa * 36 + (Math.abs(sa) > 0.6 ? (sa > 0 ? -4 : 14) : 4);
+      ctx.font = F(800, 15);
+      const label = (o.dead ? m.name + ' needs help! ' : m.name + ' ') + '· ' + metres + ' m';
+      ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
+      ctx.lineWidth = 4.5; ctx.strokeStyle = 'rgba(0,0,0,.88)';
       ctx.strokeText(label, lx, ly);
       ctx.fillStyle = col;
       ctx.fillText(label, lx, ly);
