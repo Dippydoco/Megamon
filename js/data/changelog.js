@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Run history'), new: [
+    T('A new History tab on the Missions screen keeps your last 100 runs: Pokémon, date, time survived, level, kills, moves, held item, damage, coins and bosses.'),
+    T('Group runs also list your teammates and their Pokémon. Click a run to see its full details.')
+  ] },
   { d: '2026-10-17', title: T('Gold star for reaching Arceus'), new: [
     T('Any Pokémon that reaches Arceus in a run now gets a little gold star on its portrait: in the Pokédex, on the main menu and in-game. Each Pokémon earns its own.')
   ] },

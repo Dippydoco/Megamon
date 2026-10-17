@@ -85,6 +85,7 @@ G.DB = (() => {
       codes: {},              // huella del código -> fecha: códigos canjeados (js/systems/redeem.js)
       pity: {},               // generación del banner -> tiradas sin ★5
       legends: {},            // dex -> fecha: legendarios vencidos en grietas
+      history: [],            // últimas partidas (más reciente primero, máx. HISTORY_MAX): ver cleanHistory()
       arceus: {},             // dex -> fecha: Pokémon con los que se ha llegado a Arceus (estrella dorada)
       arenas: {},             // tipo -> fecha: arenas de grieta ganadas
       itemsFound: {},         // id -> fecha: objetos equipables encontrados
@@ -95,6 +96,40 @@ G.DB = (() => {
       stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
                bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 }
     };
+  }
+
+  // ---------------- historial de partidas ----------------
+  /*
+   * Cada partida acaba en save.history (la más reciente primero, hasta HISTORY_MAX):
+   *   id fecha (ms) · d dex · sh shiny · t segundos · lv nivel · k derrotados · b jefes · c monedas
+   *   dd daño hecho · dt daño recibido · m [[movimiento, nivel]] · it objeto · x 1 = caíste (0 = abandonaste)
+   *   g 1 = en grupo · mt [[nombre, dex, shiny]] compañeros · ar [segundos, legendarios] ante Arceus (o 0)
+   */
+  const HISTORY_MAX = 100;
+  function cleanHistory(list) {
+    const n = v => (Number.isFinite(+v) && +v > 0 ? Math.floor(+v) : 0);
+    const out = [], seen = new Set();
+    for (const e of Array.isArray(list) ? list : []) {
+      if (!isObj(e) || !n(e.id) || seen.has(e.id) || (G.DEX_BY && !G.DEX_BY[e.d])) continue;
+      seen.add(e.id);
+      out.push({
+        id: n(e.id), d: n(e.d), sh: e.sh ? 1 : 0, t: Math.min(n(e.t), 86400), lv: n(e.lv), k: n(e.k), b: n(e.b), c: n(e.c),
+        dd: n(e.dd), dt: n(e.dt),
+        m: (Array.isArray(e.m) ? e.m : []).filter(x => Array.isArray(x) && typeof x[0] === 'string' && (!G.Moves || G.Moves.BY_ID[x[0]]))
+            .slice(0, 12).map(x => [x[0], Math.min(n(x[1]), 99)]),
+        it: typeof e.it === 'string' && (!G.Items || !e.it || G.Items.BY[e.it]) ? e.it : '',
+        x: e.x ? 1 : 0, g: e.g ? 1 : 0,
+        mt: (Array.isArray(e.mt) ? e.mt : []).filter(x => Array.isArray(x)).slice(0, 4)
+            .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
+        ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0
+      });
+    }
+    return out.sort((a, b) => b.id - a.id).slice(0, HISTORY_MAX);
+  }
+  /** Apunta una partida acabada al principio del historial. */
+  function addHistory(entry) {
+    if (!save) return;
+    save.history = cleanHistory([entry, ...(save.history || [])]);
   }
 
   /** Rellena campos que falten en partidas de versiones anteriores. */
@@ -112,6 +147,7 @@ G.DB = (() => {
       s.pupgDone = true;
     }
     s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
+    s.history = cleanHistory(s.history);
     sanitize(s);
     s.v = VERSION;
     return s;
@@ -265,6 +301,8 @@ G.DB = (() => {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }
+    // Historial: unión de las partidas de las dos copias (por fecha), con el tope.
+    r.history = cleanHistory([...(r.history || []), ...(older.history || [])]);
     // Misiones del mismo día/semana: el mayor progreso y lo ya recogido.
     const mo = older.missions || {}, mr = r.missions = r.missions || {};
     for (const [per, list] of [['day', 'daily'], ['week', 'weekly']]) {
@@ -848,7 +886,7 @@ G.DB = (() => {
 
   return {
     ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow,
-    owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf,
+    owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, HISTORY_MAX,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },
     /** Acceso de bajo nivel para los módulos de red (sólo en modo nube). */

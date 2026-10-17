@@ -591,6 +591,29 @@ select.field { font-family: var(--font); }
   padding: 10px 12px; margin-bottom: 6px; border-radius: 8px;
   background: rgba(0,0,0,.22); border: 2px solid rgba(244,248,255,.14);
 }
+/* Run history (goals-ui.js) */
+.hist-run { margin-bottom: 6px; border-radius: 8px; background: rgba(0,0,0,.22); border: 2px solid rgba(244,248,255,.14); }
+.hist-run.open { border-color: var(--edge); background: rgba(255,255,255,.06); }
+.hist-head { display: grid; grid-template-columns: 48px 1fr auto auto; gap: 12px; align-items: center; padding: 6px 12px; cursor: pointer; }
+.hist-main b { display: block; font-size: 15px; }
+.hist-main small, .hist-nums small { color: var(--muted); font-size: 12px; }
+.hist-nums { text-align: right; }
+.hist-t { display: block; font-weight: 800; font-size: 17px; }
+.hist-t.best { color: var(--gold); }
+.hist-tag { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 9px; background: rgba(159,177,201,.25); }
+.hist-tag.grp { background: rgba(95,212,255,.25); color: #9fe6ff; }
+.hist-detail { display: none; padding: 4px 14px 12px; }
+.hist-run.open .hist-detail { display: block; }
+.hist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 14px; margin-bottom: 10px; }
+.hist-grid span, .hist-moves > span, .hist-mates > span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.hist-grid b { font-size: 14px; }
+.hist-moves i { display: inline-block; font-style: normal; font-size: 13px; margin: 3px 12px 0 0; }
+.hist-mates { margin-top: 10px; }
+.hist-mate-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.hist-mate { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 8px; background: rgba(0,0,0,.25); }
+.hist-mate b { font-size: 13px; display: block; } .hist-mate small { color: var(--muted); font-size: 11px; display: block; }
+@media (max-width: 760px) { .hist-head { grid-template-columns: 48px 1fr auto; } .hist-tag { display: none; } .hist-grid { grid-template-columns: repeat(2, 1fr); } }
+
 .mission.ready { border-color: var(--gold); background: rgba(255,210,63,.1); }
 .mission.claimed { opacity: .55; }
 .mission small, .ach small { color: var(--muted); font-size: 12px; }

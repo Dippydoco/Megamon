@@ -35,7 +35,72 @@
       box.innerHTML = '';
       if (tab === 'missions') missions(box);
       else if (tab === 'ach') achievements(box);
+      else if (tab === 'history') history(box);
       else profile(box);
+    }
+
+    // ---------------- history (last 100 runs) ----------------
+
+    let histShown = 20, histOpen = null;
+    const fmtDate = ms => new Date(ms).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const num = n => (n || 0).toLocaleString('en-GB');
+
+    function history(box) {
+      const list = G.DB.save.history || [];
+      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Run history</h3>
+        <span class="sub" translate="no">Last ${G.DB.HISTORY_MAX} runs · ${list.length} saved</span></div>`);
+      if (!list.length) { box.insertAdjacentHTML('beforeend', '<p class="sub">No runs yet. Finish a run and it will show up here.</p>'); return; }
+      const best = Math.max(...list.map(e => e.t));
+      list.slice(0, histShown).forEach(e => {
+        const mon = G.DEX_BY[e.d];
+        const el = document.createElement('div');
+        el.className = 'hist-run' + (histOpen === e.id ? ' open' : '');
+        const mates = e.mt || [];
+        el.innerHTML = `
+          <div class="hist-head">
+            <span class="hist-mon"></span>
+            <div class="hist-main">
+              <b translate="no">${esc(mon ? mon.name : '?')}${e.sh ? ' ' + G.Icons.html('shiny', 12) : ''}${e.ar ? ' ' + G.Icons.html('star', 14) : ''}</b>
+              <small translate="no">${fmtDate(e.id)}</small>
+            </div>
+            <div class="hist-nums" translate="no">
+              <span class="hist-t${e.t === best ? ' best' : ''}">${fmt(e.t)}</span>
+              <small>Lv. ${e.lv} · ${num(e.k)} kills</small>
+            </div>
+            <span class="hist-tag ${e.g ? 'grp' : ''}" translate="no">${e.g ? 'Group' : 'Solo'}</span>
+          </div>
+          <div class="hist-detail">
+            <div class="hist-grid">
+              <div><span>Result</span><b>${e.x ? 'Fainted' : 'Left the run'}</b></div>
+              <div><span>Bosses beaten</span><b>${num(e.b)}</b></div>
+              <div><span>Coins earned</span><b>${num(e.c)}</b></div>
+              <div><span>Damage dealt</span><b>${num(e.dd)}</b></div>
+              <div><span>Damage taken</span><b>${num(e.dt)}</b></div>
+              <div><span>Held item</span><b>${e.it && G.Items.BY[e.it] ? esc(G.Items.BY[e.it].name) : '—'}</b></div>
+              ${e.ar ? `<div style="grid-column:1/-1"><span>Arceus</span><b>${G.Icons.html('star', 14)} Reached Arceus: ${fmt(e.ar[0])} in the fight · ${e.ar[1]} legendaries beaten</b></div>` : ''}
+            </div>
+            <div class="hist-moves"><span>Moves</span>
+              ${e.m.length ? e.m.map(([id, lv]) => `<i>${G.Icons.html('move:' + id, 16)} ${esc(G.Moves.BY_ID[id].name)} Lv.${lv}</i>`).join('') : '<i>—</i>'}</div>
+            ${mates.length ? `<div class="hist-mates"><span>Teammates</span><div class="hist-mate-row"></div></div>` : ''}
+          </div>`;
+        el.querySelector('.hist-mon').appendChild(G.UI.spriteCanvas(e.d, 44, 40, { scale: 1, shiny: !!e.sh }));
+        const mr = el.querySelector('.hist-mate-row');
+        if (mr) mates.forEach(([n, d, sh]) => {
+          const m = document.createElement('span');
+          m.className = 'hist-mate';
+          if (G.DEX_BY[d]) m.appendChild(G.UI.spriteCanvas(d, 32, 30, { scale: 1, shiny: !!sh }));
+          m.insertAdjacentHTML('beforeend', `<b translate="no">${esc(n)}</b><small translate="no">${G.DEX_BY[d] ? esc(G.DEX_BY[d].name) : ''}</small>`);
+          mr.appendChild(m);
+        });
+        el.querySelector('.hist-head').onclick = () => { histOpen = histOpen === e.id ? null : e.id; render(); };
+        box.appendChild(el);
+      });
+      if (list.length > histShown) {
+        const more = document.createElement('button');
+        more.className = 'btn small ghost'; more.textContent = 'Show more (' + (list.length - histShown) + ' left)';
+        more.onclick = () => { histShown += 20; render(); };
+        box.appendChild(more);
+      }
     }
 
     // ---------------- misiones ----------------
