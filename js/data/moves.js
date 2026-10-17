@@ -381,8 +381,15 @@
       cd: 3.5, dmg: 15, rate: 0.55, dur: 6, count: 1, range: 300, speed: 300, size: 7, burn: 1 },
 
     { id: 'substitute', name: 'Sustituto', type: 'normal', kind: 'turret',
-      desc: 'Un muñeco que se queda disparando por ti.',
-      cd: 4.0, dmg: 14, rate: 0.4, dur: 6, count: 1, range: 280, speed: 320, size: 6 },
+      desc: 'A plush decoy: nearby enemies go for it instead of you, it shoots back, and it explodes when it breaks.',
+      cd: 4.0, dmg: 14, rate: 0.4, dur: 7, count: 1, range: 280, speed: 320, size: 6,
+      hp: 8, radius: 70, boom: 3, taunt: 340,
+      ups: [
+        { t: 'Takes 4 more hits before it breaks', m: { hp: 4 } },
+        { t: '+50% damage', m: { dmg: 1.50 } },
+        { t: '+4 hits and a 30% bigger explosion', m: { hp: 4, radius: 1.30 } },
+        { t: '+50% duration and a 50% stronger explosion', m: { dur: 1.50, boom: 1.50 } }
+      ] },
 
     { id: 'aerial-ace', name: 'Golpe Aéreo', type: 'flying', kind: 'dash',
       desc: 'Te lanzas en picado y cortas todo lo que cruzas.',
@@ -417,7 +424,7 @@
 
   const BY_ID = {};
   for (const m of RAW) {
-    m.ups = LADDERS[m.kind];
+    m.ups = m.ups || LADDERS[m.kind];
     m.maxLvl = m.ups.length + 1;
     BY_ID[m.id] = m;
   }
@@ -441,8 +448,8 @@
     return s;
   }
 
-  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate'];
-  const ADD = ['count', 'pierce', 'stacks'];
+  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'boom'];
+  const ADD = ['count', 'pierce', 'stacks', 'hp'];
 
   function applyMods(s, m) {
     for (const k in m) {
@@ -537,12 +544,16 @@
     cone:       { t: '×1,7 daño, +4 disparos y +1 perforación', m: { dmg: 1.7, count: 4, pierce: 1 } }
   };
 
+  // Moves whose evolution differs from the generic one of their kind.
+  const EVO_OWN = { substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } } };
+  const evoMods = m => EVO_OWN[m.id] || EVO_MODS[m.kind];
+
   /** ¿Puede evolucionar ya? → { name, needs, needName, text, ready } o null */
   function evoInfo(m, statsTaken) {
     const e = EVO[m.id];
-    if (!e || m.evolved || m.lvl < m.def.maxLvl || !EVO_MODS[m.kind]) return null;
+    if (!e || m.evolved || m.lvl < m.def.maxLvl || !evoMods(m)) return null;
     const [name, needs] = e;
-    return { name, needs, needName: NEED_NAME[needs], text: EVO_MODS[m.kind].t,
+    return { name, needs, needName: NEED_NAME[needs], text: evoMods(m).t,
              ready: !!(statsTaken && statsTaken[needs]) };
   }
 
@@ -550,7 +561,7 @@
   function evolve(m) {
     const e = EVO[m.id];
     if (!e || m.evolved) return false;
-    applyMods(m, EVO_MODS[m.kind].m);
+    applyMods(m, evoMods(m).m);
     m.baseName = m.name;
     m.name = e[0];
     m.evolved = true;

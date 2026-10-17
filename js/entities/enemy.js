@@ -960,7 +960,11 @@
       rebuildGrid();
       for (const e of list) {
         if (e.remote) e.netUpdate(dt);
-        else e.update(dt, nearestPlayer(players, e.x, e.y) || pl);
+        else {
+          const tp = nearestPlayer(players, e.x, e.y) || pl;
+          const dc = G.Combat.decoyFor(e, tp);       // Substitute: go for the decoy instead
+          e.update(dt, dc ? G.Combat.decoyTarget(dc, tp) : tp);
+        }
       }
       if (!G.Coop.active || G.Coop.isHost) separate(dt);
       for (let i = list.length - 1; i >= 0; i--) {

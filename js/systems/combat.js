@@ -286,10 +286,67 @@ G.Combat = (() => {
     const col = G.U.TYPE_COLOR[m.type], vis = G.VFX.forMove(m);
     const a = pl.aim + Math.PI + G.U.rand(-0.6, 0.6);
     fields.push({ kind: 'turret', owner: pl, ghost, m, col, vis, x: pl.x + Math.cos(a) * 26, y: pl.y + Math.sin(a) * 20,
-                  t: 0, life: m.dur || 6, shotT: 0.3, dmg: m.dmg * pl.atk });
+                  t: 0, life: m.dur || 6, shotT: 0.3, dmg: m.dmg * pl.atk,
+                  hp: m.hp || 0, maxHp: m.hp || 0, hitCd: 0, hurtT: 0 });
     const mine = fields.filter(f => f.kind === 'turret' && f.owner === pl && !f.gone);
     for (const f of mine.slice(0, Math.max(0, mine.length - Math.max(1, m.count | 0)))) f.gone = true;
     G.FX.ring(pl.x, pl.y, 4, 30, col, 0.3, 2);
+  }
+
+  /**
+   * Substitute: the decoy enemies go for. Returns it if `e` should chase it instead of the player
+   * (ordinary enemies within its taunt range that are not already on top of the player).
+   */
+  function decoyFor(e, pl) {
+    if (e.boss || e.legend || e.judge || e.behavior === 'thief' || e.behavior === 'aegis') return null;
+    let best = null, bd = Infinity;
+    for (const f of fields) {
+      if (f.kind !== 'turret' || !f.hp || f.ghost || f.gone || f.t < 0.25) continue;
+      const d = G.U.dist2(e.x, e.y, f.x, f.y), rg = f.m.taunt || 320;
+      if (d < rg * rg && d < bd) { bd = d; best = f; }
+    }
+    if (!best) return null;
+    if (pl && G.U.dist2(e.x, e.y, pl.x, pl.y) < 70 * 70) return null;      // already on you: keep hitting you
+    return best;
+  }
+
+  /** The decoy as a stand-in "player" for enemy AI (position, size, no velocity). */
+  function decoyTarget(f, pl) {
+    const t = Object.create(pl);
+    t.x = f.x; t.y = f.y; t.r = 12; t._vx = 0; t._vy = 0; t.dead = false;
+    return t;
+  }
+
+  /** Enemies touching the decoy hit it; at 0 hits it breaks and explodes. */
+  function decoyContacts(dt) {
+    for (let i = fields.length - 1; i >= 0; i--) {
+      const f = fields[i];
+      if (f.kind !== 'turret' || !f.hp || f.ghost || f.gone) continue;
+      if (f.hitCd > 0) f.hitCd -= dt;
+      if (f.hurtT > 0) f.hurtT -= dt;
+      for (const e of G.EnemyMgr.queryCircle(f.x, f.y, 40)) {
+        if (G.U.dist2(e.x, e.y, f.x, f.y) > (e.r + 12) * (e.r + 12)) continue;
+        if (e.touchCd > 0 || e.freezeT > 0 || e.behavior === 'thief' || e.boss) continue;
+        e.touchCd = 0.55;
+        e.strike(f);
+        const [nx, ny] = G.U.norm(e.x - f.x, e.y - f.y);
+        e.kx += nx * 150; e.ky += ny * 150;
+        if (f.hitCd > 0) continue;
+        f.hitCd = 0.25; f.hurtT = 0.2; f.hp--;
+        G.FX.burst(f.x, f.y - 14, '#e8dcb8', 4, 70);
+        if (G.Camera.sees(f.x, f.y, 40)) G.Audio.sfx('hit');
+        if (f.hp <= 0) { breakDecoy(f); fields.splice(i, 1); break; }
+      }
+    }
+  }
+
+  function breakDecoy(f) {
+    const r = f.m.radius || 70;
+    G.FX.ring(f.x, f.y, 6, r, f.col, 0.4, 5);
+    G.FX.burst(f.x, f.y - 12, '#e8dcb8', 18, 190);
+    G.FX.burst(f.x, f.y - 12, f.col, 10, 150);
+    if (G.Camera.sees(f.x, f.y, 40)) { G.Audio.sfx('break'); G.Camera.kick(0.25); }
+    blast(f, r, f.m.boom || 3);
   }
 
   /** Embestida: cruzas como un rayo hacia el enemigo y golpeas a todo lo del camino. */
@@ -359,6 +416,7 @@ G.Combat = (() => {
   }
 
   function updateFields(dt) {
+    decoyContacts(dt);
     for (let i = fields.length - 1; i >= 0; i--) {
       const f = fields[i];
       f.t += dt;
@@ -510,9 +568,16 @@ G.Combat = (() => {
         if (doll) {
           const k = G.Sprites.PX * ((f.owner.anim && f.owner.anim.scale) || 1) * 0.9;
           const prev = ctx.globalAlpha, imgS = ctx.imageSmoothingEnabled;
-          ctx.globalAlpha = prev * fade; ctx.imageSmoothingEnabled = false;
+          ctx.globalAlpha = prev * fade * (f.hurtT > 0 && Math.floor(f.hurtT * 40) % 2 ? 0.45 : 1); ctx.imageSmoothingEnabled = false;
           ctx.drawImage(doll.cv, Math.round(f.x - doll.ax * k), Math.round(f.y - 8 + bob - doll.ay * k), doll.cv.width * k, doll.cv.height * k);
           ctx.globalAlpha = prev; ctx.imageSmoothingEnabled = imgS;
+          if (f.maxHp) {       // little stitches: one per hit it can still take
+            const n = f.maxHp, sw = Math.min(5, 36 / n), w = n * sw, bx = Math.round(f.x - w / 2), by = Math.round(f.y - 8 + bob - doll.ay * k - 7);
+            ctx.globalAlpha = prev * fade;
+            ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(bx - 1, by - 1, w + 2, 5);
+            for (let i = 0; i < n; i++) { ctx.fillStyle = i < f.hp ? '#f6eed2' : '#5b4632'; ctx.fillRect(bx + i * sw, by, Math.max(1, sw - 1), 3); }
+            ctx.globalAlpha = prev;
+          }
         } else G.VFX.draw(ctx, f.vis.proj, f.vis.pal, f.x, f.y - 16 + bob, { scale: 1.5, alpha: fade, frame: Math.floor(now * 8) });
       }
     }
@@ -740,6 +805,6 @@ G.Combat = (() => {
     }
   }
 
-  return { reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  return { decoyFor, decoyTarget, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();

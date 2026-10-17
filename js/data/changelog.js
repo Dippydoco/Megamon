@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Substitute is now a decoy'), chg: [
+    T('Substitute now draws enemies to it: ordinary enemies near the doll go for it instead of you. It can take 8 hits (little stitches above it show how many are left), then it breaks and explodes. It still shoots enemies while it stands.'),
+    T('Its upgrades now add more hits it can take, a bigger and stronger explosion, extra damage and a longer life (it no longer places a second doll). Bosses ignore it.')
+  ] },
   { d: '2026-10-17', title: T('Substitute is now a doll'), chg: [
     T('Substitute now leaves a stitched plush doll of your own Pokémon instead of a little star. It still shoots at enemies for a few seconds.')
   ] },
