@@ -151,13 +151,50 @@ G.Social = (() => {
   let playing = false, lastBeat = 0;
   /** ¿Hay alguien que pueda leer tu "en línea"? (sólo los amigos confirmados) */
   const hasFriends = () => [...friends.values()].some(f => f.status === 'ok');
+  // What you are doing (menu, gacha, in a run...) and, for runs, when it started (server clock).
+  // Friends read it with the rest of your status. Written only when it changes (at most one write
+  // per ACT_GAP) plus a light heartbeat during a run; turned off by the "Show what I'm doing" setting.
+  const ACTS = new Set(['menu', 'gacha', 'upgrades', 'dex', 'rank', 'goals', 'lobby', 'run', 'group', 'arceus']);
+  const RUNS = new Set(['run', 'group', 'arceus']);
+  const ACT_GAP = 30 * 1000, RUN_FRESH = 12 * 60 * 1000;
+  let act = '', actSince = 0, actOk = true, actT = 0;
+
   function writeStatus(on = true) {
     // Sin amigos nadie lo lee: no se gasta una escritura (cupo diario de Firebase).
     if (!fb || !me || !hasFriends()) return;
     lastBeat = Date.now();
-    fb.fs.collection('pres').doc(uid).set({ on, at: fts(), room: room ? room.id : '', play: playing }).catch(() => {});
+    if (!act && G.Activity) { const c = G.Activity.current(); act = c.act; actSince = c.since; }   // first write after login
+    const doc = { on, at: fts(), room: room ? room.id : '', play: playing };
+    if (actOk) {
+      const share = on && G.Settings.get('shareAct') !== false;
+      doc.act = share ? act : '';
+      doc.since = share && RUNS.has(act) ? Math.round(actSince) : 0;
+    }
+    fb.fs.collection('pres').doc(uid).set(doc).catch(e => {
+      // Rules not republished yet (they don't know act/since): keep the old status working.
+      if (actOk && e && e.code === 'permission-denied') {
+        actOk = false;
+        fb.fs.collection('pres').doc(uid).set({ on, at: fts(), room: room ? room.id : '', play: playing }).catch(() => {});
+      }
+    });
   }
   function setPlaying(p) { if (playing !== !!p) { playing = !!p; writeStatus(); } }
+
+  /** Tell friends what you are doing. `since` = server-clock ms when the run started (runs only). */
+  function setActivity(a, since = 0) {
+    if (!ACTS.has(a)) a = '';
+    if (a === act && (!since || Math.abs(since - actSince) < 5000)) return;
+    act = a; actSince = since || 0;
+    if (!started || actT) return;
+    const wait = Math.max(0, ACT_GAP - (Date.now() - lastBeat));
+    if (!wait) writeStatus();
+    else actT = setTimeout(() => { actT = 0; writeStatus(); }, wait);
+  }
+  /** Re-send the status if the last one is older than `minAge` ms (run heartbeat; 0 = now). */
+  function touch(minAge = 0) {
+    if (!started || document.visibilityState !== 'visible') return;
+    if (Date.now() - lastBeat >= minAge) writeStatus();
+  }
   // Al volver a la pestaña tras un rato, un latido; al cerrarla, "desconectado".
   function onVisible() { if (document.visibilityState === 'visible' && Date.now() - lastBeat > BEAT) writeStatus(); }
   function onHide() { writeStatus(false); }
@@ -240,7 +277,13 @@ G.Social = (() => {
     ok.forEach((f, i) => {
       const v = docs[i] && docs[i].exists ? docs[i].data() : null;
       const on = !!(v && v.on && t - msOf(v.at) < ONLINE);
-      const p = { online: on, play: !!(on && v.play), room: on ? v.room : '', seen: v ? msOf(v.at) : 0 };
+      const p = { online: on, play: !!(on && v.play), room: on ? v.room : '', seen: v ? msOf(v.at) : 0, act: '', since: 0 };
+      if (on && typeof v.act === 'string' && ACTS.has(v.act)) {
+        // A run with no recent sign of life (crash, closed tab) is not shown as a run.
+        if (!RUNS.has(v.act) || t - msOf(v.at) < RUN_FRESH) p.act = v.act;
+        const sn = +v.since;
+        if (RUNS.has(p.act) && Number.isFinite(sn) && sn > 0 && sn <= t + 60000 && t - sn < 6 * 3600 * 1000) p.since = sn;
+      }
       pres.set(f.uid, p);
       // La lista de amigos puede haberse renovado mientras se leía: se aplica a la actual.
       const cur = friends.get(f.uid);
@@ -565,7 +608,7 @@ G.Social = (() => {
 
   return {
     start, stop, claimNick, request, accept, remove, publishProfile, getProfile, profileData,
-    createRoom, joinRoom, leaveRoom, setOpen, refreshMember, setPlaying, refreshPresence,
+    createRoom, joinRoom, leaveRoom, setOpen, refreshMember, setPlaying, setActivity, touch, refreshPresence,
     invite, acceptInvite, declineInvite,
     on(fn) { listeners.add(fn); }, off(fn) { listeners.delete(fn); },
     get me() { return me; },

@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Friends: what they are doing'), new: [
+    T('The friends list now shows what online friends are up to: in the menu, opening gacha packs, browsing upgrades or the Pokédex, in a lobby, in a run or group run (with a live timer showing how long it has lasted) or facing Arceus.'),
+    T('Prefer to keep it private? Settings > Account > "Show what I\'m doing". When it is off, friends only see that you are online.')
+  ] },
   { d: '2026-10-17', title: T('Balance: gentler difficulty curve'), chg: [
     T('Enemy damage is a little lower across the whole run (x2.2 instead of x2.4).'),
     T('New enemy tiers now phase in over about 100 seconds: their first arrivals start closer to the previous tier\'s strength and rise to full strength, so there is no sudden jump when a new tier begins.'),

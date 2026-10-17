@@ -65,6 +65,9 @@
       };
       $('fr-room').onclick = () => G.LobbyUI.open();
       G.Social.on(() => { if (G.UI.isOpen('scr-friends')) render(); });
+      setInterval(() => { if (G.UI.isOpen('scr-friends') && document.visibilityState === 'visible') tickClocks(); }, 1000);
+      // While the list is open, friends' activity is re-read about once a minute (cached 60 s inside refreshPresence).
+      setInterval(() => { if (G.UI.isOpen('scr-friends') && document.visibilityState === 'visible') G.Social.refreshPresence(); }, 30000);
     }
 
     function msg(t, bad) {
@@ -84,11 +87,24 @@
       return 'hace ' + Math.round(h / 24) + ' días';
     }
 
+    // What an online friend is doing (G.Activity). Runs show how long they have been going.
+    const ACT = { menu: 'In the menu', gacha: 'Opening gacha packs', upgrades: 'Browsing upgrades', dex: 'Browsing the Pokédex',
+                  rank: 'Viewing rankings', goals: 'Viewing goals', lobby: 'In a lobby', run: 'In a run', group: 'In a group run', arceus: 'Facing Arceus' };
+    const isRun = f => f.act === 'run' || f.act === 'group' || f.act === 'arceus';
+    const runClock = f => G.U.mmss(Math.max(0, (G.Social.now() - f.since) / 1000));
     function stateText(f) {
       if (f.status === 'in') return 'Quiere ser tu amigo';
       if (f.status === 'out') return 'Solicitud enviada';
       if (!f.online) return f.seen ? 'Visto ' + ago(f.seen) : 'Desconectado';
+      if (f.act && ACT[f.act]) return ACT[f.act] + (isRun(f) && f.since ? ' · ' + runClock(f) : '');
       return f.play ? 'Jugando' : 'En línea';
+    }
+    /** Keeps the run clocks in the list ticking. */
+    function tickClocks() {
+      document.querySelectorAll('#fr-list .st[data-uid]').forEach(el => {
+        const f = G.Social.friends.find(x => x.uid === el.dataset.uid);
+        if (f && f.online && isRun(f) && f.since) el.textContent = ACT[f.act] + ' · ' + runClock(f);
+      });
     }
 
     function render() {
@@ -96,7 +112,7 @@
       $('fr-me').innerHTML = 'Tu apodo: <b class="gold" translate="no">' + esc(G.Social.me ? G.Social.me.name : '') + '</b> · dáselo a tus amigos para que te añadan.';
       $('fr-room').classList.toggle('hidden', !room);
       const list = G.Social.friends.sort((a, b) => {
-        const rank = f => f.status === 'in' ? 0 : f.status === 'ok' ? (f.online ? (f.play ? 2 : 1) : 3) : 4;
+        const rank = f => f.status === 'in' ? 0 : f.status === 'ok' ? (f.online ? (f.play || isRun(f) ? 2 : 1) : 3) : 4;
         return rank(a) - rank(b) || a.name.localeCompare(b.name);
       });
       const box = $('fr-list');
@@ -108,9 +124,9 @@
       for (const f of list) {
         const el = document.createElement('div');
         el.className = 'fr-row';
-        const dot = f.status !== 'ok' ? 'pend' : !f.online ? 'off' : f.play ? 'play' : 'on';
+        const dot = f.status !== 'ok' ? 'pend' : !f.online ? 'off' : f.play || isRun(f) ? 'play' : 'on';
         const inRoom = room && room.members.some(m => m.uid === f.uid);
-        el.innerHTML = `<i class="dot ${dot}"></i><b translate="no"><a href="#" class="plink" title="Ver su perfil">${esc(f.name)}</a></b><span class="st">${inRoom ? 'En tu sala' : stateText(f)}</span><span class="grow"></span>`;
+        el.innerHTML = `<i class="dot ${dot}"></i><b translate="no"><a href="#" class="plink" title="Ver su perfil">${esc(f.name)}</a></b><span class="st" data-uid="${esc(f.uid)}">${inRoom ? 'En tu sala' : stateText(f)}</span><span class="grow"></span>`;
         if (f.status === 'ok') el.querySelector('.plink').onclick = e => { e.preventDefault(); G.ProfileUI.show(f.uid); };
         if (f.status === 'ok') {
           // Favourite Pokémon (up to 3) next to the name; profile comes from the 10-min cache.
@@ -142,7 +158,7 @@
           const n = G.Chat.unread(f.uid);
           const cb = btn(n ? 'Chat (' + n + ')' : 'Chat', n ? 'gold' : 'ghost', () => G.DMUI.open(f.uid));
           cb.title = n ? n + ' unread' : 'Chat with ' + f.name;
-          if (f.online && !f.play && !inRoom && (!room || room.isHost)) {
+          if (f.online && !f.play && !isRun(f) && !inRoom && (!room || room.isHost)) {
             btn('Invitar', 'gold', async () => {
               const r = await G.Social.invite(f.uid);
               msg(r.ok ? r.msg : r.error, !r.ok);
