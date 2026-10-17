@@ -85,6 +85,7 @@ G.DB = (() => {
       codes: {},              // huella del código -> fecha: códigos canjeados (js/systems/redeem.js)
       pity: {},               // generación del banner -> tiradas sin ★5
       legends: {},            // dex -> fecha: legendarios vencidos en grietas
+      arceus: {},             // dex -> fecha: Pokémon con los que se ha llegado a Arceus (estrella dorada)
       arenas: {},             // tipo -> fecha: arenas de grieta ganadas
       itemsFound: {},         // id -> fecha: objetos equipables encontrados
       evoMoves: {},           // id -> fecha: movimientos evolucionados alguna vez
@@ -260,7 +261,7 @@ G.DB = (() => {
     }
     r.pupgDone = r.pupgDone || older.pupgDone;
     // Lo conseguido nunca se pierde: unión de legendarios, arenas, objetos, logros...
-    for (const coll of ['legends', 'arenas', 'itemsFound', 'evoMoves', 'ach']) {
+    for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach']) {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }

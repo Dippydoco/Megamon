@@ -162,7 +162,7 @@ G.Judgment = (() => {
     if (!ported) port();
     land(true);
     arenaT = 0; bossT = 1.2; bossN = 0; downs = 0;
-    G.Progress.event('judge');
+    G.Progress.event('judge', { dex: G.Game.player ? G.Game.player.dex : 0 });
     // Vida del primer legendario: unos 3 s de vuestro daño a un enemigo (y un mínimo).
     const n = G.Game.everyone().length, t = G.Game.st.time;
     const floor = (3200 + t * 9) * 0.35 * G.Coop.scaleHp(n);

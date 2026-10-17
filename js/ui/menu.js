@@ -41,7 +41,7 @@ G.MenuUI = (() => {
     G.UI.sprite($('menu-partner'), mon.dex, { lively: true, scale: 4, hero: true, shiny });
     $('menu-partner').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
     $('menu-partner').classList.toggle('shiny', shiny);
-    $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '');
+    $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '') + (reachedArceus(mon.dex) ? ' ' + arcStar(24) : '');
     $('menu-partner-info').innerHTML = G.UI.typeChips(mon.types) + ' ' + G.UI.stars(mon.rarity);
     // Normal / shiny a mano, aquí mismo (en el móvil no se encontraba en la ficha).
     const seg = $('menu-shiny');
@@ -143,6 +143,11 @@ G.MenuUI = (() => {
   // (Para quitarla, borra el número de aquí. Añadidos el 17-10-2026.)
   const NEW_DEX = new Set([593, 865, 879, 948, 1025]);
 
+  /** Gold star: this Pokémon has reached Arceus in a run. */
+  const reachedArceus = dex => !!(G.DB.save.arceus && G.DB.save.arceus[dex]);
+  const ARC_TITLE = 'Reached Arceus';
+  const arcStar = size => `<span title="${ARC_TITLE}">${G.Icons.html('star', size)}</span>`;
+
   function renderGrid() {
     const s = G.DB.save;
     const grid = $('dex-grid');
@@ -160,6 +165,7 @@ G.MenuUI = (() => {
       cell.className = 'cell' + (own ? '' : ' locked') + (p.dex === dexSel ? ' on' : '');
       cell.insertAdjacentHTML('beforeend', `<span class="no">${String(p.dex).padStart(3, '0')}</span>`);
       if (NEW_DEX.has(p.dex)) cell.insertAdjacentHTML('beforeend', '<span class="tag-new">NEW</span>');
+      if (own && reachedArceus(p.dex)) cell.insertAdjacentHTML('beforeend', `<span class="badge-arc${p.dex === s.partner || sh ? ' shift' : ''}" title="${ARC_TITLE}">${G.Icons.html('star', 14)}</span>`);
       if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Compañero">${G.Icons.html('crown', 14)}</span>`);
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Tienes su shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
@@ -202,7 +208,7 @@ G.MenuUI = (() => {
           <button class="${viewShiny ? 'on' : ''}" data-v="1">${G.Icons.html('shiny', 12)} Shiny</button></div>` : ''}
       <div class="center">
         <div style="color:var(--muted);font-size:13px">Nº ${String(p.dex).padStart(3, '0')} · ${GEN_NAMES[p.gen - 1]}</div>
-        <h3>${own ? p.name : '???'}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
+        <h3>${own ? p.name : '???'}${own && reachedArceus(p.dex) ? ' ' + arcStar(20) : ''}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
         <div style="color:${G.Gacha.RARITY_COLOR[p.rarity]}">${G.UI.stars(p.rarity, 24)} ${G.Gacha.RARITY_NAME[p.rarity]}</div>
         <div style="margin:6px 0">${own ? G.UI.typeChips(p.types) : ''}</div>
       </div>

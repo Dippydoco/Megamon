@@ -602,6 +602,8 @@ G.HUD = (() => {
     if (c.dead) ctx.globalAlpha = 0.4;
     pt.draw(ctx, ix + CARD_IC / 2, iy + CARD_IC - 3);
     ctx.restore();
+    // Gold star on your own portrait if this Pokémon has reached Arceus.
+    if (c.key === 'me' && G.DB.save.arceus && G.DB.save.arceus[o.dex]) G.Icons.draw(ctx, 'star', ix + CARD_IC - 9, iy - 5, 13);
     // Nombre (y nivel), vida y barra
     const tx = x + CARD_IC + 10;
     ctx.textAlign = 'left';

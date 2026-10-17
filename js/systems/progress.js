@@ -155,6 +155,8 @@ G.Progress = (() => {
         break;
       case 'judge':
         S.judged = (S.judged || 0) + 1;
+        // This Pokémon reached Arceus: it gets a gold star on its portrait.
+        if (d.dex) { s.arceus = s.arceus || {}; s.arceus[d.dex] = s.arceus[d.dex] || Date.now(); }
         break;
       case 'judgeEnd':
         S.judgeTime = Math.max(S.judgeTime || 0, Math.floor(d.time));

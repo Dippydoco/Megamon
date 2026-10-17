@@ -431,6 +431,8 @@ img.pix { image-rendering: pixelated; image-rendering: crisp-edges; vertical-ali
 .stars-row { display: inline-flex; gap: 1px; vertical-align: middle; }
 .cell .stars-row { display: flex; justify-content: center; margin-top: 2px; }
 .badge-r { position: absolute; top: 3px; right: 4px; }
+.badge-arc { position: absolute; top: 3px; right: 4px; z-index: 2; }
+.badge-arc.shift { right: 22px; }
 .move-icons { display: flex; flex-wrap: wrap; gap: 3px; margin: 0 0 10px; }
 .card .ico img { display: block; }
 .upg-item .ic { display: flex; justify-content: center; }
