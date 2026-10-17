@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Clearer move descriptions'), chg: [
+    T('Rewrote the English descriptions of all moves so they read naturally and say plainly what each one does.')
+  ] },
   { d: '2026-10-17', title: T('Move tooltips in the menu'), new: [
     T('Hover (or tap) a move in the Pokémon tab, or in the ban list, to see its name, type, attack kind and what it does.')
   ] },

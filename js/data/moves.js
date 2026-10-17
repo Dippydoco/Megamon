@@ -381,7 +381,7 @@
       cd: 3.5, dmg: 15, rate: 0.55, dur: 6, count: 1, range: 300, speed: 300, size: 7, burn: 1 },
 
     { id: 'substitute', name: 'Sustituto', type: 'normal', kind: 'turret',
-      desc: 'A plush decoy: nearby enemies go for it instead of you, it shoots back, and it explodes when it breaks.',
+      desc: 'A plush decoy: nearby enemies go for it instead of you. It shoots back and explodes when it breaks.',
       cd: 4.0, dmg: 14, rate: 0.4, dur: 7, count: 1, range: 280, speed: 320, size: 6,
       hp: 8, radius: 70, boom: 3, taunt: 340,
       ups: [
