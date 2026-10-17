@@ -402,27 +402,70 @@ G.HUD = (() => {
    *   y a cuántos metros están (roja y parpadeando si está caído).
    * - Si has caído tú: aviso y barra de "te están levantando".
    */
+  // Iconos de los compañeros: un Animator por jugador, mirando de frente y en reposo.
+  const portraits = new Map();
+  let portraitT = performance.now();
+  function portrait(m, o) {
+    let p = portraits.get(m.uid);
+    if (!p || p.dex !== o.dex || p.shinyWanted !== !!o.shiny) {
+      p = new G.Sprites.Animator(o.dex, 1, !!o.shiny);
+      p.shinyWanted = !!o.shiny;
+      p.dir = G.Sprites.dirFromAngle(Math.PI / 2);
+      p.loop('Idle');
+      portraits.set(m.uid, p);
+    }
+    return p;
+  }
+
   function drawCoop(ctx, w, h, pl, px, top) {
     const cam = G.Camera;
     const t = performance.now() / 1000;
     let y = top;
+    // Lista de compañeros (a la izquierda, hacia abajo): una tarjeta por jugador con
+    // el icono de su Pokémon, su nombre, su vida y, si ha caído, el aviso.
+    const nowMs = performance.now(), dt = Math.min(0.1, (nowMs - portraitT) / 1000);
+    portraitT = nowMs;
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
-    ctx.textAlign = 'left';
+    const CW = 216, CH = 34, CGAP = 6, IC = 28;
     for (const m of G.Coop.mates) {
       if (!m.connected) continue;
       const o = m.pl;
-      ctx.font = F(800, 10);
+      // Tarjeta
+      roundRect(ctx, px, y, CW, CH, 8);
+      ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill();
+      // Icono del Pokémon (mirando de frente, en un recuadro redondeado)
+      const ix = px + 3, iy = y + (CH - IC) / 2;
+      roundRect(ctx, ix, iy, IC, IC, 7);
+      ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fill();
+      ctx.strokeStyle = m.color; ctx.lineWidth = 1.5; ctx.stroke();
+      const pt = portrait(m, o);
+      pt.update(dt);
+      const am = G.Sprites.animMeta(o.dex, 'Idle', pt.shiny);
+      pt.scale = Math.min(2, (IC - 6) / ((am && am.ay) || 24)) / G.Sprites.PX;
+      ctx.save();
+      roundRect(ctx, ix, iy, IC, IC, 7); ctx.clip();
+      if (o.dead) ctx.globalAlpha = 0.4;
+      pt.draw(ctx, ix + IC / 2, iy + IC - 3);
+      ctx.restore();
+      // Nombre y vida
+      const tx = px + IC + 10;
+      ctx.textAlign = 'left';
+      ctx.font = F(800, 11);
       ctx.fillStyle = m.color;
-      ctx.fillText(m.name, px, y + 9);
-      const lx = px + 78;
-      bar(ctx, lx, y + 1, 110, 8, o.dead ? 0 : o.hp / o.maxHp, o.dead ? '#ff5f6d' : '#5fe08a');
+      ctx.fillText(m.name, tx, y + 14);
+      ctx.textAlign = 'right';
       if (o.dead) {
-        ctx.font = F(800, 9);
+        ctx.font = F(800, 10);
         ctx.fillStyle = Math.sin(t * 8) > 0 ? '#ff8a96' : '#ffd0d5';
-        ctx.fillText('CAÍDO', lx + 116, y + 9);
+        ctx.fillText('DOWN', px + CW - 8, y + 14);
+      } else {
+        ctx.font = F(700, 9);
+        ctx.fillStyle = 'rgba(255,255,255,.75)';
+        ctx.fillText(Math.ceil(o.hp) + ' / ' + Math.round(o.maxHp), px + CW - 8, y + 14);
       }
-      y += 15;
+      bar(ctx, tx, y + 19, CW - (tx - px) - 8, 9, o.dead ? 0 : o.hp / o.maxHp, '#5fe08a');
+      y += CH + CGAP;
     }
     ctx.restore();
 

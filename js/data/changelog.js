@@ -12,6 +12,8 @@ G.CHANGELOG = [
     ['Nuevo ajuste "Joystick del ratón fijo": el joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.',
      'New "Locked mouse joystick" setting: the joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.']
   ], chg: [
+    ['The party list in the top left is clearer: each teammate now has their own card with the icon of the Pokémon they are playing, their name, their HP numbers and a health bar, spaced out and stacked downwards as more players join.',
+     'The party list in the top left is clearer: each teammate now has their own card with the icon of the Pokémon they are playing, their name, their HP numbers and a health bar, spaced out and stacked downwards as more players join.'],
     ['Buffs now show an icon next to their text (attack, speed, defense, regeneration and the shrine powers), wrap onto a new row instead of overlapping, and the top-left HUD (health, teammates\' health and buffs) is a bit bigger.',
      'Buffs now show an icon next to their text (attack, speed, defense, regeneration and the shrine powers), wrap onto a new row instead of overlapping, and the top-left HUD (health, teammates\' health and buffs) is a bit bigger.'],
     ['Breakable chests within range of your active move are now targeted before enemies, so you no longer have to stand between a Pokémon and the chest to break it.',
