@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Substitute lasts longer'), chg: [
+    T('Substitute\'s doll now stays for 10 seconds instead of 7 before the duration upgrade, so it is more likely to break (and explode) than fade away.')
+  ] },
   { d: '2026-10-17', title: T('Team stats on the end screen'), fix: [
     T('In groups of three or more, some players could only see part of the team on the end screen\'s Stats tab (other players\' numbers were shown under the wrong person, and your own could go missing). Everyone\'s stats now show correctly.')
   ] },
