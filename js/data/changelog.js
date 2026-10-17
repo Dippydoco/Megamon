@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('New menu backgrounds'), new: [
+    T('The main menu background now also shows rift arenas with their legendary boss and a small team facing it (Entei, Articuno, Kyogre, Giratina, Zapdos, Rayquaza and Arceus), mixed in with the forest, cave and volcano scenes.')
+  ] },
   { d: '2026-10-17', title: T('Life Orb buffed'), chg: [
     T('Life Orb now gives +50% damage (was +30%). It still costs a little HP with each attack.')
   ] },
