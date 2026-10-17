@@ -511,8 +511,15 @@ G.Tiles = (() => {
       for (let y = 21; y <= 25; y++) for (let x = 1; x <= 16; x++) P.set(x, y, R[y === 21 ? 2 : y >= 24 ? 0 : 1]);
       for (let y = 12; y <= 20; y++) for (let x = 5; x <= 12; x++) P.set(x, y, R[x === 5 ? 2 : x >= 11 ? 0 : 1]);
       for (let y = 10; y <= 11; y++) for (let x = 3; x <= 14; x++) P.set(x, y, R[y === 10 ? 2 : 1]);
-      // Runas de su color en la columna.
-      [[7, 14], [8, 15], [10, 14], [9, 17], [7, 18], [10, 18]].forEach(([x, y]) => P.set(x, y, O[1]));
+      // A carved symbol on the column (5×6 pixels) that says what the altar gives:
+      // flame = Fury, bolt = Thunderbolt, horseshoe magnet = Magnet, clock = Haste.
+      const CARVE = [
+        ['..#..', '.##..', '.###.', '##.##', '#####', '.###.'],
+        ['..###', '.##..', '.###.', '..##.', '.##..', '##...'],
+        ['#...#', '#...#', '#...#', '#...#', '##.##', '.###.'],
+        ['.###.', '#.#.#', '#.###', '#...#', '.###.', '.....']
+      ][eff];
+      CARVE.forEach((row, ry) => { for (let rx = 0; rx < 5; rx++) if (row[rx] === '#') P.set(6 + rx, 14 + ry, O[1]); });
       // Orbe.
       disc(P, 8.5, 5.5, 4.2, (x, y, d) => {
         const lit = (8.5 - x) * 0.5 + (5.5 - y) * 0.7;

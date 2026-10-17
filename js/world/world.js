@@ -489,6 +489,34 @@ G.World = (() => {
     return out;
   }
 
+  // Power altars: a floating icon (same as the buff icon in the HUD) and a particle effect
+  // of their own, so each one can be told apart without remembering colours.
+  const ALTAR_ICON = ['fist', 'boot', 'magnet', 'clock'];
+  const ALTAR_COL = ['#ff5f6d', '#5fd4ff', '#ff8ad8', '#ffd23f'];
+  function drawAltarSign(ctx, p, t, h, P) {
+    const k = p.kind, col = ALTAR_COL[k];
+    const ox = p.x, oy = p.y - h + 11 * P;                    // centre of the orb
+    const iy = oy - 34 + Math.sin(t * 2.2 + p.wiggle) * 3;     // icon, bobbing
+    ctx.save();
+    ctx.fillStyle = 'rgba(10,14,26,.78)';
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(ox, iy, 15, 0, 6.2832); ctx.fill(); ctx.stroke();
+    G.Icons.draw(ctx, ALTAR_ICON[k], ox - 11, iy - 11, 22);
+    ctx.restore();
+    // Particles (sparse; the effect system caps them by quality).
+    if (G.Game.state !== 'playing') return;
+    const r = Math.random();
+    if (k === 0 && r < 0.07) G.FX.px(ox + G.U.rand(-8, 8), oy + 4, r < 0.03 ? '#ffd23f' : '#ff7b3d', { vy: -45, vx: G.U.rand(-8, 8), life: 0.9 });
+    else if (k === 1 && r < 0.09) G.FX.px(ox + G.U.rand(-14, 14), oy + G.U.rand(-14, 10), '#d8f6ff', { vx: G.U.rand(-60, 60), vy: G.U.rand(-60, 60), life: 0.16 });
+    else if (k === 2 && r < 0.07) {
+      const a = Math.random() * 6.2832;
+      G.FX.px(ox + Math.cos(a) * 34, oy + Math.sin(a) * 34, '#ff8ad8', { vx: -Math.cos(a) * 55, vy: -Math.sin(a) * 55, life: 0.6, drag: 1 });
+    } else if (k === 3 && (!p.tk || t - p.tk > 1.4)) {
+      p.tk = t;                                                // a ring every 1.4 s, like a ticking clock
+      G.FX.ring(ox, oy, 6, 26, '#ffd23f', 0.5, 2);
+    }
+  }
+
   function drawProp(ctx, p, t) {
     const P = G.Sprites.PX;
     const variant = p.type === 'grass' ? (Math.sin(t * 2.4 + p.wiggle) > 0.55 ? 1 : 0)
@@ -538,6 +566,7 @@ G.World = (() => {
       ctx.globalAlpha = k;
     }
     ctx.drawImage(img, x, y, w, h);
+    if (p.type === 'altar' && !p.used) drawAltarSign(ctx, p, t, h, P);
     if (p.flash > 0) { ctx.globalAlpha = 0.6; ctx.drawImage(G.Sprites.white(img), x, y, w, h); }
     ctx.restore();
   }
