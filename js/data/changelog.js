@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Fixed mouse joystick is now the default'), chg: [
+    T('When moving with the mouse, the joystick now stays where you clicked instead of following the cursor. You can switch it back with "Joystick del ratón fijo" in Settings.')
+  ] },
   { d: '2026-10-17', title: T('Bigger move bar'), chg: [
     T('The move bar at the bottom is a bit larger. When a long move name (like a bonded "Thunder Shock +2") would touch the held item\'s name, the item box now slides left instead of its name jumping up.')
   ] },

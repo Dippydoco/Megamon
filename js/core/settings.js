@@ -14,7 +14,7 @@
  *   stick       0.8 | 1 | 1.25                    tamaño del joystick táctil
  *   stickMode   'float' | 'fixed'                 joystick donde pones el dedo, o siempre en su sitio
  *   mouseStick  true/false                        mover con el ratón: botón izquierdo y arrastrar (joystick flotante)
- *   mouseLock   true/false                        el joystick del ratón no sigue al cursor: se queda donde pulsaste
+ *   mouseLock   true/false                        el joystick del ratón no sigue al cursor: se queda donde pulsaste (por defecto: sí)
  *   pad         { bar, pause, stick } | null      dónde van los botones en móvil (centro, en
  *                                                 proporción a la pantalla); lo pone layout-ui.js
  *
@@ -23,9 +23,11 @@
  */
 G.Settings = (() => {
   const KEY = 'ps.settings';
-  const DEF = { quality: 'auto', dmgNumbers: true, dmgSize: 1, dmgShow: 'all', dmgColor: 'type', shareAct: true, moveTags: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: false, pad: null };
+  const DEF = { quality: 'auto', dmgNumbers: true, dmgSize: 1, dmgShow: 'all', dmgColor: 'type', shareAct: true, moveTags: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: true, pad: null };
   let s = Object.assign({}, DEF);
   try { Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nada */ }
+  // One-time: the fixed mouse joystick became the default for everyone (also those who had saved the old default).
+  if (s.lockV !== 1) { s.mouseLock = true; s.lockV = 1; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* nada */ } }
   const fns = new Set();
 
   // Calidad automática: empieza alta (media en móvil) y baja si va a tirones.
