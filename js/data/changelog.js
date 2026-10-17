@@ -10,6 +10,11 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Balance: gentler difficulty curve'), chg: [
+    T('Enemy damage is a little lower across the whole run (x2.2 instead of x2.4).'),
+    T('New enemy tiers now phase in over about 100 seconds: their first arrivals start closer to the previous tier\'s strength and rise to full strength, so there is no sudden jump when a new tier begins.'),
+    T('Healer Pokémon appear less often, and no more than 3 healers can be alive at once, so they no longer gang up.')
+  ] },
   { d: '2026-10-17', title: T('Owned counter on level-up stats'), new: [
     T('Level-up stat cards (Vigor, Reflexes, Armour and the rest) now show how many of that upgrade you have taken this run, e.g. "Owned 3", or "Owned 3/10" when it has a limit.')
   ] },

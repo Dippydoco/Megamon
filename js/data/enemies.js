@@ -90,7 +90,7 @@ G.Enemies = (() => {
     const spdK = G.U.clamp(0.75 + baseSpd(p) / 260, 0.75, 1.3);
     const behavior = behaviorOf(p);
     const d = {
-      dex: p.dex, name: p.name, behavior,
+      dex: p.dex, name: p.name, behavior, tier: ti,
       hp: Math.round(tier.hp * hpK * (behavior === 'tank' ? 1.5 : 1)),
       spd: Math.round(tier.spd * spdK * (behavior === 'tank' ? 0.7 : 1)),
       dmg: Math.round(tier.dmg * (behavior === 'tank' ? 1.2 : 1)),
@@ -183,6 +183,21 @@ G.Enemies = (() => {
    */
   function bossScale(t) { return { hp: 1 + t / 600, dmg: 1 + t / 600, spd: 1 }; }
 
+  /**
+   * Smoothing between tiers: for RAMP seconds after a tier starts, its enemies are born
+   * with stats blended from the previous tier up to their own, instead of jumping all at once.
+   * Returns { hp, dmg } multipliers (or null when fully ramped / not a tier enemy).
+   */
+  const RAMP = 100;
+  function ramp(def, t) {
+    const ti = def && def.tier;
+    if (!ti) return null;
+    const f = G.U.clamp((t - TIERS[ti].from) / RAMP, 0, 1);
+    if (f >= 1) return null;
+    const lerp = (a, b) => a + (b - a) * f;
+    return { hp: lerp(TIERS[ti - 1].hp / TIERS[ti].hp, 1), dmg: lerp(TIERS[ti - 1].dmg / TIERS[ti].dmg, 1) };
+  }
+
   /** Tramo que toca en el segundo `t`. */
   function tierAt(t) { let ti = 0; TIERS.forEach((tr, i) => { if (t >= tr.from) ti = i; }); return ti; }
 
@@ -208,8 +223,13 @@ G.Enemies = (() => {
     const bag = [];
     for (const tier of cast) {
       if (t < tier.from) continue;
-      const w = t - tier.from > 260 ? 3 : 10;       // los tramos viejos pierden peso
-      for (const e of tier.list) for (let i = 0; i < w; i++) bag.push(e);
+      // Old tiers lose weight; a new tier fades in over RAMP seconds (smoother difficulty step).
+      const fade = tier.from > 0 ? G.U.clamp((t - tier.from) / RAMP, 0, 1) : 1;
+      const w = t - tier.from > 260 ? 3 : Math.round(3 + 7 * fade);
+      for (const e of tier.list) {
+        const n = e.behavior === 'healer' ? Math.max(1, Math.round(w * 0.6)) : w;   // healers show up a bit less
+        for (let i = 0; i < n; i++) bag.push(e);
+      }
     }
     return bag.length ? bag : cast[0].list;
   }
@@ -224,7 +244,7 @@ G.Enemies = (() => {
   }
 
   return {
-    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs,
+    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, ramp, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs,
     get BOSSES() { if (!bosses) rollRun(); return bosses; },
     get cast() { if (!cast) rollRun(); return cast; }
   };

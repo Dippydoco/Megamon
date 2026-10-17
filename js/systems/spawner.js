@@ -18,7 +18,7 @@ G.Spawner = (() => {
   let CAP = 64;                 // grows a little with a 5th player
   // Menos Pokémon pero más fuertes (la pantalla no se satura): salen ~24% de
   // los de antes, cada uno con más vida, daño y experiencia.
-  const DENSITY = 0.24, DMG_K = 2.4, XP_K = 5.6;
+  const DENSITY = 0.24, DMG_K = 2.2, XP_K = 5.6;
   // La resistencia extra crece con la run: al principio ×3,3 y hasta ×5
   // hacia el minuto 6, cuando ya tienes ataques para tumbarlos.
   const hpK = t => 3.3 + Math.min(1.7, t / 210);
@@ -78,12 +78,16 @@ G.Spawner = (() => {
   }
 
   function spawnOne(pl, t, angle) {
-    const def = G.U.pick(G.Enemies.bagAt(t));
+    let def = G.U.pick(G.Enemies.bagAt(t));
+    // Healers never gang up: with 3 already alive, pick something else (a few tries).
+    for (let i = 0; i < 4 && def.behavior === 'healer' && G.EnemyMgr.all().filter(x => !x.dead && x.behavior === 'healer').length >= 3; i++) def = G.U.pick(G.Enemies.bagAt(t));
     const pt = freePoint(pl, angle == null ? Math.random() * 6.2832 : angle, isFlyer(def));
     if (!pt) return null;
     const shiny = rollShiny(def.dex);
     const e = new G.Enemy(def, pt[0], pt[1], scaled(G.Enemies.scale(t), G.Coop.scaleHp(players.length) * hpK(t)));
     e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K);
+    const rp = G.Enemies.ramp(def, t);
+    if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
     if (G.EnemyMgr.count >= CAP * ELITE_FROM) { e.maxHp = e.hp = Math.round(e.maxHp * 1.6); e.dmg *= 1.25; e.xp = Math.round(e.xp * 1.6); }
     if (shiny) e.makeShiny();
     if (G.Events.golden) e.makeGolden();
