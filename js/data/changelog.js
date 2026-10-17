@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Support button is now a joke'), chg: [
+    T('The Support button no longer links anywhere: it just shows a joke message. The donation messages on the end screen are gone too.')
+  ] },
   { d: '2026-10-17', title: T('Damage taken stat fixed'), fix: [
     T('The "damage taken" stat on the end screen now counts only the health you actually lost. Before, a huge killing blow (like from the legendaries in Arceus\' arena, which keep doubling in strength) added its full, overkill damage, giving absurd totals like 1.16 quadrillion.')
   ] },

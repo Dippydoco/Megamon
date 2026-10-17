@@ -12,26 +12,17 @@ G.SupportUI = (() => {
 
   function init() {
     const b = $('btn-support');
-    if (!F.url) return;                       // aún sin cuenta de Ko-fi: no sale
     b.classList.remove('hidden');
     b.innerHTML = G.Icons.html('heart', 18) + ' <span>Apoyar</span>';
     b.onclick = open;
     $('sup-close').onclick = close;
   }
 
+  // Sin enlaces ni donaciones: el botón es una broma.
   function open() {
-    const rows = F.costs.map(([c, v]) => `<tr><td>${c}</td><td class="num">${val(v)}</td></tr>`).join('');
     $('sup-body').innerHTML = `
-      <p>Megamon es y será <b>gratis</b>, sin anuncios ni compras. Si quieres ayudar a que siga en línea, puedes hacer una
-      <b>donación voluntaria</b>: todo el dinero se usa para los <b>servidores y el dominio</b>, nada más.</p>
-      <p class="sub">Donar no da ninguna ventaja en el juego.</p>
-      <h3>Lo que cuesta mantenerlo</h3>
-      <table class="sup-tab">${rows}</table>
-      <p class="sub">Cuanta más gente juega, más cuestan los servidores. Lo que sobre se guarda para los gastos de los meses siguientes.</p>
-      <div class="row wrap" style="gap:8px;justify-content:center;margin-top:10px">
-        <a class="btn gold" href="${F.url}" target="_blank" rel="noopener">${G.Icons.html('heart', 18)} Donar en Ko-fi</a>
-        ${window.PS_PAGES ? `<a class="btn" href="en/support/" target="_blank">Más información</a>` : ''}
-      </div>`;
+      <p style="text-align:center;font-size:22px;margin:18px 0 8px">Buy Ryan a Taco Bell</p>
+      <p class="sub" style="text-align:center;margin-bottom:6px">(this is a joke, the game is free and always will be)</p>`;
     $('scr-support').classList.remove('hidden');
   }
   function close() { $('scr-support').classList.add('hidden'); }
