@@ -158,6 +158,11 @@ G.GachaUI = (() => {
       out.insertAdjacentHTML('beforeend', `<div class="pull-sum" style="grid-column:1/-1;width:100%;text-align:center"><b>${res.length} pulls</b> · ${news} new${shin ? ' · ' + G.Icons.html('shiny', 12) + ' ' + shin + ' shiny' : ''} · <span class="coin"></span> +${coins} from duplicates · best: <span style="color:${G.Gacha.RARITY_COLOR[top]}">${G.Gacha.RARITY_NAME[top]}</span></div>`);
       list = res.filter(r => r.isNew || r.shiny || r.rarity >= 3);
     }
+    // Slower reveal for "Use all tickets" (about 220 ms each, never more than ~10 s in total); click to skip ahead.
+    const step = many ? Math.min(220, Math.max(60, 10000 / list.length)) : n === 10 ? 150 : 0;
+    let fast = false;
+    const speedUp = () => { fast = true; };
+    fx.addEventListener('click', speedUp);
     for (const r of list) {
       const mon = G.DEX_BY[r.dex];
       const c = document.createElement('div');
@@ -171,8 +176,9 @@ G.GachaUI = (() => {
       c.insertAdjacentHTML('beforeend', `<b>${r.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${mon.name}</b>${surprise ? `<small class="sub">Gen ${r.gen}</small>` : ''}<div class="tag">${tag}</div>`);
       out.appendChild(c);
       G.Audio.sfx('reveal', { rarity: r.rarity });
-      await wait(many ? 40 : n === 10 ? 150 : 0);
+      await wait(fast ? 0 : step);
     }
+    fx.removeEventListener('click', speedUp);
     $('pull-close').classList.remove('hidden');
     busy = false;
   }
