@@ -875,10 +875,13 @@ G.Game = (() => {
    */
   const Backdrop = (() => {
     let wanderers = [], t = 0, ready = false, sceneT = 0, cur = 0, sw = null;
+    let goldT = 0, evT = 0, banner = null, tags = [], hourOv = null, lastTeam = 0, tapHooked = false;
     const CAST = [1, 4, 7, 25, 133, 52, 39, 35, 16, 43, 60, 69, 74, 92, 129, 147, 113, 143, 54, 79];
     const SCENE_TIME = 30, FADE_HALF = 0.6;
+    const FONT = '800 8px Pixelify,"Segoe UI",system-ui,sans-serif';
     // Escenas del fondo, en orden: el mapa normal (3 paletas) y arenas de grieta con su legendario
     // y un pequeño equipo que lo rodea. Las arenas usan el mismo código que las de verdad.
+    // El equipo sale de una partida en grupo de tu historial (si la hay); si no, el de aquí.
     const SCENES = [
       { map: 0 },
       { arena: 'fire', boss: 244, team: [6, 25, 448, 94] },        // Entei
@@ -892,6 +895,8 @@ G.Game = (() => {
       { arena: 'judgment', boss: 493, team: [6, 9, 3, 25] }       // Arceus
     ];
     const ARENA_TX = 5200, ARENA_TY = 5200, ARENA_R = 11;
+    const WX_NAME = { sun: 'Harsh sunlight', rain: 'Rain', sand: 'Sandstorm', snow: 'Snowfall', fog: 'Fog' };
+    const HORDE_TYPES = ['fire', 'water', 'grass', 'electric', 'ice', 'psychic', 'ghost', 'dragon', 'fighting', 'poison', 'bug', 'rock'];
 
     /** Escala de un jefe (como en enemy.js): ~110 px de alto, en múltiplos de 0,5. */
     function bossScale(dex) {
@@ -900,37 +905,99 @@ G.Game = (() => {
       return G.U.clamp(Math.round(110 / h * 2) / 2, 1, 2);
     }
 
+    // ---------------- Pokémon de tus partidas ----------------
+
+    const myName = () => (G.Social && G.Social.me && G.Social.me.name) || 'You';
+    const hasSprite = d => !!(G.SPRITE_META && G.SPRITE_META[d]);
+
+    /** Un equipo de una partida en grupo de tu historial (tú + tus compañeros); si no hay, tus últimos Pokémon. */
+    function historyTeam() {
+      const hist = (G.DB.save && G.DB.save.history) || [];
+      const groups = hist.filter(e => e.g && e.mt && e.mt.length && hasSprite(e.d));
+      if (groups.length) {
+        const pool = groups.length > 1 ? groups.filter(e => e.id !== lastTeam) : groups;
+        const e = G.U.pick(pool);
+        lastTeam = e.id;
+        const mem = [{ dex: e.d, sh: !!e.sh, label: myName() }, ...e.mt.map(([n, d, sh]) => ({ dex: d, sh: !!sh, label: n }))];
+        return mem.filter(m => hasSprite(m.dex)).slice(0, 5);
+      }
+      const seen = new Set(), own = [];
+      for (const e of hist) if (!seen.has(e.d) && hasSprite(e.d)) { seen.add(e.d); own.push({ dex: e.d, sh: !!e.sh, label: myName() }); }
+      return own.length >= 2 ? own.slice(0, 4) : null;
+    }
+
+    /** Hasta 6 Pokémon de tus partidas (tuyos y de tus compañeros) para pasear por el mapa. */
+    function historyCast() {
+      const hist = (G.DB.save && G.DB.save.history) || [], out = new Map();
+      for (const e of hist.slice(0, 30)) {
+        if (hasSprite(e.d) && !out.has(e.d)) out.set(e.d, { dex: e.d, sh: !!e.sh, label: myName() });
+        for (const [n, d, sh] of e.mt || []) if (hasSprite(d) && !out.has(d)) out.set(d, { dex: d, sh: !!sh, label: n });
+      }
+      const all = [...out.values()];
+      for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+      return all.slice(0, 6);
+    }
+
+    // ---------------- escenas ----------------
+
+    function say(text, col = '#ffffff') { banner = { text, col, t: 0 }; }
+
     function applyScene(i) {
       cur = ((i % SCENES.length) + SCENES.length) % SCENES.length;
       const sc = SCENES[cur];
       G.World.reset(4242);
       G.FX.clear(); G.Projectiles.clear(); G.Combat.clearFields(); G.EnemyMgr.clear(); G.Pickups.clear();
-      t = 0; sceneT = 0;
+      G.Weather.clear();
+      t = 0; sceneT = 0; goldT = 0; tags = []; banner = null;
+      evT = G.U.rand(7, 12);
       if (sc.arena) {
         const ts = G.World.TS, cx = ARENA_TX * ts + ts / 2, cy = ARENA_TY * ts + ts / 2;
         G.World.setArena({ tx: ARENA_TX, ty: ARENA_TY, r: ARENA_R, type: sc.arena });
         G.World.setBiome(G.Tiles.arenaBiome(sc.arena), true);
         G.Camera.x = cx; G.Camera.y = cy + ts;
         // El legendario al norte (en grande) y el equipo al sur, mirándole.
-        const boss = spawn(sc.boss, { x: cx, y: cy - ts * 3, leash: ts * 2.2, boss: true });
-        wanderers = [boss, ...sc.team.map((d, k) => spawn(d, {
-          x: cx + (k - (sc.team.length - 1) / 2) * ts * 1.8, y: cy + ts * 3.5, leash: ts * 3, target: boss }))];
+        const team = historyTeam() || sc.team.map(d => ({ dex: d }));
+        G.Sprites.preload([sc.boss, ...team.map(m => m.dex)], 6000);
+        const boss = spawn({ dex: sc.boss }, { x: cx, y: cy - ts * 3, leash: ts * 2.2, boss: true });
+        wanderers = [boss, ...team.map((m, k) => spawn(m, {
+          x: cx + (k - (team.length - 1) / 2) * ts * 1.8, y: cy + ts * 3.5, leash: ts * 3, target: boss }))];
+        // Cada arena trae su clima, como las de verdad.
+        const th = G.Tiles.ARENA_THEMES[sc.arena];
+        if (th && th.weather) { G.Weather.showcase(th.weather, 9999); say(WX_NAME[th.weather], '#9fd8ff'); }
       } else {
         G.World.setBiome(sc.map, true);
         G.Camera.x = 0; G.Camera.y = 0;
-        wanderers = CAST.map(dex => spawn(dex, null));
+        const hc = historyCast(), have = new Set(hc.map(m => m.dex));
+        const base = CAST.filter(d => !have.has(d)).slice(0, 20 - hc.length);
+        G.Sprites.preload(hc.map(m => m.dex), 6000);
+        wanderers = [...hc, ...base.map(d => ({ dex: d }))].map(m => spawn(m, null));
+        // A veces, clima (los mismos del juego, según el bioma).
+        if (Math.random() < 0.55) {
+          const k = G.Weather.pickFor(sc.map);
+          G.Weather.showcase(k, G.U.rand(40, 60)); say(WX_NAME[k], '#9fd8ff');
+        }
       }
     }
 
     function init() {
       applyScene(0);
       ready = true;
+      // Tocar el fondo (no un botón ni un panel) hace reaccionar a los Pokémon.
+      if (!tapHooked) {
+        tapHooked = true;
+        document.addEventListener('pointerdown', e => {
+          if (!ready || state !== 'ui' || sw) return;
+          const el = e.target;
+          if (el && (el.id === 'game' || (el.classList && el.classList.contains('scr')))) tap(e.clientX, e.clientY);
+        });
+      }
     }
 
-    /** `home` = null: en cualquier sitio de la pantalla (mapa); si no, { x, y, leash, boss, target } de una arena. */
-    function spawn(dex, home) {
+    /** `m` = { dex, sh?, label? }. `home` = null: en cualquier sitio de la pantalla (mapa); si no, { x, y, leash, boss, target } de una arena. */
+    function spawn(m, home) {
+      const dex = m.dex;
       const scale = home && home.boss ? bossScale(dex) : 1;
-      const a = new G.Sprites.Animator(dex, scale);
+      const a = new G.Sprites.Animator(dex, scale, !!m.sh);
       const r = G.Sprites.bodyRadius(dex, scale);
       let x = 0, y = 0;
       if (home) { x = home.x; y = home.y; }
@@ -941,15 +1008,128 @@ G.Game = (() => {
           if (G.World.isFree(x, y, r)) break;
         }
       }
-      return { dex, anim: a, x, y, r, vx: 0, vy: 0, t: 0, home, scale, draw(ctx) {
+      return { dex, m, anim: a, x, y, r, vx: 0, vy: 0, t: 0, home, scale, draw(ctx) {
         G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
+        // Hora dorada / ladrón: un brillo dorado detrás, como los enemigos dorados.
+        if ((goldT > 0 && !(this.home && this.home.boss)) || this.thief) {
+          const h = G.Sprites.bodyHeight(this.dex, this.scale);
+          ctx.save();
+          ctx.globalAlpha = 0.3 + Math.sin(t * 5 + this.x) * 0.06;
+          ctx.fillStyle = '#ffd23f';
+          ctx.beginPath(); ctx.ellipse(this.x, this.y - h * 0.45, this.r * 1.3, h * 0.6, 0, 0, 6.2832); ctx.fill();
+          ctx.restore();
+        }
         this.anim.draw(ctx, this.x, this.y);
+        if (this.thief) G.Icons.draw(ctx, 'coin', this.x - 6, this.y - G.Sprites.bodyHeight(this.dex, this.scale) - 14, 12);
       } };
     }
+
+    // ---------------- eventos del juego, en el menú ----------------
+
+    function spawnThief() {
+      // Como en las partidas: un Meowth cargado de monedas o, 1 de cada 4, un Gholdengo.
+      const dex = Math.random() < 0.25 && hasSprite(1000) ? 1000 : 52;
+      const left = Math.random() < 0.5;
+      const x = left ? G.Camera.left() - 30 : G.Camera.left() + G.Camera.w + 30, y = G.Camera.y + G.U.rand(-0.3, 0.3) * G.Camera.h;
+      const wd = spawn({ dex, label: dex === 1000 ? 'Gholdengo' : 'Meowth' }, { x, y, leash: 0 });
+      Object.assign(wd, { temp: true, thief: true, life: 15, vx: (left ? 1 : -1) * 120, vy: G.U.rand(-30, 30) });
+      wanderers.push(wd);
+      say('Treasure thief! Catch it!', '#ffd23f');
+    }
+
+    function spawnHorde() {
+      const type = G.U.pick(HORDE_TYPES);
+      const pool = G.DEX.filter(p => !p.leg && p.rarity <= 3 && p.types.includes(type) && hasSprite(p.dex));
+      if (pool.length < 4) return;
+      const pick = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+      const dirR = Math.random() < 0.5, base = G.Camera.y + G.U.rand(-0.25, 0.25) * G.Camera.h;
+      G.Sprites.preload(pick.map(p => p.dex), 5000);
+      pick.forEach((p, i) => {
+        const x = dirR ? G.Camera.left() - 40 - (i % 5) * 44 : G.Camera.left() + G.Camera.w + 40 + (i % 5) * 44;
+        const y = base + (Math.floor(i / 5) - 0.5) * 56 + G.U.rand(-12, 12);
+        const wd = spawn({ dex: p.dex }, { x, y, leash: 0 });
+        Object.assign(wd, { temp: true, life: 30, vx: (dirR ? 1 : -1) * G.U.rand(70, 90), vy: 0 });
+        wanderers.push(wd);
+      });
+      say('Horde: ' + type[0].toUpperCase() + type.slice(1) + ' type', G.U.TYPE_COLOR[type] || '#ffffff');
+    }
+
+    function startEvent() {
+      if (SCENES[cur].arena || goldT > 0 || wanderers.some(w => w.temp)) return;
+      const k = Math.random();
+      if (k < 0.3) { goldT = 14; say('Gold Hour', '#ffd23f'); G.Audio.sfx('select'); }
+      else if (k < 0.65) spawnThief();
+      else spawnHorde();
+    }
+
+    // ---------------- tocar un Pokémon ----------------
+
+    function tap(px, py) {
+      const wx = G.Camera.left() + px / G.Camera.scale, wy = G.Camera.top() + py / G.Camera.scale;
+      let best = null, bd = Infinity;
+      for (const wd of wanderers) {
+        const h = G.Sprites.bodyHeight(wd.dex, wd.scale);
+        const d = Math.hypot(wx - wd.x, wy - (wd.y - h * 0.5));
+        if (d < Math.max(wd.r, h * 0.5) + 10 && d < bd) { best = wd; bd = d; }
+      }
+      if (!best) return;
+      const mon = G.DEX_BY[best.dex], h = G.Sprites.bodyHeight(best.dex, best.scale);
+      const col = (mon && G.U.TYPE_COLOR[mon.types[0]]) || '#ffffff';
+      G.FX.ring(best.x, best.y - h * 0.5, 6, 46, col, 0.45, 4);
+      G.FX.burst(best.x, best.y - h * 0.5, col, 14, 150);
+      if (best.thief) {
+        // Pillado: lluvia de monedas (sólo de adorno).
+        G.FX.burst(best.x, best.y - h * 0.5, '#ffd23f', 30, 230);
+        G.Audio.sfx('buy');
+        tags.push({ x: best.x, y: best.y - h - 14, text: 'Caught!', t: 0, col: '#ffd23f' });
+        best.life = Math.min(best.life, 0.25);
+        return;
+      }
+      best.anim.play(G.U.pick(['Attack', 'Shoot', 'Charge']));
+      best.anim.dir = G.Sprites.dirFromAngle(Math.PI / 2);
+      best.vx = best.vy = 0; best.t = G.U.rand(1.6, 2.8);
+      tags.push({ x: best.x, y: best.y - h - 8, text: (best.m && best.m.label) || (mon ? mon.name : ''), t: 0, col: '#ffffff' });
+    }
+
+    // ---------------- hora del día ----------------
+
+    // Tinte según la hora real del jugador: noche, amanecer, atardecer.
+    const TOD = [[0, 12, 16, 58, .36], [5, 12, 16, 58, .36], [6.5, 255, 140, 110, .16], [8.5, 255, 200, 140, .05], [10, 0, 0, 0, 0],
+                 [16, 0, 0, 0, 0], [17.5, 255, 170, 90, .10], [19.5, 200, 90, 110, .20], [21, 40, 30, 90, .30], [22.5, 12, 16, 58, .36], [24, 12, 16, 58, .36]];
+    function todColor() {
+      const d = new Date(), h = hourOv != null ? hourOv : d.getHours() + d.getMinutes() / 60;
+      for (let i = 1; i < TOD.length; i++) {
+        if (h <= TOD[i][0]) {
+          const a = TOD[i - 1], b = TOD[i], k = (h - a[0]) / (b[0] - a[0] || 1);
+          return [0, 1, 2, 3].map(j => a[j + 1] + (b[j + 1] - a[j + 1]) * k);
+        }
+      }
+      return [0, 0, 0, 0];
+    }
+    const STARS = Array.from({ length: 40 }, (_, i) => [G.U.hash(i, 1, 7), G.U.hash(i, 2, 7) * 0.7, G.U.hash(i, 3, 7) * 6.28]);
+    function drawTod(ctx, w, h) {
+      const [r, g, b, a0] = todColor();
+      const a = a0 * (SCENES[cur].arena ? 0.6 : 1);
+      if (a < 0.01) return;
+      ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`;
+      ctx.fillRect(0, 0, w, h);
+      if (a > 0.2 && !SCENES[cur].arena) {            // de noche, unas estrellas que parpadean
+        ctx.fillStyle = '#ffffff';
+        for (const [sx, sy, ph] of STARS) {
+          ctx.globalAlpha = (0.25 + 0.5 * Math.abs(Math.sin(t * 1.3 + ph))) * Math.min(1, (a - 0.2) * 8);
+          ctx.fillRect(Math.round(sx * w), Math.round(sy * h), 2, 2);
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    // ---------------- cada fotograma ----------------
 
     function step(dt) {
       t += dt;
       G.World.update(dt, G.Camera);
+      G.FX.update(dt);
+      G.Weather.tickMenu(dt);
       // Deriva lenta de la cámara.
       G.Camera.x += Math.cos(t * 0.05) * 14 * dt;
       G.Camera.y += Math.sin(t * 0.037) * 10 * dt;
@@ -964,8 +1144,34 @@ G.Game = (() => {
         if (sw.t >= FADE_HALF * 2) sw = null;
       }
 
-      for (const wd of wanderers) {
+      // Eventos de partida (hora dorada, ladrón, horda): de vez en cuando, en el mapa.
+      if (goldT > 0) goldT -= dt;
+      evT -= dt;
+      if (evT <= 0) { evT = G.U.rand(14, 22); startEvent(); }
+      for (const tg of tags) tg.t += dt;
+      tags = tags.filter(tg => tg.t < 2.4);
+
+      for (let i = wanderers.length - 1; i >= 0; i--) {
+        const wd = wanderers[i];
         const hm = wd.home;
+        if (goldT > 0 && !wd.temp && !(hm && hm.boss) && Math.random() < dt * 2) {
+          G.FX.px(wd.x + G.U.rand(-wd.r, wd.r), wd.y - G.U.rand(0, G.Sprites.bodyHeight(wd.dex, wd.scale)), '#ffd23f', { vy: -34, life: 0.6 });
+        }
+        if (wd.temp) {
+          // Ladrón u horda: cruzan la pantalla y se van.
+          wd.life -= dt;
+          if (wd.thief && Math.random() < dt * 0.7) wd.vy = G.U.rand(-60, 60);
+          wd.x += wd.vx * dt; wd.y += wd.vy * dt;
+          G.World.collide(wd);
+          wd.anim.dir = G.Sprites.dirFromAngle(Math.atan2(wd.vy, wd.vx));
+          wd.anim.loop('Walk', 1.4);
+          wd.anim.update(dt);
+          if (wd.life <= 0 || (!wd.thief && Math.abs(wd.x - G.Camera.x) > G.Camera.w * 0.5 + 160 && wd.life < 27)) {
+            if (wd.thief) G.FX.burst(wd.x, wd.y - 10, '#ffffff', 12, 120);
+            wanderers.splice(i, 1);
+          }
+          continue;
+        }
         wd.t -= dt;
         if (wd.t <= 0) {
           // Pasea, se para o "ataca" al aire de vez en cuando.
@@ -992,8 +1198,20 @@ G.Game = (() => {
         wd.anim.loop(moving ? 'Walk' : 'Idle');
         wd.anim.update(dt);
         // Si se queda fuera de cámara, reaparece dentro.
-        if (!G.Camera.sees(wd.x, wd.y, 120)) Object.assign(wd, spawn(wd.dex, hm));
+        if (!G.Camera.sees(wd.x, wd.y, 120)) Object.assign(wd, spawn(wd.m, hm));
       }
+    }
+
+    function drawTags(ctx) {
+      ctx.font = FONT; ctx.textAlign = 'center';
+      for (const tg of tags) {
+        const k = tg.t / 2.4;
+        ctx.globalAlpha = k < 0.8 ? 1 : (1 - k) / 0.2;
+        const y = Math.round(tg.y - tg.t * 8);
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(10,8,24,.85)'; ctx.strokeText(tg.text, Math.round(tg.x), y);
+        ctx.fillStyle = tg.col; ctx.fillText(tg.text, Math.round(tg.x), y);
+      }
+      ctx.globalAlpha = 1;
     }
 
     function render(ctx, w, h, dpr, dt) {
@@ -1005,8 +1223,27 @@ G.Game = (() => {
       ctx.scale(G.Camera.scale, G.Camera.scale);
       G.Camera.apply(ctx);
       drawScene(G.Camera, wanderers);
+      G.FX.draw(ctx);
+      drawTags(ctx);
       ctx.restore();
+      drawTod(ctx, w, h);
+      G.Weather.draw(ctx, w, h, dt);
       G.World.drawVignette(ctx, w, h);
+      if (banner) {
+        banner.t += dt;
+        const k = banner.t < 0.4 ? banner.t / 0.4 : banner.t > 3.6 ? Math.max(0, (4 - banner.t) / 0.4) : 1;
+        if (banner.t > 4) banner = null;
+        else {
+          ctx.save();
+          ctx.globalAlpha = k;
+          ctx.font = '800 15px Pixelify,"Segoe UI",system-ui,sans-serif';
+          ctx.textAlign = 'center';
+          const tw = ctx.measureText(banner.text).width + 28, bx = w / 2 - tw / 2, by = h - 70;
+          ctx.fillStyle = 'rgba(8,6,22,.62)'; ctx.fillRect(Math.round(bx), by, Math.round(tw), 28);
+          ctx.fillStyle = banner.col; ctx.fillText(banner.text, w / 2, by + 19);
+          ctx.restore();
+        }
+      }
       if (sw) {
         const k = sw.t < FADE_HALF ? sw.t / FADE_HALF : 1 - (sw.t - FADE_HALF) / FADE_HALF;
         ctx.save();
@@ -1023,7 +1260,18 @@ G.Game = (() => {
       applyScene(cur);
     }
 
-    return { init, render, restore };
+    /** Para pruebas: { hour, scene, event: 'gold' | 'thief' | 'horde' | 'weather:rain' } */
+    function debug(o = {}) {
+      if (o.hour !== undefined) hourOv = o.hour;
+      if (o.scene !== undefined) applyScene(o.scene);
+      if (o.event === 'gold') { goldT = 14; say('Gold Hour', '#ffd23f'); }
+      else if (o.event === 'thief') spawnThief();
+      else if (o.event === 'horde') spawnHorde();
+      else if (o.event && o.event.startsWith('weather:')) { G.Weather.showcase(o.event.slice(8), 30); say(WX_NAME[o.event.slice(8)], '#9fd8ff'); }
+      return { wanderers: wanderers.map(w => ({ dex: w.dex, x: w.x, y: w.y, label: w.m && w.m.label, temp: !!w.temp })), scene: cur };
+    }
+
+    return { init, render, restore, tap, debug };
   })();
 
   return {
@@ -1038,6 +1286,8 @@ G.Game = (() => {
     /** Para grabar vídeos: abre las cartas de subir de nivel. */
     debugLevelUp() { tampered = true; pl.level++; pendingLevels++; },
     toUI() { state = 'ui'; Backdrop.restore(); },
+    /** Para pruebas: controla el fondo del menú. */
+    debugBackdrop(o) { return Backdrop.debug(o); },
     /** Grupo: los OTROS jugadores que están eligiendo (vínculo u objeto) y tienen la partida parada. */
     get waitingChoosers() {
       const me = G.Social.me && G.Social.me.name;

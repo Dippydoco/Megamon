@@ -174,6 +174,11 @@ G.Weather = (() => {
     get vignette() { return cur && cur.kind === 'fog' ? level() : 0; },
     /** Pone un clima ya (la arena de la grieta; no se manda: cada uno lo pone). */
     force(kind, dur) { start(kind, dur); },
+    /** Main-menu backdrop: starts a weather silently (no message or sound) and lets it run by itself. */
+    showcase(kind, dur) { cur = { kind, t: 0, dur }; },
+    tickMenu(dt) { if (cur) { cur.t += dt; if (cur.t >= cur.dur) { cur = null; parts.length = 0; } } },
+    /** A random weather for a biome (the same odds as in a run). */
+    pickFor: pick,
     /** Quita el clima de golpe (al salir de la arena). */
     clear() { cur = null; parts.length = 0; },
     debugStart(kind = 'rain', dur = 60) { start(kind, dur); if (G.Coop.isHost) G.Coop.broadcast(['wx', kind, dur]); }

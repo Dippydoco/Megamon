@@ -10,6 +10,12 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('A livelier main menu'), new: [
+    T('Tap or click the Pokémon in the menu background and they react, showing their name (or your teammate\'s name).'),
+    T('The rift scenes in the menu now use a team from one of your past group runs: you and your teammates\' Pokémon, when you have one in your History.'),
+    T('The menu background follows your real time of day (dawn, dusk, night with stars) and shows the game\'s weather: rain, sun, sandstorm, snow and fog. Rift scenes bring their own weather.'),
+    T('Game events show up in the menu too: Gold Hour, hordes of one type and the treasure thief (try to tap it).')
+  ] },
   { d: '2026-10-17', title: T('Favourites list shows every Pokémon'), fix: [
     T('Picking a favourite Pokémon on your profile only listed your first 120 Pokémon, so later generations were cut off. It now lists everything you own.')
   ] },
