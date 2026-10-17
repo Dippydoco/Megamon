@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Easier to find bosses'), chg: [
+    T('The boss name at the top of the screen is bigger, with the boss\'s icon next to it and a percentage of its health left.'),
+    T('When a boss is off screen, an arrow with its icon, name and distance now points to it from the edge of the screen, so you can find it quickly (a living boss stops new rifts from appearing).')
+  ] },
   { d: '2026-10-17', title: T('Bigger health cards and buffs'), chg: [
     T('Your health card, your active buffs and your teammates\' cards are larger and easier to read (a bit less on small screens so they do not cover the timer).')
   ] },
