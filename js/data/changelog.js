@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Shell Bell description'), chg: [
+    T('The Shell Bell now says exactly what it does: you heal for 4% of the damage you deal, up to 4 HP per second.')
+  ] },
   { d: '2026-10-17', title: T('Rift arrow with an icon'), chg: [
     T('When a rift is off screen, the arrow pointing to it now comes with a round badge showing the rift itself (like the boss arrows), plus a bigger label with its distance and time left.')
   ] },
