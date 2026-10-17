@@ -919,7 +919,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .chat-box form .field, #lobby-chatform .field { min-width: 0; }
 
 .chat-run {
-  position: fixed; left: 12px; top: 112px; z-index: 15; width: min(340px, calc(100% - 24px));
+  position: fixed; left: 12px; bottom: 12px; z-index: 15; width: clamp(200px, 30vw, 320px);   /* bottom left: the top left is the HP bar and party */
   pointer-events: none; display: flex; flex-direction: column; gap: 4px;
 }
 .chat-run-log { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow: hidden; }
