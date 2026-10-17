@@ -144,12 +144,18 @@ G.RunUI = (() => {
   function showItemChoice(cur, next, cb) {
     const box = $('item-cards');
     box.innerHTML = '';
-    [[cur, 'Quedarme con'], [next, 'Cambiar a']].forEach(([id, verb], i) => {
-      const it = G.Items.BY[id];
+    // Sin objeto (cur = null): se ofrece el nuevo para aceptarlo o descartarlo.
+    const opts = cur ? [[cur, 'Quedarme con'], [next, 'Cambiar a']] : [[next, 'Take'], [null, 'Discard']];
+    opts.forEach(([id, verb], i) => {
+      const it = id ? G.Items.BY[id] : null;
       const el = document.createElement('div');
-      el.className = 'card' + (i === 1 ? ' evo' : '');
-      el.innerHTML = `<div class="ico">${G.Icons.html(id, 36)}</div>
+      el.className = 'card' + (cur && i === 1 ? ' evo' : '');
+      el.innerHTML = it
+        ? `<div class="ico">${G.Icons.html(id, 36)}</div>
         <div class="txt"><div class="nm">${verb} ${it.name}</div><div class="ds">${it.desc}</div></div>
+        <div class="key">${i + 1}</div>`
+        : `<div class="ico">${G.Icons.html('ban', 36)}</div>
+        <div class="txt"><div class="nm">${verb} ${G.Items.BY[next].name}</div><div class="ds">Leave it behind and keep going without an item.</div></div>
         <div class="key">${i + 1}</div>`;
       el.onclick = () => { G.UI.hide('scr-item'); cb(id); };
       box.appendChild(el);

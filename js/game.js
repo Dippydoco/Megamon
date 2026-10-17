@@ -440,7 +440,7 @@ G.Game = (() => {
     let mine = false;            // esta elección es la que ha parado el juego
     const take = got => {
       openItem = null;
-      if (got !== pl.item) {
+      if (got && got !== pl.item) {
         pl.equip(got);
         G.Spawner.say('¡Llevas ' + G.Items.BY[got].name + '!', 2.6, true);
         G.Progress.event('item', { id: got });
@@ -450,7 +450,8 @@ G.Game = (() => {
       if (G.Coop.active) G.Coop.holdEnd();
       afterLevelUp();
     };
-    if (!pl.item) { take(id); return; }
+    // De momento la Vidasfera no se pone sola: si es lo primero que encuentras, eliges aceptarla o descartarla.
+    if (!pl.item && id !== 'lifeorb') { take(id); return; }
     if (pl.item === id) { G.Spawner.say('Ya llevas ' + G.Items.BY[id].name, 2, true); return; }
     // Se para el juego mientras eliges; en grupo, para todos (como con las
     // fusiones). Antes en grupo seguía y te pegaban mientras elegías.
@@ -459,8 +460,8 @@ G.Game = (() => {
       state = 'choice';
       if (G.Coop.active) G.Coop.holdStart();
     }
-    openItem = { cur: pl.item, next: id, take, get mine() { return mine; } };
-    G.RunUI.showItemChoice(pl.item, id, take);
+    openItem = { cur: pl.item || null, next: id, take, get mine() { return mine; } };
+    G.RunUI.showItemChoice(pl.item || null, id, take);
   }
 
   /** @param who  quien lo ha cogido (en cooperativo puede ser un compañero) */
