@@ -75,13 +75,13 @@ def page(pid, lang, title, desc, body, ld=None):
     foot = ' · '.join(f'<a href="{rel(me, PATH[lang][p])}">{esc(t)}</a>' for p, t in FOOT[lang])
     play = 'Jugar gratis' if lang == 'es' else 'Play free'
     switch = f'<a class="lang" hreflang="{other}" href="{rel(me, PATH[other][pid])}">{"English" if lang == "es" else "Español"}</a>'
-    legal = ('PokéSurvivor es un juego de fans <b>gratuito y sin ánimo de lucro</b>, sin anuncios ni compras (sólo donaciones voluntarias para los servidores). No está afiliado a Nintendo, Creatures, '
+    legal = ('PokéSurvivor es un juego de fans <b>gratuito y sin ánimo de lucro</b>, sin anuncios ni compras. No está afiliado a Nintendo, Creatures, '
              'GAME FREAK ni The Pokémon Company; Pokémon y sus personajes son propiedad de sus respectivos dueños. Sprites de PMD SpriteCollab '
              '(CC BY-NC 4.0) · datos de PokéAPI · música y sonidos originales. No tiene ninguna criptomoneda ni token oficial: '
              'cualquiera que use su nombre es de terceros y no nos hacemos cargo de compras ni inversiones. '
              '<b>La única web oficial es pokesurvivor.com</b> y el juego es y será gratis: si alguien te pide pagar, no somos nosotros. '
              'Código bajo PolyForm Noncommercial 1.0.0 (hasta el 14-10-2026, MIT).') if lang == 'es' else (
-             'PokéSurvivor is a <b>free, non-profit</b> fan game with no ads or purchases (only voluntary donations for the servers). It is not affiliated with Nintendo, Creatures, GAME FREAK '
+             'PokéSurvivor is a <b>free, non-profit</b> fan game with no ads or purchases. It is not affiliated with Nintendo, Creatures, GAME FREAK '
              'or The Pokémon Company; Pokémon and its characters are owned by their respective owners. Sprites from PMD SpriteCollab (CC BY-NC 4.0) '
              '· data from PokéAPI · original music and sounds. It has no official cryptocurrency or token: any using its name '
              'belongs to third parties and we take no responsibility for purchases or investments. '
@@ -166,7 +166,7 @@ FAQ = {
   ('¿Se guarda mi progreso?', 'Con una cuenta (nombre y contraseña o Google) tu partida se guarda en la nube y la puedes seguir en cualquier dispositivo. Como invitado se juega al momento, pero no se guarda.'),
   ('¿Es un juego oficial de Pokémon?', 'No. Es un proyecto hecho por fans, gratuito y sin ánimo de lucro, sin relación con Nintendo, GAME FREAK ni The Pokémon Company.')],
  'en': [
-  ('Is PokéSurvivor free?', 'Yes, completely. It\'s a non-profit fan game with no ads or purchases. If you like, you can support it with a voluntary donation, which only pays for the servers and gives no advantages.'),
+  ('Is PokéSurvivor free?', 'Yes, completely. It\'s a non-profit fan game with no ads or purchases.'),
   ('Do I need to download anything?', 'No. You play in your browser on PC, tablet or phone. If you like, you can install it as an app with “Add to Home Screen”.'),
   ('Can I play on my phone?', 'Yes, in landscape. Put your finger anywhere on the screen and drag to move (the joystick appears where you touch), tap a move to switch to it and the top-right button to pause.'),
   ('Is it in English?', 'Yes: the game shows up in English or Spanish depending on your browser language, and you can change it in Settings.'),
@@ -521,45 +521,23 @@ def news(lang):
     write(pid, lang, page(pid, lang, title, desc, body, {'@context': 'https://schema.org', '@graph': [crumbs(pid, lang, h1)]}))
 
 # ================= apoyar el proyecto =================
+# Sin donaciones ni enlaces: la página es una broma.
 def support(lang):
     pid = 'support'
-    F = D['funding']
-    val = lambda v: (f'{v} €/mes' if lang == 'es' else f'€{v}/month') if isinstance(v, (int, float)) else esc(L(lang, v))
-    rows = ''.join(f'<tr><td>{esc(L(lang, c))}</td><td class="num">{val(v)}</td></tr>' for c, v in F['costs'])
-    kofi = f'https://ko-fi.com/{F["kofi"]}' if F['kofi'] else ''
-    spons = f'https://github.com/sponsors/{F["sponsors"]}' if F['sponsors'] else ''
     if lang == 'es':
-        h1 = 'Apoyar PokéSurvivor'
-        btns = ''.join(x for x in [f'<a class="btn" href="{kofi}" rel="noopener">Donar en Ko-fi</a>' if kofi else '',
-                                   f'<a class="btn ghost" href="{spons}" rel="noopener">GitHub Sponsors</a>' if spons else ''])
+        h1 = 'Apoyar Megamon'
         body = f"""<article class="doc"><h1>{h1}</h1>
-<p class="lead">PokéSurvivor es y será <b>gratis</b>: sin anuncios, sin compras y sin ventajas de pago. Si te gusta y quieres ayudar a que siga en línea,
-puedes hacer una <b>donación voluntaria</b>. <b>Todo el dinero se usa para los servidores y el dominio</b>; lo que sobre se guarda para los meses siguientes.</p>
-<p>Donar no da ninguna ventaja dentro del juego: todos los jugadores juegan igual.</p>
-<h2>Qué cuesta mantenerlo</h2>
-<table class="list"><tbody>{rows}</tbody></table>
-<p>Los servidores guardan las partidas y las cuentas, el ranking y las partidas en grupo: cuanta más gente juega, más cuestan.</p>
-<h2>Cómo apoyar</h2>
-<p>{btns or 'Muy pronto podrás donar desde aquí.'}</p>
-<p>También ayuda mucho, y gratis: compartir el juego con tus amigos, recomendarlo y avisar de fallos.</p>
+<p class="lead">Invita a Ryan a un Taco Bell.</p>
+<p>(Es una broma: el juego es gratis, sin anuncios ni compras, y siempre lo será.)</p>
 {cta(pid, lang, 'Volver al juego')}</article>"""
-        title, desc = 'Apoyar PokéSurvivor: donaciones para los servidores', 'PokéSurvivor es gratis y sin anuncios. Las donaciones voluntarias se usan sólo para los servidores y el dominio.'
+        title, desc = 'Apoyar Megamon', 'Invita a Ryan a un Taco Bell (es una broma: el juego es gratis).'
     else:
-        h1 = 'Support PokéSurvivor'
-        btns = ''.join(x for x in [f'<a class="btn" href="{kofi}" rel="noopener">Donate on Ko-fi</a>' if kofi else '',
-                                   f'<a class="btn ghost" href="{spons}" rel="noopener">GitHub Sponsors</a>' if spons else ''])
+        h1 = 'Support Megamon'
         body = f"""<article class="doc"><h1>{h1}</h1>
-<p class="lead">PokéSurvivor is and will stay <b>free</b>: no ads, no purchases and no pay-to-win. If you enjoy it and want to help keep it online,
-you can make a <b>voluntary donation</b>. <b>All the money goes to the servers and the domain</b>; anything left over is saved for the following months.</p>
-<p>Donating gives no advantage in the game: everyone plays on equal terms.</p>
-<h2>What it costs to run</h2>
-<table class="list"><tbody>{rows}</tbody></table>
-<p>The servers store saves and accounts, the leaderboards and group games: the more people play, the more they cost.</p>
-<h2>How to support</h2>
-<p>{btns or 'You\'ll be able to donate from here very soon.'}</p>
-<p>Sharing the game with your friends, recommending it and reporting bugs helps a lot too, and it\'s free.</p>
+<p class="lead">Buy Ryan a Taco Bell.</p>
+<p>(This is a joke: the game is free, has no ads or purchases, and always will.)</p>
 {cta(pid, lang, 'Back to the game')}</article>"""
-        title, desc = 'Support PokéSurvivor: donations for the servers', 'PokéSurvivor is free and ad-free. Voluntary donations only pay for the servers and the domain.'
+        title, desc = 'Support Megamon', 'Buy Ryan a Taco Bell (this is a joke: the game is free).'
     write(pid, lang, page(pid, lang, title, desc, body, {'@context': 'https://schema.org', '@graph': [crumbs(pid, lang, h1)]}))
 
 # ================= el juego en inglés (/en/) =================
