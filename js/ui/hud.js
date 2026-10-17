@@ -44,22 +44,15 @@ G.HUD = (() => {
 
     // ---------- vida + nivel + buffs (arriba a la izquierda, a escala HUD_SCALE) ----------
     const px = 16, py = 20;
+    portraitDt = Math.min(0.1, (performance.now() - portraitT) / 1000);
+    portraitT = performance.now();
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
-    ctx.font = F(800, 13);
-    ctx.fillStyle = '#eaf2ff';
-    ctx.textAlign = 'left';
-    ctx.fillText(pl.mon.name, px, py + 10);
-
-    ctx.font = F(700, 11);
-    ctx.fillStyle = '#ffcb3d';
-    ctx.fillText('Lv. ' + pl.level, px, py + 26);
-
-    bar(ctx, px + 48, py + 17, 168, 11, pl.hp / pl.maxHp, '#ff5f6d');
-    ctx.font = F(700, 10);
-    ctx.fillStyle = 'rgba(255,255,255,.95)';
-    ctx.textAlign = 'center';
-    ctx.fillText(Math.ceil(pl.hp) + ' / ' + Math.round(pl.maxHp), px + 48 + 84, py + 26);
+    // Tu tarjeta: igual que las de los compañeros (icono de tu Pokémon, nombre, vida), con el nivel.
+    drawCard(ctx, px, py, {
+      key: 'me', pl, name: pl.mon.name, nameCol: '#eaf2ff', color: '#ffcb3d', tag: 'Lv. ' + pl.level,
+      hp: pl.hp, maxHp: pl.maxHp, dead: pl.dead, barCol: '#ff5f6d'
+    });
 
     // Buffs activos y poder de altar: píldoras con icono + texto. Si no caben en
     // una fila (hasta el final de la barra de vida) pasan a la siguiente, sin solaparse.
@@ -77,7 +70,7 @@ G.HUD = (() => {
       pills.push({ icon: POWER_ICO[pw.def.id] || 'star', txt: pw.def.name.toUpperCase() + ' ' + Math.ceil(pw.t) + 's', col: pw.def.color, bg: 'rgba(0,0,0,.6)' });
     }
     const PH = 18, PGAP = 5, MAXX = px + 216;
-    let bx = px, rowY = py + 34, rows = pills.length ? 1 : 0;
+    let bx = px, rowY = py + CARD_H + CARD_GAP, rows = pills.length ? 1 : 0;
     ctx.textAlign = 'left';
     for (const pi of pills) {
       ctx.font = F(800, 10);
@@ -90,7 +83,7 @@ G.HUD = (() => {
       ctx.fillText(pi.txt, bx + 5 + 14 + 4, rowY + 13);
       bx += tw + PGAP;
     }
-    const coopTop = rows ? py + 34 + rows * (PH + 4) + 2 : py + 40;
+    const coopTop = rows ? py + CARD_H + CARD_GAP + rows * (PH + 4) + 2 : py + CARD_H + CARD_GAP;
     ctx.restore();
 
     // ---------- reloj / bioma / kills ----------
@@ -425,70 +418,81 @@ G.HUD = (() => {
    *   y a cuántos metros están (roja y parpadeando si está caído).
    * - Si has caído tú: aviso y barra de "te están levantando".
    */
-  // Iconos de los compañeros: un Animator por jugador, mirando de frente y en reposo.
+  // Tarjeta de jugador (tú y tus compañeros): recuadro con el icono de su Pokémon, nombre,
+  // vida en números y barra. Se dibuja ya en el espacio escalado del HUD.
+  const CARD_W = 216, CARD_H = 34, CARD_GAP = 6, CARD_IC = 28;
   const portraits = new Map();
-  let portraitT = performance.now();
-  function portrait(m, o) {
-    let p = portraits.get(m.uid);
+  let portraitT = performance.now(), portraitDt = 0;
+  function portrait(key, o) {
+    let p = portraits.get(key);
     if (!p || p.dex !== o.dex || p.shinyWanted !== !!o.shiny) {
       p = new G.Sprites.Animator(o.dex, 1, !!o.shiny);
       p.shinyWanted = !!o.shiny;
       p.dir = G.Sprites.dirFromAngle(Math.PI / 2);
       p.loop('Idle');
-      portraits.set(m.uid, p);
+      portraits.set(key, p);
     }
     return p;
+  }
+
+  /** c = { key, pl, name, nameCol, color, tag?, hp, maxHp, dead, barCol } */
+  function drawCard(ctx, x, y, c) {
+    const o = c.pl, t = performance.now() / 1000;
+    roundRect(ctx, x, y, CARD_W, CARD_H, 8);
+    ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill();
+    // Icono del Pokémon (de frente, en un recuadro redondeado)
+    const ix = x + 3, iy = y + (CARD_H - CARD_IC) / 2;
+    roundRect(ctx, ix, iy, CARD_IC, CARD_IC, 7);
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fill();
+    ctx.strokeStyle = c.color; ctx.lineWidth = 1.5; ctx.stroke();
+    const pt = portrait(c.key, o);
+    pt.update(portraitDt);
+    const am = G.Sprites.animMeta(o.dex, 'Idle', pt.shiny);
+    pt.scale = Math.min(2, (CARD_IC - 6) / ((am && am.ay) || 24)) / G.Sprites.PX;
+    ctx.save();
+    roundRect(ctx, ix, iy, CARD_IC, CARD_IC, 7); ctx.clip();
+    if (c.dead) ctx.globalAlpha = 0.4;
+    pt.draw(ctx, ix + CARD_IC / 2, iy + CARD_IC - 3);
+    ctx.restore();
+    // Nombre (y nivel), vida y barra
+    const tx = x + CARD_IC + 10;
+    ctx.textAlign = 'left';
+    ctx.font = F(800, 11);
+    ctx.fillStyle = c.nameCol;
+    ctx.fillText(c.name, tx, y + 14);
+    if (c.tag) {
+      const nw = ctx.measureText(c.name).width;
+      ctx.font = F(700, 10);
+      ctx.fillStyle = '#ffcb3d';
+      ctx.fillText(c.tag, tx + nw + 7, y + 14);
+    }
+    ctx.textAlign = 'right';
+    if (c.dead) {
+      ctx.font = F(800, 10);
+      ctx.fillStyle = Math.sin(t * 8) > 0 ? '#ff8a96' : '#ffd0d5';
+      ctx.fillText('DOWN', x + CARD_W - 8, y + 14);
+    } else {
+      ctx.font = F(700, 9);
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.fillText(Math.ceil(c.hp) + ' / ' + Math.round(c.maxHp), x + CARD_W - 8, y + 14);
+    }
+    bar(ctx, tx, y + 19, CARD_W - (tx - x) - 8, 9, c.dead ? 0 : c.hp / c.maxHp, c.barCol);
+    ctx.textAlign = 'left';
   }
 
   function drawCoop(ctx, w, h, pl, px, top) {
     const cam = G.Camera;
     const t = performance.now() / 1000;
     let y = top;
-    // Lista de compañeros (a la izquierda, hacia abajo): una tarjeta por jugador con
-    // el icono de su Pokémon, su nombre, su vida y, si ha caído, el aviso.
-    const nowMs = performance.now(), dt = Math.min(0.1, (nowMs - portraitT) / 1000);
-    portraitT = nowMs;
+    // Lista de compañeros (a la izquierda, hacia abajo): una tarjeta por jugador.
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
-    const CW = 216, CH = 34, CGAP = 6, IC = 28;
     for (const m of G.Coop.mates) {
       if (!m.connected) continue;
       const o = m.pl;
-      // Tarjeta
-      roundRect(ctx, px, y, CW, CH, 8);
-      ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill();
-      // Icono del Pokémon (mirando de frente, en un recuadro redondeado)
-      const ix = px + 3, iy = y + (CH - IC) / 2;
-      roundRect(ctx, ix, iy, IC, IC, 7);
-      ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fill();
-      ctx.strokeStyle = m.color; ctx.lineWidth = 1.5; ctx.stroke();
-      const pt = portrait(m, o);
-      pt.update(dt);
-      const am = G.Sprites.animMeta(o.dex, 'Idle', pt.shiny);
-      pt.scale = Math.min(2, (IC - 6) / ((am && am.ay) || 24)) / G.Sprites.PX;
-      ctx.save();
-      roundRect(ctx, ix, iy, IC, IC, 7); ctx.clip();
-      if (o.dead) ctx.globalAlpha = 0.4;
-      pt.draw(ctx, ix + IC / 2, iy + IC - 3);
-      ctx.restore();
-      // Nombre y vida
-      const tx = px + IC + 10;
-      ctx.textAlign = 'left';
-      ctx.font = F(800, 11);
-      ctx.fillStyle = m.color;
-      ctx.fillText(m.name, tx, y + 14);
-      ctx.textAlign = 'right';
-      if (o.dead) {
-        ctx.font = F(800, 10);
-        ctx.fillStyle = Math.sin(t * 8) > 0 ? '#ff8a96' : '#ffd0d5';
-        ctx.fillText('DOWN', px + CW - 8, y + 14);
-      } else {
-        ctx.font = F(700, 9);
-        ctx.fillStyle = 'rgba(255,255,255,.75)';
-        ctx.fillText(Math.ceil(o.hp) + ' / ' + Math.round(o.maxHp), px + CW - 8, y + 14);
-      }
-      bar(ctx, tx, y + 19, CW - (tx - px) - 8, 9, o.dead ? 0 : o.hp / o.maxHp, '#5fe08a');
-      y += CH + CGAP;
+      drawCard(ctx, px, y, { key: m.uid, pl: o, name: m.name, nameCol: m.color, color: m.color,
+                             hp: o.hp, maxHp: o.maxHp, dead: o.dead, barCol: '#5fe08a' });
+      y += CARD_H + CARD_GAP;
     }
     ctx.restore();
 
