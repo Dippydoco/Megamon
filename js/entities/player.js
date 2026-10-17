@@ -370,7 +370,19 @@ G.Player = class Player {
     const ranged = !!m && (m.kind === 'projectile' || m.kind === 'beam');
     const threat = G.Projectiles.nearest(all, this.x, this.y, this.r + 24);
     const boss = all.find(e => e.boss && !e.dead && G.U.dist(this.x, this.y, e.x, e.y) < 330);
-    const tg = (ranged ? boss || threat : threat || boss)
+    // Un cofre que se puede romper y está al alcance del movimiento activo va antes que
+    // los enemigos: así no hace falta ponerse entre un Pokémon y el cofre para romperlo.
+    let chest = null;
+    if (m) {
+      const cr = Math.min(G.Combat.reach(m), 260);
+      let bd = cr * cr;
+      for (const p of G.World.propsInCircle(this.x, this.y, cr)) {
+        if (p.type !== 'chest' || p.dead) continue;
+        const d = G.U.dist2(this.x, this.y, p.x, p.y);
+        if (d < bd) { bd = d; chest = p; }
+      }
+    }
+    const tg = chest || (ranged ? boss || threat : threat || boss)
             || G.Projectiles.nearest(all, this.x, this.y, 520)
             || G.World.nearestBreakable(this.x, this.y, 200);
     this.target = tg;

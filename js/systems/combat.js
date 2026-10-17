@@ -671,6 +671,6 @@ G.Combat = (() => {
     }
   }
 
-  return { tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  return { reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();

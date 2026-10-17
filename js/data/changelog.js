@@ -12,6 +12,8 @@ G.CHANGELOG = [
     ['Nuevo ajuste "Joystick del ratón fijo": el joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.',
      'New "Locked mouse joystick" setting: the joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.']
   ], chg: [
+    ['Breakable chests within range of your active move are now targeted before enemies, so you no longer have to stand between a Pokémon and the chest to break it.',
+     'Breakable chests within range of your active move are now targeted before enemies, so you no longer have to stand between a Pokémon and the chest to break it.'],
     ['Leaving a rift now puts every player together at the rift\'s exit, wherever they were before, and gives everyone 3 seconds of immunity so nobody is hit the moment they come back.',
      'Leaving a rift now puts every player together at the rift\'s exit, wherever they were before, and gives everyone 3 seconds of immunity so nobody is hit the moment they come back.'],
     ['When you find the Life Orb and are not holding an item, you now choose whether to take it or discard it instead of it being equipped automatically.',
