@@ -505,19 +505,22 @@ G.Tiles = (() => {
       const R = B.rock.map(h => pack(h));
       const eff = variant >> 1, used = variant & 1;
       const ORB = [['#ff5f6d', '#c23a4b', '#ffd3d8'], ['#5fd4ff', '#2a8fd0', '#d8f6ff'],
-                   ['#ff8ad8', '#b03d84', '#ffe0f4'], ['#ffd23f', '#c08a10', '#fff3b0']][eff];
+                   ['#ff8ad8', '#b03d84', '#ffe0f4'], ['#b48cff', '#7a52c8', '#ece0ff'],
+                   ['#c9d6e6', '#7d8da6', '#f4f8fd'], ['#ffd23f', '#c08a10', '#fff3b0']][eff];
       const O = (used ? ['#6b7380', '#4a505c', '#9aa2ae'] : ORB).map(h => pack(h));
       // Escalones, columna y losa.
       for (let y = 21; y <= 25; y++) for (let x = 1; x <= 16; x++) P.set(x, y, R[y === 21 ? 2 : y >= 24 ? 0 : 1]);
       for (let y = 12; y <= 20; y++) for (let x = 5; x <= 12; x++) P.set(x, y, R[x === 5 ? 2 : x >= 11 ? 0 : 1]);
       for (let y = 10; y <= 11; y++) for (let x = 3; x <= 14; x++) P.set(x, y, R[y === 10 ? 2 : 1]);
       // A carved symbol on the column (5×6 pixels) that says what the altar gives:
-      // flame = Fury, bolt = Thunderbolt, horseshoe magnet = Magnet, clock = Haste.
+      // flame = Fury, bolt = Thunderbolt, horseshoe magnet = Magnet, clock = Haste, shield = Guardian, coin = Gold.
       const CARVE = [
         ['..#..', '.##..', '.###.', '##.##', '#####', '.###.'],
         ['..###', '.##..', '.###.', '..##.', '.##..', '##...'],
         ['#...#', '#...#', '#...#', '#...#', '##.##', '.###.'],
-        ['.###.', '#.#.#', '#.###', '#...#', '.###.', '.....']
+        ['.###.', '#.#.#', '#.###', '#...#', '.###.', '.....'],
+        ['#####', '#...#', '#...#', '#...#', '.#.#.', '..#..'],
+        ['.###.', '#.#.#', '#.#.#', '#.#.#', '#.#.#', '.###.']
       ][eff];
       CARVE.forEach((row, ry) => { for (let rx = 0; rx < 5; rx++) if (row[rx] === '#') P.set(6 + rx, 14 + ry, O[1]); });
       // Orbe.

@@ -523,8 +523,9 @@ G.Game = (() => {
       return;
     }
     if (p.kind === 'coin') {
-      pl.coins += p.value;
-      G.FX.dmgText(who.x, who.y - who.bodyH - 6, '+' + p.value, '#ffd23f');
+      const v = G.Interact.goldCoin(p.value);            // Gold shrine combo (team-wide)
+      pl.coins += v;
+      G.FX.dmgText(who.x, who.y - who.bodyH - 6, '+' + v, v > p.value ? '#fff08a' : '#ffd23f');
       return;
     }
     if (p.kind === 'item') {

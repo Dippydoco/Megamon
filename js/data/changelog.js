@@ -10,6 +10,12 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Gold and Guardian shrines'), new: [
+    T('Gold Shrine (gold orb, coin icon): for 25 s every coin the team picks up builds a combo (×1.15, ×1.30 ... up to ×3). The combo drops if no coin is picked up for 2.5 s, and each shrine gives at most 80 extra coins. It helps the whole team, but only one player can use the shrine.'),
+    T('Guardian Shrine (silver orb, shield icon): you take 35% less damage for 25 s.')
+  ], chg: [
+    T('The Haste shrine is now purple instead of yellow, so it does not look like the Gold shrine.')
+  ] },
   { d: '2026-10-17', title: T('Shrines you can tell apart'), chg: [
     T('Each power shrine now shows what it does without needing to remember its colour: a floating icon above it (fist = Fury, boot = Thunderbolt, magnet = Magnet, clock = Haste, the same icons as your buffs), a matching symbol carved on its column, and its own effect (embers, sparks, inward-drifting motes, or a ticking ring).')
   ] },

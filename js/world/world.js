@@ -151,7 +151,7 @@ G.World = (() => {
       const hs = H(tx, ty, seed + 909);
       if (open && Math.hypot(tx, ty) > 12 && hs < 0.0032) {
         type = hs < 0.0004 ? 'altar' : hs < 0.0008 ? 'spring' : hs < 0.0011 ? 'bigchest' : 'trap';
-        kind = Math.floor(H(tx, ty, seed + 910) * (type === 'altar' ? 4 : 3));
+        kind = Math.floor(H(tx, ty, seed + 910) * (type === 'altar' ? 6 : 3));
       }
       if (type) { /* ya elegido */ }
       else if (open && h < (grove ? 0.07 : 0.006)) type = 'tree';
@@ -178,6 +178,16 @@ G.World = (() => {
   };
   const SPECIAL = new Set(['altar', 'spring', 'bigchest', 'trap']);
 
+  // Team-wide altars (Gold): once one player takes it, it is used up for everybody (see interact.js).
+  const usedAlt = new Set();
+  function markUsed(tx, ty) {
+    usedAlt.add(tx + ',' + ty);
+    const c = data.get(Math.floor(tx / N) + ',' + Math.floor(ty / N));
+    const p = c && c.props.find(o => o.tx === tx && o.ty === ty);
+    if (p) p.used = true;
+  }
+  const altarUsed = (tx, ty) => usedAlt.has(tx + ',' + ty);
+
   function makeProp(type, tx, ty, kind = 0) {
     const d = PROP[type];
     return {
@@ -186,7 +196,7 @@ G.World = (() => {
       r: d.r, hp: d.hp, maxHp: d.hp, solid: d.solid, flat: !!d.flat,
       destructible: d.hp !== Infinity, flash: 0,
       wiggle: H(tx, ty, 9) * 6.28,
-      used: false, charge: 1, open: 0          // altar / manantial / cofre con candado
+      used: usedAlt.has(tx + ',' + ty), charge: 1, open: 0          // altar / manantial / cofre con candado
     };
   }
 
@@ -491,8 +501,8 @@ G.World = (() => {
 
   // Power altars: a floating icon (same as the buff icon in the HUD) and a particle effect
   // of their own, so each one can be told apart without remembering colours.
-  const ALTAR_ICON = ['fist', 'boot', 'magnet', 'clock'];
-  const ALTAR_COL = ['#ff5f6d', '#5fd4ff', '#ff8ad8', '#ffd23f'];
+  const ALTAR_ICON = ['fist', 'boot', 'magnet', 'clock', 'shield', 'coin'];
+  const ALTAR_COL = ['#ff5f6d', '#5fd4ff', '#ff8ad8', '#b48cff', '#c9d6e6', '#ffd23f'];
   function drawAltarSign(ctx, p, t, h, P) {
     const k = p.kind, col = ALTAR_COL[k];
     const ox = p.x, oy = p.y - h + 11 * P;                    // centre of the orb
@@ -513,7 +523,13 @@ G.World = (() => {
       G.FX.px(ox + Math.cos(a) * 34, oy + Math.sin(a) * 34, '#ff8ad8', { vx: -Math.cos(a) * 55, vy: -Math.sin(a) * 55, life: 0.6, drag: 1 });
     } else if (k === 3 && (!p.tk || t - p.tk > 1.4)) {
       p.tk = t;                                                // a ring every 1.4 s, like a ticking clock
-      G.FX.ring(ox, oy, 6, 26, '#ffd23f', 0.5, 2);
+      G.FX.ring(ox, oy, 6, 26, '#b48cff', 0.5, 2);
+    } else if (k === 4 && r < 0.12) {
+      const a = t * 2.6 + p.wiggle;                             // silver motes circling the orb, like a shield
+      G.FX.px(ox + Math.cos(a) * 20, oy + Math.sin(a) * 12, '#e6eef8', { life: 0.35, drag: 1 });
+    } else if (k === 5 && r < 0.08) {
+      G.FX.px(ox + G.U.rand(-12, 12), oy + G.U.rand(-6, 10), r < 0.02 ? '#ffffff' : '#ffd23f', { vy: -28, life: 0.75 });   // glints
+      if (r < 0.01) G.FX.twinkle(ox + G.U.rand(-16, 16), oy + G.U.rand(-12, 8));
     }
   }
 
@@ -536,7 +552,7 @@ G.World = (() => {
     }
     if (p.type === 'altar' && !p.used) {
       // Halo del orbe, latiendo.
-      const col = ['#ff5f6d', '#5fd4ff', '#ff8ad8', '#ffd23f'][p.kind];
+      const col = ['#ff5f6d', '#5fd4ff', '#ff8ad8', '#b48cff', '#c9d6e6', '#ffd23f'][p.kind];
       ctx.save();
       ctx.globalAlpha = 0.22 + Math.sin(t * 3 + p.wiggle) * 0.1;
       ctx.fillStyle = col;
@@ -582,6 +598,7 @@ G.World = (() => {
 
   function reset(s) {
     seed = (s | 0) || 1;
+    usedAlt.clear();
     data.clear(); images.clear(); broken.clear();
     fade = null; arena = null;
   }
@@ -617,7 +634,7 @@ G.World = (() => {
   return {
     TS, CW, reset, setBiome, biomeName, liquidKind, liquidEffect, walkable,
     kindAt, isWall, isLiquid, isFree, collide, projectileBlock, propsInCircle, nearestBreakable,
-    damageProp, breakAt, specialsNear, update,
+    damageProp, breakAt, specialsNear, update, markUsed, altarUsed,
     breakProp(p) { if (!broken.has(p.tx + ',' + p.ty)) destroyProp(p); },
     /** Arena de la grieta: { tx, ty, r } (en tiles) o null. */
     setArena(a) {

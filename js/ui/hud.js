@@ -59,7 +59,7 @@ G.HUD = (() => {
     const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
     const LBL = { atk: 'ATK', spd: 'SPD', def: 'DEF', regen: 'REGEN' };
     const ICO = { atk: 'fist', spd: 'boot', def: 'shield', regen: 'sprout' };
-    const POWER_ICO = { dmg: 'fist', spd: 'boot', mag: 'magnet', cd: 'clock' };
+    const POWER_ICO = { dmg: 'fist', spd: 'boot', mag: 'magnet', cd: 'clock', guard: 'shield' };
     const pills = [];
     for (const k in pl.buffs) {
       const b = pl.buffs[k];
@@ -69,6 +69,8 @@ G.HUD = (() => {
       const pw = pl.power;
       pills.push({ icon: POWER_ICO[pw.def.id] || 'star', txt: pw.def.name.toUpperCase() + ' ' + Math.ceil(pw.t) + 's', col: pw.def.color, bg: 'rgba(0,0,0,.6)' });
     }
+    const gd = G.Interact.goldState();                 // Gold shrine combo (whole team)
+    if (gd) pills.push({ icon: 'coin', txt: 'GOLD ×' + (gd[1] / 100).toFixed(2) + (gd[2] ? ' MAX' : '') + ' ' + Math.ceil(gd[0]) + 's', col: '#ffd23f', bg: 'rgba(70,52,0,.75)' });
     const PH = 18, PGAP = 5, MAXX = px + 216;
     let bx = px, rowY = py + CARD_H + CARD_GAP, rows = pills.length ? 1 : 0;
     ctx.textAlign = 'left';
