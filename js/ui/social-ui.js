@@ -130,7 +130,17 @@
               if (r.ok) G.LobbyUI.open();
             });
           }
-          btn('Quitar', 'ghost', () => { if (confirm('¿Quitar a ' + f.name + ' de tus amigos?')) G.Social.remove(f.uid); });
+          // Quitar amigo: hay que pulsar dos veces (la primera pide confirmar y se desarma sola),
+          // y va separado de "Invitar" para no darle sin querer.
+          let armed = false, armT = 0;
+          const rm = btn('Remove', 'ghost', () => {
+            if (armed) { clearTimeout(armT); G.Social.remove(f.uid); return; }
+            armed = true;
+            rm.textContent = 'Sure? Tap again';
+            rm.style.color = '#ff8a96'; rm.style.borderColor = '#ff8a96';
+            armT = setTimeout(() => { armed = false; rm.textContent = 'Remove'; rm.style.color = ''; rm.style.borderColor = ''; }, 3500);
+          });
+          rm.style.marginLeft = '18px';
         }
         box.appendChild(el);
       }
