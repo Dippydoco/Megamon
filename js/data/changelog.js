@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Dates on the all-time leaderboard'), new: [
+    T('Each run in the All-time leaderboard now shows the date it was set.')
+  ] },
   { d: '2026-10-17', title: T('New menu backgrounds'), new: [
     T('The main menu background now also shows rift arenas with their legendary boss and a small team facing it (Entei, Articuno, Kyogre, Giratina, Zapdos, Rayquaza and Arceus), mixed in with the forest, cave and volcano scenes.')
   ] },

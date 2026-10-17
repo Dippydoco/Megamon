@@ -160,7 +160,9 @@ G.Ranking = (() => {
 
   // Kills tables ('sk_' solo, 'gk_' group) rank by `kills`; the time tables by `t`.
   const vkOf = b => /^[sg]k_/.test(b) ? 'kills' : 't';
-  const rowOf = (id, v) => ({ id, t: v.t, uids: v.uids || [], names: v.names || [], dex: v.dex || [], shiny: v.shiny || [], lv: v.lv, kills: v.kills });
+  // `at` = when the record was set (ms). Top-50 rows store it as a number; entry docs have a Timestamp.
+  const atMs = a => (a && a.toMillis ? a.toMillis() : typeof a === 'number' ? a : 0);
+  const rowOf = (id, v) => ({ id, t: v.t, uids: v.uids || [], names: v.names || [], dex: v.dex || [], shiny: v.shiny || [], lv: v.lv, kills: v.kills, at: atMs(v.at) });
   const sorted = (top, vk = 't') => Object.entries(top || {}).map(([id, v]) => rowOf(id, v)).sort((a, b) => (b[vk] || 0) - (a[vk] || 0));
   const now = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -225,7 +227,7 @@ G.Ranking = (() => {
             const s = await tx.get(sumRef(b));
             const top = Object.assign({}, s.exists ? s.data().top : {});
             // (Sin "shiny" si no hay ninguno: el resumen pesa menos.)
-            const mine = { t: entry.t, uids: entry.uids, names: entry.names, dex: entry.dex, lv: entry.lv, kills: entry.kills };
+            const mine = { t: entry.t, uids: entry.uids, names: entry.names, dex: entry.dex, lv: entry.lv, kills: entry.kills, at: Date.now() };
             if (entry.shiny.some(Boolean)) mine.shiny = entry.shiny;
             let ev = '';
             // Ya estabas con una marca mejor (otro ordenador): nada que escribir.
@@ -318,6 +320,40 @@ G.Ranking = (() => {
    * @param friendsOnly  sólo tú y tus amigos
    */
   async function top(mode, period, dex, friendsOnly) {
+    const rows = await topRows(mode, period, dex, friendsOnly);
+    if (period === 'a') await fillDates(board(mode, period, mode.length > 1 ? null : dex), rows);
+    return rows;
+  }
+
+  /**
+   * All-time rows set before dates were stored have no `at`: read it once from the
+   * record itself and remember it in this browser (so each old row costs one read, ever).
+   */
+  async function fillDates(b, rows) {
+    const vk = vkOf(b), KEY = 'ps.rk.dates';
+    let c = {};
+    try { c = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { c = {}; }
+    const need = [];
+    for (const r of rows) {
+      if (r.at) continue;
+      const k = b + ':' + r.id + ':' + r[vk];
+      if (c[k]) r.at = c[k]; else need.push([r, k]);
+    }
+    if (!need.length) return;
+    await Promise.all(need.map(async ([r, k]) => {
+      try {
+        const d = await col(b).doc(r.id).get();
+        const at = d.exists ? atMs(d.data().at) : 0;
+        if (at) { r.at = at; c[k] = at; }
+      } catch (e) { /* sin fecha */ }
+    }));
+    try {
+      if (Object.keys(c).length > 800) c = Object.fromEntries(Object.entries(c).slice(-400));
+      localStorage.setItem(KEY, JSON.stringify(c));
+    } catch (e) { /* nada */ }
+  }
+
+  async function topRows(mode, period, dex, friendsOnly) {
     const fb = fbx();
     if (!fb) return [];
     if (mode.length > 1) dex = null;                      // no per-Pokémon filter on kills tables
