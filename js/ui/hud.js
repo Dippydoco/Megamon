@@ -765,6 +765,25 @@ G.HUD = (() => {
       if (f > 0) bar(ctx, w / 2 - 110, h * 0.62 + 12, 220, 10, f, '#5fe08a');
       ctx.restore();
     }
+
+    // Reviving a teammate: a progress bar above you (on top of the ring that fills around them).
+    if (!pl.dead && G.Coop.active) {
+      let tgt = null;
+      for (const p of G.Coop.puppets()) if (p.dead && (p.reviveT || 0) > 0 && G.U.dist2(p.x, p.y, pl.x, pl.y) < 80 * 80) tgt = p;
+      if (tgt) {
+        const k = G.Camera.scale || 1, cx = (pl.x - G.Camera.left()) * k, cy = (pl.y - G.Camera.top()) * k - ((pl.bodyH || 30) + 30) * k;
+        const f = G.U.clamp(tgt.reviveT / G.Player.REVIVE_TIME, 0, 1), bw = 120;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.font = F(800, 14);
+        ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
+        const msg = 'Reviving ' + (tgt.tag || 'teammate') + '… ' + Math.round(f * 100) + '%';
+        ctx.strokeText(msg, cx, cy - 6); ctx.fillStyle = '#e6ffee'; ctx.fillText(msg, cx, cy - 6);
+        bar(ctx, cx - bw / 2, cy, bw, 11, f, '#5fe08a');
+        ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.8)'; roundRect(ctx, cx - bw / 2, cy, bw, 11, 5.5); ctx.stroke();
+        ctx.restore();
+      }
+    }
   }
 
   return { draw, roundRect, bar, portraitBox };

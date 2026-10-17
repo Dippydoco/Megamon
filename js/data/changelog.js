@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Revive progress bar'), new: [
+    T('When you are reviving a downed teammate, a progress bar with their name and a percentage now shows above you, along with the ring that fills around them.')
+  ] },
   { d: '2026-10-17', title: T('Downed players can pick from the Armoury'), fix: [
     T('Players who have been downed can now choose an item from the Aegislash Armoury too (they keep it if a teammate revives them). The game does not pause for their choice.')
   ] },
