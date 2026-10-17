@@ -972,3 +972,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .cos-col { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid rgba(244,248,255,.25); padding: 0; }
 .cos-col.on { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,.6); }
 .cos-sample { margin: 8px 0 0; }
+
+.diag { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.diag summary { cursor: pointer; }
+.diag textarea { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 8px; font: 12px/1.4 ui-monospace, Consolas, monospace; color: #dfe9ff; background: rgba(0,0,0,.35); border: 2px solid rgba(244,248,255,.18); border-radius: 8px; resize: vertical; }

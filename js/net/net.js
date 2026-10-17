@@ -50,6 +50,23 @@ G.Net = (() => {
   const handlers = new Set(), peerHandlers = new Set();
   let stats = { sent: 0, recv: 0, relaySent: 0 };
 
+  // ---- Connection diagnostics (lobby > "Connection details") ----
+  // Per other player: which kinds of network addresses each side found, signalling counts, ICE state.
+  const diags = new Map();          // uid -> { tries, loc:{}, rem:{}, sigOut, sigIn, ice, gather, err:[], at }
+  const dbErrors = [];              // problems writing the signalling messages to the database
+  function diagOf(u) {
+    let d = diags.get(u);
+    if (!d) { d = { tries: 0, loc: {}, rem: {}, sigOut: 0, sigIn: 0, ice: '-', gather: '-', err: [] }; diags.set(u, d); }
+    return d;
+  }
+  // 'host' addresses ending in .local are Chrome's privacy names (mDNS): they only work if both PCs can answer mDNS on the LAN.
+  function candKind(line) {
+    const m = /typ (host|srflx|prflx|relay)/.exec(line || '');
+    if (!m) return 'other';
+    if (m[1] === 'host') return /\.local /.test(line) ? 'host(mDNS)' : 'host(ip)';
+    return m[1];
+  }
+
   function emitPeer(u) {
     const p = peers.get(u);
     peerHandlers.forEach(fn => { try { fn(u, p ? p.mode : 'closed'); } catch (e) { console.warn(e); } });
@@ -113,11 +130,18 @@ G.Net = (() => {
   function newPeer(u) {
     const p = { pc: null, dc: null, mode: 'connecting', timer: 0 };
     peers.set(u, p);
+    const dg = diagOf(u);
+    dg.tries++; dg.loc = {}; dg.rem = {}; dg.sigOut = 0; dg.sigIn = 0; dg.ice = '-'; dg.gather = '-'; dg.err = []; dg.at = Date.now();
     // Sin WebRTC (navegador antiguo o bloqueado): directamente por el relé.
     let pc;
     try { pc = p.pc = new RTCPeerConnection({ iceServers: ICE }); }
     catch (e) { p.mode = 'relay'; emitPeer(u); return p; }
-    pc.onicecandidate = e => { if (e.candidate) signal(u, { c: e.candidate.toJSON() }); };
+    pc.onicecandidate = e => {
+      if (e.candidate) { const k = candKind(e.candidate.candidate); dg.loc[k] = (dg.loc[k] || 0) + 1; signal(u, { c: e.candidate.toJSON() }); }
+    };
+    pc.oniceconnectionstatechange = () => { dg.ice = pc.iceConnectionState; };
+    pc.onicegatheringstatechange = () => { dg.gather = pc.iceGatheringState; };
+    pc.onicecandidateerror = e => { if (dg.err.length < 4) dg.err.push((e.errorCode || '?') + ' ' + String(e.url || '').slice(0, 40)); };
     pc.onconnectionstatechange = () => {
       const s = pc.connectionState;
       if (s === 'connected') { clearTimeout(p.discT); return; }
@@ -205,6 +229,7 @@ G.Net = (() => {
   async function onSignal(from, sig) {
     let p = peers.get(from);
     try {
+      if (sig.sdp) diagOf(from).sigIn++;
       if (sig.sdp && sig.sdp.type === 'offer') {
         if (isHost) return;
         if (p) drop(from, true);
@@ -220,6 +245,8 @@ G.Net = (() => {
       } else if (sig.sdp && sig.sdp.type === 'answer') {
         if (p && p.pc) await p.pc.setRemoteDescription(sig.sdp);
       } else if (sig.c) {
+        const k = candKind(sig.c.candidate), dg = diagOf(from);
+        dg.rem[k] = (dg.rem[k] || 0) + 1;
         if (p && p.pc && p.pc.remoteDescription) await p.pc.addIceCandidate(sig.c).catch(() => {});
         else { if (!pendingIce.has(from)) pendingIce.set(from, []); pendingIce.get(from).push(sig.c); }
       }
@@ -229,7 +256,7 @@ G.Net = (() => {
     }
   }
 
-  function signal(to, sig) { relayPush(to, { f: uid, sig }); }
+  function signal(to, sig) { diagOf(to).sigOut++; relayPush(to, { f: uid, sig }); }
 
   function drop(u, silent) {
     const p = peers.get(u);
@@ -246,7 +273,7 @@ G.Net = (() => {
 
   function relayPush(to, env) {
     if (!rtdb || !roomId) return;
-    rtdb.ref('rooms/' + roomId + '/q/' + to).push(JSON.stringify(env)).catch(e => console.warn('[Net] relé:', e.code || e.message));
+    rtdb.ref('rooms/' + roomId + '/q/' + to).push(JSON.stringify(env)).catch(e => { console.warn('[Net] relé:', e.code || e.message); if (dbErrors.length < 5) dbErrors.push(e.code || e.message); });
   }
 
   function send(to, msg) {
@@ -271,8 +298,41 @@ G.Net = (() => {
     handlers.forEach(fn => { try { fn(from, msg); } catch (e) { console.error('[Net] mensaje:', e); } });
   }
 
+  /**
+   * Plain-text report of why a connection is (not) working, with a guess at the cause.
+   * `names`: uid -> nickname. Nothing private: only kinds of addresses (never the addresses), counts and states.
+   */
+  function report(names = {}) {
+    const L = [];
+    const kinds = o => Object.keys(o).map(k => k + '×' + o[k]).join(', ') || 'none';
+    L.push('Megamon connection report · ' + new Date().toISOString());
+    L.push('Browser: ' + navigator.userAgent);
+    L.push('Room open: ' + !!roomId + ' · you are ' + (isHost ? 'host' : 'guest') + ' · WebRTC: ' + (typeof RTCPeerConnection !== 'undefined'));
+    L.push('Messages: sent ' + stats.sent + ', received ' + stats.recv + (dbErrors.length ? ' · database errors: ' + dbErrors.join(', ') : ''));
+    for (const [u, p] of peers) {
+      const d = diagOf(u);
+      L.push('');
+      L.push('Player ' + (names[u] || String(u).slice(0, 6)) + ': ' + p.mode + (p.why ? ' (' + p.why + ')' : '') + ' · attempts ' + d.tries);
+      L.push('  your addresses found: ' + kinds(d.loc));
+      L.push('  their addresses seen: ' + kinds(d.rem));
+      L.push('  setup messages sent ' + d.sigOut + ' / received ' + d.sigIn + ' · ICE ' + d.ice + ' · gathering ' + d.gather + (d.err.length ? ' · STUN errors: ' + d.err.join('; ') : ''));
+      // Guess
+      let why = '';
+      if (p.mode === 'direct') why = 'Connected fine.';
+      else if (dbErrors.length) why = 'The database refused the setup messages (' + dbErrors[0] + '): check the Realtime Database rules.';
+      else if (!d.sigIn) why = 'Nothing arrived from the other player: they may not have joined properly, or the database is not delivering messages.';
+      else if (!d.loc.srflx && !d.loc['host(ip)']) why = 'Your browser found no public address: STUN (stun.l.google.com) looks blocked on your network/browser.';
+      else if (!d.rem.srflx && !d.rem['host(ip)'] && d.rem['host(mDNS)']) why = 'Their side only offered private mDNS names and no public address. Same-network play needs mDNS to work (Windows: set the network to Private, allow the browser in the firewall; no VPN; no Wi-Fi client isolation).';
+      else why = 'Both sides found addresses but could not reach each other. On the same home network this is usually router hairpinning plus blocked mDNS. A relay (TURN or the database fallback) fixes it.';
+      L.push('  likely cause: ' + why);
+    }
+    const log = history.slice(-10).map(r => r.t + ' ' + r.ev + ' ' + r.u + ' ' + r.x);
+    if (log.length) { L.push(''); L.push('Recent events:'); L.push(...log.map(x => '  ' + x)); }
+    return L.join('\n');
+  }
+
   return {
-    open, close, syncMembers, send, toHost, broadcast,
+    report, open, close, syncMembers, send, toHost, broadcast,
     on(fn) { handlers.add(fn); }, off(fn) { handlers.delete(fn); },
     onPeer(fn) { peerHandlers.add(fn); },
     mode(u) { const p = peers.get(u); return p ? p.mode : 'closed'; },

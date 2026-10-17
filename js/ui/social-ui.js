@@ -180,6 +180,18 @@
         G.MenuUI.open();
       };
       $('lobby-menu').onclick = () => G.MenuUI.open();
+      const diag = () => {
+        const room = G.Social.room, names = {};
+        if (room) for (const m of room.members) names[m.uid] = m.name;
+        $('lobby-diag-text').value = G.Net.report(names);
+      };
+      $('lobby-diag').addEventListener('toggle', () => { if ($('lobby-diag').open) diag(); });
+      $('lobby-diag-copy').onclick = async () => {
+        diag();
+        const t = $('lobby-diag-text');
+        try { await navigator.clipboard.writeText(t.value); G.UI.toast('Copied', 1400); }
+        catch (e) { t.select(); G.UI.toast('Select and copy the text', 2200); }
+      };
       $('lobby-start').onclick = start;
       $('lobby-start').dataset.sfx = 'confirm';
       // Conecta / desconecta la red al entrar o salir de una sala.

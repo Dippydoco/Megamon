@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Connection details in the room'), new: [
+    T('If a friend cannot connect, open "Connection details" at the bottom of the room: it shows what went wrong and a likely cause, and has a Copy button.')
+  ] },
   { d: '2026-10-17', title: T('Profile banner and border'), new: [
     T('Profile tab: pick a banner (behind your name) and a border for your public profile. A few are unlocked by playing: Legendary (beat a legendary in a rift), Shiny shimmer and the Rainbow border (catch a shiny), and Arceus (reach Arceus).')
   ] },

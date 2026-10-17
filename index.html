@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preload" href="assets/fonts/PixelifyPS-400.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="assets/fonts/PixelifyPS-700.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="css/style.css?v=8cb1514446">
+<link rel="stylesheet" href="css/style.css?v=1f9ceade3b">
 </head>
 <body>
 
@@ -368,6 +368,12 @@
       <button id="lobby-start" class="btn gold grow">Empezar partida</button>
     </div>
     <p class="note" id="lobby-note"></p>
+    <details id="lobby-diag" class="diag">
+      <summary>Connection details</summary>
+      <p class="note">If a friend cannot connect, copy this and send it to whoever looks after the game.</p>
+      <textarea id="lobby-diag-text" readonly rows="9" spellcheck="false"></textarea>
+      <button id="lobby-diag-copy" class="btn small" type="button">Copy</button>
+    </details>
   </div>
 </section>
 
@@ -567,6 +573,6 @@
 </section>
 
 <!-- datos generados -->
-<script defer src="js/app.min.js?v=8cb1514446"></script>
+<script defer src="js/app.min.js?v=1f9ceade3b"></script>
 </body>
 </html>
