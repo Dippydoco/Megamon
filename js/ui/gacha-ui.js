@@ -117,7 +117,11 @@ G.GachaUI = (() => {
     const total = t.t1 + t.t10 * 10;
     if (!(t.t1 > 0 || t.t10 > 0)) { G.Audio.sfx('error'); G.UI.toast('You have no tickets'); return; }
     const where = surprise ? 'the Surprise banner' : G.Gacha.BANNERS[gen - 1].name;
-    if (!confirm(`Spend all your tickets (${t.t1} single + ${t.t10} ×10 = ${total} pulls) on ${where}?`)) return;
+    busy = true;                // no double clicks while the prompt is open
+    const ok = await G.UI.ask('Use all tickets?',
+      `Spend <b>${t.t1}</b> single and <b>${t.t10}</b> ×10 tickets (${total} pulls) on <b>${where}</b>?`, 'Use all', 'Cancel');
+    busy = false;
+    if (!ok) return;
     const res = [];
     const go = (n, use) => { const r = G.Gacha.pull(s, n, gen, use, surprise); if (r) res.push(...r); return !!r; };
     while (G.Gacha.costOf(s, 10, 't10') && go(10, 't10'));

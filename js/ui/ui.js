@@ -147,6 +147,31 @@ G.UI = (() => {
     });
   }
 
+  /** In-game yes/no prompt (instead of the browser's confirm). → Promise<boolean>; html is trusted markup. */
+  function ask(title, html, yes = 'Confirm', no = 'Cancel') {
+    return new Promise(done => {
+      const el = document.createElement('section');
+      el.className = 'scr dim';
+      el.style.zIndex = 70;
+      el.innerHTML = `<div class="box center" style="max-width:400px">
+        <h3>${title}</h3>
+        <p class="sub" style="margin:10px 0 16px">${html}</p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn ghost" data-a="no">${no}</button>
+          <button class="btn gold" data-a="yes">${yes}</button>
+        </div></div>`;
+      document.body.appendChild(el);
+      const end = v => { document.removeEventListener('keydown', key, true); el.remove(); done(v); };
+      const key = e => {
+        if (e.key === 'Escape') { e.stopPropagation(); end(false); }
+        else if (e.key === 'Enter') { e.stopPropagation(); end(true); }
+      };
+      document.addEventListener('keydown', key, true);
+      el.querySelector('[data-a=no]').onclick = () => end(false);
+      el.querySelector('[data-a=yes]').onclick = () => end(true);
+    });
+  }
+
   function closeLegal() { $('scr-legal').classList.add('hidden'); }
 
   function wireLegal() {
@@ -283,5 +308,5 @@ G.UI = (() => {
   }
 
   return { $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
-           sprite, spriteCanvas, tick, initChrome, soundControls };
+           sprite, spriteCanvas, ask, tick, initChrome, soundControls };
 })();
