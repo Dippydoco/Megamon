@@ -127,7 +127,9 @@ G.Game = (() => {
       pl.setActive(0);
     }
 
+    teamStats.clear();
     if (coop) {
+      hookStats();
       G.Coop.begin(coop, pl, coopApi);
       G.Social.setPlaying(true);
     }
@@ -164,6 +166,30 @@ G.Game = (() => {
   function teamState() {
     return { time, level: pl.level, xp: pl.xp, xpNext: pl.xpNext, kills: pl.kills, bosses: pl.bosses, coins: pl.coins, t1: pl.t1, t10: pl.t10 };
   }
+  // ---- end-of-run stats: everyone sends theirs (via the host) so all see the whole team ----
+  const teamStats = new Map();            // uid -> stats of each player in the run
+  let statsHooked = false;
+  function myStats() {
+    const me = G.Social.me;
+    return { u: pl.uid || 'me', n: (me && me.name) || 'You', dex: pl.dex, sh: pl.shiny ? 1 : 0,
+             d: Math.round(pl.dmgDealt), t: Math.round(pl.dmgTaken), b: Math.round(pl.bigHit),
+             dn: pl.downs, sr: pl.shrines, rb: pl.revivedBy.slice() };
+  }
+  function hookStats() {
+    if (statsHooked) return;
+    statsHooked = true;
+    G.Net.on((from, msg) => {
+      if (!msg || msg.k !== 'rs' || !msg.s) return;
+      teamStats.set(from, Object.assign({}, msg.s, { u: from }));
+      if (G.Net.isHost) G.Net.broadcast({ k: 'rs', s: Object.assign({}, msg.s, { u: from }) }, from);
+      if (state === 'over' && G.RunUI.refreshTeam) G.RunUI.refreshTeam();
+    });
+  }
+  function shareStats(s) {
+    teamStats.set(s.u, s);
+    if (G.Net.isHost) G.Net.broadcast({ k: 'rs', s }); else G.Net.toHost({ k: 'rs', s });
+  }
+
   function summary() { return { t: time, ki: pl.kills, bo: pl.bosses, co: pl.coins, lv: pl.level, t1: pl.t1, t10: pl.t10 }; }
 
   /** Lo que el cooperativo necesita del juego. */
@@ -284,6 +310,8 @@ G.Game = (() => {
     if (state === 'over' || !pl) return;
     const coop = !!pl.uid;                    // sólo las partidas en grupo le ponen uid
     const wasHost = !!pl.coopHost;
+    const mine = myStats();
+    if (coop) shareStats(mine); else teamStats.clear();
     const team = coop ? G.Coop.members.slice() : [];
     if (G.Coop.active) G.Coop.end();
     if (coop) G.Social.setPlaying(false);
@@ -329,7 +357,7 @@ G.Game = (() => {
 
     G.RunUI.showOver({
       dead, time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
-      moves: pl.moves, caught,
+      moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
                  (mul > 1 ? ` · ×${mul.toFixed(2)} Fortuna` : '')
     }, () => { pl = null; G.Flow.afterRun(); });
@@ -705,9 +733,16 @@ G.Game = (() => {
 
   /** Caído en grupo: un compañero a tu lado te va levantando. */
   function reviveTick(dt) {
-    const helper = G.Coop.puppets().some(p => !p.dead && G.U.dist2(p.x, p.y, pl.x, pl.y) < 56 * 56);
+    let helper = null, best = 56 * 56;
+    for (const p of G.Coop.puppets()) {
+      const d2 = p.dead ? Infinity : G.U.dist2(p.x, p.y, pl.x, pl.y);
+      if (d2 < best) { best = d2; helper = p; }
+    }
     pl.reviveT = helper ? (pl.reviveT || 0) + dt : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
-    if (pl.reviveT >= G.Player.REVIVE_TIME) pl.revive(0.5);
+    if (pl.reviveT >= G.Player.REVIVE_TIME) {
+      if (helper && helper.uid) pl.revivedBy.push(helper.uid);       // credited to them in the end-of-run stats
+      pl.revive(0.5);
+    }
   }
 
   /** Anfitrión: si caéis todos, se acaba (tras ver caer al último). */

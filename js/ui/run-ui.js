@@ -102,7 +102,50 @@ G.RunUI = (() => {
     return true;
   }
 
+  // Stats tab: one column per player (everyone's numbers arrive from the other computers).
+  let overRes = null;
+  function refreshTeam() {
+    const r = overRes, box = $('over-team');
+    if (!r || !box) return;
+    let list = r.team ? r.team() : [];
+    if (!list.length) list = [r.mine];
+    const rank = u => { const i = (r.order || []).indexOf(u); return i < 0 ? 99 : i; };
+    list = list.slice().sort((a, b) => rank(a.u) - rank(b.u));
+    const n = x => Math.round(x).toLocaleString('en-GB');
+    const rows = [
+      ['Damage dealt', p => p.d, n],
+      ['Biggest hit', p => p.b, n],
+      ['Damage taken', p => p.t, n],
+      ['Times downed', p => p.dn, n],
+      ['Revives given', p => list.reduce((s, q) => s + (q.rb || []).filter(u => u === p.u).length, 0), n],
+      ['Shrines used', p => p.sr, n]
+    ];
+    const lowGood = new Set(['Damage taken', 'Times downed']);
+    let h = '<table class="ptable"><thead><tr><th></th>' +
+      list.map(p => `<th><span class="pc" data-dex="${p.dex}" data-sh="${p.sh ? 1 : 0}"></span><div translate="no">${esc(p.n)}</div></th>`).join('') + '</tr></thead><tbody>';
+    for (const [label, get, fmt] of rows) {
+      const vals = list.map(get), best = lowGood.has(label) ? Math.min(...vals) : Math.max(...vals);
+      h += `<tr><td>${label}</td>` + vals.map(v => `<td class="${list.length > 1 && v === best && (v > 0 || lowGood.has(label)) ? 'top' : ''}">${fmt(v)}</td>`).join('') + '</tr>';
+    }
+    h += '</tbody></table>';
+    if (list.length > 1) h += '<p class="sub" style="margin:8px 0 0">Gold marks the best in each row.</p>';
+    box.innerHTML = h;
+    box.querySelectorAll('.pc').forEach(el => {
+      if (G.DEX_BY[+el.dataset.dex]) el.appendChild(G.UI.spriteCanvas(+el.dataset.dex, 44, 44, { shiny: el.dataset.sh === '1' }));
+    });
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
   function showOver(r, onBack) {
+    overRes = r;
+    const setTab = t => {
+      document.querySelectorAll('#over-tabs .tab').forEach(el => el.classList.toggle('on', el.dataset.tab === t));
+      $('over-stats').classList.toggle('hidden', t !== 'sum');
+      $('over-team').classList.toggle('hidden', t !== 'team');
+      if (t === 'team') refreshTeam();
+    };
+    document.querySelectorAll('#over-tabs .tab').forEach(el => { el.onclick = () => setTab(el.dataset.tab); });
+    setTab('sum');
     $('over-title').textContent = r.dead ? 'Has caído…' : 'Run terminada';
     $('over-stats').innerHTML = `
       <div><span>Tiempo</span><b>${G.U.mmss(r.time)}</b></div>
@@ -239,5 +282,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, showItemChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, wirePause, showPause };
+  return { showLevelUp, reroll, showItemChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

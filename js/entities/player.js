@@ -57,6 +57,7 @@ G.Player = class Player {
     this.coins = 0;            // monedas recogidas en esta run
     this.t1 = 0; this.t10 = 0; // tickets del gacha recogidos en esta run
     this.dmgDealt = 0;
+    this.dmgTaken = 0; this.bigHit = 0; this.downs = 0; this.shrines = 0; this.revivedBy = [];   // end-of-run stats
 
     this.invuln = 0;
     this.flash = 0;
@@ -242,6 +243,7 @@ G.Player = class Player {
     const close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
     const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close);
     this.hp -= d;
+    this.dmgTaken += d;
     this.invuln = 0.45;
     this.flash = 0.14;
     G.Audio.sfx('hurt');
@@ -256,7 +258,7 @@ G.Player = class Player {
       G.FX.ring(this.x, this.y, 6, 70, '#ff9a3d', 0.5, 4);
     }
     if (this.hp <= 0) {
-      this.hp = 0; this.dead = true;
+      this.hp = 0; this.dead = true; this.downs++;
       this.anim.play('Faint', { hold: true });
       G.Projectiles.clearOrbs(this);
       this.reviveT = 0;

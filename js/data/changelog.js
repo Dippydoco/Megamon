@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Stats tab on the end screen'), new: [
+    T('The end-of-run screen now has a second "Stats" tab: damage dealt, biggest hit, damage taken, times downed, revives given and shrines used. In a group run it shows every player side by side, with the best in each row in gold.')
+  ] },
   { d: '2026-10-17', title: T('Favourites in the friends list'), new: [
     T('Each friend\'s three favourite Pokémon now show next to their name in the friends list.')
   ] },
