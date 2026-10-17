@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Substitute is now a doll'), chg: [
+    T('Substitute now leaves a stitched plush doll of your own Pokémon instead of a little star. It still shoots at enemies for a few seconds.')
+  ] },
   { d: '2026-10-17', title: T('Fixed mouse joystick is now the default'), chg: [
     T('When moving with the mouse, the joystick now stays where you clicked instead of following the cursor. You can switch it back with "Joystick del ratón fijo" in Settings.')
   ] },
