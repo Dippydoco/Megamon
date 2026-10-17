@@ -160,10 +160,10 @@ G.Player = class Player {
   // solo hueco y se lanzan a la vez. Sólo crece un grupo (hasta BOND_MAX); si
   // no hay ninguno a medias, el vínculo une dos movimientos sueltos.
   static get BOND_MAX() { return 4; }
-  // Al ser revivido: segundos sin daño, y segundos de velocidad extra (×1,3).
+  // Al ser revivido: segundos sin daño, y segundos de velocidad extra (×1,5).
   static get REVIVE_SAFE() { return 3; }
   static get REVIVE_BOOST_T() { return 4; }
-  static get REVIVE_BOOST() { return 1.3; }
+  static get REVIVE_BOOST() { return 1.5; }
 
   /** Lo que se puede hacer ahora con un vínculo: añadir a un grupo o unir dos sueltos. */
   bondOptions() {

@@ -12,8 +12,8 @@ G.CHANGELOG = [
     ['Nuevo ajuste "Joystick del ratón fijo": el joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.',
      'New "Locked mouse joystick" setting: the joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.']
   ], chg: [
-    ['A revived player now gets 3 seconds of invulnerability and 4 seconds of +30% movement speed, so they are not instantly downed again.',
-     'A revived player now gets 3 seconds of invulnerability and 4 seconds of +30% movement speed, so they are not instantly downed again.'],
+    ['A revived player now gets 3 seconds of invulnerability and 4 seconds of +50% movement speed, so they are not instantly downed again.',
+     'A revived player now gets 3 seconds of invulnerability and 4 seconds of +50% movement speed, so they are not instantly downed again.'],
     ['The party list in the top left is clearer: each teammate now has their own card with the icon of the Pokémon they are playing, their name, their HP numbers and a health bar, spaced out and stacked downwards as more players join.',
      'The party list in the top left is clearer: each teammate now has their own card with the icon of the Pokémon they are playing, their name, their HP numbers and a health bar, spaced out and stacked downwards as more players join.'],
     ['Buffs now show an icon next to their text (attack, speed, defense, regeneration and the shrine powers), wrap onto a new row instead of overlapping, and the top-left HUD (health, teammates\' health and buffs) is a bit bigger.',
