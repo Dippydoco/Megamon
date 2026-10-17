@@ -353,7 +353,7 @@ G.HUD = (() => {
     }
 
     // ---------- ranura de movimientos ----------
-    const S = 54, GAP = 9;
+    const S = w < 640 ? 54 : 66, GAP = w < 640 ? 9 : 11, K = S / 54;      // bigger on wider screens
     const n = Math.max(1, pl.slots.length);
     const totalW = n * S + (n - 1) * GAP;
     let sx = (w - totalW) / 2;
@@ -398,7 +398,7 @@ G.HUD = (() => {
 
       if (fused) {
         // Vínculo: los movimientos en una cuadrícula de 2×2, cada uno con su recarga.
-        const C = 22, P = (S - C * 2) / 3;
+        const C = Math.round(22 * K), P = (S - C * 2) / 3;
         g.forEach((gm, k) => {
           const cx = x + P + (k % 2) * (C + P), cy = y + P + Math.floor(k / 2) * (C + P);
           G.Icons.draw(ctx, 'move:' + gm.id, cx, cy, C);
@@ -421,27 +421,27 @@ G.HUD = (() => {
         }
 
         // emblema del tipo + insignia de la familia
-        G.Icons.draw(ctx, 'move:' + m.id, x + (S - 32) / 2, y + (S - 32) / 2 - 2, 32);
+        G.Icons.draw(ctx, 'move:' + m.id, x + (S - 32 * K) / 2, y + (S - 32 * K) / 2 - 2, 32 * K);
 
         // nivel del movimiento (puntitos)
         const dots = m.def.maxLvl;
-        const dw = 4, dgap = 2;
+        const dw = Math.round(4 * K), dgap = 2;
         const tw = dots * dw + (dots - 1) * dgap;
         for (let d = 0; d < dots; d++) {
           ctx.fillStyle = d < m.lvl ? col : 'rgba(255,255,255,.18)';
-          ctx.fillRect(x + (S - tw) / 2 + d * (dw + dgap), y + S - 9, dw, 3);
+          ctx.fillRect(x + (S - tw) / 2 + d * (dw + dgap), y + S - 9 * K, dw, 3);
         }
       }
 
       // tecla
-      ctx.font = F(800, 9);
+      ctx.font = F(800, Math.round(9 * K));
       ctx.fillStyle = fused ? BOND : on ? col : 'rgba(180,200,230,.6)';
       ctx.textAlign = 'left';
-      ctx.fillText(String(i + 1), x + 3, y + 10);
+      ctx.fillText(String(i + 1), x + 3, y + 10 * K);
 
       // nombre encima del activo (con un vínculo: "Ascuas +2")
       if (on) {
-        ctx.font = F(700, 10);
+        ctx.font = F(700, Math.round(10 * K));
         ctx.textAlign = 'center';
         ctx.fillStyle = fused ? BOND : col;
         ctx.fillText(fused ? m.name + ' +' + (g.length - 1) : m.name, x + S / 2, y - 7);
@@ -470,8 +470,8 @@ G.HUD = (() => {
       ctx.strokeStyle = pl.item ? '#ffd23f' : 'rgba(140,170,210,.18)';
       ctx.stroke();
       if (pl.item) {
-        G.Icons.draw(ctx, pl.item, ix + (S - 36) / 2, iy + (S - 36) / 2, 36);
-        ctx.font = F(700, 9);
+        G.Icons.draw(ctx, pl.item, ix + (S - 36 * K) / 2, iy + (S - 36 * K) / 2, 36 * K);
+        ctx.font = F(700, Math.round(9 * K));
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffd23f';
         ctx.fillText(G.Items.BY[pl.item].name, ix + S / 2, iy - 6);
