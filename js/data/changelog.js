@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Profile title fix'), fix: [
+    T('The title you pick on your profile now stays selected in the dropdown (it was saving to your public profile but showing as empty when you came back).')
+  ] },
   { d: '2026-10-17', title: T('Friend chat'), new: [
     T('Chat with your friends: open Friends and press "Chat" next to a name. Your last 25 messages together are kept, you get an unread count on the Chat button and the main menu, and you can mute a friend.')
   ] },
