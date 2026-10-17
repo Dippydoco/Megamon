@@ -50,9 +50,20 @@ G.Redeem = (() => {
   const normalize = code => String(code || '').toUpperCase().replace(/[\s\-_]/g, '');
   const hashOf = code => sha256(SALT + normalize(code));
 
+  const DEMO_KEY = 'ps.gachaDemo';
+  function demoMode() { try { return localStorage.getItem(DEMO_KEY) === '1'; } catch (e) { return false; } }
+
   /** @returns {{ok:boolean, error?:string, reward?:object}} */
   function redeem(code) {
     const s = G.DB.save;
+    // Multi-use demo code: flips gacha demo mode (dummy pulls) on this device. Not saved, never spent.
+    const dh = hashOf(code);
+    const dd = (G.CODES || []).find(c => c.h === dh && c.demo);
+    if (dd) {
+      const on = !demoMode();
+      try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch (e) { /* nada */ }
+      return { ok: true, demo: on };
+    }
     if (!s || G.DB.guest) return { ok: false, error: 'Entra con tu cuenta para canjear códigos (como invitado no se guardaría).' };
     const norm = normalize(code);
     if (!norm) return { ok: false, error: 'Escribe un código.' };
@@ -69,5 +80,5 @@ G.Redeem = (() => {
     return { ok: true, reward };
   }
 
-  return { redeem, normalize, hashOf, sha256 };
+  return { redeem, demoMode, normalize, hashOf, sha256 };
 })();

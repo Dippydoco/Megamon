@@ -145,6 +145,11 @@ G.SettingsUI = (() => {
       if (!r.ok) { G.Audio.sfx('error'); msg.textContent = r.error; return; }
       G.Audio.sfx('confirm');
       input.value = '';
+      if (r.demo !== undefined) {
+        const t = r.demo ? 'Gacha demo mode is ON: pulls cost nothing and nothing is saved. Enter the code again to turn it off.' : 'Gacha demo mode is OFF.';
+        msg.textContent = t; G.UI.toast(r.demo ? 'Gacha demo mode ON' : 'Gacha demo mode OFF');
+        return;
+      }
       msg.innerHTML = '¡Canjeado! Has recibido: ' + G.Progress.rewardText(r.reward);
       G.UI.toast('¡Código canjeado!');
     };

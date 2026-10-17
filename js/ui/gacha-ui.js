@@ -6,6 +6,13 @@ G.GachaUI = (() => {
   let busy = false;
   let gen = 1;
   let surprise = false;        // "Surprise me": each roll uses a random generation
+  let demoSave = null;         // demo mode (code): pulls run on a throw-away copy of your save
+  const demo = () => G.Redeem.demoMode();
+  const sv = () => {
+    if (!demo()) { demoSave = null; return G.DB.save; }
+    if (!demoSave) demoSave = JSON.parse(JSON.stringify(G.DB.save));
+    return demoSave;
+  };
   let mystery = [];            // the three silhouettes on the mystery banner
 
   function init() {
@@ -34,6 +41,7 @@ G.GachaUI = (() => {
   }
 
   function open() {
+    demoSave = null;            // every visit starts a fresh demo copy
     G.UI.show('scr-gacha', true);
     refresh();
   }
@@ -76,7 +84,8 @@ G.GachaUI = (() => {
       feat.appendChild(G.UI.spriteCanvas(dex, 170, 190, { lively: true, scale: 2, dir: 1 }));
     }
 
-    const pity = (s.pity && s.pity[surprise ? 'x' : gen]) || 0;
+    const ps = sv();
+    const pity = (ps.pity && ps.pity[surprise ? 'x' : gen]) || 0;
     $('gacha-pity').textContent = `Tiradas sin legendaria en ${surprise ? 'Surprise' : banner.name}: ${pity} / ${G.Gacha.PITY_5}`;
 
     $('gacha-rates').innerHTML = '<h3>Probabilidades</h3>' + G.Gacha.RATES.slice().reverse().map(([r, w]) => `
@@ -94,10 +103,12 @@ G.GachaUI = (() => {
     $('cost-10').innerHTML = `${G.Icons.html('ticket', 18)} 10`;
     $('cost-10b').innerHTML = `${G.Icons.html('ticket10', 18)} 1`;
     $('gacha-tickets').innerHTML = `Tienes ${G.Icons.html('ticket', 18)} <b>${t.t1}</b> tickets y ${G.Icons.html('ticket10', 18)} <b>${t.t10}</b> tickets ×10`;
-    $('pull-1').disabled = !G.Gacha.costOf(s, 1);
-    $('pull-10').disabled = !G.Gacha.costOf(s, 10, 't1');
-    $('pull-10b').disabled = !G.Gacha.costOf(s, 10, 't10');
-    $('pull-all').disabled = !(t.t1 > 0 || t.t10 > 0);
+    const dm = demo();
+    $('pull-1').disabled = !dm && !G.Gacha.costOf(s, 1);
+    $('pull-10').disabled = !dm && !G.Gacha.costOf(s, 10, 't1');
+    $('pull-10b').disabled = !dm && !G.Gacha.costOf(s, 10, 't10');
+    $('pull-all').disabled = !dm && !(t.t1 > 0 || t.t10 > 0);
+    if (dm) $('gacha-pity').textContent += ' · DEMO MODE: pulls are free and nothing is saved';
     G.UI.refreshCoins();
   }
 
@@ -105,7 +116,9 @@ G.GachaUI = (() => {
 
   async function pull(n, use = 't1') {
     if (busy) return;
-    const res = G.Gacha.pull(G.DB.save, n, gen, use, surprise);
+    let res;
+    if (demo()) { const d = sv(); d.tickets = { t1: 1000, t10: 1000 }; res = G.Gacha.pull(d, n, gen, use, surprise); }
+    else res = G.Gacha.pull(G.DB.save, n, gen, use, surprise);
     if (!res) { G.Audio.sfx('error'); G.UI.toast('No tienes tickets suficientes: consíguelos jugando'); return; }
     present(res, n);
   }
@@ -113,7 +126,11 @@ G.GachaUI = (() => {
   /** Spend every ticket on the selected banner (or Surprise): ×10 tickets, then groups of 10, then singles. */
   async function pullAll() {
     if (busy) return;
-    const s = G.DB.save, t = s.tickets;
+    const real = G.DB.save.tickets;
+    const s = sv();
+    // Demo mode: simulate with your real ticket count (or a sample of 100 if you have none).
+    if (demo()) s.tickets = (real.t1 || real.t10) ? { t1: real.t1, t10: real.t10 } : { t1: 100, t10: 0 };
+    const t = s.tickets;
     const total = t.t1 + t.t10 * 10;
     if (!(t.t1 > 0 || t.t10 > 0)) { G.Audio.sfx('error'); G.UI.toast('You have no tickets'); return; }
     const where = surprise ? 'the Surprise banner' : G.Gacha.BANNERS[gen - 1].name;
@@ -132,14 +149,14 @@ G.GachaUI = (() => {
   }
 
   async function present(res, n) {
-    G.Progress.checkAch();
-    G.DB.commit(true);
+    if (!demo()) { G.Progress.checkAch(); G.DB.commit(true); }
     busy = true;
 
     const best = Math.max(...res.map(r => r.rarity));
     const many = res.length > 10;
     const fx = $('pull-fx'), slot = $('slot'), out = $('pull-results');
     out.innerHTML = '';
+    if (demo()) out.insertAdjacentHTML('beforeend', '<div style="width:100%;text-align:center;color:#ffd23f"><b>DEMO MODE</b>: nothing was spent or saved</div>');
     $('pull-close').classList.add('hidden');
     slot.style.display = many ? 'none' : '';
     fx.classList.remove('hidden');
