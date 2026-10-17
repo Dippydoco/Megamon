@@ -33,6 +33,10 @@ G.Icons = (() => {
     ban: { pal: { r: '#ff5f6d' }, rows: [
       '...kkkkkk...', '..krrrrrrk..', '.krrkkkkrrk.', 'krrk..krrrrk', 'krk..krrkkrk', 'krk.krrk.krk',
       'krkkrrk..krk', 'krrrrk..krrk', '.krrkkkkrrk.', '..krrrrrrk..', '...kkkkkk...', '............'] },
+    // Saltar (Skip: pasar de las cartas de nivel).
+    skip: { pal: { y: '#ffd23f', o: '#d99a1f', w: '#fff3b0' }, rows: [
+      '.k...k....k.', 'kwk.kwk..kwk', 'kwwkkwwk.kwk', 'kwywkwywkkwk', 'kwyywyyywkwk', 'kyyyyyyyyyyk',
+      'kyyyyyyyyyyk', 'kooooooookok', 'koookoookkok', 'kookkook.kok', 'kok.kok..kok', '.k...k....k.'] },
     heart: { pal: { r: '#ff5f6d', s: '#c23a4b', w: '#ffd3d8' }, rows: [
       '............', '.kkk....kkk.', 'kwwrk..krrrk', 'kwrrrkkrrrsk', 'krrrrrrrrrsk', 'krrrrrrrrrsk',
       '.krrrrrrrsk.', '..krrrrrsk..', '...krrrsk...', '....krsk....', '.....kk.....', '............'] },

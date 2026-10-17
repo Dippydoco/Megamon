@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('New upgrade: Skip'), new: [
+    T('A new upgrade in the Upgrades tab lets you skip a level-up without taking anything. Each level gives 1 skip per run, up to 3 at max level. Use the Skip button on the level-up screen or press X.')
+  ] },
   { d: '2026-10-17', title: T('Dates on the all-time leaderboard'), new: [
     T('Each run in the All-time leaderboard now shows the date it was set.')
   ] },
