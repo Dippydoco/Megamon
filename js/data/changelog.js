@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Easier to spot events and arrows'), chg: [
+    T('On-screen announcements (events, bosses, shiny alerts) are bigger: they pop in, sit on a dark band and have a thicker outline. The Aegislash message stays up a little longer.'),
+    T('The arrows at the edge of the screen that point to off-screen things (Treasure Thief, Aegislash, Lost Pokémon, bosses) and their labels are larger.')
+  ] },
   { d: '2026-10-17', title: T('Use all tickets: every pull is shown'), fix: [
     T('"Use all tickets" only showed full cards for new, shiny and Rare-or-better pulls, so it looked like most tickets had disappeared. The rest of your pulls (duplicates) are now listed underneath, grouped, with the coins they gave you.')
   ] },

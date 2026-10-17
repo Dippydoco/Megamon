@@ -155,7 +155,7 @@ G.Events = (() => {
       e.life = AEGIS_LIFE;
       G.EnemyMgr.add(e);
       G.FX.ring(x, y, 4, 60, '#9fb4ff', 0.6, 4);
-      G.Spawner.say('An Aegislash appears with an Armoury of Items!', 3.6);
+      G.Spawner.say('An Aegislash appears with an Armoury of Items!', 5);
       G.Audio.sfx('legend');
       return true;
     }
@@ -369,25 +369,28 @@ G.Events = (() => {
   function edgeArrow(ctx, w, h, cam, x, y, col, label, F) {
     const sx = (x - cam.left()) * cam.scale, sy = (y - cam.top()) * cam.scale;
     if (sx > 0 && sx < w && sy > 0 && sy < h) return;
-    const M = 44, ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 80);
+    const K = w < 640 ? 1.35 : 1.7;                       // bigger arrows (and labels) so they are easy to spot
+    const M = 40 + 14 * K, ex = G.U.clamp(sx, M, w - M), ey = G.U.clamp(sy, M + 70, h - M - 80);
     const a = Math.atan2(sy - ey, sx - ex), ca = Math.cos(a), sa = Math.sin(a);
-    const pulse = 0.65 + Math.sin(performance.now() / 160) * 0.35;
+    const pulse = 0.7 + Math.sin(performance.now() / 160) * 0.3;
     ctx.save();
     ctx.translate(ex, ey);
+    ctx.lineJoin = 'round';
     ctx.globalAlpha = pulse;
     ctx.beginPath();
-    ctx.moveTo(ca * 30, sa * 30);
-    ctx.lineTo(Math.cos(a + 2.45) * 15, Math.sin(a + 2.45) * 15);
-    ctx.lineTo(Math.cos(a - 2.45) * 15, Math.sin(a - 2.45) * 15);
+    ctx.moveTo(ca * 30 * K, sa * 30 * K);
+    ctx.lineTo(Math.cos(a + 2.45) * 15 * K, Math.sin(a + 2.45) * 15 * K);
+    ctx.lineTo(Math.cos(a - 2.45) * 15 * K, Math.sin(a - 2.45) * 15 * K);
     ctx.closePath();
-    ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke();
+    ctx.lineWidth = 3.5; ctx.strokeStyle = '#000'; ctx.stroke();
     ctx.fillStyle = col; ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.font = F(800, 11);
+    ctx.font = F(800, Math.round(11 * K));
     ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
-    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
-    ctx.strokeText(label, -ca * 26, -sa * 24 + 4);
-    ctx.fillStyle = col; ctx.fillText(label, -ca * 26, -sa * 24 + 4);
+    ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(0,0,0,.88)';
+    const lx = -ca * 26 * K, ly = -sa * 24 * K + 4 * K;
+    ctx.strokeText(label, lx, ly);
+    ctx.fillStyle = col; ctx.fillText(label, lx, ly);
     ctx.restore();
   }
 

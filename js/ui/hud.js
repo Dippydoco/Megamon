@@ -170,7 +170,7 @@ G.HUD = (() => {
         ctx.lineTo(Math.cos(a - 0.6) * 28, Math.sin(a - 0.6) * 28);
         ctx.closePath(); ctx.stroke(); ctx.fill();
         // Nombre y distancia, al lado contrario de la flecha para que no se salga
-        ctx.font = F(800, 12);
+        ctx.font = F(800, 15);
         const ca = Math.cos(a), sa = Math.sin(a);
         ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
         const lx = -ca * 34, ly = -sa * 34 + (Math.abs(sa) > 0.6 ? (sa > 0 ? -4 : 14) : 4);
@@ -343,16 +343,26 @@ G.HUD = (() => {
     const ban = G.Spawner.banner();
     if (ban) {
       const a = Math.min(1, ban.t * 1.6);
+      // Bigger announcement: a pop-in, a dark pill behind it and a thick outline, so events are hard to miss.
+      const age = Math.max(0, (ban.dur || ban.t) - ban.t), pop = 1 + 0.22 * Math.max(0, 1 - age / 0.3);
       ctx.save();
       ctx.globalAlpha = a;
       // Siempre centrado (antes heredaba la alineación de lo último dibujado, p.
       // ej. la flecha de un duende del tesoro, y salía descolocado).
-      ctx.textAlign = 'center';
-      ctx.font = F(800, 22);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      let size = w < 640 ? 24 : 34;
+      ctx.font = F(800, size);
+      const mw = ctx.measureText(ban.text).width;
+      if (mw > w - 56) { size = Math.max(14, Math.floor(size * (w - 56) / mw)); ctx.font = F(800, size); }
+      const tw = ctx.measureText(ban.text).width, by = h * 0.3;
+      ctx.translate(w / 2, by); ctx.scale(pop, pop);
+      roundRect(ctx, -tw / 2 - 18, -size * 0.85, tw + 36, size * 1.7, size * 0.5);
+      ctx.fillStyle = 'rgba(8,10,20,.62)'; ctx.fill();
+      ctx.lineJoin = 'round';
       ctx.fillStyle = '#ffcb3d';
-      ctx.strokeStyle = 'rgba(0,0,0,.7)'; ctx.lineWidth = 4;
-      ctx.strokeText(ban.text, w / 2, h * 0.3);
-      ctx.fillText(ban.text, w / 2, h * 0.3);
+      ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineWidth = Math.max(4, size / 6);
+      ctx.strokeText(ban.text, 0, 1);
+      ctx.fillText(ban.text, 0, 1);
       ctx.restore();
     }
 

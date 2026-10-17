@@ -23,7 +23,7 @@ G.Spawner = (() => {
   // hacia el minuto 6, cuando ya tienes ataques para tumbarlos.
   const hpK = t => 3.3 + Math.min(1.7, t / 210);
   const SHINY_RATE = 1 / 4096;
-  let acc = 0, bossIdx = 0, surgeT = 32, announce = null, announceT = 0, preloadT = 0;
+  let acc = 0, bossIdx = 0, surgeT = 32, announce = null, announceT = 0, announceDur = 0, preloadT = 0;
   let forceShiny = 0;           // para pruebas: los N próximos salen shiny
 
   function reset() {
@@ -176,11 +176,11 @@ G.Spawner = (() => {
   /** Aviso grande en pantalla (también lo usan el bioma y los shinies). */
   /** @param local  sólo en este ordenador (no se manda a los compañeros) */
   function say(text, secs = 2.6, local = false) {
-    announce = text; announceT = secs;
+    announce = text; announceT = secs; announceDur = secs;
     if (G.Coop.isHost && !local) G.Coop.say(text, secs);
   }
 
-  function banner() { return announceT > 0 ? { text: announce, t: announceT } : null; }
+  function banner() { return announceT > 0 ? { text: announce, t: announceT, dur: announceDur } : null; }
 
   /** Invitado en cooperativo: sólo corre el reloj del aviso. */
   function tickBanner(dt) { if (announceT > 0) announceT -= dt; }
