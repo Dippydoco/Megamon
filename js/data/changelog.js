@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Weather tooltip'), new: [
+    T('Hover over the weather label (top right) during a run to see what that weather does: which types are boosted or weakened, by how much, and who loses HP.')
+  ] },
   { d: '2026-10-17', title: T('Chest targeting range'), chg: [
     T('Your Pokémon now only prioritises a chest over enemies when the chest is a little closer than before, so it no longer aims at chests that are out of range of the attack.')
   ] },

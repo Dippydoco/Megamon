@@ -99,12 +99,14 @@ G.HUD = (() => {
 
     // ---------- clima (arriba a la derecha) ----------
     const wx = G.Weather.current;
+    let wxBox = null;           // the weather chip's rectangle, for its hover tooltip
     if (wx) {
       ctx.font = F(800, 11);
       ctx.textAlign = 'left';
       const txt = wx.name.toUpperCase() + ' · ' + Math.ceil(wx.left) + 's';
       const tw = ctx.measureText(txt).width + 40;
       const x0 = w - tw - 16 - (touch ? 56 : 0), y0 = 14;
+      wxBox = { x: x0, y: y0, w: tw, h: 26 };
       roundRect(ctx, x0, y0, tw, 26, 9);
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
       G.Icons.draw(ctx, wx.icon, x0 + 6, y0 + 3, 20);
@@ -493,6 +495,18 @@ G.HUD = (() => {
       }
     }
 
+    // The weather chip also explains itself on hover: what is boosted, what is weakened, who it hurts.
+    if (wxBox && wx) {
+      const T = G.T || (s => s);
+      const up = Object.keys(wx.mult).filter(k => wx.mult[k] > 1), down = Object.keys(wx.mult).filter(k => wx.mult[k] < 1);
+      const lines = [];
+      if (up.length) lines.push('Boosted: ' + up.map(k => T(G.U.TYPE_NAME[k] || k) + ' ×' + wx.mult[k]).join(', '));
+      if (down.length) lines.push('Weakened: ' + down.map(k => T(G.U.TYPE_NAME[k] || k) + ' ×' + wx.mult[k]).join(', '));
+      if (wx.safe) lines.push('Other types lose a little HP' + (wx.slow ? ' and move more slowly' : '') + '.');
+      lines.push('It affects you and the enemies alike.');
+      tips.push({ x: wxBox.x, y: wxBox.y, w: wxBox.w, h: wxBox.h, title: wx.name, col: wx.color, lines, below: true });
+    }
+
     // ---------- tooltip (mouse only): what the move or item does ----------
     if (!touch) {
       const ms = G.Input.mouse();
@@ -515,7 +529,7 @@ G.HUD = (() => {
         ctx.font = F(800, 15);
         const bw = Math.min(MW, Math.max(ctx.measureText(title).width, ...body.map(l => { ctx.font = F(500, FS); return ctx.measureText(l).width; }))) + 20;
         const bh = 14 + 20 + body.length * LH;
-        const bx = G.U.clamp(tp.x + tp.w / 2 - bw / 2, 6, w - bw - 6), by = tp.y - bh - 32;
+        const bx = G.U.clamp(tp.x + tp.w / 2 - bw / 2, 6, w - bw - 6), by = tp.below ? tp.y + tp.h + 8 : tp.y - bh - 32;
         roundRect(ctx, bx, by, bw, bh, 8);
         ctx.fillStyle = 'rgba(8,12,22,.95)'; ctx.fill();
         ctx.lineWidth = 2; ctx.strokeStyle = tp.col; ctx.stroke();
