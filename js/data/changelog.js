@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Bigger move icons in the bar'), chg: [
+    T('On larger screens the move icons in the bottom bar are bigger and fill their boxes better, so the small attack-kind symbol in the corner is easier to see.')
+  ] },
   { d: '2026-10-17', title: T('Move kind tags on cards'), new: [
     T('Level-up and Bond cards now show each move\'s attack kind (Projectile, Beam, Aura, Melee...) as a small tag. Don\'t like it? Turn off "Move kind tags" in Settings.')
   ] },

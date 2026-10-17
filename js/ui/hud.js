@@ -464,7 +464,9 @@ G.HUD = (() => {
         }
 
         // emblema del tipo + insignia de la familia
-        G.Icons.draw(ctx, 'move:' + m.id, x + (S - 32 * K) / 2, y + (S - 32 * K) / 2 - 2, 32 * K);
+        // Icons only scale in whole steps (16 px each): on the bigger slots use 3x so the disc fills the box and the kind tag is easier to see.
+        const IS = S >= 60 ? 48 : 32;
+        G.Icons.draw(ctx, 'move:' + m.id, x + (S - IS) / 2, y + (S - IS) / 2 - (IS > 32 ? 5 : 2), IS);
 
         // nivel del movimiento (puntitos)
         const dots = m.def.maxLvl;
