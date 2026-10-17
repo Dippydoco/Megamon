@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Search your Pokémon'), new: [
+    T('The Pokémon tab has a search box: type part of a name (only Pokémon you own are found) or a Dex number, and it searches every generation at once.')
+  ] },
   { d: '2026-10-17', title: T('Upgrades list in English'), fix: [
     T('The Pokémon picker in the Upgrades tab now says "levels" instead of the Spanish "niveles".')
   ] },
