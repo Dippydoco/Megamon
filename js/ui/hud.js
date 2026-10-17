@@ -184,7 +184,9 @@ G.HUD = (() => {
     // ---------- espectador: caído en grupo, miras a un compañero ----------
     const spec = G.Game.spectating;
     if (spec) {
-      const cx = w / 2, cy = h - 130, bs = 40;
+      // Sits above the move bar (its slots and the active move's name), which grew with the larger slots.
+      const barS = w < 640 ? 58 : 72;
+      const cx = w / 2, cy = h - barS - 80 - (touch ? Math.min(28, G.Touch.safeArea().bottom) : 0), bs = 40;
       ctx.save();
       ctx.font = F(800, 16);
       const label = 'Spectating: ' + spec.name;

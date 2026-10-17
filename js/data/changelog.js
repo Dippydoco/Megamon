@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Spectator bar moved up'), fix: [
+    T('The "Spectating" bar now sits higher so it no longer touches the move bar and the selected move\'s name.')
+  ] },
   { d: '2026-10-17', title: T('Pink screen while a teammate bonds'), fix: [
     T('Fixed the whole screen turning solid purple/pink for everyone when a teammate chose a Bond at the same moment as a rift flash. The flash now always fades out, even while the game is paused.')
   ] },
