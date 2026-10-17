@@ -57,7 +57,7 @@ const min = fs.readFileSync(outJs);
 const css = fs.readFileSync(path.join(ROOT, 'css', 'style.css'));
 const hash = crypto.createHash('sha1').update(min).update(css).digest('hex').slice(0, 10);
 
-let html = dev.slice(0, i) + `<script defer src="js/app.min.js?v=${hash}"></script>` + dev.slice(j + END.length);
+let html = dev.slice(0, i) + `<script>window.PS_BUILD=${JSON.stringify({ v: hash, at: new Date().toISOString() })};</script>\n<script defer src="js/app.min.js?v=${hash}"></script>` + dev.slice(j + END.length);
 html = html.replace('href="css/style.css"', `href="css/style.css?v=${hash}"`);
 html = html.replace(/<meta name="robots" content="noindex">\s*/, '');
 // --sin-seo: sin canonical/redes/datos estructurados ni enlaces a las páginas

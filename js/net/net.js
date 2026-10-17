@@ -307,6 +307,7 @@ G.Net = (() => {
     const L = [];
     const kinds = o => Object.keys(o).map(k => k + '×' + o[k]).join(', ') || 'none';
     L.push('Megamon connection report · ' + new Date().toISOString());
+    L.push('Game: ' + G.UI.buildLabel());
     L.push('Browser: ' + navigator.userAgent);
     L.push('Room open: ' + !!roomId + ' · you are ' + (isHost ? 'host' : 'guest') + ' · WebRTC: ' + (typeof RTCPeerConnection !== 'undefined'));
     L.push('Messages: sent ' + stats.sent + ', received ' + stats.recv + (dbErrors.length ? ' · database errors: ' + dbErrors.join(', ') : ''));

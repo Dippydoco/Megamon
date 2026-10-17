@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Build number'), new: [
+    T('The game build (a short code and its date) now shows in the bottom-right corner of the menus, in Settings > About and in the connection report, so you can check everyone is on the same version.')
+  ] },
   { d: '2026-10-17', title: T('Group play on any network'), fix: [
     T('Friends whose networks would not connect directly (for example two people on the same home wifi) can now play together: if the direct link does not work after about 9 seconds, the game goes through the server instead. It is used only as a fallback.')
   ] },

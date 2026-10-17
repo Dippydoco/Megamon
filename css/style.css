@@ -288,6 +288,10 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
   display: inline-block; width: 18px; height: 18px; vertical-align: -3px;
   background: var(--ico-coin) no-repeat center / contain; image-rendering: pixelated;
 }
+.ver-tag {
+  position: fixed; right: 12px; bottom: 8px; z-index: 25; font-size: 11px; color: rgba(185,203,240,.6);
+  text-shadow: 1px 1px 0 #000; pointer-events: auto; user-select: all;
+}
 .credits-line {
   position: fixed; left: 14px; bottom: 10px; z-index: 25; font-size: 12px; color: rgba(185,203,240,.7);
   text-shadow: 1px 1px 0 #000;

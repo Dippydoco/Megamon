@@ -23,6 +23,7 @@ G.UI = (() => {
   function chrome(on) {
     $('topbar').classList.toggle('hidden', !on);
     $('credits-line').classList.toggle('hidden', !on);
+    $('ver-tag').classList.toggle('hidden', !on);
     if (!on) $('sound-panel').classList.add('hidden');
     if (on) refreshCoins();
   }
@@ -192,7 +193,17 @@ G.UI = (() => {
     };
   }
 
+  /** The build the page is running (hash from tools/build.js; same as version.json) and its date. */
+  function buildLabel() {
+    const b = window.PS_BUILD;
+    if (!b) return 'dev build';
+    const d = new Date(b.at);
+    const when = isNaN(d) ? '' : ' · ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return 'Build ' + b.v + when;
+  }
+
   function initChrome() {
+    $('ver-tag').textContent = buildLabel();
     G.Icons.installCss();
     wireLegal();
     G.DB.onSync(() => { if (!$('topbar').classList.contains('hidden')) refreshCoins(); });
@@ -307,6 +318,6 @@ G.UI = (() => {
     return cv;
   }
 
-  return { $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
+  return { buildLabel, $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
            sprite, spriteCanvas, ask, tick, initChrome, soundControls };
 })();
