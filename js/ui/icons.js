@@ -165,6 +165,30 @@ G.Icons = (() => {
     assaultvest: { pal: { g: '#4f8a3a', d: '#2f5a22', y: '#ffd23f' }, rows: [
       '............', '.kkk....kkk.', 'kggk....kggk', 'kgggkkkkgggk', 'kgggyggygggk', 'kgggggggggdk',
       'kggyggggygdk', 'kgggggggggdk', 'kgggggggggdk', 'kddddddddddk', 'kkkkkkkkkkkk', '............'] },
+    scopelens: { pal: { b: '#4fb4ff', g: '#9aa6b5', d: '#2a6fb0', w: '#e6f4ff', r: '#ff5f6d' }, rows: [
+      '............', '...kkkkk....', '..kgbbbgk...', '.kgbbrbbgk..', 'kgbwbrbbbgk.', 'kgbbbrbbbgk.',
+      'kgrrrrrrrgk.', 'kgbbbrbbbgk.', 'kgbbbrbbbgk.', '.kgbbrbbgk..', '..kgbbbgk...', '...kkkkk....'] },
+    flameorb: { pal: { o: '#ff8a3d', d: '#c0431a', w: '#ffe8b0', y: '#ffd23f', r: '#ff3048' }, rows: [
+      '....kkkk....', '..kkooodkk..', '.kwwooooodk.', '.kwooyyooook', 'koooyyyyoodk', 'kooyyrryyodk',
+      'kooyrrrryodk', 'koooyrryoodk', '.kooooyoodk.', '.kdoooooddk.', '..kkddddkk..', '....kkkk....'] },
+    toxicorb: { pal: { p: '#a24fd0', d: '#5a2a80', w: '#f4f4ff' }, rows: [
+      '....kkkk....', '..kkpppdkk..', '.kwwpppppdk.', '.kwpwwwwppk.', 'kppwwwwwwpdk', 'kppwkwwkwpdk',
+      'kppwwwwwwpdk', 'kpppwkkwppdk', '.kpppppppdk.', '.kdpppppddk.', '..kkddddkk..', '....kkkk....'] },
+    kingsrock: { pal: { y: '#ffd23f', r: '#ff5f6d', g: '#9aa6b5', d: '#5d6773', w: '#e0e6ee' }, rows: [
+      '..k...k...k.', '.kyk.kyk.kyk', 'kyyyyyyyyyyk', 'kyyryyyyryyk', '.kkkkkkkkkk.', '.kwggggggdk.',
+      'kwggggggggdk', 'kgggggkgggdk', 'kggggkkgggdk', '.kgggggggdk.', '..kddddddk..', '...kkkkkk...'] },
+    bindingband: { pal: { r: '#ff5f6d', d: '#b8283a', w: '#ffd8d8', y: '#ffd23f' }, rows: [
+      '............', '...kkkkkk...', '..kryyyyrk..', '.krwrrrrrrk.', '.krrkkkkrrk.', 'krrk....krrk',
+      'krrk....krrk', '.kdrkkkkrdk.', '.kddyyyyddk.', '..kkddddkk..', '....kkkk....', '............'] },
+    brightpowder: { pal: { w: '#f4f4ff', s: '#c9c9e0', y: '#ffd23f' }, rows: [
+      '............', '....k..k....', '.....kk.....', '....kyyk....', '...kkkkkk...', '..kwwwwwwk..',
+      '.kwwwywwwsk.', '.kwwyyywwsk.', '.kwwwywwwsk.', '.kwwwwwwssk.', '..kssssssk..', '...kkkkkk...'] },
+    heavyboots: { pal: { g: '#6b7585', d: '#3a4150', w: '#aab4c4', y: '#ffd23f' }, rows: [
+      '............', '.kkkkkk.....', '.kwggggk....', '.kyyyyyk....', '.kggggdk....', '.kggggdk....',
+      '.kggggdkkkk.', '.kwgggggggdk', '.kggggggggdk', 'kddddddddddk', 'kkkkkkkkkkkk', '............'] },
+    lightclay: { pal: { t: '#e8c98a', d: '#b8955a', w: '#fff3d0', y: '#ffd23f' }, rows: [
+      '.y........y.', '...kkkkkk...', '..kttttttk..', '.kwtttttttk.', 'kwtttttttttk', 'kttttyttttdk',
+      'kttttttttddk', '.ktttttttddk', '..kddddddk..', '...kkkkkk...', '..y......y..', '............'] },
     // ---------- medallas de logros (bronce, plata, oro) ----------
     medal1: { pal: { r: '#ff5f6d', q: '#b8283a', m: '#d08a4a', n: '#8a5226', w: '#ffd0a0', s: '#ffe8c8' }, rows: MEDAL },
     medal2: { pal: { r: '#4fb4ff', q: '#2a6fb0', m: '#c9d2de', n: '#7d8899', w: '#ffffff', s: '#ffffff' }, rows: MEDAL },

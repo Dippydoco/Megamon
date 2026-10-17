@@ -10,6 +10,15 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Eight new held items'), new: [
+    T('Scope Lens: +20% critical hit chance.'),
+    T('Flame Orb and Toxic Orb: your hits have a 30% chance to burn or poison the enemy.'),
+    T('King\'s Rock: your hits have a 6% chance to freeze the enemy for 1.2 s (not bosses).'),
+    T('Binding Band: your hits slow enemies by 25% for 1.5 s.'),
+    T('Bright Powder: 10% chance to dodge any hit.'),
+    T('Heavy-Duty Boots: you ignore lava damage and the slowing and sliding of water, mud and ice.'),
+    T('Light Clay: shrine powers (Fury, Thunderbolt, Magnet, Haste, Guardian) last 50% longer.')
+  ] },
   { d: '2026-10-17', title: T('Support button is now a joke'), chg: [
     T('The Support button no longer links anywhere: it just shows a joke message. The donation messages on the end screen are gone too.')
   ] },

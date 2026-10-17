@@ -32,7 +32,16 @@ G.Items = (() => {
     { id: 'rockyhelmet', name: 'Casco Dentado', desc: 'Los que te golpean cuerpo a cuerpo reciben daño.',
       on: () => {}, off: () => {} },
     { id: 'assaultvest', name: 'Chaleco Asalto', desc: '+20% de reducción de daño recibido.',
-      on: p => { p.dmgReduce += 0.2; }, off: p => { p.dmgReduce -= 0.2; } }
+      on: p => { p.dmgReduce += 0.2; }, off: p => { p.dmgReduce -= 0.2; } },
+    // ---- 17-10-2026 (efectos en combat.js, player.js e interact.js) ----
+    { id: 'scopelens', name: 'Scope Lens', desc: '+20% critical hit chance.', on: () => {}, off: () => {} },
+    { id: 'flameorb', name: 'Flame Orb', desc: 'Your hits have a 30% chance to burn the enemy.', on: () => {}, off: () => {} },
+    { id: 'toxicorb', name: 'Toxic Orb', desc: 'Your hits have a 30% chance to poison the enemy.', on: () => {}, off: () => {} },
+    { id: 'kingsrock', name: "King's Rock", desc: 'Your hits have a 6% chance to freeze the enemy for 1.2 s (not bosses).', on: () => {}, off: () => {} },
+    { id: 'bindingband', name: 'Binding Band', desc: 'Your hits slow enemies by 25% for 1.5 s.', on: () => {}, off: () => {} },
+    { id: 'brightpowder', name: 'Bright Powder', desc: '10% chance to dodge any hit.', on: () => {}, off: () => {} },
+    { id: 'heavyboots', name: 'Heavy-Duty Boots', desc: 'You ignore lava damage and the slowing and sliding of water, mud and ice.', on: () => {}, off: () => {} },
+    { id: 'lightclay', name: 'Light Clay', desc: 'Shrine powers (Fury, Thunderbolt, Magnet, Haste, Guardian) last 50% longer.', on: () => {}, off: () => {} }
   ];
   const BY = {};
   for (const it of LIST) BY[it.id] = it;

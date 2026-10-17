@@ -91,7 +91,7 @@ G.Player = class Player {
   get spd() {
     const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
     const w = G.Weather.speedFor(this.mon.types);
-    const slow = this.inLiquid ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
+    const slow = this.inLiquid && !this.hasItem('heavyboots') ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
     return s * slow * w;
   }
   get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount); }
@@ -233,6 +233,12 @@ G.Player = class Player {
    */
   hurt(amount, type = null, pure = false) {
     if (this.invuln > 0 || this.dead) return;
+    // Bright Powder: 10 % de esquivar cualquier golpe.
+    if (this.hasItem('brightpowder') && Math.random() < 0.1) {
+      this.invuln = 0.3;
+      G.FX.dmgText(this.x, this.y - this.bodyH - 4, 'Dodged!', '#f4f4ff', true);
+      return;
+    }
     let eff = null;
     if (type) {
       const k = G.Types.mult(type, this.mon.types);
@@ -307,6 +313,7 @@ G.Player = class Player {
 
   /** Poder de un altar (ver systems/interact.js): se aplica y se quita solo. */
   addPower(def, dur) {
+    if (this.hasItem('lightclay')) dur *= 1.5;            // Light Clay
     if (this.power) this.power.def.off(this);
     def.on(this);
     this.power = { def, t: dur, dur };
@@ -344,7 +351,7 @@ G.Player = class Player {
     this.walking = ax !== 0 || ay !== 0;
     const s = this.spd;
     // Hielo: resbalas (la velocidad cambia despacio).
-    const slide = this.inLiquid && G.World.liquidEffect(this.mon.types).slide;
+    const slide = this.inLiquid && !this.hasItem('heavyboots') && G.World.liquidEffect(this.mon.types).slide;
     this.svx = slide ? G.U.damp(this.svx || 0, ax * s * 1.15, 1.6, dt) : ax * s;
     this.svy = slide ? G.U.damp(this.svy || 0, ay * s * 1.15, 1.6, dt) : ay * s;
     this.x += this.svx * dt;
@@ -356,14 +363,14 @@ G.Player = class Player {
     this.inLiquid = G.World.isLiquid(this.x, this.y);
     if (this.inLiquid) {
       const le = G.World.liquidEffect(this.mon.types);
-      if (le.dmg) {
+      if (le.dmg && !this.hasItem('heavyboots')) {
         this.lavaTick -= dt;
         if (this.lavaTick <= 0) {
           this.lavaTick = le.every; this.invuln = 0;
           this.hurt(Math.max(le.flat, this.maxHp * le.dmg * 0.5));
           G.FX.burst(this.x, this.y - 4, le.color, 5, 70);
         }
-      } else if (this.walking && Math.random() < dt * 8) {
+      } else if (!le.dmg && this.walking && Math.random() < dt * 8) {
         G.FX.burst(this.x, this.y, le.slide ? '#ffffff' : '#b3defa', 2, 40);
       }
     }

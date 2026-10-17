@@ -271,6 +271,7 @@ G.Coop = (() => {
           if (ev[2] === 'b') e.applyBurn(ev[3]);
           else if (ev[2] === 'p') e.applyPoison(ev[3]);
           else if (ev[2] === 's') e.applySlow(ev[3]);
+          else if (ev[2] === 'f') e.freeze(Math.min(2, ev[3]));
           break;
         }
         case 'c':

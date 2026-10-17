@@ -524,7 +524,17 @@ G.Combat = (() => {
 
   // Golpe crítico (Mejoras → Golpe Crítico): x1,5 de daño, número naranja y grande.
   const CRIT_MUL = 1.5;
-  const isCrit = pl => !ghost && pl.critChance > 0 && Math.random() < pl.critChance;
+  const isCrit = pl => { const c = pl.critChance + (pl.hasItem('scopelens') ? 0.2 : 0); return !ghost && c > 0 && Math.random() < c; };
+
+  /** Objetos que actúan al golpear: Flame/Toxic Orb, King's Rock, Binding Band. */
+  function itemHit(pl, e) {
+    const it = pl.item;
+    if (!it || ghost) return;
+    if (it === 'flameorb') { if (Math.random() < 0.3) e.applyBurn(1); }
+    else if (it === 'toxicorb') { if (Math.random() < 0.3) e.applyPoison(1); }
+    else if (it === 'kingsrock') { if (Math.random() < 0.06 && !e.boss && !e.judge) e.freeze(1.2); }
+    else if (it === 'bindingband') e.applySlow(0.25, 1.5);
+  }
 
   function hit(pl, e, dmg, col, dx, dy, knock, m) {
     const k = typeK(m.type, e);
@@ -537,6 +547,7 @@ G.Combat = (() => {
     if (m.burn) e.applyBurn(m.burn);
     if (m.poison) e.applyPoison(m.poison);
     if (m.slow) e.applySlow(m.slow);
+    itemHit(pl, e);
   }
 
   // ---------------- colisiones ----------------
@@ -647,6 +658,7 @@ G.Combat = (() => {
         if (p.burn) e.applyBurn(p.burn);
         if (p.poison) e.applyPoison(p.poison);
         if (p.slow) e.applySlow(p.slow);
+        itemHit(pl, e);
 
         if (!p.orb) {
           if (p.pierce > 0) { p.pierce--; }

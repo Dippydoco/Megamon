@@ -140,7 +140,8 @@
 
     /** Stopwatch: se queda quieto (no se mueve, ataca ni anima) unos segundos. */
     freeze(dur) {
-      if (this.remote || this.judge) return;
+      if (this.judge || this.boss) return;
+      if (this.remote) { G.Coop.status(this, 'f', dur); return; }
       this.freezeT = Math.max(this.freezeT || 0, dur);
     }
 
