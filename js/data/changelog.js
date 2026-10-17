@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Tooltips for moves and items'), new: [
+    T('Hover over a move or your held item at the bottom of the screen to see what it does (on a computer; there is no tooltip on touch screens).')
+  ] },
   { d: '2026-10-17', title: T('Stats tab on the end screen'), new: [
     T('The end-of-run screen now has a second "Stats" tab: damage dealt, biggest hit, damage taken, times downed, revives given and shrines used. In a group run it shows every player side by side, with the best in each row in gold.')
   ] },
