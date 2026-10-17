@@ -2,6 +2,7 @@
  * Se dibuja en coordenadas de PANTALLA (sin la transformación de cámara).
  */
 G.HUD = (() => {
+  let HUD_SCALE = 1.3;       // tamaño del bloque de arriba a la izquierda (vida, compañeros, buffs)
   const F = (w, s) => `${w} ${s}px Pixelify,"Segoe UI",system-ui,sans-serif`;
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -26,6 +27,7 @@ G.HUD = (() => {
   }
 
   function draw(ctx, w, h, pl, st) {
+    HUD_SCALE = w < 640 ? 1.1 : 1.3;      // en pantallas estrechas, menos para no tapar el reloj
     ctx.save();
     ctx.textBaseline = 'alphabetic';
     G.Touch.clearButtons();
@@ -40,8 +42,10 @@ G.HUD = (() => {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w * G.U.clamp(xpF, 0, 1), 7);
 
-    // ---------- vida + nivel ----------
+    // ---------- vida + nivel + buffs (arriba a la izquierda, a escala HUD_SCALE) ----------
     const px = 16, py = 20;
+    ctx.save();
+    ctx.scale(HUD_SCALE, HUD_SCALE);
     ctx.font = F(800, 13);
     ctx.fillStyle = '#eaf2ff';
     ctx.textAlign = 'left';
@@ -49,7 +53,7 @@ G.HUD = (() => {
 
     ctx.font = F(700, 11);
     ctx.fillStyle = '#ffcb3d';
-    ctx.fillText('Nv. ' + pl.level, px, py + 26);
+    ctx.fillText('Lv. ' + pl.level, px, py + 26);
 
     bar(ctx, px + 48, py + 17, 168, 11, pl.hp / pl.maxHp, '#ff5f6d');
     ctx.font = F(700, 10);
@@ -57,23 +61,37 @@ G.HUD = (() => {
     ctx.textAlign = 'center';
     ctx.fillText(Math.ceil(pl.hp) + ' / ' + Math.round(pl.maxHp), px + 48 + 84, py + 26);
 
-    // buffs activos
+    // Buffs activos y poder de altar: píldoras con icono + texto. Si no caben en
+    // una fila (hasta el final de la barra de vida) pasan a la siguiente, sin solaparse.
     const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
-    const LBL = { atk: 'ATK', spd: 'VEL', def: 'DEF', regen: 'REG' };
-    let bx = px;
-    ctx.textAlign = 'left';
+    const LBL = { atk: 'ATK', spd: 'SPD', def: 'DEF', regen: 'REGEN' };
+    const ICO = { atk: 'fist', spd: 'boot', def: 'shield', regen: 'sprout' };
+    const POWER_ICO = { dmg: 'fist', spd: 'boot', mag: 'magnet', cd: 'clock' };
+    const pills = [];
     for (const k in pl.buffs) {
       const b = pl.buffs[k];
-      if (b.n <= 0) continue;
-      ctx.font = F(800, 9);
-      const txt = LBL[k] + ' ×' + b.n;
-      const tw = ctx.measureText(txt).width + 12;
-      roundRect(ctx, bx, py + 34, tw, 15, 7);
-      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fill();
-      ctx.fillStyle = COL[k];
-      ctx.fillText(txt, bx + 6, py + 45);
-      bx += tw + 5;
+      if (b.n > 0) pills.push({ icon: ICO[k], txt: LBL[k] + ' ×' + b.n, col: COL[k], bg: 'rgba(0,0,0,.5)' });
     }
+    if (pl.power) {
+      const pw = pl.power;
+      pills.push({ icon: POWER_ICO[pw.def.id] || 'star', txt: pw.def.name.toUpperCase() + ' ' + Math.ceil(pw.t) + 's', col: pw.def.color, bg: 'rgba(0,0,0,.6)' });
+    }
+    const PH = 18, PGAP = 5, MAXX = px + 216;
+    let bx = px, rowY = py + 34, rows = pills.length ? 1 : 0;
+    ctx.textAlign = 'left';
+    for (const pi of pills) {
+      ctx.font = F(800, 10);
+      const tw = 6 + 14 + 4 + ctx.measureText(pi.txt).width + 8;
+      if (bx > px && bx + tw > MAXX) { bx = px; rowY += PH + 4; rows++; }
+      roundRect(ctx, bx, rowY, tw, PH, 9);
+      ctx.fillStyle = pi.bg; ctx.fill();
+      G.Icons.draw(ctx, pi.icon, bx + 5, rowY + 2, 14);
+      ctx.fillStyle = pi.col;
+      ctx.fillText(pi.txt, bx + 5 + 14 + 4, rowY + 13);
+      bx += tw + PGAP;
+    }
+    const coopTop = rows ? py + 34 + rows * (PH + 4) + 2 : py + 40;
+    ctx.restore();
 
     // ---------- reloj / bioma / kills ----------
     ctx.textAlign = 'center';
@@ -132,20 +150,7 @@ G.HUD = (() => {
       ctx.restore();
     }
 
-    // Poder de altar activo.
-    if (pl.power) {
-      const pw = pl.power, txt = pw.def.name.toUpperCase() + ' ' + Math.ceil(pw.t) + 's';
-      ctx.font = F(800, 9);
-      ctx.textAlign = 'left';
-      const tw = ctx.measureText(txt).width + 12;
-      roundRect(ctx, bx, py + 34, tw, 15, 7);
-      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
-      ctx.fillStyle = pw.def.color;
-      ctx.fillText(txt, bx + 6, py + 45);
-      bx += tw + 5;
-    }
-
-    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, py + (bx > px ? 56 : 40));
+    if (G.Coop.active) drawCoop(ctx, w, h, pl, px, coopTop);
 
     // Grieta: flecha grande que late en el borde si no se ve, y si se ve, una
     // flecha que bota encima; en la arena, cuenta atrás.
@@ -401,6 +406,8 @@ G.HUD = (() => {
     const cam = G.Camera;
     const t = performance.now() / 1000;
     let y = top;
+    ctx.save();
+    ctx.scale(HUD_SCALE, HUD_SCALE);
     ctx.textAlign = 'left';
     for (const m of G.Coop.mates) {
       if (!m.connected) continue;
@@ -417,6 +424,7 @@ G.HUD = (() => {
       }
       y += 15;
     }
+    ctx.restore();
 
     // Flechas hacia los compañeros fuera de la vista.
     for (const m of G.Coop.mates) {
