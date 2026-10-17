@@ -2,7 +2,7 @@
  * Se dibuja en coordenadas de PANTALLA (sin la transformación de cámara).
  */
 G.HUD = (() => {
-  let HUD_SCALE = 1.3;       // tamaño del bloque de arriba a la izquierda (vida, compañeros, buffs)
+  let HUD_SCALE = 1.55;       // tamaño del bloque de arriba a la izquierda (vida, compañeros, buffs)
   const F = (w, s) => `${w} ${s}px Pixelify,"Segoe UI",system-ui,sans-serif`;
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -27,7 +27,7 @@ G.HUD = (() => {
   }
 
   function draw(ctx, w, h, pl, st) {
-    HUD_SCALE = w < 640 ? 1.1 : 1.3;      // en pantallas estrechas, menos para no tapar el reloj
+    HUD_SCALE = w < 640 ? 1.2 : w < 1000 ? 1.4 : 1.55;      // en pantallas estrechas, menos para no tapar el reloj
     ctx.save();
     ctx.textBaseline = 'alphabetic';
     G.Touch.clearButtons();
