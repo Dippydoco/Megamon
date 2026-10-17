@@ -373,6 +373,7 @@ G.HUD = (() => {
     const BOND = '#ff8ad8';
     const tips = [];            // hover tooltips for moves and the held item
     const cdOf = m => m.kind === 'orbit' ? 0 : G.U.clamp(m.t / (m.cd * pl.cdMul), 0, 1);
+    let moveLbl = null;         // horizontal extent of the active move's name, so the item's name can dodge it
 
     for (let i = 0; i < n; i++) {
       const g = pl.slots[i] || [];
@@ -450,6 +451,8 @@ G.HUD = (() => {
         ctx.strokeText(nm, x + S / 2, y - 8);
         ctx.fillStyle = '#fff';
         ctx.fillText(nm, x + S / 2, y - 8);
+        const hw = ctx.measureText(nm).width / 2 + 3;
+        moveLbl = { x0: x + S / 2 - hw, x1: x + S / 2 + hw };
       }
     }
 
@@ -479,9 +482,13 @@ G.HUD = (() => {
         ctx.font = F(800, Math.round(12 * K));
         ctx.textAlign = 'center';
         ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
-        ctx.strokeText(G.Items.BY[pl.item].name, ix + S / 2, iy - 8);
+        // If the move's name (long when bonded, e.g. "Thunder Shock +2") would run into the item's name, lift the item's one line up.
+        const inm = G.Items.BY[pl.item].name, iw = ctx.measureText(inm).width / 2 + 3;
+        const clash = moveLbl && ix + S / 2 + iw > moveLbl.x0 && ix + S / 2 - iw < moveLbl.x1;
+        const ly = iy - 8 - (clash ? 19 : 0);
+        ctx.strokeText(inm, ix + S / 2, ly);
         ctx.fillStyle = '#ffd23f';
-        ctx.fillText(G.Items.BY[pl.item].name, ix + S / 2, iy - 8);
+        ctx.fillText(inm, ix + S / 2, ly);
         tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.BY[pl.item].desc] });
       }
     }

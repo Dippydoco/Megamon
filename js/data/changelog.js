@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Item and move names no longer overlap'), fix: [
+    T('The held item name and the selected move name (especially a bonded move like "Thunder Shock +2") no longer draw on top of each other above the move bar.')
+  ] },
   { d: '2026-10-17', title: T('Search your Pokémon'), new: [
     T('The Pokémon tab has a search box: type part of a name (only Pokémon you own are found) or a Dex number, and it searches every generation at once.')
   ] },
