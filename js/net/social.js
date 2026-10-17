@@ -185,6 +185,7 @@ G.Social = (() => {
     // Cada paso por separado: si uno falla, los demás se borran igual.
     const step = async (what, fn) => { try { await fn(); } catch (e) { console.warn('[Social] no se pudo borrar ' + what + ':', e.code || e.message); } };
     const del = async q => { const s = await q.get(); await Promise.all(s.docs.map(d => d.ref.delete().catch(() => {}))); };
+    await step('chats', () => del(fb.fs.collection('chats').where('users', 'array-contains', uid)));
     await step('amistades', () => del(fb.fs.collection('friendships').where('users', 'array-contains', uid)));
     await step('filas del ranking', () => G.Ranking.removeMine());
     await step('invitaciones', () => del(fb.fs.collection('inv').where('to', '==', uid)));
@@ -288,7 +289,10 @@ G.Social = (() => {
   async function remove(other) {
     const f = friends.get(other);
     if (!f) return { ok: false };
-    try { await fb.fs.collection('friendships').doc(f.pid).delete(); return { ok: true }; }
+    try {
+      if (f.status === 'ok' && G.Chat) await G.Chat.purge(other);     // their conversation goes too (needs the friendship for the rules)
+      await fb.fs.collection('friendships').doc(f.pid).delete(); return { ok: true };
+    }
     catch (e) { return { ok: false, error: 'No se pudo borrar (' + (e.code || 'error') + ').' }; }
   }
 

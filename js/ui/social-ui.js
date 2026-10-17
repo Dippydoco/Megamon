@@ -139,6 +139,9 @@
         } else if (f.status === 'out') {
           btn('Cancelar', 'ghost', () => G.Social.remove(f.uid));
         } else {
+          const n = G.Chat.unread(f.uid);
+          const cb = btn(n ? 'Chat (' + n + ')' : 'Chat', n ? 'gold' : 'ghost', () => G.DMUI.open(f.uid));
+          cb.title = n ? n + ' unread' : 'Chat with ' + f.name;
           if (f.online && !f.play && !inRoom && (!room || room.isHost)) {
             btn('Invitar', 'gold', async () => {
               const r = await G.Social.invite(f.uid);
@@ -216,6 +219,7 @@
     function render() {
       const room = G.Social.room;
       if (!room) return;
+      if (G.RoomChatUI) G.RoomChatUI.renderLobby();
       const ms = room.members;
       $('lobby-sub').textContent = room.isHost
         ? 'Eres el anfitrión. Invita a tus amigos (hasta ' + G.Social.MAX_PLAYERS + ') y empezad cuando estéis.'

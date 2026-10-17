@@ -378,6 +378,21 @@
   </div>
 </section>
 
+<!-- ====== Chat privado con un amigo ====== -->
+<section id="scr-chat" class="scr dim hidden">
+  <div class="box wide chat-box">
+    <div class="row between"><h2 id="chat-title">Chat</h2>
+      <div class="row"><button id="chat-mute" class="btn small ghost">Mute</button><button id="chat-back" class="btn small ghost">Back</button></div></div>
+    <p class="sub" id="chat-sub">Your last 25 messages together are kept.</p>
+    <div id="chat-log" class="chat-log" translate="no"></div>
+    <form id="chat-form" class="row" autocomplete="off">
+      <input id="chat-input" class="field grow" maxlength="140" spellcheck="false" placeholder="Type a message…">
+      <button class="btn gold" type="submit" data-sfx="none">Send</button>
+    </form>
+    <p id="chat-note" class="note"></p>
+  </div>
+</section>
+
 <!-- ====== Sala (partida en grupo) ====== -->
 <section id="scr-lobby" class="scr dim hidden">
   <div class="box wide">
@@ -387,6 +402,12 @@
     <div id="lobby-members" class="lobby-members"></div>
     <h3 id="lobby-inv-title" style="margin:14px 0 6px">Invitar amigos</h3>
     <div id="lobby-invite" class="fr-list"></div>
+    <h3 style="margin:14px 0 6px">Room chat</h3>
+    <div id="lobby-chatlog" class="chat-log small" translate="no"></div>
+    <form id="lobby-chatform" class="row" autocomplete="off">
+      <input id="lobby-chatinput" class="field grow" maxlength="140" spellcheck="false" placeholder="Say something to the room…">
+      <button class="btn small gold" type="submit" data-sfx="none">Send</button>
+    </form>
     <div class="row" style="margin-top:14px">
       <button id="lobby-start" class="btn gold grow">Empezar partida</button>
     </div>
@@ -445,6 +466,15 @@
     <div id="prof-body"></div>
   </div>
 </section>
+
+<!-- ====== Chat de sala durante la partida ====== -->
+<div id="chat-run" class="chat-run hidden" translate="no">
+  <div id="chat-run-log" class="chat-run-log"></div>
+  <form id="chat-run-form" class="chat-run-form hidden" autocomplete="off">
+    <input id="chat-run-input" maxlength="140" spellcheck="false" placeholder="Message the room (Enter to send, Esc to close)">
+  </form>
+  <button id="chat-run-btn" class="chat-run-btn" type="button" title="Chat (Enter)">Chat</button>
+</div>
 
 <!-- ====== Invitación recibida ====== -->
 <div id="invite-pop" class="box invite-pop hidden">
@@ -637,6 +667,7 @@
 <!-- red: amigos, salas, cooperativo y ranking -->
 <script defer src="js/net/social.js"></script>
 <script defer src="js/net/net.js"></script>
+<script defer src="js/net/chat.js"></script>
 <script defer src="js/net/coop.js"></script>
 <script defer src="js/net/ranking.js"></script>
 <!-- interfaz -->
@@ -650,6 +681,7 @@
 <script defer src="js/ui/gacha-ui.js"></script>
 <script defer src="js/ui/run-ui.js"></script>
 <script defer src="js/ui/social-ui.js"></script>
+<script defer src="js/ui/chat-ui.js"></script>
 <script defer src="js/ui/ranking-ui.js"></script>
 <script defer src="js/ui/mod-ui.js"></script>
 <script defer src="js/ui/goals-ui.js"></script>

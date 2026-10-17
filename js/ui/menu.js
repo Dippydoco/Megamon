@@ -100,8 +100,10 @@ G.MenuUI = (() => {
     const parts = [];
     if (on) parts.push(on + ' en línea');
     if (req) parts.push(req + (req === 1 ? ' solicitud' : ' solicitudes'));
+    const msgs = G.Chat ? G.Chat.totalUnread() : 0;
+    if (msgs) parts.push(msgs + (msgs === 1 ? ' new message' : ' new messages'));
     $('menu-friends-sub').textContent = parts.length ? parts.join(' · ') : 'Play in a group, up to 5';
-    $('menu-friends-sub').classList.toggle('gold', req > 0);
+    $('menu-friends-sub').classList.toggle('gold', req > 0 || msgs > 0);
   }
 
   // ---------------- colección ----------------
@@ -456,5 +458,5 @@ G.MenuUI = (() => {
     return el;
   }
 
-  return { init, open, GEN_NAMES };
+  return { init, open, GEN_NAMES, refreshSocial() { if (G.UI.isOpen('scr-menu')) socialLine(); } };
 })();

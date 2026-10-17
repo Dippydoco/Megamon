@@ -10,6 +10,7 @@ rules_version = '2';
 //   reports/{tabla__id__uid}  reportes de marcas sospechosas (sólo los lee el admin)
 //   lbs/{tabla}            resumen con el top 50 de cada tabla
 //   pres/{uid}             en línea (aproximado) · inv/{para_de} invitaciones
+//   chats/{a_b}            chat privado entre amigos (últimos 25 mensajes)
 // Todo lo demás está cerrado.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -106,6 +107,35 @@ service cloud.firestore {
         && resource.data.status == 'pending'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'at', 'names'])
         && request.resource.data.status == 'ok';
+      allow delete: if signedIn() && me() in resource.data.users;
+    }
+
+    // ---------- chat privado ----------
+    // Un documento por pareja de amigos (mismo id que la amistad) con sus últimos 25
+    // mensajes y hasta dónde ha leído cada uno. Sólo entre amigos confirmados.
+    function chatOk(pid, d) {
+      return d.keys().hasOnly(['users', 'msgs', 'seen'])
+        && d.users is list && d.users.size() == 2
+        && d.users[0] < d.users[1]
+        && me() in d.users
+        && pid == d.users[0] + '_' + d.users[1]
+        && d.msgs is list && d.msgs.size() <= 25
+        && d.seen is map
+        && get(/databases/$(database)/documents/friendships/$(pid)).data.status == 'ok';
+    }
+    // El último mensaje es tuyo y razonable (no se pueden poner mensajes con tu nombre en el de otro).
+    function chatLastOk(d) {
+      return d.msgs.size() == 0
+        || (d.msgs[d.msgs.size() - 1].f == me()
+            && d.msgs[d.msgs.size() - 1].t is string
+            && d.msgs[d.msgs.size() - 1].t.size() <= 140
+            && d.msgs[d.msgs.size() - 1].at is number);
+    }
+    match /chats/{pid} {
+      allow read: if signedIn() && (resource == null || me() in resource.data.users);
+      allow create: if signedIn() && chatOk(pid, request.resource.data) && chatLastOk(request.resource.data);
+      allow update: if signedIn() && me() in resource.data.users && chatOk(pid, request.resource.data)
+        && (request.resource.data.msgs == resource.data.msgs || chatLastOk(request.resource.data));
       allow delete: if signedIn() && me() in resource.data.users;
     }
 

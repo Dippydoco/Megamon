@@ -890,3 +890,38 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .tag-new { position: absolute; bottom: 4px; left: 4px; z-index: 2; font-size: 9px; font-weight: 800; letter-spacing: .5px;
   padding: 1px 4px; border-radius: 3px; background: #ff5f6d; color: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.4); }
 .tag-new.inline { position: static; display: inline-block; vertical-align: middle; font-size: 11px; padding: 2px 6px; margin-left: 6px; }
+
+/* ---------- chat: privado, de sala y en partida ---------- */
+.chat-box { max-width: 640px; }
+.chat-log {
+  display: flex; flex-direction: column; gap: 4px; height: 38vh; min-height: 180px; overflow-y: auto;
+  padding: 8px 10px; margin: 8px 0 10px; border-radius: 8px;
+  background: rgba(0,0,0,.28); border: 2px solid rgba(244,248,255,.14);
+}
+.chat-log.small { height: 14vh; min-height: 84px; margin-bottom: 8px; }
+.cm { font-size: 15px; line-height: 1.35; word-break: break-word; }
+.cm b { margin-right: 6px; color: #9fd4ff; }
+.cm.me b { color: var(--gold); }
+.cm i { margin-left: 8px; font-style: normal; font-size: 11px; color: var(--muted); }
+.cm-empty { color: var(--muted); font-size: 14px; margin: auto; }
+.chat-box form .field, #lobby-chatform .field { min-width: 0; }
+
+.chat-run {
+  position: fixed; left: 12px; top: 112px; z-index: 15; width: min(340px, calc(100% - 24px));
+  pointer-events: none; display: flex; flex-direction: column; gap: 4px;
+}
+.chat-run-log { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow: hidden; }
+.chat-run-log .cm {
+  font-size: 14px; padding: 2px 8px; border-radius: 6px; background: rgba(8,14,30,.62);
+  text-shadow: 0 1px 2px #000; width: fit-content; max-width: 100%;
+}
+.chat-run-form { pointer-events: auto; }
+.chat-run-form input {
+  width: 100%; padding: 6px 10px; font: inherit; font-size: 14px; color: var(--fg, #f4f8ff);
+  background: rgba(8,14,30,.88); border: 2px solid var(--gold); border-radius: 8px; outline: none;
+}
+.chat-run-btn {
+  pointer-events: auto; align-self: flex-start; padding: 2px 10px; font: inherit; font-size: 12px; cursor: pointer;
+  color: var(--muted); background: rgba(8,14,30,.5); border: 1px solid rgba(244,248,255,.25); border-radius: 12px; opacity: .65;
+}
+.chat-run-btn:hover { opacity: 1; }

@@ -10,6 +10,12 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Friend chat'), new: [
+    T('Chat with your friends: open Friends and press "Chat" next to a name. Your last 25 messages together are kept, you get an unread count on the Chat button and the main menu, and you can mute a friend.')
+  ] },
+  { d: '2026-10-17', title: T('Room chat'), new: [
+    T('Chat with everyone in your room, in the waiting room and during a group run: press Enter (or the small Chat button) to type, Enter to send, Esc to close. Room chat is not saved.')
+  ] },
   { d: '2026-10-17', title: T('New event: Aegislash and its Armoury'), new: [
     T('Every so often "An Aegislash appears with an Armoury of Items!" It slowly hunts you down and swaps between Shield Forme (takes far less damage) and Blade Forme (takes full damage, but is fast and dangerous). An arrow shows where it is.'),
     T('Defeat it and everyone chooses one of 3 items, or skips if nothing is worth taking. Taking one replaces your current item. It leaves after 75 seconds if you cannot beat it, and up to 3 can show up per run.')

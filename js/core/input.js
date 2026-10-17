@@ -11,7 +11,11 @@ G.Input = (() => {
 
   function code(e) { return (e.code || e.key).toLowerCase(); }
 
+  // Typing in a text box (chat, nickname...) must not move the player or trigger game keys.
+  const typing = e => { const t = e.target; return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable); };
+
   addEventListener('keydown', e => {
+    if (typing(e)) { down.clear(); return; }
     const c = code(e);
     if (!down.has(c)) pressed.add(c);
     down.add(c);
