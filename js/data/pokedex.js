@@ -588,6 +588,7 @@ G.DEX = [
   {"dex":588,"name":"Karrablast","types":["bug"],"hp":92,"spd":103,"atk":1.11,"rarity":1,"bst":315,"starter":false,"gen":5},
   {"dex":589,"name":"Escavalier","types":["bug","steel"],"hp":102,"spd":86,"atk":1.44,"rarity":4,"bst":495,"starter":false,"gen":5},
   {"dex":590,"name":"Foongus","types":["grass","poison"],"hp":101,"spd":84,"atk":1.0,"rarity":1,"bst":294,"starter":false,"gen":5},
+  {"dex":593,"name":"Jellicent","types":["water","ghost"],"hp":115,"spd":103,"atk":1.17,"rarity":3,"bst":480,"starter":false,"gen":5},
   {"dex":594,"name":"Alomomola","types":["water"],"hp":144,"spd":105,"atk":1.11,"rarity":3,"bst":470,"starter":false,"gen":5},
   {"dex":595,"name":"Joltik","types":["bug","electric"],"hp":92,"spd":105,"atk":1.01,"rarity":1,"bst":319,"starter":false,"gen":5},
   {"dex":596,"name":"Galvantula","types":["bug","electric"],"hp":102,"spd":123,"atk":1.23,"rarity":3,"bst":472,"starter":false,"gen":5},
@@ -846,6 +847,7 @@ G.DEX = [
   {"dex":862,"name":"Obstagoon","types":["dark","normal"],"hp":112,"spd":118,"atk":1.2,"rarity":4,"bst":520,"starter":false,"gen":8},
   {"dex":863,"name":"Perrserker","types":["steel"],"hp":102,"spd":99,"atk":1.31,"rarity":3,"bst":440,"starter":false,"gen":8},
   {"dex":864,"name":"Cursola","types":["ghost"],"hp":97,"spd":91,"atk":1.5,"rarity":4,"bst":510,"starter":false,"gen":8},
+  {"dex":865,"name":"Sirfetch'd","types":["fighting"],"hp":98,"spd":105,"atk":1.44,"rarity":4,"bst":507,"starter":false,"gen":8},
   {"dex":867,"name":"Runerigus","types":["ground","ghost"],"hp":96,"spd":91,"atk":1.22,"rarity":3,"bst":483,"starter":false,"gen":8},
   {"dex":868,"name":"Milcery","types":["fairy"],"hp":90,"spd":92,"atk":0.97,"rarity":1,"bst":270,"starter":false,"gen":8},
   {"dex":869,"name":"Alcremie","types":["fairy"],"hp":99,"spd":105,"atk":1.31,"rarity":4,"bst":495,"starter":false,"gen":8},
@@ -856,6 +858,7 @@ G.DEX = [
   {"dex":875,"name":"Eiscue","types":["ice"],"hp":104,"spd":99,"atk":1.14,"rarity":3,"bst":470,"starter":false,"gen":8},
   {"dex":876,"name":"Indeedee","types":["psychic","normal"],"hp":97,"spd":118,"atk":1.28,"rarity":3,"bst":475,"starter":false,"gen":8},
   {"dex":877,"name":"Morpeko","types":["electric","dark"],"hp":96,"spd":119,"atk":1.22,"rarity":3,"bst":436,"starter":false,"gen":8},
+  {"dex":879,"name":"Copperajah","types":["steel"],"hp":125,"spd":91,"atk":1.42,"rarity":4,"bst":500,"starter":false,"gen":8},
   {"dex":880,"name":"Dracozolt","types":["electric","dragon"],"hp":110,"spd":110,"atk":1.25,"rarity":4,"bst":505,"starter":false,"gen":8},
   {"dex":881,"name":"Arctozolt","types":["electric","ice"],"hp":110,"spd":101,"atk":1.25,"rarity":4,"bst":505,"starter":false,"gen":8},
   {"dex":882,"name":"Dracovish","types":["water","dragon"],"hp":110,"spd":110,"atk":1.2,"rarity":4,"bst":505,"starter":false,"gen":8},
@@ -916,6 +919,7 @@ G.DEX = [
   {"dex":940,"name":"Wattrel","types":["electric","flying"],"hp":88,"spd":107,"atk":1.0,"rarity":1,"bst":280,"starter":false,"gen":9},
   {"dex":941,"name":"Kilowattrel","types":["electric","flying"],"hp":102,"spd":130,"atk":1.28,"rarity":3,"bst":490,"starter":false,"gen":9},
   {"dex":946,"name":"Bramblin","types":["grass","ghost"],"hp":88,"spd":103,"atk":1.06,"rarity":1,"bst":275,"starter":false,"gen":9},
+  {"dex":948,"name":"Toedscool","types":["ground","grass"],"hp":88,"spd":107,"atk":0.97,"rarity":2,"bst":335,"starter":false,"gen":9},
   {"dex":951,"name":"Capsakid","types":["grass"],"hp":92,"spd":99,"atk":1.04,"rarity":1,"bst":304,"starter":false,"gen":9},
   {"dex":952,"name":"Scovillain","types":["grass","fire"],"hp":99,"spd":110,"atk":1.29,"rarity":3,"bst":486,"starter":false,"gen":9},
   {"dex":953,"name":"Rellor","types":["bug"],"hp":88,"spd":91,"atk":0.97,"rarity":1,"bst":270,"starter":false,"gen":9},
@@ -973,6 +977,7 @@ G.DEX = [
   {"dex":1018,"name":"Archaludon","types":["steel","dragon"],"hp":110,"spd":114,"atk":1.39,"rarity":5,"bst":600,"starter":false,"gen":9},
   {"dex":1019,"name":"Hydrapple","types":["grass","dragon"],"hp":118,"spd":96,"atk":1.36,"rarity":4,"bst":540,"starter":false,"gen":9},
   {"dex":1024,"name":"Terapagos","types":["normal"],"hp":110,"spd":103,"atk":1.06,"rarity":5,"bst":450,"starter":false,"gen":9,"leg":true},
+  {"dex":1025,"name":"Pecharunt","types":["poison","ghost"],"hp":110,"spd":115,"atk":1.18,"rarity":5,"bst":600,"starter":false,"gen":9,"leg":true},
 ];
 
 G.DEX_BY = {};

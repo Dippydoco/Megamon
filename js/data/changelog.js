@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Five new Pokémon'), new: [
+    T('Jellicent, Sirfetch\'d, Copperajah, Toedscool and Pecharunt are now in the game. They can be pulled in the gacha, picked as your partner and show up as enemies like the others (Pecharunt is a mythical, so it only appears in rifts and the Judgment pool, like the other legendaries).'),
+    T('Their sprites have no dedicated attack animation yet, so they reuse their swing or idle animation when attacking.')
+  ] },
   { d: '2026-10-17', title: T('Fewer random disconnects in groups'), fix: [
     T('A short network blip (Wi-Fi hiccup, brief signal drop) no longer drops you from a group. The game now spends up to 25 s trying to reconnect before giving up, and the host keeps you in the game while the link is still alive.'),
     T('If your connection to the room server blinks, your spot in the room is now restored automatically instead of staying deleted.'),
