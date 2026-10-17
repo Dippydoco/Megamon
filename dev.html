@@ -171,6 +171,7 @@
       <div class="nm" id="menu-partner-name"></div>
       <div class="lv" id="menu-partner-info"></div>
       <div class="seg hidden" id="menu-shiny"><button data-v="0">Normal</button><button data-v="1"></button></div>
+      <button id="menu-random" class="btn small ghost" data-sfx="click" title="Pick a random partner from the Pokémon you own"></button>
     </div>
   </div>
   <div class="menu-right">
@@ -344,6 +345,21 @@
       <div class="row"><button id="nick-ok" class="btn gold grow" type="submit">Guardar apodo</button></div>
     </form>
     <div class="row" style="margin-top:8px"><button id="nick-later" class="btn ghost grow" type="button">Ahora no</button></div>
+  </div>
+</section>
+
+<!-- ====== Random partner ====== -->
+<section id="scr-random" class="scr dim hidden">
+  <div class="box rnd-box">
+    <h2>Random partner</h2>
+    <p class="sub" id="rnd-sub">Picking from the Pokémon you own…</p>
+    <canvas id="rnd-stage" class="stage" width="260" height="210"></canvas>
+    <div class="rnd-name" id="rnd-name">???</div>
+    <div class="rnd-info" id="rnd-info"></div>
+    <div class="row" style="margin-top:12px">
+      <button id="rnd-again" class="btn gold grow" data-sfx="none">Spin again</button>
+      <button id="rnd-done" class="btn grow">Done</button>
+    </div>
   </div>
 </section>
 

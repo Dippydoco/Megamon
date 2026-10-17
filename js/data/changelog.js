@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Random partner'), new: [
+    T('A new "Random partner" button under your partner on the main menu picks a random Pokémon from the ones you own and makes it your partner, with a shuffling-silhouette animation. If you own its shiny too, it can come out shiny. Spin again as many times as you like.')
+  ] },
   { d: '2026-10-17', title: T('A livelier main menu'), new: [
     T('Tap or click the Pokémon in the menu background and they react, showing their name (or your teammate\'s name).'),
     T('The rift scenes in the menu now use a team from one of your past group runs: you and your teammates\' Pokémon, when you have one in your History.'),

@@ -240,6 +240,12 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 }
 .menu-left .logo .t1 { font-size: clamp(36px, 6vw, 64px); }
 .partner-card { text-align: center; margin-top: 10px; }
+.partner-card #menu-random { margin-top: 8px; }
+/* Random partner (menu.js, spinRandom) */
+.rnd-box { width: min(380px, 100%); text-align: center; }
+.rnd-box .stage { display: block; margin: 8px auto; }
+.rnd-name { font-size: 26px; font-weight: 700; min-height: 34px; text-shadow: 3px 3px 0 var(--shadow); }
+.rnd-info { min-height: 26px; }
 .partner-card .nm { font-size: 24px; font-weight: 700; text-shadow: 3px 3px 0 var(--shadow); }
 .partner-card .lv { color: var(--muted); font-size: 14px; text-shadow: 2px 2px 0 var(--shadow); }
 .menu-right {
