@@ -11,7 +11,8 @@ G.Activity = (() => {
     const st = G.Game.state;
     if (st && st !== 'ui' && st !== 'over') {
       const kind = G.Judgment.active ? 'arceus' : G.Coop.active ? 'group' : 'run';
-      return { act: kind, since: G.Social.now() - G.Game.st.time * 1000 };
+      const pl = G.Game.player;
+      return { act: kind, since: G.Social.now() - G.Game.st.time * 1000, mon: pl ? pl.dex : 0 };
     }
     for (const [id, a] of SCREEN) if (G.UI.isOpen(id)) return { act: a, since: 0 };
     return { act: 'menu', since: 0 };
@@ -20,7 +21,7 @@ G.Activity = (() => {
   function tick() {
     if (!G.Social.started) return;
     const c = current();
-    G.Social.setActivity(c.act, c.since);
+    G.Social.setActivity(c.act, c.since, c.mon);
     if (c.since) G.Social.touch(5 * 60 * 1000);      // light heartbeat during a run
   }
 

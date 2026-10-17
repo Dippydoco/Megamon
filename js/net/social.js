@@ -157,7 +157,7 @@ G.Social = (() => {
   const ACTS = new Set(['menu', 'gacha', 'upgrades', 'dex', 'rank', 'goals', 'lobby', 'run', 'group', 'arceus']);
   const RUNS = new Set(['run', 'group', 'arceus']);
   const ACT_GAP = 30 * 1000, RUN_FRESH = 12 * 60 * 1000;
-  let act = '', actSince = 0, actOk = true, actT = 0;
+  let act = '', actSince = 0, actMon = 0, actOk = true, monOk = true, actT = 0;
 
   function writeStatus(on = true) {
     // Sin amigos nadie lo lee: no se gasta una escritura (cupo diario de Firebase).
@@ -169,22 +169,28 @@ G.Social = (() => {
       const share = on && G.Settings.get('shareAct') !== false;
       doc.act = share ? act : '';
       doc.since = share && RUNS.has(act) ? Math.round(actSince) : 0;
+      if (monOk) doc.mon = share && RUNS.has(act) ? actMon : 0;
     }
-    fb.fs.collection('pres').doc(uid).set(doc).catch(e => {
-      // Rules not republished yet (they don't know act/since): keep the old status working.
-      if (actOk && e && e.code === 'permission-denied') {
-        actOk = false;
-        fb.fs.collection('pres').doc(uid).set({ on, at: fts(), room: room ? room.id : '', play: playing }).catch(() => {});
+    const ref = fb.fs.collection('pres').doc(uid);
+    ref.set(doc).catch(e => {
+      // Rules not republished yet (they don't know mon, or act/since): keep the status working with fewer fields.
+      if (!(e && e.code === 'permission-denied')) return;
+      if (monOk && actOk) {
+        monOk = false; delete doc.mon;
+        return ref.set(doc).catch(e2 => {
+          if (e2 && e2.code === 'permission-denied') { actOk = false; ref.set({ on, at: fts(), room: room ? room.id : '', play: playing }).catch(() => {}); }
+        });
       }
+      if (actOk) { actOk = false; ref.set({ on, at: fts(), room: room ? room.id : '', play: playing }).catch(() => {}); }
     });
   }
   function setPlaying(p) { if (playing !== !!p) { playing = !!p; writeStatus(); } }
 
   /** Tell friends what you are doing. `since` = server-clock ms when the run started (runs only). */
-  function setActivity(a, since = 0) {
+  function setActivity(a, since = 0, mon = 0) {
     if (!ACTS.has(a)) a = '';
-    if (a === act && (!since || Math.abs(since - actSince) < 5000)) return;
-    act = a; actSince = since || 0;
+    if (a === act && (!since || Math.abs(since - actSince) < 5000) && (mon || 0) === actMon) return;
+    act = a; actSince = since || 0; actMon = mon || 0;
     if (!started || actT) return;
     const wait = Math.max(0, ACT_GAP - (Date.now() - lastBeat));
     if (!wait) writeStatus();
@@ -277,11 +283,12 @@ G.Social = (() => {
     ok.forEach((f, i) => {
       const v = docs[i] && docs[i].exists ? docs[i].data() : null;
       const on = !!(v && v.on && t - msOf(v.at) < ONLINE);
-      const p = { online: on, play: !!(on && v.play), room: on ? v.room : '', seen: v ? msOf(v.at) : 0, act: '', since: 0 };
+      const p = { online: on, play: !!(on && v.play), room: on ? v.room : '', seen: v ? msOf(v.at) : 0, act: '', since: 0, mon: 0 };
       if (on && typeof v.act === 'string' && ACTS.has(v.act)) {
         // A run with no recent sign of life (crash, closed tab) is not shown as a run.
         if (!RUNS.has(v.act) || t - msOf(v.at) < RUN_FRESH) p.act = v.act;
         const sn = +v.since;
+        if (RUNS.has(p.act) && G.DEX_BY[v.mon]) p.mon = +v.mon;
         if (RUNS.has(p.act) && Number.isFinite(sn) && sn > 0 && sn <= t + 60000 && t - sn < 6 * 3600 * 1000) p.since = sn;
       }
       pres.set(f.uid, p);

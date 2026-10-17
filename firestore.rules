@@ -226,12 +226,13 @@ service cloud.firestore {
     match /pres/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && me() == uid
-        && request.resource.data.keys().hasOnly(['at', 'room', 'play', 'on', 'act', 'since'])
+        && request.resource.data.keys().hasOnly(['at', 'room', 'play', 'on', 'act', 'since', 'mon'])
         && request.resource.data.at == request.time
         && request.resource.data.room is string && request.resource.data.room.size() <= 40
         && request.resource.data.play is bool && request.resource.data.on is bool
         && (!('act' in request.resource.data) || (request.resource.data.act is string && request.resource.data.act.size() <= 12))
-        && (!('since' in request.resource.data) || request.resource.data.since is number);
+        && (!('since' in request.resource.data) || request.resource.data.since is number)
+        && (!('mon' in request.resource.data) || request.resource.data.mon is number);
       allow delete: if signedIn() && me() == uid;
     }
 

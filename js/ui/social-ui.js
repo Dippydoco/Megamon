@@ -92,18 +92,19 @@
                   rank: 'Viewing rankings', goals: 'Viewing goals', lobby: 'In a lobby', run: 'In a run', group: 'In a group run', arceus: 'Facing Arceus' };
     const isRun = f => f.act === 'run' || f.act === 'group' || f.act === 'arceus';
     const runClock = f => G.U.mmss(Math.max(0, (G.Social.now() - f.since) / 1000));
+    const runMon = f => (f.mon && G.DEX_BY[f.mon] ? ' · ' + G.DEX_BY[f.mon].name : '');
     function stateText(f) {
       if (f.status === 'in') return 'Quiere ser tu amigo';
       if (f.status === 'out') return 'Solicitud enviada';
       if (!f.online) return f.seen ? 'Visto ' + ago(f.seen) : 'Desconectado';
-      if (f.act && ACT[f.act]) return ACT[f.act] + (isRun(f) && f.since ? ' · ' + runClock(f) : '');
+      if (f.act && ACT[f.act]) return ACT[f.act] + (isRun(f) ? runMon(f) + (f.since ? ' · ' + runClock(f) : '') : '');
       return f.play ? 'Jugando' : 'En línea';
     }
     /** Keeps the run clocks in the list ticking. */
     function tickClocks() {
       document.querySelectorAll('#fr-list .st[data-uid]').forEach(el => {
         const f = G.Social.friends.find(x => x.uid === el.dataset.uid);
-        if (f && f.online && isRun(f) && f.since) el.textContent = ACT[f.act] + ' · ' + runClock(f);
+        if (f && f.online && isRun(f) && f.since) el.textContent = ACT[f.act] + runMon(f) + ' · ' + runClock(f);
       });
     }
 
