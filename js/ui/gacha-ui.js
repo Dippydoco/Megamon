@@ -13,6 +13,7 @@ G.GachaUI = (() => {
     $('pull-10').onclick = () => pull(10, 't1');
     $('pull-10b').onclick = () => pull(10, 't10');
     $('pull-close').onclick = close;
+    $('pull-all').onclick = pullAll;
     $('gacha-surprise').onclick = () => {
       surprise = !surprise;
       if (surprise) mystery = G.U.shuffle ? G.U.shuffle(G.DEX.filter(p => p.rarity === 5 && G.SPRITE_META[p.dex])).slice(0, 3).map(p => p.dex)
@@ -96,6 +97,7 @@ G.GachaUI = (() => {
     $('pull-1').disabled = !G.Gacha.costOf(s, 1);
     $('pull-10').disabled = !G.Gacha.costOf(s, 10, 't1');
     $('pull-10b').disabled = !G.Gacha.costOf(s, 10, 't10');
+    $('pull-all').disabled = !(t.t1 > 0 || t.t10 > 0);
     G.UI.refreshCoins();
   }
 
@@ -105,23 +107,54 @@ G.GachaUI = (() => {
     if (busy) return;
     const res = G.Gacha.pull(G.DB.save, n, gen, use, surprise);
     if (!res) { G.Audio.sfx('error'); G.UI.toast('No tienes tickets suficientes: consíguelos jugando'); return; }
+    present(res, n);
+  }
+
+  /** Spend every ticket on the selected banner (or Surprise): ×10 tickets, then groups of 10, then singles. */
+  async function pullAll() {
+    if (busy) return;
+    const s = G.DB.save, t = s.tickets;
+    const total = t.t1 + t.t10 * 10;
+    if (!(t.t1 > 0 || t.t10 > 0)) { G.Audio.sfx('error'); G.UI.toast('You have no tickets'); return; }
+    const where = surprise ? 'the Surprise banner' : G.Gacha.BANNERS[gen - 1].name;
+    if (!confirm(`Spend all your tickets (${t.t1} single + ${t.t10} ×10 = ${total} pulls) on ${where}?`)) return;
+    const res = [];
+    const go = (n, use) => { const r = G.Gacha.pull(s, n, gen, use, surprise); if (r) res.push(...r); return !!r; };
+    while (G.Gacha.costOf(s, 10, 't10') && go(10, 't10'));
+    while (G.Gacha.costOf(s, 10, 't1') && go(10, 't1'));
+    while (G.Gacha.costOf(s, 1) && go(1, 't1'));
+    if (!res.length) return;
+    present(res, res.length);
+  }
+
+  async function present(res, n) {
     G.Progress.checkAch();
     G.DB.commit(true);
     busy = true;
 
     const best = Math.max(...res.map(r => r.rarity));
+    const many = res.length > 10;
     const fx = $('pull-fx'), slot = $('slot'), out = $('pull-results');
     out.innerHTML = '';
     $('pull-close').classList.add('hidden');
-    slot.style.display = '';
+    slot.style.display = many ? 'none' : '';
     fx.classList.remove('hidden');
 
-    // La tragaperras (ui/slots.js) y luego las cartas.
-    await G.Slots.play(slot, res);
+    // La tragaperras (ui/slots.js) y luego las cartas. (With "Use all tickets" there are too many: summary instead.)
+    if (!many) await G.Slots.play(slot, res);
     G.Audio.sfx('burst', { rarity: best });
     slot.style.display = 'none';
 
-    for (const r of res) {
+    let list = res;
+    if (many) {
+      // Summary line, then only the notable results (new, shiny or Rare and above).
+      const news = res.filter(r => r.isNew).length, shin = res.filter(r => r.shiny).length;
+      const coins = res.reduce((a, r) => a + r.refund, 0);
+      const top = Math.max(...res.map(r => r.rarity));
+      out.insertAdjacentHTML('beforeend', `<div class="pull-sum" style="grid-column:1/-1;width:100%;text-align:center"><b>${res.length} pulls</b> · ${news} new${shin ? ' · ' + G.Icons.html('shiny', 12) + ' ' + shin + ' shiny' : ''} · <span class="coin"></span> +${coins} from duplicates · best: <span style="color:${G.Gacha.RARITY_COLOR[top]}">${G.Gacha.RARITY_NAME[top]}</span></div>`);
+      list = res.filter(r => r.isNew || r.shiny || r.rarity >= 3);
+    }
+    for (const r of list) {
       const mon = G.DEX_BY[r.dex];
       const c = document.createElement('div');
       c.className = 'pcard r' + r.rarity + (r.shiny ? ' shiny' : '');
@@ -134,7 +167,7 @@ G.GachaUI = (() => {
       c.insertAdjacentHTML('beforeend', `<b>${r.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${mon.name}</b>${surprise ? `<small class="sub">Gen ${r.gen}</small>` : ''}<div class="tag">${tag}</div>`);
       out.appendChild(c);
       G.Audio.sfx('reveal', { rarity: r.rarity });
-      await wait(n === 10 ? 150 : 0);
+      await wait(many ? 40 : n === 10 ? 150 : 0);
     }
     $('pull-close').classList.remove('hidden');
     busy = false;
