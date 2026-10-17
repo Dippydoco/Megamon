@@ -7,7 +7,7 @@
  * Las medidas copian las del HUD: si cambian allí, cambiarlas aquí.
  */
 G.LayoutUI = (() => {
-  const S = 54, GAP = 9, ITEM_GAP = 18, N = 4;          // como en hud.js
+  const S = 58, GAP = 9, ITEM_GAP = 18, N = 4;          // como en hud.js
   const BAR_W = S + ITEM_GAP + N * S + (N - 1) * GAP;
   let el = null, pos = null, moved = null, mode = 'float';
 

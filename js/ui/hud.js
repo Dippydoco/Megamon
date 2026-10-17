@@ -395,7 +395,7 @@ G.HUD = (() => {
     }
 
     // ---------- ranura de movimientos ----------
-    const S = w < 640 ? 54 : 66, GAP = w < 640 ? 9 : 11, K = S / 54;      // bigger on wider screens
+    const S = w < 640 ? 58 : 72, GAP = w < 640 ? 9 : 12, K = S / 54;      // bigger on wider screens
     const n = Math.max(1, pl.slots.length);
     const totalW = n * S + (n - 1) * GAP;
     let sx = (w - totalW) / 2;
@@ -465,7 +465,7 @@ G.HUD = (() => {
 
         // emblema del tipo + insignia de la familia
         // Icons only scale in whole steps (16 px each): on the bigger slots use 3x so the disc fills the box and the kind tag is easier to see.
-        const IS = S >= 60 ? 48 : 32;
+        const IS = S >= 64 ? 48 : 32;
         G.Icons.draw(ctx, 'move:' + m.id, x + (S - IS) / 2, y + (S - IS) / 2 - (IS > 32 ? 5 : 2), IS);
 
         // nivel del movimiento (puntitos)
@@ -512,7 +512,15 @@ G.HUD = (() => {
 
     // ---------- objeto equipado (a la izquierda de los movimientos) ----------
     {
-      const ix = sx - S - 18, iy = sy;
+      let ix = sx - S - 18;
+      const iy = sy;
+      // If the move's name (long when bonded, e.g. "Thunder Shock +2") would run into the item's name, slide the whole item box left instead of lifting the text.
+      if (pl.item && moveLbl) {
+        ctx.font = F(800, Math.round(12 * K));
+        const iw0 = ctx.measureText(G.Items.BY[pl.item].name).width / 2 + 3;
+        const over = ix + S / 2 + iw0 - (moveLbl.x0 - 4);
+        if (over > 0) ix = Math.max(6, iw0 + 4 - S / 2, ix - over);   // never past the screen edge, name included
+      }
       roundRect(ctx, ix, iy, S, S, 12);
       ctx.fillStyle = pl.item ? 'rgba(40,30,10,.9)' : 'rgba(10,16,28,.55)';
       ctx.fill();
@@ -524,10 +532,7 @@ G.HUD = (() => {
         ctx.font = F(800, Math.round(12 * K));
         ctx.textAlign = 'center';
         ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
-        // If the move's name (long when bonded, e.g. "Thunder Shock +2") would run into the item's name, lift the item's one line up.
-        const inm = G.Items.BY[pl.item].name, iw = ctx.measureText(inm).width / 2 + 3;
-        const clash = moveLbl && ix + S / 2 + iw > moveLbl.x0 && ix + S / 2 - iw < moveLbl.x1;
-        const ly = iy - 8 - (clash ? 19 : 0);
+        const inm = G.Items.BY[pl.item].name, ly = iy - 8;
         ctx.strokeText(inm, ix + S / 2, ly);
         ctx.fillStyle = '#ffd23f';
         ctx.fillText(inm, ix + S / 2, ly);
