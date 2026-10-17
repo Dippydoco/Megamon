@@ -840,7 +840,15 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 /* Novedades */
 .news-btn { position: relative; }
 .news-btn .dot { display: none; position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; background: #ff5f6d; box-shadow: 0 0 0 2px var(--shadow); }
-.news-btn.new .dot { display: block; }
+.news-btn.new .dot { display: block; width: 10px; height: 10px; top: -3px; right: -3px; border-radius: 50%; animation: news-ping 1.6s ease-out infinite; }
+/* Something unread: the button stands out (gold, soft glow) until you open it. */
+.news-btn.new {
+  color: #1a1200; background: linear-gradient(180deg, #ffe27a, var(--gold)); border-color: #fff1b0;
+  font-weight: 700; text-shadow: none; animation: news-glow 2.2s ease-in-out infinite;
+}
+@keyframes news-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,214,90,.0), 0 0 6px rgba(255,214,90,.45); } 50% { box-shadow: 0 0 0 3px rgba(255,214,90,.18), 0 0 14px rgba(255,214,90,.8); } }
+@keyframes news-ping { 0% { box-shadow: 0 0 0 0 rgba(255,95,109,.7); } 100% { box-shadow: 0 0 0 9px rgba(255,95,109,0); } }
+@media (prefers-reduced-motion: reduce) { .news-btn.new, .news-btn.new .dot { animation: none; } }
 .box.news-box { width: min(640px, 100%); max-height: calc(100dvh - 90px); display: flex; flex-direction: column; }
 .news-body { overflow-y: auto; padding-right: 4px; }
 .news-day { padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.1); }

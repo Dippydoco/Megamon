@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Easier to spot new updates'), chg: [
+    T('The "What\'s new" button now glows gold with a pulsing red dot while there is something you have not read yet.')
+  ] },
   { d: '2026-10-17', title: T('Profile title fix'), fix: [
     T('The title you pick on your profile now stays selected in the dropdown (it was saving to your public profile but showing as empty when you came back).')
   ] },
