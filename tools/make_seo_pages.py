@@ -124,7 +124,7 @@ def page(pid, lang, title, desc, body, ld=None):
 <footer>
   <p>{foot}</p>
   <p>{legal}</p>
-  <p><a href="https://github.com/JPTER78/pokesurvivor">GitHub</a></p>
+  <p><a href="https://github.com/Dippydoco/Megamon">GitHub</a></p>
 </footer>
 </body>
 </html>

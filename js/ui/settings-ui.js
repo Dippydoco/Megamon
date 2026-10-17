@@ -7,7 +7,7 @@ G.SettingsUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const VERSION = '1.2 · 2026-10-09';
-  const REPO = 'https://github.com/JPTER78/pokesurvivor';
+  const REPO = 'https://github.com/Dippydoco/Megamon';
   let tab = 'sound';
 
   function init() {
