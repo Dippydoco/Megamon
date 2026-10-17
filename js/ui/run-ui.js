@@ -182,6 +182,13 @@ G.RunUI = (() => {
         <div style="font-size:12px;color:var(--muted)">${r.breakdown}</div></div>
       ${r.t1 || r.t10 ? `<div style="grid-column:1/-1"><span>Tickets del gacha</span><b>
         ${r.t1 ? G.Icons.html('ticket', 22) + ' +' + r.t1 + ' ' : ''}${r.t10 ? G.Icons.html('ticket10', 22) + ' +' + r.t10 + ' ×10' : ''}</b></div>` : ''}
+      ${r.killer ? `<div style="grid-column:1/-1" class="killer" translate="no"><span>Defeated by</span>
+        <div class="killer-main"><span class="killer-sprite"></span><div>
+          <b>${esc(r.killer.n)}</b>
+          <small>${esc(r.killer.a)}${r.killer.ty ? ` · <i class="ktype" style="color:${G.U.TYPE_COLOR[r.killer.ty] || '#ccc'}">${esc(r.killer.ty)}</i>` : ''}${r.killer.e === 'super' ? ' · super effective' : r.killer.e === 'weak' ? ' · not very effective' : ''}</small>
+        </div><em>${r.killer.h} damage</em></div>
+        ${(r.recent || []).length > 1 ? `<div class="killer-prev">Hits before that: ${r.recent.slice(0, -1).reverse().map(h => `${esc(h.n)} (${esc(h.a)}, ${h.h})`).join(' · ')}</div>` : ''}
+      </div>` : ''}
       <div style="grid-column:1/-1"><span>Movimientos</span><b style="font-size:15px">
         ${r.moves.map(m => `${G.Icons.html('move:' + m.id, 16)} ${m.name} Nv.${m.lvl}`).join(' · ') || '—'}</b></div>
       ${r.caught && r.caught.length ? `<div style="grid-column:1/-1" class="caught"><span>${G.Icons.html('shiny', 12)} Shinies conseguidos</span>
@@ -192,6 +199,8 @@ G.RunUI = (() => {
         <p>¿Te está gustando Megamon? Lo hago yo solo y los servidores cuestan dinero. Si quieres, puedes ayudarme a mantenerlo en línea.</p>
         <a class="btn small gold" href="${G.Funding.url}" target="_blank" rel="noopener">${G.Icons.html('heart', 14)} Apoyar en Ko-fi</a>
       </div>` : ''}`;
+    const ks = document.querySelector('#over-stats .killer-sprite');
+    if (ks && r.killer && r.killer.d) ks.appendChild(G.UI.spriteCanvas(r.killer.d, 56, 48, { scale: 1 }));
     const ask = $('over-ask');
     if (ask) ask.querySelector('.x').onclick = () => ask.remove();
     $('btn-again').onclick = onBack;

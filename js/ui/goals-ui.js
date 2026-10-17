@@ -77,6 +77,7 @@
               <div><span>Damage dealt</span><b>${num(e.dd)}</b></div>
               <div><span>Damage taken</span><b>${num(e.dt)}</b></div>
               <div><span>Held item</span><b>${e.it && G.Items.BY[e.it] ? esc(G.Items.BY[e.it].name) : '—'}</b></div>
+              ${e.kb ? `<div style="grid-column:1/-1"><span>Defeated by</span><b translate="no">${esc(e.kb.n)} · ${esc(e.kb.a)}${e.kb.ty ? ' (' + esc(e.kb.ty) + ')' : ''} · ${num(e.kb.h)} damage</b></div>` : ''}
               ${e.ar ? `<div style="grid-column:1/-1"><span>Arceus</span><b>${G.Icons.html('star', 14)} Reached Arceus: ${fmt(e.ar[0])} in the fight · ${e.ar[1]} legendaries beaten</b></div>` : ''}
             </div>
             <div class="hist-moves"><span>Moves</span>

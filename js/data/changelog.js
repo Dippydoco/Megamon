@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Defeated by'), new: [
+    T('When you faint, the run summary now shows what defeated you: who it was, the attack, its type and how much damage the final hit did, plus the hits just before it. It is also saved in your match history.')
+  ] },
   { d: '2026-10-17', title: T('Stopwatch freezes new arrivals'), chg: [
     T('While the Stopwatch effect lasts, enemies that spawn are frozen too (bosses are slowed), for whatever time is left, instead of only the ones already on screen.')
   ] },

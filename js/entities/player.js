@@ -233,7 +233,7 @@ G.Player = class Player {
    * @param type  tipo del ataque (tabla de tipos y clima); sin tipo, daño tal cual
    * @param pure  daño que no baja con la defensa ni el cuerpo a cuerpo (Arceus)
    */
-  hurt(amount, type = null, pure = false) {
+  hurt(amount, type = null, pure = false, src = null) {
     if (this.invuln > 0 || this.dead) return;
     // Bright Powder: 10 % de esquivar cualquier golpe.
     if (this.hasItem('brightpowder') && Math.random() < 0.1) {
@@ -255,6 +255,9 @@ G.Player = class Player {
     // legendarios de la arena de Arceus, que se duplican sin tope, no suma billones de daño de sobra).
     this.dmgTaken += Math.min(d, Math.max(0, this.hp));
     this.hp -= d;
+    // "Defeated by": remember the last few hits (who, which attack, how much).
+    (this.hits || (this.hits = [])).push(G.Killer.make(src, type, d, eff, pure));
+    if (this.hits.length > 4) this.hits.shift();
     this.invuln = 0.45;
     this.flash = 0.14;
     G.Audio.sfx('hurt');
@@ -270,6 +273,7 @@ G.Player = class Player {
     }
     if (this.hp <= 0) {
       this.hp = 0; this.dead = true; this.downs++;
+      this.killer = this.hits[this.hits.length - 1];
       this.anim.play('Faint', { hold: true });
       G.Projectiles.clearOrbs(this);
       this.reviveT = 0;
@@ -369,7 +373,7 @@ G.Player = class Player {
         this.lavaTick -= dt;
         if (this.lavaTick <= 0) {
           this.lavaTick = le.every; this.invuln = 0;
-          this.hurt(Math.max(le.flat, this.maxHp * le.dmg * 0.5));
+          this.hurt(Math.max(le.flat, this.maxHp * le.dmg * 0.5), null, false, { k: 'liquid' });
           G.FX.burst(this.x, this.y - 4, le.color, 5, 70);
         }
       } else if (!le.dmg && this.walking && Math.random() < dt * 8) {

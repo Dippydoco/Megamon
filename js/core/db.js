@@ -104,6 +104,7 @@ G.DB = (() => {
    *   id fecha (ms) · d dex · sh shiny · t segundos · lv nivel · k derrotados · b jefes · c monedas
    *   dd daño hecho · dt daño recibido · m [[movimiento, nivel]] · it objeto · x 1 = caíste (0 = abandonaste)
    *   g 1 = en grupo · mt [[nombre, dex, shiny]] compañeros · ar [segundos, legendarios] ante Arceus (o 0)
+   *   kb quién te derrotó { d dex, n nombre, a ataque, ty tipo, h daño, e efecto } (o 0): ver systems/killer.js
    */
   const HISTORY_MAX = 100;
   function cleanHistory(list) {
@@ -121,7 +122,8 @@ G.DB = (() => {
         x: e.x ? 1 : 0, g: e.g ? 1 : 0,
         mt: (Array.isArray(e.mt) ? e.mt : []).filter(x => Array.isArray(x)).slice(0, 4)
             .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
-        ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0
+        ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0,
+        kb: e.x && G.Killer ? G.Killer.clean(e.kb) : 0
       });
     }
     return out.sort((a, b) => b.id - a.id).slice(0, HISTORY_MAX);

@@ -345,7 +345,8 @@ G.Game = (() => {
       id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
       dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
       mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
-      ar: judge ? [Math.floor(judge.time), judge.bosses] : 0
+      ar: judge ? [Math.floor(judge.time), judge.bosses] : 0,
+      kb: dead && pl.killer ? pl.killer : 0
     });
     if (judge) G.Progress.event('judgeEnd', judge);
     G.Judgment.reset();
@@ -365,7 +366,8 @@ G.Game = (() => {
     if (sent) sent.then(b => { if (b && b.some(p => p !== 'a')) G.DB.commit(true); }).catch(() => {});
 
     G.RunUI.showOver({
-      dead, time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
+      dead, killer: dead && pl.killer ? pl.killer : null, recent: dead && pl.hits ? pl.hits.slice(-4) : [],
+      time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
       moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
                  (mul > 1 ? ` · ×${mul.toFixed(2)} Fortuna` : '')

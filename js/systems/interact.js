@@ -169,9 +169,9 @@ G.Interact = (() => {
         return;
       }
       pl.invuln = 0;
-      if (k === 0) pl.hurt(pl.maxHp * 0.1);
+      if (k === 0) pl.hurt(pl.maxHp * 0.1, null, false, { k: 'trap', n: 'Trapped chest', a: 'Poison trap' });
       else if (k === 1) { pl.slowT = 3.5; G.FX.dmgText(pl.x, pl.y - pl.bodyH - 6, '¡Pegajoso!', '#8bd94a'); }
-      else pl.hurt(pl.maxHp * 0.2);
+      else pl.hurt(pl.maxHp * 0.2, null, false, { k: 'trap', n: 'Trapped chest', a: 'Explosive trap' });
     }
   }
 

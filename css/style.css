@@ -995,3 +995,13 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .lob-card .conn.bad { color: #ff8a96; }
 @keyframes lobby-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }
 @media (prefers-reduced-motion: reduce) { .lobby-status.wait .dot { animation: none; } }
+
+/* Defeated by (run summary) */
+.killer { background: rgba(255, 80, 100, .08); border: 1px solid rgba(255, 107, 122, .35); border-radius: 10px; padding: 8px 10px; }
+.killer-main { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.killer-main b { display: block; font-size: 17px; }
+.killer-main small { display: block; font-size: 12px; color: var(--muted); }
+.killer-main em { margin-left: auto; font-style: normal; font-weight: 700; color: #ff6b7a; white-space: nowrap; }
+.killer-sprite { display: inline-flex; width: 56px; height: 48px; align-items: center; justify-content: center; }
+.killer .ktype { font-style: normal; text-transform: capitalize; font-weight: 600; }
+.killer-prev { margin-top: 6px; font-size: 12px; color: var(--muted); }
