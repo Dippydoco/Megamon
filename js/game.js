@@ -554,9 +554,9 @@ G.Game = (() => {
       G.FX.swirl(who.x, who.y, R * 0.55);
       G.FX.ring(who.x, who.y, 10, R * 0.6, '#8fe3ff', 0.6, 4);
       for (const e of G.EnemyMgr.all()) {
-        if (e.dead || e.judge || G.U.dist2(e.x, e.y, who.x, who.y) > R * R * 0.36) continue;
+        if (e.dead || e.judge) continue;
         if (e.boss) e.applySlow(0.5, 8);
-        else e.freeze(5);
+        else e.freeze(7);
       }
       return;
     }
