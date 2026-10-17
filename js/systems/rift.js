@@ -25,6 +25,7 @@ G.Rift = (() => {
   const CHECK = 30, CHANCE = 0.2, TTL = 45;
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
   let rift = null;          // { x, y, ttl, t }
+  const EXIT_SAFE = 3;      // segundos de inmunidad al salir de la grieta
   let arena = null;         // { tx, ty, r, dex, shiny, x, y, back, biome, t, phase, endT, bossId }
   let checkT = CHECK, asked = false, downT = 0, misses = 0;
   const authority = () => !G.Coop.active || G.Coop.isHost;
@@ -97,7 +98,9 @@ G.Rift = (() => {
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), mi = 0;
     while (mi < pool.length - 1 && (r -= ws[mi]) > 0) mi++;
     const mon = pool[mi];
+    const here = rift || G.Game.player;      // la salida: donde estaba la grieta (igual para todos)
     const cfg = {
+      bx: Math.round(here.x), by: Math.round(here.y),
       tx: 5000 + Math.floor(Math.random() * 3000), ty: 5000 + Math.floor(Math.random() * 3000), r: ARENA_R,
       dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < 1 / 512,
       // La arena es la de uno de sus tipos, al azar.
@@ -114,7 +117,7 @@ G.Rift = (() => {
     const ts = TS();
     arena = Object.assign({}, cfg, {
       x: cfg.tx * ts + ts / 2, y: cfg.ty * ts + ts / 2,
-      back: { x: pl.x, y: pl.y }, biome: G.World.biome, t: 0, phase: 'fight', endT: 0, bossId: 0
+      back: cfg.bx != null ? { x: cfg.bx, y: cfg.by } : rift ? { x: rift.x, y: rift.y } : { x: pl.x, y: pl.y }, biome: G.World.biome, t: 0, phase: 'fight', endT: 0, bossId: 0
     });
     rift = null; asked = false; downT = 0;
     if (authority()) G.EnemyMgr.stash(); else G.EnemyMgr.clearRemote();
@@ -126,6 +129,7 @@ G.Rift = (() => {
     // Cada arena trae su clima (el volcán, sol; el glaciar, nieve...).
     const th = G.Tiles.ARENA_THEMES[cfg.type];
     if (th && th.weather) G.Weather.force(th.weather, ARENA_TIME + 15);
+    // (La salida es el sitio donde estaba la grieta, el mismo para todos.)
     // Todos al sur de la arena, en fila; el legendario aparece al norte.
     const ps = G.Game.everyone();
     ps.forEach((p, i) => { p.x = arena.x + (i - (ps.length - 1) / 2) * 34; p.y = arena.y + ts * 3; });
@@ -227,6 +231,9 @@ G.Rift = (() => {
     for (const p of G.Game.everyone()) { p.x = a.back.x; p.y = a.back.y; }
     pl.x = a.back.x; pl.y = a.back.y;
     if (pl.dead) pl.revive(0.3);
+    // Unos segundos sin poder recibir daño al salir (los enemigos vuelven de golpe).
+    for (const p of G.Game.everyone()) p.invuln = Math.max(p.invuln || 0, EXIT_SAFE);
+    pl.invuln = Math.max(pl.invuln || 0, EXIT_SAFE);
     G.Camera.x = pl.x; G.Camera.y = pl.y;
     G.Game.flash('#c9a6ff', 0.8);
     if (pl.bonds > 0) G.Game.offerBond();
