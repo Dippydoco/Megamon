@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-17', title: T('Upgrades list in English'), fix: [
+    T('The Pokémon picker in the Upgrades tab now says "levels" instead of the Spanish "niveles".')
+  ] },
   { d: '2026-10-17', title: T('Build number'), new: [
     T('The game build (a short code and its date) now shows in the bottom-right corner of the menus, in Settings > About and in the connection report, so you can check everyone is on the same version.')
   ] },

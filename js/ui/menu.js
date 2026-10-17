@@ -340,7 +340,7 @@ G.MenuUI = (() => {
     const lv = d => Object.values(s.pupg[d] || {}).reduce((a, b) => a + b, 0);
     const mons = Object.keys(s.owned).map(Number).filter(d => G.DEX_BY[d])
       .sort((a, b) => (b === s.partner) - (a === s.partner) || lv(b) - lv(a) || a - b);
-    sel.innerHTML = mons.map(d => `<option value="${d}">${G.DEX_BY[d].name}${d === s.partner ? ' (compañero)' : ''}${lv(d) ? ' · ' + lv(d) + ' niveles' : ''}</option>`).join('');
+    sel.innerHTML = mons.map(d => `<option value="${d}">${G.DEX_BY[d].name}${d === s.partner ? ' (compañero)' : ''}${lv(d) ? ' · ' + lv(d) + (G.I18n.lang === 'en' ? (lv(d) === 1 ? ' level' : ' levels') : (lv(d) === 1 ? ' nivel' : ' niveles')) : ''}</option>`).join('');
     sel.value = upgDex;
     sel.onchange = () => { upgDex = +sel.value; G.Audio.sfx('select'); renderUpgrades(); };
     renderUpgrades();
