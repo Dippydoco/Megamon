@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Gold star shown to teammates'), chg: [
+    T('In co-op, the gold star for a Pokémon that has reached Arceus now also shows on your teammates\' portraits, not just your own.')
+  ] },
   { d: '2026-10-18', title: T('Aegislash timer for guests'), fix: [
     T('The off-screen arrow to the Aegislash now shows its real time left for everyone in co-op, instead of "NaN s".')
   ] },
