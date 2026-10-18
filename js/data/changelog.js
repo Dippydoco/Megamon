@@ -9,7 +9,7 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
-  { d: '2026-10-18', at: '2026-10-18T22:52Z', title: 'Frozen after beating Zygarde', fix: [
+  { d: '2026-10-18', at: '2026-10-18T22:53Z', title: 'Frozen after beating Zygarde', fix: [
     'Beating Zygarde could freeze the game for good: its item drops are pulled in all at once, and a new item could replace the "choose an item" screen while it was open. After choosing, the game stayed paused with nothing on screen. Items now wait their turn, and if the game is ever paused for a choice with no screen open, it carries on by itself. In co-op this could freeze the whole group.'
   ] },
   { d: '2026-10-18', at: '2026-10-18T22:33Z', title: 'Life Orb reworked', chg: [
