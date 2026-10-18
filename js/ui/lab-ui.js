@@ -1,5 +1,5 @@
 /* ============ lab-ui.js — Balance Lab (developer tool) ============
- * Open the game with ?dev&lab in the address (e.g. pokesurvivor.com/?dev&lab).
+ * Open the game with ?dev&lab in the address (e.g. dippydoco.github.io/Megamon/?dev&lab).
  * Instead of the menu you get a test bench on top of a real run:
  *   pick moves, levels (1-5 and evolved), a Pokémon, upgrades, an item and a scenario
  *   (one big target, a boss, a crowd, a swarm), and it runs each combination against

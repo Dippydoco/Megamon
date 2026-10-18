@@ -7,7 +7,7 @@ real game engine and shows the numbers.
 
 Add `?dev&lab` to the game's address:
 
-- live: `https://pokesurvivor.com/?dev&lab`
+- live: `https://dippydoco.github.io/Megamon/?dev&lab`
 - local: `http://localhost:8123/dev.html?dev&lab`
 
 Players never see it: without `?dev&lab` the game starts as normal. Anyone who types the address
