@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Capitalised titles'), chg: [
+    T('Profile titles are now written in title case: Shiny Hunter, Legend Hunter, Boss Hunter, Living Legend, Move Master, Rift Traveler and Loyal Partner.')
+  ] },
   { d: '2026-10-18', title: T('See other players\' run history'), new: [
     T('Open a player\'s profile and tap "Run history" to see their last runs: Pokémon, time, level, kills, moves, held item, teammates and what defeated them.'),
     T('You can turn this off in Settings > Share my run history.')
