@@ -12,6 +12,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T14:24Z', title: T('Group freeze after Zygarde'), fix: [
+    T('Fixed a co-op softlock where one player picking a Bond froze everyone else: item drops (like Zygarde\'s) could replace the Bond screen and leave that player marked as still choosing. Items now wait until the Bond is picked, and a stuck choice is released automatically.'),
+  ] },
   { d: '2026-10-18', at: '2026-10-18T14:18Z', title: T('No new games on an old version'), chg: [
     T('When a new version of the game is out, pressing Play (or Start in a co-op room) now updates the game first instead of starting a run on the old version.')
   ] },

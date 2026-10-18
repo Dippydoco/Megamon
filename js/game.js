@@ -452,6 +452,7 @@ G.Game = (() => {
       G.Spawner.say('¡Vínculo! ' + group.length + ' movimientos a la vez', 2.6, true);
       if (state === 'choice') state = holdBy.length ? 'held' : 'playing';
       if (G.Coop.active) G.Coop.holdEnd();
+      afterLevelUp();                       // items that arrived while the Bond screen was open
     });
   }
 
@@ -483,7 +484,7 @@ G.Game = (() => {
   function offerItem(id) {
     const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
     if (!pl || (list ? !list.length : !G.Items.BY[id])) return;
-    if (state === 'levelup' || G.UI.isOpen('scr-levelup')) { laterItems.push(id); return; }
+    if (state === 'levelup' || G.UI.isOpen('scr-levelup') || G.UI.isOpen('scr-bond')) { laterItems.push(id); return; }
     let mine = false;            // esta elección es la que ha parado el juego
     const take = got => {
       openItem = null;
@@ -707,6 +708,11 @@ G.Game = (() => {
 
   function update(dt) {
     const coop = G.Coop.active;
+    // Failsafe: flagged as choosing but no choice screen is open (another screen replaced it) -> would freeze the whole group.
+    if (coop && state === 'choice' && !['scr-bond', 'scr-item', 'scr-mod', 'scr-levelup'].some(G.UI.isOpen)) {
+      state = holdBy.length ? 'held' : 'playing';
+      G.Coop.holdEnd();
+    }
     // La Sentencia de Arceus: mientras dura la animación, todo lo demás se para.
     if (G.Judgment.cinematic) {
       G.Judgment.cineTick(dt);
