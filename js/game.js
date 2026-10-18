@@ -87,6 +87,7 @@ G.Game = (() => {
   /** @param coop  { seed, host, members } para una partida en grupo */
   function startRun(coop = null) {
     holdBy = []; awayBy = null;
+    openItem = null; laterItems.length = 0;      // nothing left over from the last run's choice screens
     const save = G.DB.save;
     const mon = G.DEX_BY[save.partner];
     const perks = G.Upgrades.perks(G.DB.upgradesOf(mon.dex));
@@ -474,7 +475,8 @@ G.Game = (() => {
     if (openItem && !G.UI.isOpen('scr-item')) {
       const o = openItem;
       if (o.mine) { state = 'choice'; if (G.Coop.active) G.Coop.holdStart(); }
-      if (o.list) G.RunUI.showArmoury(o.cur, o.list, o.take); else G.RunUI.showItemChoice(o.cur, o.next, o.take);
+      if (o.band) G.RunUI.showMoveChoice(pl, o.pick);              // Choice Band: which move to lock into
+      else if (o.list) G.RunUI.showArmoury(o.cur, o.list, o.take); else G.RunUI.showItemChoice(o.cur, o.next, o.take);
       return;
     }
     if (laterItems.length) offerItem(laterItems.shift());
@@ -498,11 +500,17 @@ G.Game = (() => {
             mine = true; state = 'choice';
             if (G.Coop.active) G.Coop.holdStart();
           }
-          G.RunUI.showMoveChoice(pl, i => {
+          // Remembered in openItem like the item choice: in co-op the level-up cards can arrive while this is open
+          // and replace it; afterLevelUp() shows it again. (Before, it was lost and the band locked whatever move
+          // was active, most often with Repertoire, which gives you 2 moves while level-ups are still very fast.)
+          const pick = i => {
+            openItem = null;
             if (i !== pl.active) { pl.active = i; G.Projectiles.clearOrbs(pl); }
             G.Audio.sfx('confirm');
             finish();
-          });
+          };
+          openItem = { band: true, pick, get mine() { return mine; } };
+          G.RunUI.showMoveChoice(pl, pick);
           return;
         }
       }
