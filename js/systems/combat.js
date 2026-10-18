@@ -301,7 +301,8 @@ G.Combat = (() => {
     if (e.boss || e.legend || e.judge || e.behavior === 'thief' || e.behavior === 'aegis') return null;
     let best = null, bd = Infinity;
     for (const f of fields) {
-      if (f.kind !== 'turret' || !f.hp || f.ghost || f.gone || f.t < 0.25) continue;
+      if (f.kind !== 'turret' || !f.hp || f.gone || f.t < 0.25) continue;
+      if (f.ghost && !G.Coop.isHost) continue;      // a teammate's Substitute: only the host (who runs the enemies) lets it draw them
       const d = G.U.dist2(e.x, e.y, f.x, f.y), rg = f.m.taunt || 320;
       if (d < rg * rg && d < bd) { bd = d; best = f; }
     }
@@ -321,7 +322,10 @@ G.Combat = (() => {
   function decoyContacts(dt) {
     for (let i = fields.length - 1; i >= 0; i--) {
       const f = fields[i];
-      if (f.kind !== 'turret' || !f.hp || f.ghost || f.gone) continue;
+      if (f.kind !== 'turret' || !f.hp || f.gone) continue;
+      // In co-op the host decides when any Substitute breaks (its owner is told with 'sb'): a guest's own copy never
+      // counts hits, because the enemies it sees there are only copies and do not chase it.
+      if (G.Coop.active && !G.Coop.isHost) continue;
       if (f.hitCd > 0) f.hitCd -= dt;
       if (f.hurtT > 0) f.hurtT -= dt;
       for (const e of G.EnemyMgr.queryCircle(f.x, f.y, 40)) {
@@ -347,6 +351,18 @@ G.Combat = (() => {
     G.FX.burst(f.x, f.y - 12, f.col, 10, 150);
     if (G.Camera.sees(f.x, f.y, 40)) { G.Audio.sfx('break'); G.Camera.kick(0.25); }
     blast(f, r, f.m.boom || 3);
+    if (G.Coop.isHost && f.owner && f.owner.uid) G.Coop.broadcast(['sb', f.owner.uid]);     // tell the owner (to explode for real) and everyone else (to drop the copy)
+  }
+
+  /** The host says this player's Substitute broke: the owner's own copy explodes, everyone else's just disappears. */
+  function netBreak(uid) {
+    let best = null;
+    for (const f of fields) {
+      if (f.kind === 'turret' && f.hp && !f.gone && f.owner && f.owner.uid === uid && (!best || f.t > best.t)) best = f;
+    }
+    if (!best) return;
+    fields.splice(fields.indexOf(best), 1);
+    breakDecoy(best);
   }
 
   /** Embestida: cruzas como un rayo hacia el enemigo y golpeas a todo lo del camino. */
@@ -805,6 +821,6 @@ G.Combat = (() => {
     }
   }
 
-  return { decoyFor, decoyTarget, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  return { decoyFor, decoyTarget, netBreak, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();

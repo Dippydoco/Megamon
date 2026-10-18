@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Substitute in co-op'), fix: [
+    T('In co-op, a teammate\'s Substitute now draws enemies and breaks for everyone, not just when the host is the one using it. When it breaks, its owner gets the explosion and everyone sees it disappear.')
+  ] },
   { d: '2026-10-18', title: T('Capitalised titles'), chg: [
     T('Profile titles are now written in title case: Shiny Hunter, Legend Hunter, Boss Hunter, Living Legend, Move Master, Rift Traveler and Loyal Partner.')
   ] },
