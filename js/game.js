@@ -491,6 +491,10 @@ G.Game = (() => {
     const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
     if (!pl || (list ? !list.length : !G.Items.BY[id])) return;
     if (state === 'levelup' || G.UI.isOpen('scr-levelup') || G.UI.isOpen('scr-bond')) { laterItems.push(id); return; }
+    // Another item choice (or the Choice Band move pick) is already open: this one waits its turn.
+    // (Zygarde drops 3 items that are all pulled in at once: the third used to replace the second's screen,
+    // the game forgot which choice had paused it, and after picking it stayed paused for good.)
+    if (openItem || state === 'choice' || G.UI.isOpen('scr-item')) { laterItems.push(id); return; }
     let mine = false;            // this choice is the one that paused the game
     const take = got => {
       openItem = null;
@@ -706,6 +710,7 @@ G.Game = (() => {
     if (flashT > 0) flashT -= Math.min(1 / 30, real);
 
     handleKeys();
+    choiceFailsafe(Math.min(1 / 30, real));
 
     if (state === 'playing') update(dt);
     else if (pl && state !== 'ui') { G.FX.update(dt * 0.25); pl.anim.update(dt * 0.25); }
@@ -718,13 +723,26 @@ G.Game = (() => {
     G.Input.endFrame();
   }
 
+  /**
+   * Failsafe (every frame, solo and co-op): paused "choosing" but no choice screen is open (another screen
+   * replaced it, or the choice that paused the game was lost) -> after half a second, carry on instead of
+   * staying frozen for good (in co-op it froze the whole group). It used to sit inside update(), which
+   * never runs while choosing, so it could not fire.
+   */
+  let lostChoiceT = 0;
+  function choiceFailsafe(real) {
+    if (state !== 'choice' || ['scr-bond', 'scr-item', 'scr-mod', 'scr-levelup'].some(G.UI.isOpen)) { lostChoiceT = 0; return; }
+    lostChoiceT += real;
+    if (lostChoiceT < 0.5) return;
+    lostChoiceT = 0;
+    console.warn('[Game] paused for a choice with no choice screen open: carrying on');
+    state = holdBy.length ? 'held' : 'playing';
+    if (G.Coop.active) G.Coop.holdEnd();
+    afterLevelUp();             // anything still waiting (another item, the Choice Band pick) comes up now
+  }
+
   function update(dt) {
     const coop = G.Coop.active;
-    // Failsafe: flagged as choosing but no choice screen is open (another screen replaced it) -> would freeze the whole group.
-    if (coop && state === 'choice' && !['scr-bond', 'scr-item', 'scr-mod', 'scr-levelup'].some(G.UI.isOpen)) {
-      state = holdBy.length ? 'held' : 'playing';
-      G.Coop.holdEnd();
-    }
     // Arceus's Judgment: while the animation lasts, everything else stops.
     if (G.Judgment.cinematic) {
       G.Judgment.cineTick(dt);
