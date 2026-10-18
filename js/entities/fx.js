@@ -70,6 +70,7 @@ G.FX = (() => {
       case 'bubbles': px(x + j(), y + j(), P[3], { vy: -35, life: 0.45, size: Math.random() < 0.3 ? 2 : 1 }); break;
       case 'dirt':    px(x + j(), y + j(), P[Math.random() < 0.5 ? 2 : 1], { vx: Math.cos(back) * 25, vy: -20, grav: 300, life: 0.35 }); break;
       case 'wisp':    px(x + j() * 2, y + j() * 2, P[Math.random() < 0.5 ? 1 : 2], { vy: -30, life: 0.5, size: 2 }); break;
+      case 'frost':   px(x + j(), y + j(), Math.random() < 0.5 ? P[4] : P[3], { vx: G.U.rand(-15, 15), vy: 12, life: 0.4 }); break;
     }
   }
 

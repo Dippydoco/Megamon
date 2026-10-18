@@ -170,7 +170,8 @@ G.Coop = (() => {
       if (e.dead || G.U.dist2(e.x, e.y, near.x, near.y) > r2n) continue;
       const a = ANIMS.indexOf(e.anim.cur);
       out.push([e.id, r1(e.x), r1(e.y), Math.ceil(e.hp), a < 0 ? 0 : a, e.anim.dir,
-                (e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0) | (e.freezeT > 0 ? 8 : 0) | (e.aegisShield ? 16 : 0)]);
+                (e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0) | (e.freezeT > 0 ? 8 : 0) | (e.aegisShield ? 16 : 0) |
+                (e.freezeT > 0 && e.stunned ? 32 : 0) | (e.vulnT > 0 ? 64 : 0)]);
     }
     return out;
   }
@@ -288,11 +289,13 @@ G.Coop = (() => {
           else if (ev[2] === 'p') e.applyPoison(ev[3]);
           else if (ev[2] === 's') e.applySlow(ev[3]);
           else if (ev[2] === 'f') e.freeze(Math.min(2, ev[3]));
+          else if (ev[2] === 'z') e.freeze(Math.min(2, ev[3]), true);     // stun (Dragon Breath)
+          else if (ev[2] === 'v') e.vuln(Math.min(4, ev[3]));             // takes more damage (Acid Spray)
           break;
         }
         case 'c':
-          G.Combat.ghostCast(m.pl, ev[1], ev[2], ev[3], ev[4]);
-          emit(['c', from, ev[1], ev[2], ev[3], ev[4]], from);
+          G.Combat.ghostCast(m.pl, ev[1], ev[2], ev[3], ev[4], ev[5]);
+          emit(['c', from, ev[1], ev[2], ev[3], ev[4], ev[5]], from);
           break;
         case 'sw': {
         const R = G.Camera.outerRadius();
@@ -387,7 +390,7 @@ G.Coop = (() => {
         break;
       case 'sh': G.Combat.netHurt(ev[1], ev[2]); break;            // a Substitute took a hit (hits left)
       case 'sb': G.Combat.netBreak(ev[1]); break;                  // a Substitute broke (the host decides)
-      case 'c': { const m = mates.get(ev[1]); if (m) G.Combat.ghostCast(m.pl, ev[2], ev[3], ev[4], ev[5]); break; }
+      case 'c': { const m = mates.get(ev[1]); if (m) G.Combat.ghostCast(m.pl, ev[2], ev[3], ev[4], ev[5], ev[6]); break; }
       case 'item': api.item(ev[1]); break;
       case 'pk': G.Pickups.addRemote(ev[1], ev[2], ev[3], ev[4], ev[5]); break;
       case 'pc': G.Pickups.removeId(ev[1]); break;
@@ -422,8 +425,9 @@ G.Coop = (() => {
   /** Your attack: the others replay it as a ghost. */
   function cast(pl, m) {
     if (!active || pl !== local) return;
-    if (host) emit(['c', me, m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0]);
-    else outEv.push(['c', m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0]);
+    const area = r2(pl.areaMul || 1);                   // Reach: the others draw the attack at its real size
+    if (host) emit(['c', me, m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area]);
+    else outEv.push(['c', m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area]);
   }
 
   // guest

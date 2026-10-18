@@ -9,6 +9,22 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T20:41Z', title: '8 new moves', new: [
+    'Absorb (Grass): homing seeds that heal you for part of the damage. Evolves into Giga Drain with Synthesis.',
+    'Acid Spray (Poison): enemies it hits take 25% more damage from everyone for 3 seconds, which is great in co-op. Evolves into Corrosive Gas with Reflexes.',
+    'Pin Missile (Bug): a rapid volley of homing needles. Evolves into Fell Stinger with Power: every kill raises your damage by 5% for 4 seconds (up to 5 at once).',
+    'Ice Shard (Ice): a very fast shard with a chance to freeze enemies solid for a moment. Evolves into Glacial Lance with Power.',
+    'Frost Breath (Ice): icy breath that slows, and enemies that keep getting hit by it freeze. Evolves into Sheer Cold with Focus.',
+    'Drain Punch (Fighting): a heavy punch that heals you. Evolves into Hammer Arm with Synthesis.',
+    'Dragon Breath (Dragon): dragon fire with a chance to stun (stars spin over stunned enemies). Evolves into Dragon Pulse with Reflexes.',
+    'Pursuit (Dark): a homing shot that does double damage to enemies below 30% HP (one and a half times against bosses). Evolves into Kowtow Cleave with Focus.',
+    'Healing from moves is capped at 2.5% of your max HP per second, and bosses and legendaries can\'t be frozen or stunned.'
+  ] },
+  { d: '2026-10-18', at: '2026-10-18T20:41Z', title: 'Reach and Focus upgrades', new: [
+    'Two new level-up upgrades. Reach: +10% size of every area attack (melee, auras, orbits, beams, mines, meteors and puddles), up to 6 times. Focus: +4% critical-hit chance, up to 6 times. They add to the Critical Hit shop upgrade and the Scope Lens.'
+  ], chg: [
+    'Move evolutions are spread more evenly between upgrades, so Power is no longer the answer for almost half of them. Now with Reach: Earth Power, Earthquake, Uproar, Eruption, Expanding Force and Misty Terrain. With Focus: Close Combat, Stone Edge, Crunch, Leaf Storm and Psychic Fangs. With Vigor: Giga Impact and Shadow Punch. With Armor: Iron Head and Fissure. With Magnet: Magnet Bomb. With Learning: Future Sight and Swarm.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T17:16Z', title: 'English only', chg: [
     'The game is now English only: the Spanish version and the Language setting have been removed. Every text is written in English directly, so nothing gets lost in translation.'
   ], fix: [

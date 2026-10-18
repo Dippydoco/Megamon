@@ -56,9 +56,9 @@ G.HUD = (() => {
 
     // Active buffs and altar power: pills with an icon + text. If they don't fit in
     // one row (up to the end of the health bar) they move to the next, without overlapping.
-    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
-    const LBL = { atk: 'ATK', spd: 'SPD', def: 'DEF', regen: 'REGEN' };
-    const ICO = { atk: 'fist', spd: 'boot', def: 'shield', regen: 'sprout' };
+    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a', fell: '#c7e04a' };
+    const LBL = { atk: 'ATK', spd: 'SPD', def: 'DEF', regen: 'REGEN', fell: 'STINGER' };
+    const ICO = { atk: 'fist', spd: 'boot', def: 'shield', regen: 'sprout', fell: 'up' };
     const POWER_ICO = { dmg: 'fist', spd: 'boot', mag: 'magnet', cd: 'clock', guard: 'shield' };
     const pills = [];
     for (const k in pl.buffs) {

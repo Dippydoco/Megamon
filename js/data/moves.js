@@ -405,7 +405,48 @@
 
     { id: 'hex', name: 'Hex', type: 'ghost', kind: 'chain',
       desc: 'A curse that jumps between enemies. Much more damage to burned, poisoned or slowed ones.',
-      cd: 0.9, dmg: 17, count: 4, radius: 150, hex: 1.7 }
+      cd: 0.9, dmg: 17, count: 4, radius: 150, hex: 1.7 },
+
+    // ---------------- new moves (18-10-2026) ----------------
+    // Same kinds as before, each with an on-hit effect (`fx`, see hitFx in systems/combat.js).
+    { id: 'absorb', name: 'Absorb', type: 'grass', kind: 'projectile',
+      desc: 'Homing seeds that heal you for part of the damage they deal.',
+      cd: 0.55, dmg: 12, speed: 300, count: 1, spread: 0.16, pierce: 0, life: 1.6, size: 6, homing: 2.5,
+      fx: { drain: 0.25 } },
+
+    { id: 'acid-spray', name: 'Acid Spray', type: 'poison', kind: 'cone',
+      desc: 'A spray of acid. Enemies hit take 25% more damage from everyone for a few seconds.',
+      cd: 0.75, dmg: 6, count: 6, arc: 0.8, speed: 330, life: 0.42, size: 6, pierce: 1,
+      fx: { vuln: 3 } },
+
+    { id: 'pin-missile', name: 'Pin Missile', type: 'bug', kind: 'projectile',
+      desc: 'A rapid volley of small homing needles.',
+      cd: 0.60, dmg: 7, speed: 380, count: 3, spread: 0.22, pierce: 0, life: 1.3, size: 5, homing: 3 },
+
+    { id: 'ice-shard', name: 'Ice Shard', type: 'ice', kind: 'projectile',
+      desc: 'A very fast shard of ice that can freeze enemies solid for a moment.',
+      cd: 0.42, dmg: 13, speed: 470, count: 1, spread: 0.10, pierce: 0, life: 1.2, size: 6,
+      fx: { freeze: [0.2, 0.9] } },
+
+    { id: 'frost-breath', name: 'Frost Breath', type: 'ice', kind: 'cone',
+      desc: 'Icy breath that slows. Enemies that keep getting hit by it freeze.',
+      cd: 0.70, dmg: 6, count: 7, arc: 0.9, speed: 340, life: 0.42, size: 6, pierce: 0, slow: 0.3,
+      fx: { chill: 4 } },
+
+    { id: 'drain-punch', name: 'Drain Punch', type: 'fighting', kind: 'melee',
+      desc: 'A heavy punch in front of you that heals you for part of the damage.',
+      cd: 0.55, dmg: 14, radius: 48, arc: 1.5, knock: 70,
+      fx: { drain: 0.2 } },
+
+    { id: 'dragon-breath', name: 'Dragon Breath', type: 'dragon', kind: 'cone',
+      desc: 'A gust of dragon fire that can stun enemies.',
+      cd: 0.70, dmg: 7, count: 7, arc: 0.9, speed: 360, life: 0.42, size: 6, pierce: 1,
+      fx: { stun: [0.1, 0.7] } },
+
+    { id: 'pursuit', name: 'Pursuit', type: 'dark', kind: 'projectile',
+      desc: 'A homing shot that does double damage to enemies below 30% HP.',
+      cd: 0.60, dmg: 16, speed: 360, count: 1, spread: 0.10, pierce: 0, life: 1.8, size: 7, homing: 3,
+      fx: { exec: 2 } }
   ];
 
   // Melee (12-10-2026): +20 % damage and +25 % reach and arc
@@ -493,38 +534,43 @@
    * card appears. Boosters (buff) don't evolve.
    */
   const NEED_NAME = { hp: 'Vigor', atk: 'Power', spd: 'Sprint', cd: 'Reflexes', def: 'Armor',
-                      rgn: 'Synthesis', mag: 'Magnet', xp: 'Learning' };
+                      rgn: 'Synthesis', mag: 'Magnet', xp: 'Learning', area: 'Reach', crit: 'Focus' };
   const EVO = {
     'tackle': ['Take Down', 'hp'],             'quick-attack': ['Extreme Speed', 'spd'],
-    'body-slam': ['Giga Impact', 'atk'],     'hyper-voice': ['Uproar', 'cd'],
+    'body-slam': ['Giga Impact', 'hp'],     'hyper-voice': ['Uproar', 'area'],
     'ember': ['Fire Blast', 'atk'],           'flamethrower': ['Overheat', 'cd'],
-    'fire-spin': ['Sacred Fire', 'rgn'],   'heat-wave': ['Eruption', 'hp'],
+    'fire-spin': ['Sacred Fire', 'rgn'],   'heat-wave': ['Eruption', 'area'],
     'water-gun': ['Scald', 'atk'],        'bubble': ['Surf', 'spd'],
     'hydro-pump': ['Hydro Cannon', 'atk'],     'vine-whip': ['Power Whip', 'atk'],
-    'razor-leaf': ['Leaf Storm', 'cd'],     'leaf-storm': ['Petal Dance', 'rgn'],
+    'razor-leaf': ['Leaf Storm', 'crit'],     'leaf-storm': ['Petal Dance', 'rgn'],
     'giga-drain': ['Frenzy Plant', 'hp'],    'thunder-shock': ['Thunder', 'atk'],
     'discharge': ['Electric Terrain', 'def'], 'thunderbolt': ['Zap Cannon', 'cd'],
-    'confusion': ['Psyshock', 'cd'],       'psybeam': ['Future Sight', 'atk'],
-    'psychic': ['Expanding Force', 'mag'],      'sludge': ['Sludge Bomb', 'atk'],
+    'confusion': ['Psyshock', 'cd'],       'psybeam': ['Future Sight', 'xp'],
+    'psychic': ['Expanding Force', 'area'],      'sludge': ['Sludge Bomb', 'atk'],
     'poison-sting': ['Poison Jab', 'spd'],  'toxic': ['Poison Gas', 'rgn'],
-    'mud-shot': ['Earth Power', 'atk'],      'bulldoze': ['Earthquake', 'atk'],
+    'mud-shot': ['Earth Power', 'area'],      'bulldoze': ['Earthquake', 'area'],
     'gust': ['Hurricane', 'spd'],             'wing-attack': ['Brave Bird', 'atk'],
     'bug-bite': ['X-Scissor', 'atk'],         'string-shot': ['Sticky Web', 'cd'],
-    'bug-buzz': ['Swarm', 'rgn'],         'rock-throw': ['Stone Edge', 'atk'],
+    'bug-buzz': ['Swarm', 'xp'],         'rock-throw': ['Stone Edge', 'crit'],
     'rock-slide': ['Stealth Rock', 'cd'],    'ice-beam': ['Blizzard', 'atk'],
-    'powder-snow': ['Icy Wind', 'spd'],  'karate-chop': ['Close Combat', 'atk'],
-    'aura-sphere': ['Focus Blast', 'cd'],   'lick': ['Shadow Punch', 'atk'],
+    'powder-snow': ['Icy Wind', 'spd'],  'karate-chop': ['Close Combat', 'crit'],
+    'aura-sphere': ['Focus Blast', 'cd'],   'lick': ['Shadow Punch', 'hp'],
     'shadow-ball': ['Phantom Force', 'cd'], 'dragon-rage': ['Draco Meteor', 'atk'],
-    'fairy-wind': ['Moonblast', 'atk'],   'dazzling-gleam': ['Misty Terrain', 'rgn'],
-    'metal-claw': ['Iron Head', 'atk'], 'flash-cannon': ['Steel Beam', 'def'],
-    'bite': ['Crunch', 'atk'],             'dark-pulse': ['Snarl', 'spd'],
+    'fairy-wind': ['Moonblast', 'atk'],   'dazzling-gleam': ['Misty Terrain', 'area'],
+    'metal-claw': ['Iron Head', 'def'], 'flash-cannon': ['Steel Beam', 'def'],
+    'bite': ['Crunch', 'crit'],             'dark-pulse': ['Snarl', 'spd'],
     'night-shade': ['Nightmare', 'rgn'],
-    'bonemerang': ['Bone Rush', 'atk'],    'psycho-cut': ['Psychic Fangs', 'cd'],
-    'spikes': ['Fissure', 'atk'],             'toxic-spikes': ['Gunk Shot', 'rgn'],
-    'hail': ['Avalanche', 'cd'],                  'meteor-mash': ['Magnet Bomb', 'atk'],
+    'bonemerang': ['Bone Rush', 'atk'],    'psycho-cut': ['Psychic Fangs', 'crit'],
+    'spikes': ['Fissure', 'def'],             'toxic-spikes': ['Gunk Shot', 'rgn'],
+    'hail': ['Avalanche', 'cd'],                  'meteor-mash': ['Magnet Bomb', 'mag'],
     'will-o-wisp': ['Inferno', 'cd'],       'substitute': ['Double Team', 'def'],
     'aerial-ace': ['Acrobatics', 'spd'],       'flame-wheel': ['Flare Blitz', 'spd'],
-    'bubble-beam': ['Aqua Tail', 'atk'],     'hex': ['Poltergeist', 'mag']
+    'bubble-beam': ['Aqua Tail', 'atk'],     'hex': ['Poltergeist', 'mag'],
+    // 18-10-2026
+    'absorb': ['Giga Drain', 'rgn'],          'acid-spray': ['Corrosive Gas', 'cd'],
+    'pin-missile': ['Fell Stinger', 'atk'],   'ice-shard': ['Glacial Lance', 'atk'],
+    'frost-breath': ['Sheer Cold', 'crit'],   'drain-punch': ['Hammer Arm', 'rgn'],
+    'dragon-breath': ['Dragon Pulse', 'cd'],  'pursuit': ['Kowtow Cleave', 'crit']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {
@@ -545,7 +591,10 @@
   };
 
   // Moves whose evolution differs from the generic one of their kind.
-  const EVO_OWN = { substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } } };
+  const EVO_OWN = { substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } },
+    // Fell Stinger: the projectile evolution, and every kill gives +5% damage for 4 s (up to 5 at once).
+    'pin-missile': { t: '×1.8 damage, +2 needles, +2 pierce, and kills raise your damage for a moment',
+                     m: { dmg: 1.8, count: 2, pierce: 2, size: 1.3, spread: 1.1, fx: { fell: 1 } } } };
   const evoMods = m => EVO_OWN[m.id] || EVO_MODS[m.kind];
 
   /** Can it evolve yet? → { name, needs, needName, text, ready } or null */

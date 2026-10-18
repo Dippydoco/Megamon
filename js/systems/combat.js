@@ -30,7 +30,7 @@ G.Combat = (() => {
     m.t -= dt;
     if (m.t > 0) return;
     // Attacks that need a target wait until they have one (don't waste the animation on thin air).
-    if (needsTarget(m) && !(pl.target && G.U.dist(pl.x, pl.y, pl.target.x, pl.target.y) <= reach(m))) {
+    if (needsTarget(m) && !(pl.target && G.U.dist(pl.x, pl.y, pl.target.x, pl.target.y) <= reach(sized(pl, m)))) {
       m.t = 0.05;
       return;
     }
@@ -44,7 +44,22 @@ G.Combat = (() => {
     run(pl, m);
   }
 
+  // Reach (level-up): kinds whose `radius` is an AREA (not a range) and grows with it.
+  // Beams and dashes grow in width instead; projectiles, cones, chains and boomerangs don't change.
+  const AREA_R = ['melee', 'aura', 'orbit', 'mine', 'meteor', 'trail', 'turret'];
+
+  /** The move as this player casts it: same object, with area sizes scaled by Reach. */
+  function sized(pl, m) {
+    const A = pl.areaMul || 1;
+    if (A === 1) return m;
+    const s = Object.create(m);
+    if (AREA_R.includes(m.kind) && m.radius) s.radius = m.radius * A;
+    if (m.kind === 'beam' || m.kind === 'dash') s.width = (m.width || 34) * A;
+    return s;
+  }
+
   function run(pl, m) {
+    m = sized(pl, m);
     switch (m.kind) {
       case 'projectile': fireProjectiles(pl, m); break;
       case 'melee':      melee(pl, m); break;
@@ -77,7 +92,7 @@ G.Combat = (() => {
   }
 
   function payload(m) {
-    return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type };
+    return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type, fx: m.fx || null };
   }
 
   /** Type chart × weather for an attack of type `type` against `e`. */
@@ -630,15 +645,15 @@ G.Combat = (() => {
         owner: pl, ghost: isGhost, mid: m.id,
         x: pl.x, y: pl.y, r: m.size, color: col, vis: G.VFX.forMove(m),
         dmg: m.dmg * pl.atk,
-        oa: (i / want) * 6.2832, orad: m.radius, ospeed: m.speed,
+        oa: (i / want) * 6.2832, orad: m.radius * (pl.areaMul || 1), ospeed: m.speed,
         rehit: Math.max(0.12, m.cd),
-        knock: m.knock || 0, burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, mtype: m.type
+        knock: m.knock || 0, burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, mtype: m.type, fx: m.fx || null
       });
     }
     const live = G.Projectiles.all().filter(mine);
     live.forEach((p, i) => {
       p.dmg = m.dmg * pl.atk;
-      p.orad = m.radius;
+      p.orad = m.radius * (pl.areaMul || 1);
       p.ospeed = m.speed;
       p.r = m.size;
       if (relayout) p.oa = base + (i / live.length) * 6.2832;
@@ -650,12 +665,13 @@ G.Combat = (() => {
   }
 
   /** Replays a teammate's attack just to show it (no damage). */
-  function ghostCast(pl, id, lvl, aim, evolved) {
+  function ghostCast(pl, id, lvl, aim, evolved, area) {
     const def = G.Moves.BY_ID[id];
     if (!def || def.kind === 'orbit') return;
     const m = G.Moves.instance(id, lvl);
     if (evolved) G.Moves.evolve(m);
     pl.aim = aim;
+    pl.areaMul = area || 1;           // the teammate's Reach, so their attack looks as big as it really is
     ghost = true;
     try {
       pl.cast(m);
@@ -687,7 +703,8 @@ G.Combat = (() => {
   function hit(pl, e, dmg, col, dx, dy, knock, m) {
     const k = typeK(m.type, e);
     const crit = isCrit(pl);
-    dmg *= k * (crit ? CRIT_MUL : 1);
+    dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
+    const lethal = e.hp <= dmg;
     e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(m.type, e.types)));
     if (!ghost) pl.onDealt(dmg);
     pl.dmgDealt += dmg;
@@ -695,7 +712,46 @@ G.Combat = (() => {
     if (m.burn) e.applyBurn(m.burn);
     if (m.poison) e.applyPoison(m.poison);
     if (m.slow) e.applySlow(m.slow);
+    if (m.fx) hitFx(pl, e, dmg, m.fx, lethal);
     itemHit(pl, e);
+  }
+
+  /*
+   * Extra on-hit effects of some moves (`fx` in data/moves.js):
+   *   drain   share of the damage that heals you (through Player.drain, which caps it)
+   *   vuln    seconds the enemy takes +25% damage from everyone (Acid Spray)
+   *   freeze  [chance, seconds] to freeze it solid (Ice Shard)
+   *   chill   hits within 1.2 s that freeze it (Frost Breath): every `chill` hits, 1 s of ice
+   *   stun    [chance, seconds] to stun it (Dragon Breath)
+   *   exec    damage multiplier on enemies below 30% HP (Pursuit; bosses get half the bonus)
+   *   fell    a kill raises your damage for a moment (Fell Stinger)
+   * Bosses, rift legends and Arceus's legends can't be frozen or stunned (Enemy.freeze).
+   */
+  function execMul(fx, e) {
+    if (!fx || !fx.exec || e.hp > e.maxHp * 0.3) return 1;
+    return e.boss || e.legend || e.judge ? 1 + (fx.exec - 1) / 2 : fx.exec;
+  }
+
+  function hitFx(pl, e, dmg, fx, lethal) {
+    if (ghost) return;
+    if (fx.drain) {
+      pl.drain(dmg * fx.drain);
+      // A little green heart drifts from the enemy (not on every hit: it would be a cloud).
+      if (Math.random() < 0.35) {
+        const [nx, ny] = G.U.norm(pl.x - e.x, pl.y - e.y);
+        G.FX.sp('heart', 'grass', e.x, e.y - e.bodyH * 0.5, { vx: nx * 90, vy: ny * 90 - 20, life: 0.45, scale: 0.8 });
+      }
+    }
+    if (fx.vuln) e.vuln(fx.vuln);
+    if (fx.freeze && Math.random() < fx.freeze[0]) e.freeze(fx.freeze[1]);
+    if (fx.stun && Math.random() < fx.stun[0]) e.freeze(fx.stun[1], true);
+    if (fx.chill) {
+      const now = performance.now();
+      e.chill = now - (e.chillAt || 0) < 1200 ? (e.chill || 0) + 1 : 1;
+      e.chillAt = now;
+      if (e.chill >= fx.chill) { e.chill = 0; e.freeze(1); }
+    }
+    if (fx.fell && lethal) pl.addBuff('fell', 0.05, 4, 5);
   }
 
   // ---------------- colisiones ----------------
@@ -796,7 +852,8 @@ G.Combat = (() => {
         }
 
         const crit = isCrit(pl);
-        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1);
+        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1) * execMul(p.fx, e);
+        const lethal = e.hp <= p.dmg * k;
         e.hurt(p.dmg * k, p.color, p.vx || (e.x - pl.x), p.vy || (e.y - pl.y), p.knock,
                crit ? 'crit' : p.mtype ? G.Types.label(G.Types.mult(p.mtype, e.types)) : null);
         if (Math.random() < 0.5) G.FX.sp('impact', p.vis ? p.vis.pal : 'normal', e.x, e.y - e.bodyH * 0.5, { life: 0.12, scale: 1 });
@@ -806,6 +863,7 @@ G.Combat = (() => {
         if (p.burn) e.applyBurn(p.burn);
         if (p.poison) e.applyPoison(p.poison);
         if (p.slow) e.applySlow(p.slow);
+        if (p.fx) hitFx(pl, e, p.dmg * k, p.fx, lethal);
         itemHit(pl, e);
 
         if (!p.orb) {

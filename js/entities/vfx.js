@@ -248,6 +248,26 @@ G.VFX = (() => {
       P.set(5, 5, 'w');
       P.outline();
     } },
+    // Absorb: a seed with a light stripe and a little sprout at the back.
+    seed: { w: 11, h: 7, dir: true, gen(P) {
+      P.fill((x, y) => { const e = Math.hypot((x - 6) / 4.4, (y - 3) / 2.6); return e <= 1 ? (y < 3 ? 'l' : 'm') : null; });
+      for (let x = 4; x <= 8; x++) P.set(x, 2, 'w');
+      P.set(1, 2, 'd'); P.set(0, 1, 'l'); P.set(1, 4, 'd');
+      P.outline();
+    } },
+    // Frost Breath: a six-armed snowflake (2 frames, it twinkles).
+    snowflake: { w: 11, h: 11, frames: 2, spin: true, gen(P, f) {
+      for (let k = 0; k < 6; k++) {
+        const a = k * Math.PI / 3, ex = 5 + Math.cos(a) * 4.6, ey = 5 + Math.sin(a) * 4.6;
+        P.line(5, 5, ex, ey, 'l');
+        const bx = 5 + Math.cos(a) * 3, by = 5 + Math.sin(a) * 3;
+        P.set(bx + Math.cos(a + 1.2) * 1.2, by + Math.sin(a + 1.2) * 1.2, 'm');
+        P.set(bx + Math.cos(a - 1.2) * 1.2, by + Math.sin(a - 1.2) * 1.2, 'm');
+      }
+      P.set(5, 5, 'w');
+      if (f) { P.set(5, 1, 'w'); P.set(5, 9, 'w'); }
+      P.outline();
+    } },
     heart: { w: 9, h: 8, gen(P) {
       ['.ll...ll.', 'lwll.llll', 'lllllllll', 'lllllllll', '.lllllll.', '..lllll..', '...lll...', '....l....']
         .forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') P.set(x, y, c === 'w' ? 'w' : 'l'); }));
@@ -379,7 +399,16 @@ G.VFX = (() => {
     'aerial-ace':    { proj: 'wind' },
     'flame-wheel':   { proj: 'fire', aura: 'fire' },
     'bubble-beam':   { proj: 'bubble' },
-    'hex':           { beam: 'shadow', proj: 'shadow' }
+    'hex':           { beam: 'shadow', proj: 'shadow' },
+    // 18-10-2026
+    'absorb':        { proj: 'seed', trail: 'spark' },
+    'acid-spray':    { proj: 'drop', trail: 'drip' },
+    'pin-missile':   { proj: 'needle' },
+    'ice-shard':     { proj: 'shard', trail: 'frost' },
+    'frost-breath':  { proj: 'snowflake', trail: 'frost' },
+    'drain-punch':   { melee: 'impact' },
+    'dragon-breath': { proj: 'fire', trail: 'ember' },
+    'pursuit':       { proj: 'crescent', trail: 'wisp' }
   };
 
   const TYPE_SHAPE = {

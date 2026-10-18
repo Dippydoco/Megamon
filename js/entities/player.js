@@ -25,6 +25,7 @@ G.Player = class Player {
     this.magnet = 78 * (perks.magnetMul || 1);
     this.xpMul = perks.xpMul || 1;
     this.coinMul = perks.coinMul || 1;
+    this.areaMul = 1;          // Reach (level-up): size of area attacks
 
     this.maxHp = mon.hp + (perks.hp || 0);
     this.hp = this.maxHp;
@@ -41,7 +42,8 @@ G.Player = class Player {
       atk: { n: 0, t: 0, amount: 0 },
       spd: { n: 0, t: 0, amount: 0 },
       def: { n: 0, t: 0, amount: 0 },
-      regen: { n: 0, t: 0, amount: 0 }
+      regen: { n: 0, t: 0, amount: 0 },
+      fell: { n: 0, t: 0, amount: 0 }      // Fell Stinger: kills briefly raise damage
     };
 
     this.level = 1;
@@ -75,6 +77,7 @@ G.Player = class Player {
     this.item = null;          // equipped item (data/items.js), one per run
     this.sashT = -999;         // the last time the Focus Sash saved you
     this.bellHeal = 0;         // pending Shell Bell healing
+    this.drainHeal = 0;        // pending healing from draining moves (Absorb, Drain Punch...)
     this.statsTaken = {};      // stat upgrades taken (evolution condition)
   }
 
@@ -89,7 +92,7 @@ G.Player = class Player {
   cy() { return this.y; }
 
   // ---------------- stats efectivos ----------------
-  get atk() { return this.baseAtk * this.atkMul * (1 + this.buffs.atk.n * this.buffs.atk.amount); }
+  get atk() { return this.baseAtk * this.atkMul * (1 + this.buffs.atk.n * this.buffs.atk.amount) * (1 + this.buffs.fell.n * this.buffs.fell.amount); }
   get spd() {
     const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
     const w = G.Weather.speedFor(this.mon.types);
@@ -317,6 +320,15 @@ G.Player = class Player {
     if (this.item === 'shellbell') this.bellHeal = Math.min(4, this.bellHeal + dmg * 0.04);
   }
 
+  /**
+   * Draining moves: a share of the damage comes back as health. It goes into a small pool
+   * that empties at most 2.5% of max HP per second, so no build can out-heal everything
+   * (an old Giga Drain healed on every hit with no limit and made you unkillable).
+   */
+  drain(amount) {
+    if (amount > 0) this.drainHeal = Math.min(this.maxHp * 0.05, this.drainHeal + amount);
+  }
+
   /** An altar's power (see systems/interact.js): applied and removed on its own. */
   addPower(def, dur) {
     if (this.hasItem('lightclay')) dur *= 1.5;            // Light Clay
@@ -349,6 +361,7 @@ G.Player = class Player {
     }
     if (this.slowT > 0) this.slowT -= dt;
     if (this.bellHeal > 0) { const h = Math.min(this.bellHeal, 4 * dt); this.hp = Math.min(this.maxHp, this.hp + h); this.bellHeal -= h; }
+    if (this.drainHeal > 0) { const h = Math.min(this.drainHeal, this.maxHp * 0.025 * dt); this.hp = Math.min(this.maxHp, this.hp + h); this.drainHeal -= h; }
     if (this.power && (this.power.t -= dt) <= 0) { this.power.def.off(this); this.power = null; }
     if (this.regen > 0) this.hp = Math.min(this.maxHp, this.hp + this.regen * dt);
 

@@ -23,6 +23,10 @@ G.LevelUp = (() => {
       apply: pl => pl.magnet *= 1.30, max: 6 },
     { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+12% experience gained.',
       apply: pl => pl.xpMul *= 1.12, max: 8 },
+    { id: 'area', icon: 'reach', title: 'Reach',      desc: '+10% size of every area attack.',
+      apply: pl => pl.areaMul *= 1.10, max: 6 },
+    { id: 'crit', icon: 'focus', title: 'Focus',      desc: '+4% critical-hit chance (critical hits do ×1.5 damage).',
+      apply: pl => pl.critChance += 0.04, max: 6 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.heal(pl.maxHp * 0.45) }
   ];

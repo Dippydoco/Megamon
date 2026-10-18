@@ -54,7 +54,7 @@
       this.poison = 0; this.poisonT = 0; this.poisonTick = 0;
       this.lavaTick = 0;
       this.kx = 0; this.ky = 0;
-      this.touchCd = 0; this.freezeT = 0;
+      this.touchCd = 0; this.freezeT = 0; this.stunned = false; this.vulnT = 0;
       this.dead = false;
       this.fade = 0;             // fade time after falling
 
@@ -117,13 +117,16 @@
       if (this.dead) return;
       // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
       if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }
+      if (this.vulnT > 0) amount *= 1.25;             // Acid Spray: takes more damage from everyone (only the host's copy has vulnT)
       const d = Math.max(1, Math.round(amount));
       // Copy of an enemy from the host: the hit is sent to them, since they're
       // the one who decides whether it falls. Here it's only shown (number, flash and animation).
       if (this.remote) {
         G.Coop.hit(this, d, color, dirX, dirY, knock);
-        this.hp = Math.max(1, this.hp - d);
-        this.showHurt(d, color, dirX, dirY, eff);
+        // (Acid Spray: the host adds the +25%; here it's only so the number shown is the real one.)
+        const shown = this.net && this.net.st & 64 ? Math.round(d * 1.25) : d;
+        this.hp = Math.max(1, this.hp - shown);
+        this.showHurt(shown, color, dirX, dirY, eff);
         return;
       }
       // Shield: absorbs first.
@@ -157,10 +160,18 @@
     }
 
     /** Stopwatch: it stays frozen (doesn't move, attack or animate) for a few seconds. */
-    freeze(dur) {
+    freeze(dur, stun = false) {
       if (this.judge || this.boss) return;
-      if (this.remote) { G.Coop.status(this, 'f', dur); return; }
+      if (this.remote) { G.Coop.status(this, stun ? 'z' : 'f', dur); return; }
+      // Stun (Dragon Breath) works like freezing but looks different; a longer ice freeze wins.
+      if (dur >= (this.freezeT || 0)) this.stunned = stun;
       this.freezeT = Math.max(this.freezeT || 0, dur);
+    }
+
+    /** Acid Spray: for `dur` seconds it takes +25% damage from everyone. */
+    vuln(dur) {
+      if (this.remote) { G.Coop.status(this, 'v', dur); return; }
+      this.vulnT = Math.max(this.vulnT || 0, dur);
     }
 
     applySlow(factor, dur = 1.2) {
@@ -294,6 +305,7 @@
 
       // --- estados ---
       if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }
+      if (this.vulnT > 0) this.vulnT -= dt;
       if (this.burn > 0) {
         this.burnT -= dt; this.burnTick -= dt;
         if (this.burnTick <= 0) { this.burnTick = 0.5; this.hurt(1.6 * this.burn * (1 + pl.level * 0.06), '#ff9a4d'); }
@@ -310,7 +322,7 @@
       if (this.freezeT > 0) {
         this.freezeT -= dt;
         this.kx *= Math.pow(0.001, dt); this.ky *= Math.pow(0.001, dt);
-        if (seen && Math.random() < dt * 5) G.FX.px(this.x + G.U.rand(-this.r, this.r), this.y - G.U.rand(2, this.bodyH), '#bfefff', { vy: -10, life: 0.5 });
+        if (seen && Math.random() < dt * 5) G.FX.px(this.x + G.U.rand(-this.r, this.r), this.y - G.U.rand(2, this.bodyH), this.stunned ? '#ffe14d' : '#bfefff', { vy: -10, life: 0.5 });
         return;
       }
 
@@ -771,12 +783,32 @@
       }
 
       if (this.freezeT > 0 || (this.net && this.net.st & 8)) {
+        const stun = this.remote ? !!(this.net && this.net.st & 32) : this.stunned;
+        const top = this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18);
         ctx.save();
-        ctx.globalAlpha = 0.28 + Math.sin(this.bob * 0.5) * 0.05;
-        ctx.fillStyle = '#9fe6ff';
-        ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.2, this.bodyH * 0.6, 0, 0, 6.2832); ctx.fill();
+        if (stun) {
+          // Stunned: little stars circling over its head.
+          for (let i = 0; i < 3; i++) {
+            const a = this.bob * 1.6 + i * 2.094;
+            G.Icons.draw(ctx, 'star', Math.round(this.x + Math.cos(a) * this.r * 0.9 - 4), Math.round(top + 4 + Math.sin(a) * 3), 8);
+          }
+        } else {
+          ctx.globalAlpha = 0.28 + Math.sin(this.bob * 0.5) * 0.05;
+          ctx.fillStyle = '#9fe6ff';
+          ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.2, this.bodyH * 0.6, 0, 0, 6.2832); ctx.fill();
+        }
         ctx.restore();
-        G.Icons.draw(ctx, 'stopwatch', Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18)), 12);
+        if (!stun) G.Icons.draw(ctx, 'stopwatch', Math.round(this.x - 6), Math.round(top), 12);
+      }
+
+      // Acid Spray: green acid drips off it while it takes more damage.
+      if (this.vulnT > 0 || (this.net && this.net.st & 64)) {
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#9be04a';
+        ctx.beginPath(); ctx.ellipse(this.x, this.y, this.r * 1.1, this.r * 0.45, 0, 0, 6.2832); ctx.fill();
+        ctx.restore();
+        if (Math.random() < 0.12) G.FX.px(this.x + G.U.rand(-this.r, this.r) * 0.7, this.y - G.U.rand(4, this.bodyH * 0.8), '#b6f05a', { vy: 30, life: 0.4 });
       }
 
       if (this.burn > 0 || this.poison > 0 || (this.net && this.net.st & 3)) {

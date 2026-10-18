@@ -65,6 +65,14 @@ G.Icons = (() => {
     magnet: { pal: { r: '#ff5f6d', s: '#c23a4b', w: '#e8e8f0' }, rows: [
       '............', '..kkkkkkkk..', '.krrrrrrrrk.', 'krrsskkssrrk', 'krrk....krrk', 'krrk....krrk',
       'krrk....krrk', 'kwwk....kwwk', 'kwwk....kwwk', 'kkkk....kkkk', '............', '............'] },
+    // Reach (level-up): a ring with arrows pointing outwards.
+    reach: { pal: { g: '#7fe0ff', d: '#3a8fc2', w: '#e6faff' }, rows: [
+      '.....kk.....', '....kwwk....', '...kkggkk...', '..kk.kk.kk..', '.kgk....kgk.', 'kwgk.kk.kgwk',
+      'kwgk.kk.kgwk', '.kgk....kgk.', '..kk.kk.kk..', '...kkddkk...', '....kwwk....', '.....kk.....'] },
+    // Focus (level-up): a crosshair, like the Scope Lens.
+    focus: { pal: { r: '#ff5f6d', d: '#b03040', w: '#ffe6e9' }, rows: [
+      '.....kk.....', '...kkrrkk...', '..krrkkrrk..', '.krk.kk.krk.', '.krk.kk.krk.', 'krrkkwwkkrrk',
+      'krrkkwwkkrrk', '.krk.kk.krk.', '.krk.kk.krk.', '..krrkkrrk..', '...kkddkk...', '.....kk.....'] },
     book: { pal: { c: '#4fb4ff', d: '#2a6fb0', p: '#f4f4ff', y: '#ffd23f' }, rows: [
       '............', '.kkkkkkkkkk.', '.kcccccccck.', '.kcyyyyyyck.', '.kcccccccck.', '.kccyyyyyck.',
       '.kcccccccck.', '.kcccccccck.', '.kddddddddk.', '.kppppppppk.', '.kkkkkkkkkk.', '............'] },
