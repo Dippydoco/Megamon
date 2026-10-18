@@ -26,14 +26,17 @@ G.LabUI = (() => {
   const UPS = ['atk', 'cd', 'area', 'crit'];
   const SCENARIOS = {
     // (The single targets walk up to you like real enemies, so melee, orbits and mines reach them too.)
-    single: { label: 'Single target (tough dummy)', count: 1, hp: 1e7, spd: 30, dist: 110, respawn: false },
-    boss:   { label: 'Boss (can\'t be frozen, stunned or pushed)', count: 1, hp: 1e7, spd: 25, dist: 130, respawn: false, boss: true },
+    // Single targets have normal health but heal back up whenever they drop below 40%, so they never fall and
+    // percentage-based damage (poison) reads like it does in a run. (With 10 million HP poison looked absurd.)
+    single: { label: 'Single target (tough dummy)', count: 1, hp: 3000, spd: 30, dist: 110, respawn: false, immortal: true },
+    boss:   { label: 'Boss (can\'t be frozen, stunned or pushed)', count: 1, hp: 30000, spd: 25, dist: 130, respawn: false, boss: true, immortal: true },
     crowd:  { label: 'Crowd (12 enemies, 150 HP, respawning)', count: 12, hp: 150, spd: 35, dist: 200, respawn: true },
     swarm:  { label: 'Swarm (30 enemies, 60 HP, respawning)', count: 30, hp: 60, spd: 45, dist: 230, respawn: true }
   };
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const r1 = n => Math.round(n * 10) / 10;
 
+  let home = null;               // the open spot every test starts from
   let root = null, running = false, stopFlag = false, results = [], sortKey = 'dps', sortDir = -1, runNo = 0;
   const cfg = { mon: 151, moves: new Set(), levels: new Set([1, 5]), evo: true, scen: 'single', count: 1, hp: 1e7, spd: 0,
                 dur: 20, ups: { atk: 0, cd: 0, area: 0, crit: 0 }, item: '', watch: false };
@@ -118,6 +121,9 @@ G.LabUI = (() => {
     pl.statsTaken = {};
     for (const k in pl.buffs) pl.buffs[k].n = 0;
     pl.slowT = 0; pl.protectT = 0; pl.drainHeal = 0; pl.bellHeal = 0;
+    pl.guardT = 0; pl.burrowT = 0; pl.rollMom = 0; pl.protectUntil = 0;
+    // Back to the clearing: dashes and Dig move you, and the next test must start from the same open spot.
+    if (home) { pl.x = home.x; pl.y = home.y; }
     for (const s of UPS) {
       const st = G.LevelUp.STATS.find(x => x.id === s);
       for (let i = 0; i < (cfg.ups[s] | 0); i++) st.apply(pl);
@@ -182,6 +188,7 @@ G.LabUI = (() => {
             if (e.dead) continue;
             if (e.freezeT > 0) { if (e.stunned) stunned += DT; else frozen += DT; }
             if (e.vulnT > 0) weak += DT;
+            if (sc.immortal && e.hp < e.maxHp * 0.4) e.hp = e.maxHp;
           }
           if (sc.respawn) {
             for (let i = 0; i < es.length; i++) if (es[i].dead) { kills++; es[i] = spawnAround(sc, 1)[0]; }
@@ -204,7 +211,7 @@ G.LabUI = (() => {
 
   function setupLabel() {
     const u = UPS.filter(s => cfg.ups[s]).map(s => G.LevelUp.STATS.find(x => x.id === s).title + ' ×' + cfg.ups[s]).join(', ');
-    return [G.DEX_BY[cfg.mon].name, SCENARIOS[cfg.scen].label.split(' (')[0], cfg.count + '×' + (cfg.hp >= 1e6 ? '∞' : cfg.hp) + ' HP',
+    return [G.DEX_BY[cfg.mon].name, SCENARIOS[cfg.scen].label.split(' (')[0], cfg.count + '×' + (cfg.hp >= 1e6 ? '∞' : cfg.hp) + ' HP' + (SCENARIOS[cfg.scen].immortal ? ' (heals)' : ''),
             u || 'no upgrades', cfg.item ? G.Items.BY[cfg.item].name : 'no item', cfg.dur + ' s'].join(' · ');
   }
 
@@ -223,6 +230,7 @@ G.LabUI = (() => {
     root.classList.add('busy');
     setMon(cfg.mon);
     if (!clearing()) status('Couldn\'t find an open clearing: results may be affected by walls or trees.');
+    home = { x: G.Game.player.x, y: G.Game.player.y };
     const t0 = performance.now();
     for (let i = 0; i < list.length && !stopFlag; i++) {
       const [id, l, e] = list[i];

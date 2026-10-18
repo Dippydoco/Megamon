@@ -22,6 +22,8 @@ G.Combat = (() => {
     if (pl.dead) return;
     // Bonds: every move in the active slot, each with its own cooldown.
     const group = pl.activeGroup();
+    // Dig: underground you can't attack (the cooldowns wait too).
+    if (pl.burrowT > 0) return;
     for (const m of group) { tickMove(dt, pl, m, now); G.RunLog.active(pl, m.id, dt); }
     // Burst moves charge in the background too (the rest only charge while active).
     // When one is ready it chimes and its slot glows, so you know it's time to switch to it.
@@ -33,7 +35,9 @@ G.Combat = (() => {
   }
 
   function tickMove(dt, pl, m, now) {
-    if (m.kind === 'orbit') { orbit(pl, m, dt, now); return; }
+    if (m.kind === 'orbit' || m.kind === 'spin') { orbit(pl, m, dt, now); return; }
+    if (m.kind === 'roll') { roll(pl, m, dt); return; }
+    if (m.kind === 'counter') { counter(pl, m, dt); return; }
 
     m.t -= dt;
     if (m.t > 0) return;
@@ -71,6 +75,11 @@ G.Combat = (() => {
 
   function run(pl, m) {
     m = sized(pl, m);
+    // Ancient Power: each cast has a chance to raise your damage for a while ([chance, +damage, seconds, max stacks]).
+    if (m.surge && !ghost && Math.random() < m.surge[0]) {
+      pl.addBuff('surge', m.surge[1], m.surge[2], m.surge[3]);
+      G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, 'Power up!', '#c6b08a');
+    }
     switch (m.kind) {
       case 'projectile': fireProjectiles(pl, m); break;
       case 'melee':      melee(pl, m); break;
@@ -87,10 +96,19 @@ G.Combat = (() => {
       case 'trail':      trailPatch(pl, m); break;
       case 'cone':       cone(pl, m); break;
       case 'burst':      burst(pl, m); break;
+      case 'charge':     charge(pl, m); break;
+      case 'ricochet':   ricochet(pl, m); break;
+      case 'cage':       cage(pl, m); break;
+      case 'wall':       wall(pl, m); break;
+      case 'burrow':     burrow(pl, m); break;
+      case 'swarm':      swarm(pl, m); break;
+      case 'throw':      toss(pl, m); break;
+      case 'roll':       rollFx(pl, m); break;          // (teammates' copies: just the look)
+      case 'counter':    counterFx(pl, m); break;
     }
   }
 
-  const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone'];
+  const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone', 'charge', 'ricochet', 'cage', 'burrow', 'throw'];
   function needsTarget(m) { return TARGETED.includes(m.kind); }
   function reach(m) {
     if (m.kind === 'melee') return m.radius + 30;
@@ -100,6 +118,11 @@ G.Combat = (() => {
     if (m.kind === 'meteor') return 340;
     if (m.kind === 'dash') return m.radius + 60;
     if (m.kind === 'cone') return m.speed * m.life + 30;
+    if (m.kind === 'charge') return m.radius + 20;
+    if (m.kind === 'ricochet') return 420;
+    if (m.kind === 'cage') return 320;
+    if (m.kind === 'burrow') return m.range || 260;
+    if (m.kind === 'throw') return m.radius + 30;
     return 520;
   }
 
@@ -421,6 +444,7 @@ G.Combat = (() => {
     pl.x = sx + ca * len; pl.y = sy + sa * len;
     G.World.collide(pl);
     pl.invuln = Math.max(pl.invuln || 0, 0.3);
+    if (m.guard) { pl.guardAmt = m.guard[0]; pl.guardT = m.guard[1]; }      // Psyshield Bash: less damage taken for a moment
     const w = m.width || 34;
     const mx = sx + ca * len / 2, my = sy + sa * len / 2;
     for (const e of G.EnemyMgr.queryCircle(mx, my, len / 2 + w)) {
@@ -436,8 +460,9 @@ G.Combat = (() => {
   function trailPatch(pl, m) {
     const col = G.U.TYPE_COLOR[m.type], vis = G.VFX.forMove(m);
     // Standing still it doesn't leave a new one on top of the last (only now and then).
+    // (Only if that puddle still exists: after the fields are cleared, standing still used to block the trail for good.)
     const last = pl.lastPatch;
-    if (last && G.U.dist2(last.x, last.y, pl.x, pl.y) < (m.radius * 0.9) ** 2 && last.t < 1) return;
+    if (last && fields.includes(last) && G.U.dist2(last.x, last.y, pl.x, pl.y) < (m.radius * 0.9) ** 2 && last.t < 1) return;
     const f = { kind: 'patch', owner: pl, ghost, m, col, vis, x: pl.x, y: pl.y, t: 0, life: m.dur || 3, r: m.radius,
                 tick: 0, dmg: m.dmg * pl.atk };
     fields.push(f);
@@ -531,6 +556,309 @@ G.Combat = (() => {
     }
   }
 
+  // ---------------- new styles (19-10-2026, Batch 2) ----------------
+
+  /** Charge (Solar Beam): a wind-up while it gathers light, then a huge beam where you are aiming. */
+  function charge(pl, m) {
+    fields.push({ kind: 'charge', owner: pl, ghost, m, col: G.U.TYPE_COLOR[m.type], vis: G.VFX.forMove(m), x: pl.x, y: pl.y, t: 0, life: m.delay + 0.1 });
+    G.FX.ring(pl.x, pl.y, pl.r * 3, pl.r, G.U.TYPE_COLOR[m.type], m.delay, 2);
+  }
+
+  /** Ricochet (Electro Ball, Power Gem, Mirror Shot): a shot that bounces from foe to foe. */
+  function ricochet(pl, m) {
+    const col = G.U.TYPE_COLOR[m.type], vis = G.VFX.forMove(m), n = Math.max(1, m.count | 0);
+    for (let i = 0; i < n; i++) {
+      const a = pl.aim + (n === 1 ? 0 : (i / (n - 1) - 0.5) * 0.5);
+      G.Projectiles.spawn(Object.assign({
+        x: pl.x + Math.cos(a) * 3, y: pl.y + Math.sin(a) * 3, vx: Math.cos(a) * m.speed, vy: Math.sin(a) * m.speed,
+        dmg: m.dmg * pl.atk, r: m.size, life: m.life, pierce: 0, color: col, hits: new Set(), vis, ghost, owner: pl,
+        bounce: m.bounces | 0, grow: m.grow || 1
+      }, payload(m)));
+    }
+  }
+
+  /** After hitting `e`: heads for the nearest enemy it hasn't hit yet (true if it found one). */
+  function bounceFrom(p, e) {
+    let best = null, bd = 240 * 240;
+    for (const o of G.EnemyMgr.queryCircle(e.x, e.y, 240)) {
+      if (o === e || o.dead || p.hits.has(o.id)) continue;
+      const d = G.U.dist2(e.x, e.y, o.x, o.y);
+      if (d < bd) { bd = d; best = o; }
+    }
+    if (!best) return false;
+    const sp = Math.hypot(p.vx, p.vy) * 1.08;
+    const [dx, dy] = G.U.norm(best.x - p.x, best.cy() - p.y);
+    p.vx = dx * sp; p.vy = dy * sp;
+    p.bounce--; p.dmg *= p.grow || 1; p.t = Math.min(p.t, p.life * 0.4);
+    G.FX.spark(p.x, p.y - G.LIFT, p.color, dx, dy, 4);
+    return true;
+  }
+
+  /** Cage (Thunder Cage, Sand Tomb): a ring around the target's group; inside it hurts, and nobody gets out. */
+  function cage(pl, m) {
+    const tg = pl.target && !pl.target.dead ? pl.target : G.Projectiles.nearest(G.EnemyMgr.all(), pl.x, pl.y, reach(m));
+    if (!tg) return;
+    fields.push({ kind: 'cage', owner: pl, ghost, m, col: G.U.TYPE_COLOR[m.type], vis: G.VFX.forMove(m), x: tg.x, y: tg.y,
+                  r: m.radius, life: m.dur, t: 0, tick: 0, dmg: m.dmg * pl.atk, zap: new Map(), inside: new Set() });
+    G.FX.ring(tg.x, tg.y, 4, m.radius, G.U.TYPE_COLOR[m.type], 0.4, 4);
+    // At most 2 cages per player (more piled up and multiplied the damage): the oldest goes.
+    const mine = fields.filter(f => f.kind === 'cage' && f.owner === pl && !f.gone);
+    for (const f of mine.slice(0, -2)) f.gone = true;
+  }
+
+  /** Wall (Reflect): a barrier in front of you that stops enemy shots (Mirror Coat sends them back). */
+  function wall(pl, m) {
+    const d = m.dist || 34;
+    fields.push({ kind: 'wall', owner: pl, ghost, m, col: G.U.TYPE_COLOR[m.type], x: pl.x + Math.cos(pl.aim) * d, y: pl.y + Math.sin(pl.aim) * d,
+                  a: pl.aim, w: m.width, life: m.dur, t: 0, reflect: !!m.reflect });
+    const mine = fields.filter(f => f.kind === 'wall' && f.owner === pl && !f.gone);
+    for (const f of mine.slice(0, Math.max(0, mine.length - 2))) f.gone = true;
+  }
+
+  /** Enemy shot `p` against the walls: blocked (and maybe reflected). Teammates' walls block on your screen too. */
+  function wallBlocks(p) {
+    for (const f of fields) {
+      if (f.kind !== 'wall' || f.gone) continue;
+      const ca = Math.cos(f.a), sa = Math.sin(f.a);
+      const dx = p.x - f.x, dy = p.y - f.y;
+      const along = -dx * sa + dy * ca, across = dx * ca + dy * sa;          // along the wall / through it
+      if (Math.abs(along) > f.w / 2 + p.r || Math.abs(across) > 8 + p.r) continue;
+      G.FX.burst(p.x, p.y - G.LIFT, f.col, 6, 90);
+      if (f.reflect) {
+        // Mirror Coat: back at the enemies, stronger (a teammate's reflection is only shown here).
+        G.Projectiles.spawn({ x: p.x, y: p.y, vx: -(p.vx || 0) * 1.2, vy: -(p.vy || 0) * 1.2, dmg: (p.dmg || 10) * 2 * (f.owner.atk || 1),
+                              r: p.r, life: 1.2, pierce: 1, color: f.col, hits: new Set(), vis: G.VFX.forMove(f.m),
+                              ghost: f.ghost, owner: f.owner, mtype: f.m.type, mid: f.m.id });
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /** Burrow (Dig): underground for a moment (can't be hit), then you burst up under the biggest group. */
+  function burrow(pl, m) {
+    let best = null, bestN = 0;
+    for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, reach(m))) {
+      if (e.dead) continue;
+      const n = G.EnemyMgr.queryCircle(e.x, e.y, 70).length;
+      if (n > bestN) { bestN = n; best = e; }
+    }
+    if (!best) return;
+    fields.push({ kind: 'burrow', owner: pl, ghost, m, col: G.U.TYPE_COLOR[m.type], vis: G.VFX.forMove(m), x: best.x, y: best.y,
+                  t: 0, life: m.dur + 0.05 });
+    G.FX.burst(pl.x, pl.y - 4, '#aa7c3c', 12, 120);
+    if (!ghost) { pl.burrowT = m.dur; pl.invuln = Math.max(pl.invuln || 0, m.dur + 0.3); }
+  }
+
+  /** Swarm (Infestation): little bugs that chase foes on their own and keep biting. */
+  function swarm(pl, m) {
+    const col = G.U.TYPE_COLOR[m.type], vis = G.VFX.forMove(m), n = Math.max(1, m.count | 0);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.2832;
+      G.Projectiles.spawn(Object.assign({
+        x: pl.x + Math.cos(a) * 10, y: pl.y + Math.sin(a) * 8, vx: Math.cos(a) * m.speed, vy: Math.sin(a) * m.speed,
+        dmg: m.dmg * pl.atk, r: m.size, life: m.dur, pierce: 1e6, color: col, homing: 5, swarm: true,
+        hitLog: new Map(), rehit: m.rehit || 0.5, vis, ghost, owner: pl
+      }, payload(m)));
+    }
+    const mine = G.Projectiles.all().filter(p => p.swarm && p.owner === pl);
+    for (const p of mine.slice(0, Math.max(0, mine.length - n * 3))) G.Projectiles.remove(p);
+  }
+
+  /** Throw (Seismic Toss): grabs the nearest foe and hurls it into the others. Bosses (and enemies a teammate's
+   *  computer runs) are too heavy to throw: they take a big hit and are knocked back instead. */
+  function toss(pl, m) {
+    const e = pl.target && !pl.target.dead && G.U.dist(pl.x, pl.y, pl.target.x, pl.target.y) <= reach(m) ? pl.target
+            : G.Projectiles.nearest(G.EnemyMgr.all(), pl.x, pl.y, reach(m));
+    if (!e) return;
+    const col = G.U.TYPE_COLOR[m.type];
+    G.FX.slash(e.x, e.y - G.LIFT * 0.5, pl.aim, 30, 2.4, col, G.VFX.forMove(m));
+    if (ghost) return;
+    if (e.boss || e.remote) {
+      hit(pl, e, m.dmg * pl.atk * 1.3, col, Math.cos(pl.aim), Math.sin(pl.aim), 320, m);
+      fields.push({ kind: 'land', owner: pl, ghost, m, col, x: e.x + Math.cos(pl.aim) * 60, y: e.y + Math.sin(pl.aim) * 50, t: 0, life: 0.3, dmg: m.dmg * pl.atk * 0.6 });
+      return;
+    }
+    e.freeze(0.6);
+    fields.push({ kind: 'throw', owner: pl, ghost, m, col, e, vx: Math.cos(pl.aim) * m.speed, vy: Math.sin(pl.aim) * m.speed,
+                  t: 0, dur: 0.45, dmg: m.dmg * pl.atk, done: new Set([e.id]) });   // (dur, not life: life would remove it before it lands)
+    G.Camera.kick(0.15);
+  }
+
+  /** Roll (Rollout): while it's your active move you're a boulder; the longer you keep moving, the bigger and
+   *  harder it hits (momentum drops when you stop). */
+  function roll(pl, m, dt) {
+    const max = m.max || 1.5;
+    pl.rollMom = G.U.clamp((pl.rollMom || 0) + (pl.walking ? (m.rate || 0.4) * dt : -dt * 0.8), 0, max);
+    m.t -= dt;
+    if (m.t > 0) return;
+    m.t = Math.max(0.05, m.cd * pl.cdMul);
+    const k = 1 + pl.rollMom, r = m.radius * (1 + pl.rollMom * 0.5) * (pl.areaMul || 1);
+    G.RunLog.cast(pl, m.id);
+    if (G.Coop.active) G.Coop.cast(pl, m);
+    rollFx(pl, m, r);
+    for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, r)) hit(pl, e, m.dmg * pl.atk * k, G.U.TYPE_COLOR[m.type], e.x - pl.x, e.y - pl.y, 60 + 60 * pl.rollMom, m);
+    for (const p of G.World.propsInCircle(pl.x, pl.y, r)) G.World.damageProp(p, m.dmg * pl.atk * k, G.U.TYPE_COLOR[m.type]);
+  }
+  function rollFx(pl, m, r) {
+    r = r || m.radius * (1 + (pl.rollMom || 0) * 0.5);
+    G.FX.sp('rock', 'rock', pl.x, pl.y - pl.bodyH * 0.4, { life: 0.3, scale: 1 + (pl.rollMom || 0) * 0.6, spin: 9 });
+    if (Math.random() < 0.5) G.FX.burst(pl.x, pl.y, '#aa7c3c', 3, 60);
+    if ((pl.rollMom || 0) > 0.6) G.FX.ring(pl.x, pl.y, r * 0.6, r, G.U.TYPE_COLOR[m.type], 0.2, 2);
+  }
+
+  /** Counter (Sucker Punch): waits for a foe to come close, then strikes it first. */
+  function counter(pl, m, dt) {
+    m.t -= dt;
+    if (m.t > 0) return;
+    const e = G.Projectiles.nearest(G.EnemyMgr.all(), pl.x, pl.y, m.radius * (pl.areaMul || 1));
+    if (!e) { m.t = 0.05; return; }
+    m.t = Math.max(0.05, m.cd * pl.cdMul);
+    pl.aim = Math.atan2(e.y - pl.y, e.x - pl.x);
+    pl.cast(m);
+    G.RunLog.cast(pl, m.id);
+    if (G.Coop.active) G.Coop.cast(pl, m);
+    m.castAt = performance.now();
+    counterFx(pl, m, e);
+    hit(pl, e, m.dmg * pl.atk, G.U.TYPE_COLOR[m.type], e.x - pl.x, e.y - pl.y, m.knock || 0, m);
+  }
+  function counterFx(pl, m, e) {
+    const x = e ? e.x : pl.x + Math.cos(pl.aim) * 40, y = e ? e.y : pl.y + Math.sin(pl.aim) * 40;
+    G.FX.slash(x, y - G.LIFT * 0.5, pl.aim, 30, 2, G.U.TYPE_COLOR[m.type], G.VFX.forMove(m));
+    G.FX.sp('streak', 'dark', (pl.x + x) / 2, (pl.y + y) / 2 - G.LIFT * 0.5, { life: 0.15, angle: pl.aim });
+  }
+
+  /** The new styles' fields, every frame (from updateFields). */
+  function updateNewField(f, dt, i) {
+    if (f.kind === 'charge') {
+      const o = f.owner;
+      if (Math.random() < dt * 30) {
+        const a = Math.random() * 6.2832, r = G.U.rand(30, 60);
+        G.FX.sp('star', f.vis.pal, o.x + Math.cos(a) * r, o.y + Math.sin(a) * r * 0.8 - G.LIFT, { vx: -Math.cos(a) * r * 2.5, vy: -Math.sin(a) * r * 2, life: 0.35 });
+      }
+      if (f.t >= f.m.delay) {
+        const prev = ghost; ghost = f.ghost;
+        try { if (!o.dead) { beam(o, f.m); if (!ghost) G.Camera.kick(0.3); } } finally { ghost = prev; }
+        fields.splice(i, 1);
+      }
+      return;
+    }
+    if (f.kind === 'cage') {
+      f.tick -= dt;
+      if (f.tick <= 0) { f.tick = 0.5; blast(f, f.r); }
+      if (f.ghost) return;
+      // Nobody gets out: the ones inside that reach the edge are pushed back (and Thunder Cage shocks them).
+      // Foes walking in from outside aren't shocked or pulled: they're caught once they're inside.
+      for (const e of G.EnemyMgr.queryCircle(f.x, f.y, f.r + 18)) {
+        const dx = e.x - f.x, dy = e.y - f.y, d = Math.hypot(dx, dy) || 1;
+        if (d < f.r - 8) { f.inside.add(e.id); if (f.m.slow) e.applySlow(f.m.slow, 0.6); continue; }
+        if (!f.inside.has(e.id)) continue;
+        if (!e.remote && !e.boss) { e.x = f.x + dx / d * (f.r - 8); e.y = f.y + dy / d * (f.r - 8); e.kx = 0; e.ky = 0; }
+        if (f.m.edge && (f.zap.get(e.id) || 0) <= f.t) {
+          f.zap.set(e.id, f.t + 0.6);
+          hit(f.owner, e, f.dmg * f.m.edge, f.col, -dx, -dy, 0, f.m);
+          G.FX.spark(e.x, e.y - e.bodyH * 0.5, f.col, -dx / d, -dy / d, 4);
+        }
+      }
+      return;
+    }
+    if (f.kind === 'burrow') {
+      if (Math.random() < dt * 20) G.FX.px(f.x + G.U.rand(-20, 20), f.y - 2, '#aa7c3c', { vy: -30, life: 0.3 });
+      if (f.t >= f.m.dur) {
+        const o = f.owner;
+        G.FX.ring(f.x, f.y, 6, f.m.radius, f.col, 0.4, 5);
+        G.FX.burst(f.x, f.y - 6, '#aa7c3c', 22, 200);
+        if (!f.ghost) {
+          if (G.World.isFree(f.x, f.y, o.r * 0.8, true)) { o.x = f.x; o.y = f.y; }
+          o.burrowT = 0;
+          G.Camera.kick(0.35);
+          if (G.Camera.sees(f.x, f.y, 40)) G.Audio.sfx('break');
+          f.dmg = f.m.dmg * o.atk;
+          blast(f, f.m.radius);
+        }
+        fields.splice(i, 1);
+      }
+      return;
+    }
+    if (f.kind === 'throw') {
+      const e = f.e;
+      if (e.dead) { fields.splice(i, 1); return; }
+      const nx = e.x + f.vx * dt, ny = e.y + f.vy * dt;
+      const wallHit = G.World.isWall(nx, ny);
+      if (!wallHit) { e.x = nx; e.y = ny; }
+      e.freezeT = Math.max(e.freezeT || 0, 0.1);
+      for (const o of G.EnemyMgr.queryCircle(e.x, e.y, e.r + 20)) {
+        if (f.done.has(o.id) || G.U.dist2(o.x, o.y, e.x, e.y) > (o.r + e.r) ** 2) continue;
+        f.done.add(o.id);
+        hit(f.owner, o, f.dmg * 0.7, f.col, f.vx, f.vy, 140, f.m);
+      }
+      if (wallHit || f.t >= f.dur) {
+        // Landing: the thrown foe and everything around it.
+        G.FX.ring(e.x, e.y, 6, f.m.splash, f.col, 0.35, 4);
+        G.FX.burst(e.x, e.y - 6, '#e8dcb8', 14, 160);
+        if (G.Camera.sees(e.x, e.y, 40)) { G.Audio.sfx('break'); G.Camera.kick(0.2); }
+        hit(f.owner, e, f.dmg, f.col, f.vx, f.vy, 60, f.m);
+        f.x = e.x; f.y = e.y; f.dmg *= 0.5;
+        for (const o of G.EnemyMgr.queryCircle(e.x, e.y, f.m.splash)) if (o !== e) hit(f.owner, o, f.dmg, f.col, o.x - e.x, o.y - e.y, 100, f.m);
+        fields.splice(i, 1);
+      }
+      return;
+    }
+    if (f.kind === 'land') {
+      if (f.t >= 0.25) {
+        G.FX.ring(f.x, f.y, 6, f.m.splash, f.col, 0.35, 4);
+        blast(f, f.m.splash);
+        fields.splice(i, 1);
+      }
+    }
+  }
+
+  /** Ground layer of the new styles' fields. */
+  function drawNewGround(ctx, f, now) {
+    if (f.kind === 'cage') {
+      const a = Math.min(1, (f.life - f.t) * 2, f.t * 6);
+      ctx.globalAlpha = 0.18 * a; ctx.fillStyle = f.col;
+      ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.62, 0, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 0.8 * a; ctx.strokeStyle = f.col; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(f.x, f.y, f.r, f.r * 0.62, 0, 0, 6.2832); ctx.stroke();
+      // Bars all around (flickering for Thunder Cage, swirling sand for Sand Tomb).
+      const n = 14;
+      for (let k = 0; k < n; k++) {
+        const ang = k / n * 6.2832 + (f.m.edge ? 0 : now * 0.8);
+        const x = f.x + Math.cos(ang) * f.r, y = f.y + Math.sin(ang) * f.r * 0.62;
+        ctx.globalAlpha = a * (f.m.edge ? 0.6 + 0.4 * Math.sin(now * 20 + k) : 0.7);
+        ctx.fillStyle = f.col; ctx.fillRect(Math.round(x - 1), Math.round(y - 16), 2, 16);
+      }
+    } else if (f.kind === 'burrow') {
+      ctx.globalAlpha = 0.45; ctx.fillStyle = '#6e4c1e';
+      const k = Math.min(1, f.t / f.m.dur);
+      ctx.beginPath(); ctx.ellipse(f.x, f.y, 10 + k * 14, (10 + k * 14) * 0.5, 0, 0, 6.2832); ctx.fill();
+    }
+  }
+
+  /** Air layer: the Reflect barrier. */
+  function drawNewAir(ctx, f, now) {
+    if (f.kind !== 'wall') return;
+    const a = Math.min(1, (f.life - f.t) * 2, f.t * 8);
+    const ca = Math.cos(f.a), sa = Math.sin(f.a), hw = f.w / 2;
+    const x0 = f.x - sa * hw, y0 = f.y + ca * hw, x1 = f.x + sa * hw, y1 = f.y - ca * hw;
+    const col = f.reflect ? '#ffb3e6' : f.col, H = 24, pulse = 0.75 + Math.sin(now * 10) * 0.2;
+    ctx.save();
+    ctx.lineCap = 'round';
+    // A glowing pane: a thick translucent band standing up from the ground, bright edges, a shimmer running along it.
+    for (let k = 0; k <= H; k += 6) {
+      ctx.globalAlpha = 0.22 * a; ctx.strokeStyle = col; ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(x0, y0 - k); ctx.lineTo(x1, y1 - k); ctx.stroke();
+    }
+    ctx.globalAlpha = pulse * a; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x0, y0 - H); ctx.lineTo(x1, y1 - H); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+    ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 - H); ctx.moveTo(x1, y1); ctx.lineTo(x1, y1 - H); ctx.stroke();
+    const sh = (now * 0.8) % 1;
+    ctx.globalAlpha = 0.6 * a; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x0 + (x1 - x0) * sh, y0 + (y1 - y0) * sh); ctx.lineTo(x0 + (x1 - x0) * sh, y0 + (y1 - y0) * sh - H); ctx.stroke();
+    ctx.restore();
+  }
+
   /** Damage from a field (mine, meteor, puddle) to everything in its circle. */
   function blast(f, r, k = 1) {
     if (f.ghost) return;
@@ -539,6 +867,7 @@ G.Combat = (() => {
     for (const p of G.World.propsInCircle(f.x, f.y, r)) G.World.damageProp(p, f.dmg * k, f.col);
   }
 
+  const NEW_FIELDS = ['charge', 'cage', 'burrow', 'throw', 'land'];
   function updateFields(dt) {
     decoyContacts(dt);
     for (let i = fields.length - 1; i >= 0; i--) {
@@ -580,6 +909,8 @@ G.Combat = (() => {
           }
         }
         if (f.kick > 0) f.kick -= dt;
+      } else if (NEW_FIELDS.includes(f.kind)) {
+        updateNewField(f, dt, i);
       } else if (f.kind === 'patch') {
         f.tick -= dt;
         if (f.tick <= 0) { f.tick = 0.5; blast(f, f.r); }
@@ -623,7 +954,7 @@ G.Combat = (() => {
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = '#000';
         ctx.beginPath(); ctx.ellipse(f.x, f.y, 11, 4.5, 0, 0, 6.2832); ctx.fill();
-      }
+      } else drawNewGround(ctx, f, now);
       ctx.restore();
     }
   }
@@ -681,6 +1012,7 @@ G.Combat = (() => {
     const now = performance.now() / 1000;
     for (const f of fields) {
       if (!G.Camera.sees(f.x, f.y, 200)) continue;
+      if (f.kind === 'wall') { drawNewAir(ctx, f, now); continue; }
       if (f.kind === 'meteor' && f.t > 0) {
         const k = G.U.clamp(f.t / f.fall, 0, 1);
         G.VFX.draw(ctx, f.vis.proj, f.vis.pal, f.x + (1 - k) * 40, f.y - (1 - k) * 170 - 6,
@@ -732,8 +1064,10 @@ G.Combat = (() => {
       });
     }
     const live = G.Projectiles.all().filter(mine);
+    // Gyro Ball (spin): up to ×(1 + still) damage standing still, ×1 at a run (stillK is smoothed in Player.update).
+    const spinK = m.kind === 'spin' ? 1 + (m.still || 1) * (pl.stillK || 0) : 1;
     live.forEach((p, i) => {
-      p.dmg = m.dmg * pl.atk;
+      p.dmg = m.dmg * pl.atk * spinK;
       p.orad = m.radius * (pl.areaMul || 1);
       p.ospeed = m.speed;
       p.r = m.size;
@@ -763,13 +1097,19 @@ G.Combat = (() => {
   /** Orbs of a teammate who has an orbit move active (visual only). */
   function ghostOrbit(pl, dt, now) {
     const m = pl.activeMove();
-    if (m && m.kind === 'orbit' && !pl.dead) orbit(pl, m, dt, now, true);
+    if (m && (m.kind === 'orbit' || m.kind === 'spin') && !pl.dead) orbit(pl, m, dt, now, true);
     else if (G.Projectiles.all().some(p => p.orb && p.owner === pl)) G.Projectiles.clearOrbs(pl);
   }
 
   // Critical hit (Upgrades → Critical Hit): x1.5 damage, a big orange number.
   const CRIT_MUL = 1.5;
-  const isCrit = pl => { const c = pl.critChance + (pl.hasItem('scopelens') ? 0.2 : 0); return !ghost && c > 0 && Math.random() < c; };
+  // (fx.crit: moves with a high critical-hit chance, like Cross Poison or Shadow Claw, add to it.)
+  const isCrit = (pl, fx) => {
+    if (ghost) return false;
+    if (fx && fx.alwaysCrit) return true;                // Wicked Blow
+    const c = pl.critChance + (pl.hasItem('scopelens') ? 0.2 : 0) + (fx && fx.crit || 0);
+    return c > 0 && Math.random() < c;
+  };
 
   /** Items that act on hitting: Flame/Toxic Orb, King's Rock, Binding Band. */
   function itemHit(pl, e) {
@@ -783,7 +1123,7 @@ G.Combat = (() => {
 
   function hit(pl, e, dmg, col, dx, dy, knock, m) {
     const k = typeK(m.type, e);
-    const crit = isCrit(pl);
+    const crit = isCrit(pl, m.fx);
     dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
     const lethal = e.hp <= dmg;
     e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(m.type, e.types)));
@@ -854,6 +1194,7 @@ G.Combat = (() => {
 
       // --- enemy shots: walls and solid objects give cover ---
       if (!p.friendly) {
+        if (wallBlocks(p)) { projectiles.splice(i, 1); continue; }
         if (G.World.projectileBlock(p.x, p.y, p.r)) {
           G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 70);
           projectiles.splice(i, 1);
@@ -870,7 +1211,8 @@ G.Combat = (() => {
       // --- player shots ---
       // A teammate's orbs: visual only.
       if (p.orb && p.ghost) continue;
-      if (!p.orb) {
+      const rehits = p.orb || p.swarm;                  // orbs and swarm bugs: hit the same enemy again after `rehit` s
+      if (!rehits) {
         const block = G.World.projectileBlock(p.x, p.y, p.r);
         if (block === 'wall' || (block && !block.destructible)) {
           G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);
@@ -882,7 +1224,7 @@ G.Combat = (() => {
       // Scenery objects (rocks, chests, grass).
       let consumed = false;
       for (const prop of G.World.propsInCircle(p.x, p.y, p.r)) {
-        if (p.orb) {
+        if (rehits) {
           const k = 'p' + prop.id, last = p.hitLog.get(k) || -99;
           if (now - last < p.rehit) continue;
           p.hitLog.set(k, now);
@@ -912,7 +1254,7 @@ G.Combat = (() => {
       const half = Math.hypot(p.x - sx, p.y - sy) / 2;
       for (const e of G.EnemyMgr.queryCircle((sx + p.x) / 2, (sy + p.y) / 2, half + p.r)) {
         if (segDist2(sx, sy, p.x, p.y, e.x, e.y) > (p.r + e.r) * (p.r + e.r)) continue;
-        if (p.orb) {
+        if (rehits) {
           const last = p.hitLog.get(e.id) || -99;
           if (now - last < p.rehit) continue;
           p.hitLog.set(e.id, now);
@@ -926,13 +1268,15 @@ G.Combat = (() => {
         // A teammate's ghost shot: it collides and shows, but does no damage.
         if (p.ghost) {
           G.FX.sp('impact', p.vis ? p.vis.pal : 'normal', e.x, e.y - e.bodyH * 0.5, { life: 0.12, scale: 1 });
+          if (p.bounce > 0 && bounceFrom(p, e)) break;
+          if (rehits) continue;
           if (p.pierce > 0) { p.pierce--; continue; }
           G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);
           projectiles.splice(i, 1);
           break;
         }
 
-        const crit = isCrit(pl);
+        const crit = isCrit(pl, p.fx);
         const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1) * execMul(p.fx, e);
         const lethal = e.hp <= p.dmg * k;
         e.hurt(p.dmg * k, p.color, p.vx || (e.x - pl.x), p.vy || (e.y - pl.y), p.knock,
@@ -948,7 +1292,9 @@ G.Combat = (() => {
         if (p.fx) hitFx(pl, e, p.dmg * k, p.fx, lethal);
         itemHit(pl, e);
 
-        if (!p.orb) {
+        // Ricochet: off to the next enemy instead of stopping.
+        if (p.bounce > 0 && bounceFrom(p, e)) break;
+        if (!rehits) {
           if (p.pierce > 0) { p.pierce--; }
           else {
             G.FX.burst(p.x, p.y - G.LIFT, p.color, 5, 80);

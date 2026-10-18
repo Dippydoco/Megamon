@@ -113,6 +113,47 @@
       { t: '+30% range',                  m: { life: 1.30 } },
       { t: '+3 shots and +1 pierce',  m: { count: 3, pierce: 1 } }
     ],
+    // ---- new styles (19-10-2026) ----
+    charge: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
+      { t: 'A wider and longer beam', m: { width: 1.30, radius: 1.15 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    ricochet: [
+      { t: '+1 bounce', m: { bounces: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+2 bounces', m: { bounces: 2 } }
+    ],
+    cage: [
+      { t: '+25% radius', m: { radius: 1.25 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+40% duration', m: { dur: 1.40 } }, { t: '-20% cooldown', m: { cd: 0.80 } }
+    ],
+    wall: [
+      { t: '30% wider', m: { width: 1.30 } }, { t: '+40% duration', m: { dur: 1.40 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '30% wider', m: { width: 1.30 } }
+    ],
+    burrow: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% blast radius', m: { radius: 1.25 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    swarm: [
+      { t: '+1 bug', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: 'Bugs last 40% longer', m: { dur: 1.40 } }, { t: '+2 bugs', m: { count: 2 } }
+    ],
+    roll: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '25% bigger', m: { radius: 1.25 } },
+      { t: 'Builds momentum 40% faster', m: { rate: 1.40 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    throw: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+30% landing blast', m: { splash: 1.30 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    spin: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+20% radius', m: { radius: 1.20 } },
+      { t: 'Spins faster', m: { speed: 1.35 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    counter: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% reach', m: { radius: 1.25 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
     buff: [
       { t: '+1 max stack',         m: { stacks: 1 } },
       { t: '+40% power',                 m: { amount: 1.40 } },
@@ -482,6 +523,169 @@
       ups: [{ t: 'Stuns 0.3 s longer', m: { dur: 1.25 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
             { t: '+25% radius', m: { radius: 1.25 } }, { t: 'Stuns 0.3 s longer', m: { dur: 1.2 } }] },
 
+    // ---------------- Batch 2 (19-10-2026): every type gets physical and special moves ----------------
+    // (Physical / special is stored in `cat` for the future attack / special attack split; it doesn't change damage yet.)
+    { id: 'seed-bomb', name: 'Seed Bomb', type: 'grass', kind: 'meteor', cat: 'physical',
+      desc: 'Hard seeds rain down and burst on nearby foes.',
+      cd: 1.3, dmg: 22, radius: 46, count: 3, knock: 40 },
+
+    { id: 'spark', name: 'Spark', type: 'electric', kind: 'dash', cat: 'physical',
+      desc: 'Charge through foes crackling with electricity; it can stun them.',
+      cd: 0.75, dmg: 18, radius: 115, width: 36, knock: 50, fx: { stun: [0.15, 0.6] } },
+
+    { id: 'thunder-punch', name: 'Thunder Punch', type: 'electric', kind: 'melee', cat: 'physical',
+      desc: 'An electric punch in front of you; it can stun.',
+      cd: 0.55, dmg: 15, radius: 50, arc: 1.4, knock: 80, fx: { stun: [0.12, 0.6] } },
+
+    { id: 'zing-zap', name: 'Zing Zap', type: 'electric', kind: 'trail', cat: 'physical',
+      desc: 'You leave crackling sparks where you run; foes that step on them get shocked and can be stunned.',
+      cd: 0.3, dmg: 8, radius: 26, dur: 2.4, fx: { stun: [0.06, 0.5] } },
+
+    { id: 'zen-headbutt', name: 'Zen Headbutt', type: 'psychic', kind: 'melee', cat: 'physical',
+      desc: 'A headbutt with the force of the mind; it can stun.',
+      cd: 0.6, dmg: 17, radius: 46, arc: 1.2, knock: 120, fx: { stun: [0.15, 0.7] } },
+
+    { id: 'psyshield-bash', name: 'Psyshield Bash', type: 'psychic', kind: 'dash', cat: 'physical',
+      desc: 'Dash in wrapped in psychic energy: you take 30% less damage for a moment after.',
+      cd: 0.8, dmg: 21, radius: 115, width: 40, knock: 60, guard: [0.3, 1.5] },
+
+    { id: 'cross-poison', name: 'Cross Poison', type: 'poison', kind: 'melee', cat: 'physical',
+      desc: 'An X-shaped slash with a high critical-hit chance; it poisons.',
+      cd: 0.5, dmg: 14, radius: 50, arc: 1.6, knock: 50, poison: 1, fx: { crit: 0.2 } },
+
+    { id: 'scorching-sands', name: 'Scorching Sands', type: 'ground', kind: 'cone', cat: 'special',
+      desc: 'A blast of burning sand in front of you that burns.',
+      cd: 0.75, dmg: 7, count: 6, arc: 0.85, speed: 330, life: 0.42, size: 6, pierce: 1, burn: 1 },
+
+    { id: 'drill-peck', name: 'Drill Peck', type: 'flying', kind: 'melee', cat: 'physical',
+      desc: 'A spinning beak strike: a narrow, long-reaching and powerful hit.',
+      cd: 0.55, dmg: 19, radius: 62, arc: 0.7, knock: 40 },
+
+    { id: 'air-slash', name: 'Air Slash', type: 'flying', kind: 'projectile', cat: 'special',
+      desc: 'Blades of air that pierce several foes; they can stun.',
+      cd: 0.6, dmg: 14, speed: 340, count: 1, spread: 0.1, pierce: 2, life: 1.3, size: 7, fx: { stun: [0.1, 0.5] } },
+
+    { id: 'air-cutter', name: 'Air Cutter', type: 'flying', kind: 'cone', cat: 'special',
+      desc: 'A wide fan of razor wind.',
+      cd: 0.7, dmg: 7, count: 7, arc: 1.1, speed: 360, life: 0.4, size: 6, pierce: 0 },
+
+    { id: 'signal-beam', name: 'Signal Beam', type: 'bug', kind: 'beam', cat: 'special',
+      desc: 'A flickering beam of light; it can stun.',
+      cd: 1.1, dmg: 18, radius: 215, width: 32, fx: { stun: [0.15, 0.6] } },
+
+    { id: 'ancient-power', name: 'Ancient Power', type: 'rock', kind: 'nova', cat: 'special',
+      desc: 'A ring of ancient rocks in every direction; sometimes it raises your damage for a while.',
+      cd: 1.2, dmg: 13, count: 8, speed: 230, life: 1.1, size: 8, pierce: 1, surge: [0.2, 0.1, 5, 3] },
+
+    { id: 'sandstorm', name: 'Sandstorm', type: 'rock', kind: 'aura', cat: 'special',
+      desc: 'A sandstorm whirls around you, chipping at everything close.',
+      cd: 0.55, dmg: 8, radius: 78 },
+
+    { id: 'ice-punch', name: 'Ice Punch', type: 'ice', kind: 'melee', cat: 'physical',
+      desc: 'A freezing punch in front of you; it can freeze.',
+      cd: 0.55, dmg: 15, radius: 50, arc: 1.4, knock: 70, fx: { freeze: [0.12, 0.8] } },
+
+    { id: 'icicle-spear', name: 'Icicle Spear', type: 'ice', kind: 'projectile', cat: 'physical',
+      desc: 'A volley of icicles that pierce.',
+      cd: 0.55, dmg: 8, speed: 400, count: 3, spread: 0.14, pierce: 1, life: 1.1, size: 5 },
+
+    { id: 'vacuum-wave', name: 'Vacuum Wave', type: 'fighting', kind: 'projectile', cat: 'special',
+      desc: 'A very fast wave of fighting energy.',
+      cd: 0.42, dmg: 12, speed: 520, count: 1, spread: 0.08, pierce: 1, life: 0.9, size: 7 },
+
+    { id: 'shadow-claw', name: 'Shadow Claw', type: 'ghost', kind: 'melee', cat: 'physical',
+      desc: 'Claws from the shadows with a high critical-hit chance.',
+      cd: 0.5, dmg: 15, radius: 52, arc: 1.6, knock: 50, fx: { crit: 0.25 } },
+
+    { id: 'spirit-shackle', name: 'Spirit Shackle', type: 'ghost', kind: 'projectile', cat: 'physical',
+      desc: 'A ghostly arrow that pins foes, slowing them down.',
+      cd: 0.6, dmg: 15, speed: 330, count: 1, spread: 0.1, pierce: 1, life: 1.6, size: 6, slow: 0.45 },
+
+    { id: 'ominous-wind', name: 'Ominous Wind', type: 'ghost', kind: 'nova', cat: 'special',
+      desc: 'A haunting wind in every direction; foes hit take more damage for a moment.',
+      cd: 1.15, dmg: 11, count: 10, speed: 230, life: 1.1, size: 7, pierce: 0, fx: { vuln: 2 } },
+
+    { id: 'dragon-claw', name: 'Dragon Claw', type: 'dragon', kind: 'melee', cat: 'physical',
+      desc: 'Sharp dragon claws that sweep in front of you.',
+      cd: 0.5, dmg: 16, radius: 52, arc: 1.8, knock: 60 },
+
+    { id: 'dragon-darts', name: 'Dragon Darts', type: 'dragon', kind: 'projectile', cat: 'physical',
+      desc: 'Two homing darts at a time.',
+      cd: 0.55, dmg: 12, speed: 360, count: 2, spread: 0.2, pierce: 0, life: 1.6, size: 6, homing: 2.5 },
+
+    { id: 'breaking-swipe', name: 'Breaking Swipe', type: 'dragon', kind: 'melee', cat: 'physical',
+      desc: 'A tail sweep all around you; foes hit take more damage for a moment.',
+      cd: 0.8, dmg: 14, radius: 54, arc: 6.3, knock: 90, fx: { vuln: 2.5 } },
+
+    { id: 'play-rough', name: 'Play Rough', type: 'fairy', kind: 'melee', cat: 'physical',
+      desc: 'A rough tumble that hits everything in front; foes hit take more damage for a moment.',
+      cd: 0.6, dmg: 16, radius: 52, arc: 1.9, knock: 80, fx: { vuln: 2 } },
+
+    { id: 'spirit-break', name: 'Spirit Break', type: 'fairy', kind: 'dash', cat: 'physical',
+      desc: 'Dash through foes with a burst of fairy power.',
+      cd: 0.75, dmg: 19, radius: 115, width: 38, knock: 60 },
+
+    { id: 'fiery-wrath', name: 'Fiery Wrath', type: 'dark', kind: 'cone', cat: 'special',
+      desc: 'A cone of dark flames in front of you; it can stun.',
+      cd: 0.7, dmg: 7, count: 7, arc: 0.9, speed: 350, life: 0.42, size: 6, pierce: 1, fx: { stun: [0.08, 0.5] } },
+
+    { id: 'disarming-voice', name: 'Disarming Voice', type: 'fairy', kind: 'nova', cat: 'special',
+      desc: 'Charming cries all around you that home in on foes.',
+      cd: 1.05, dmg: 10, count: 9, speed: 240, life: 1.3, size: 7, pierce: 0, homing: 1.2 },
+
+    // ---- Batch 2: moves with the new styles (see the new-styles block in systems/combat.js) ----
+    { id: 'solar-beam', name: 'Solar Beam', type: 'grass', kind: 'charge', cat: 'special',
+      desc: 'Gathers sunlight for a moment, then fires a huge beam where you are aiming.',
+      cd: 2.6, dmg: 70, radius: 480, width: 40, delay: 1.1 },
+
+    { id: 'electro-ball', name: 'Electro Ball', type: 'electric', kind: 'ricochet', cat: 'special',
+      desc: 'A ball of electricity that bounces from foe to foe, stronger with every bounce.',
+      cd: 0.9, dmg: 19, speed: 330, count: 1, size: 8, life: 1.6, bounces: 3, grow: 1.15 },
+
+    { id: 'thunder-cage', name: 'Thunder Cage', type: 'electric', kind: 'cage', cat: 'special',
+      desc: 'Traps a group in an electric cage: everything inside is shocked, and foes trying to get out take a big jolt.',
+      cd: 3.2, dmg: 9, radius: 70, dur: 4, edge: 2.0 },
+
+    { id: 'reflect', name: 'Reflect', type: 'psychic', kind: 'wall', cat: null,
+      desc: 'A barrier in front of you that blocks enemy shots for a few seconds.',
+      cd: 5, dur: 3.5, width: 80, dist: 34 },
+
+    { id: 'dig', name: 'Dig', type: 'ground', kind: 'burrow', cat: 'physical',
+      desc: 'You dig underground (nothing can hit you), then burst up under the biggest group of foes.',
+      cd: 2.2, dmg: 55, radius: 72, range: 260, dur: 0.8, knock: 120 },
+
+    { id: 'sand-tomb', name: 'Sand Tomb', type: 'ground', kind: 'cage', cat: 'special',
+      desc: 'Traps a group in swirling sand that slows them and keeps chipping at them; nobody gets out.',
+      cd: 3, dmg: 8, radius: 70, dur: 4.5, slow: 0.5 },
+
+    { id: 'infestation', name: 'Infestation', type: 'bug', kind: 'swarm', cat: 'special',
+      desc: 'Releases little bugs that chase foes on their own and keep biting.',
+      cd: 3.5, dmg: 6, count: 3, dur: 6, speed: 150, size: 5, rehit: 0.5 },
+
+    { id: 'rollout', name: 'Rollout', type: 'rock', kind: 'roll', cat: 'physical',
+      desc: 'You become a rolling boulder: the longer you keep moving, the bigger and harder you hit.',
+      cd: 0.3, dmg: 10, radius: 34, rate: 0.4, max: 1.5 },
+
+    { id: 'power-gem', name: 'Power Gem', type: 'rock', kind: 'ricochet', cat: 'special',
+      desc: 'A shining gem that bounces between foes.',
+      cd: 0.8, dmg: 18, speed: 340, count: 1, size: 7, life: 1.6, bounces: 4, grow: 1 },
+
+    { id: 'seismic-toss', name: 'Seismic Toss', type: 'fighting', kind: 'throw', cat: 'physical',
+      desc: 'Grabs the nearest foe and hurls it into the others. Bosses are too heavy: they take a big hit instead.',
+      cd: 1.3, dmg: 44, radius: 70, speed: 300, splash: 50 },
+
+    { id: 'gyro-ball', name: 'Gyro Ball', type: 'steel', kind: 'spin', cat: 'physical',
+      desc: 'A steel ball spinning around you that hits harder the slower you move (double standing still).',
+      cd: 0.35, dmg: 16, count: 1, radius: 38, speed: 3.0, size: 10, still: 1 },
+
+    { id: 'mirror-shot', name: 'Mirror Shot', type: 'steel', kind: 'ricochet', cat: 'special',
+      desc: 'A flash of light that bounces between foes and slows them.',
+      cd: 0.85, dmg: 17, speed: 360, count: 1, size: 7, life: 1.5, bounces: 3, grow: 1, slow: 0.3 },
+
+    { id: 'sucker-punch', name: 'Sucker Punch', type: 'dark', kind: 'counter', cat: 'physical',
+      desc: 'Waits for a foe to come close, then strikes it first with a heavy blow.',
+      cd: 0.9, dmg: 34, radius: 66, knock: 90 },
+
     { id: 'draco-meteor', name: 'Draco Meteor', type: 'dragon', kind: 'burst',
       desc: 'Burst · 20 s. A rain of 10 meteors on the enemies around you.',
       cd: 20, dmg: 70, count: 10, radius: 52, knock: 60,
@@ -502,9 +706,27 @@
   // When each move was added (only from 18-10-2026 on): the Codex marks recent ones as "New".
   const ADDED = {
     '2026-10-18': ['absorb', 'acid-spray', 'pin-missile', 'ice-shard', 'frost-breath', 'drain-punch', 'dragon-breath', 'pursuit',
-                   'hyper-beam', 'explosion', 'protect', 'recover', 'thunder-wave', 'draco-meteor']
+                   'hyper-beam', 'explosion', 'protect', 'recover', 'thunder-wave', 'draco-meteor'],
+    '2026-10-19': ['seed-bomb', 'spark', 'thunder-punch', 'zing-zap', 'zen-headbutt', 'psyshield-bash', 'cross-poison',
+                   'scorching-sands', 'drill-peck', 'air-slash', 'air-cutter', 'signal-beam', 'ancient-power', 'sandstorm',
+                   'ice-punch', 'icicle-spear', 'vacuum-wave', 'shadow-claw', 'spirit-shackle', 'ominous-wind', 'dragon-claw',
+                   'dragon-darts', 'breaking-swipe', 'play-rough', 'spirit-break', 'disarming-voice',
+                   'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig', 'sand-tomb', 'infestation', 'rollout',
+                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath']
   };
   for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
+
+  // Physical or special (for the future attack / special attack split; nothing uses it for damage yet).
+  // Older moves follow the same list as the original PokéSurvivor; newer ones set `cat` themselves.
+  // Boosters and non-damaging bursts have none.
+  const PHYSICAL = new Set(['tackle', 'quick-attack', 'vine-whip', 'razor-leaf', 'wing-attack', 'body-slam', 'poison-sting',
+    'bulldoze', 'bug-bite', 'string-shot', 'rock-throw', 'rock-slide', 'karate-chop', 'lick', 'metal-claw', 'bite',
+    'bonemerang', 'psycho-cut', 'spikes', 'toxic-spikes', 'meteor-mash', 'substitute', 'aerial-ace', 'flame-wheel',
+    'pin-missile', 'ice-shard', 'drain-punch', 'pursuit', 'explosion']);
+  for (const m of RAW) {
+    if (m.cat !== undefined) continue;          // (set by the move itself; null = no category, like Reflect)
+    m.cat = m.kind === 'buff' || (m.kind === 'burst' && !m.dmg) ? null : PHYSICAL.has(m.id) ? 'physical' : 'special';
+  }
 
   // Move pool by type. Everyone has the `normal` pool.
   const POOL = {};
@@ -536,8 +758,8 @@
     return s;
   }
 
-  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'boom'];
-  const ADD = ['count', 'pierce', 'stacks', 'hp'];
+  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'boom', 'delay', 'splash'];
+  const ADD = ['count', 'pierce', 'stacks', 'hp', 'bounces'];
 
   function applyMods(s, m) {
     for (const k in m) {
@@ -617,7 +839,28 @@
     'absorb': ['Giga Drain', 'rgn'],          'acid-spray': ['Corrosive Gas', 'cd'],
     'pin-missile': ['Fell Stinger', 'atk'],   'ice-shard': ['Glacial Lance', 'atk'],
     'frost-breath': ['Sheer Cold', 'crit'],   'drain-punch': ['Hammer Arm', 'rgn'],
-    'dragon-breath': ['Dragon Pulse', 'cd'],  'pursuit': ['Kowtow Cleave', 'crit']
+    'dragon-breath': ['Dragon Pulse', 'cd'],  'pursuit': ['Kowtow Cleave', 'crit'],
+    // 19-10-2026 (Batch 2)
+    'seed-bomb': ['Wood Hammer', 'area'],       'spark': ['Wild Charge', 'spd'],
+    'thunder-punch': ['Plasma Fists', 'atk'],   'zing-zap': ['Volt Tackle', 'def'],
+    'zen-headbutt': ['Psyblade', 'atk'],        'psyshield-bash': ['Hyperspace Fury', 'def'],
+    'cross-poison': ['Dire Claw', 'crit'],      'scorching-sands': ["Land's Wrath", 'cd'],
+    'drill-peck': ['Sky Attack', 'atk'],        'air-slash': ['Aeroblast', 'crit'],
+    'air-cutter': ['Bleakwind Storm', 'cd'],    'signal-beam': ['Pollen Puff', 'rgn'],
+    'ancient-power': ['Diamond Storm', 'def'],  'sandstorm': ['Salt Cure', 'area'],
+    'ice-punch': ['Ice Hammer', 'atk'],         'icicle-spear': ['Icicle Crash', 'cd'],
+    'vacuum-wave': ['Secret Sword', 'cd'],      'shadow-claw': ['Spectral Thief', 'crit'],
+    'spirit-shackle': ['Last Respects', 'xp'],  'ominous-wind': ['Astral Barrage', 'area'],
+    'dragon-claw': ['Dragon Hammer', 'atk'],    'dragon-darts': ['Glaive Rush', 'cd'],
+    'breaking-swipe': ['Dual Chop', 'area'],    'play-rough': ['Magical Torque', 'atk'],
+    'spirit-break': ['Light of Ruin', 'spd'],   'disarming-voice': ['Sparkly Swirl', 'cd'],
+    'solar-beam': ['Chloroblast', 'atk'],       'electro-ball': ['Electro Drift', 'spd'],
+    'thunder-cage': ['Rising Voltage', 'area'], 'reflect': ['Mirror Coat', 'def'],
+    'dig': ['Drill Run', 'spd'],                'sand-tomb': ['Sandsear Storm', 'area'],
+    'infestation': ['Attack Order', 'xp'],      'rollout': ['Head Smash', 'hp'],
+    'power-gem': ['Meteor Beam', 'cd'],         'seismic-toss': ['Superpower', 'atk'],
+    'gyro-ball': ['Heavy Slam', 'def'],         'mirror-shot': ['Doom Desire', 'xp'],
+    'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {
@@ -634,12 +877,25 @@
     turret:     { t: '×1.8 damage, +1 at a time and fires faster', m: { dmg: 1.8, count: 1, rate: 0.8 } },
     dash:       { t: '×1.9 damage, more distance and less cooldown', m: { dmg: 1.9, radius: 1.25, cd: 0.8 } },
     trail:      { t: '×1.8 damage, bigger and longer-lasting pools', m: { dmg: 1.8, radius: 1.25, dur: 1.3 } },
-    cone:       { t: '×1.7 damage, +4 shots and +1 pierce', m: { dmg: 1.7, count: 4, pierce: 1 } }
+    cone:       { t: '×1.7 damage, +4 shots and +1 pierce', m: { dmg: 1.7, count: 4, pierce: 1 } },
+    charge:     { t: '×1.8 damage, charges 40% faster and a wider beam', m: { dmg: 1.8, delay: 0.6, width: 1.3 } },
+    ricochet:   { t: '×1.7 damage, +3 bounces and +1 shot', m: { dmg: 1.7, bounces: 3, count: 1 } },
+    cage:       { t: '×1.8 damage, a 25% bigger cage that lasts longer', m: { dmg: 1.8, radius: 1.25, dur: 1.25 } },
+    burrow:     { t: '×1.8 damage, a bigger blast and less cooldown', m: { dmg: 1.8, radius: 1.3, cd: 0.85 } },
+    swarm:      { t: '×1.7 damage and +2 bugs', m: { dmg: 1.7, count: 2 } },
+    roll:       { t: '×1.8 damage, and you can build up much more momentum', m: { dmg: 1.8, max: 2.2 } },
+    throw:      { t: '×1.8 damage and a 40% bigger landing blast', m: { dmg: 1.8, splash: 1.4 } },
+    spin:       { t: '×1.8 damage and +1 ball', m: { dmg: 1.8, count: 1 } },
+    counter:    { t: '×1.7 damage and more reach', m: { dmg: 1.7, radius: 1.2 } }
   };
 
   // Moves whose evolution differs from the generic one of their kind.
   const EVO_OWN = { substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } },
     // Fell Stinger: the projectile evolution, and every kill gives +5% damage for 4 s (up to 5 at once).
+    // Mirror Coat: shots that hit the barrier fly back at enemies, doing double damage.
+    reflect: { t: 'Shots that hit it fly back at enemies, and it is 30% wider and lasts longer', m: { reflect: 1, width: 1.3, dur: 1.2 } },
+    // Wicked Blow: always a critical hit.
+    'sucker-punch': { t: '×1.7 damage, more reach, and every hit is a critical hit', m: { dmg: 1.7, radius: 1.2, fx: { alwaysCrit: 1 } } },
     'pin-missile': { t: '×1.8 damage, +2 needles, +2 pierce, and kills raise your damage for a moment',
                      m: { dmg: 1.8, count: 2, pierce: 2, size: 1.3, spread: 1.1, fx: { fell: 1 } } } };
   const evoMods = m => EVO_OWN[m.id] || EVO_MODS[m.kind];

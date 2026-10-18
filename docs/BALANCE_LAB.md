@@ -21,8 +21,9 @@ tampered, so nothing is saved, nothing reaches the leaderboard and your account 
 2. **Levels**: any of Lv. 1–5, plus **Evolved** (evolved = level 5 + evolution).
 3. **Pokémon**: its attack stat scales every move's damage (default Mew).
 4. **Scenario**:
-   - *Single target*: one tough dummy that walks up to you.
-   - *Boss*: the same, but it can't be frozen, stunned or pushed.
+   - *Single target*: one dummy (3,000 HP) that walks up to you and heals back up whenever it drops below 40%,
+     so it never falls and poison (a share of max HP) reads like it does in a run.
+   - *Boss*: the same with 30,000 HP, and it can't be frozen, stunned or pushed.
    - *Crowd*: 12 enemies with 150 HP that respawn when they die.
    - *Swarm*: 30 enemies with 60 HP that respawn when they die.
 

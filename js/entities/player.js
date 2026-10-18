@@ -43,7 +43,8 @@ G.Player = class Player {
       spd: { n: 0, t: 0, amount: 0 },
       def: { n: 0, t: 0, amount: 0 },
       regen: { n: 0, t: 0, amount: 0 },
-      fell: { n: 0, t: 0, amount: 0 }      // Fell Stinger: kills briefly raise damage
+      fell: { n: 0, t: 0, amount: 0 },     // Fell Stinger: kills briefly raise damage
+      surge: { n: 0, t: 0, amount: 0 }     // Ancient Power: a cast sometimes raises damage
     };
 
     this.level = 1;
@@ -92,14 +93,17 @@ G.Player = class Player {
   cy() { return this.y; }
 
   // ---------------- stats efectivos ----------------
-  get atk() { return this.baseAtk * this.atkMul * (1 + this.buffs.atk.n * this.buffs.atk.amount) * (1 + this.buffs.fell.n * this.buffs.fell.amount); }
+  get atk() {
+    const b = this.buffs;
+    return this.baseAtk * this.atkMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+  }
   get spd() {
     const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
     const w = G.Weather.speedFor(this.mon.types);
     const slow = this.inLiquid && !this.hasItem('heavyboots') ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
     return s * slow * w;
   }
-  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount); }
+  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (this.guardT > 0 ? this.guardAmt || 0 : 0)); }
   get regen() { return this.regenFlat + this.buffs.regen.n * this.buffs.regen.amount; }
 
   // ---------------- moves ----------------
@@ -216,9 +220,13 @@ G.Player = class Player {
   cast(m) {
     const anim = { melee: 'Attack', beam: 'Shoot', projectile: 'Shoot', nova: 'Attack',
                    aura: 'Charge', buff: 'Charge', orbit: 'Charge', boomerang: 'Shoot', chain: 'Shoot',
-                   mine: 'Charge', meteor: 'Charge', turret: 'Charge', dash: 'Attack', trail: 'Walk', cone: 'Shoot' }[m.kind] || 'Attack';
+                   mine: 'Charge', meteor: 'Charge', turret: 'Charge', dash: 'Attack', trail: 'Walk', cone: 'Shoot',
+                   charge: 'Charge', ricochet: 'Shoot', cage: 'Charge', wall: 'Charge', burrow: 'Attack', swarm: 'Charge', roll: 'Walk',
+                   throw: 'Attack', spin: 'Charge', counter: 'Attack', burst: 'Charge' }[m.kind] || 'Attack';
     // The new families sound like the closest of the original ones.
-    const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile' };
+    const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile',
+                  charge: 'beam', ricochet: 'projectile', cage: 'aura', wall: 'buff', burrow: 'melee', swarm: 'buff', roll: 'melee', throw: 'melee',
+                  spin: 'orbit', counter: 'melee', burst: 'nova' };
     // The trail doesn't make a sound for every puddle (it would be a constant buzz).
     if (m.kind !== 'trail') G.Audio.sfx('shot', { kind: SND[m.kind] || m.kind, type: m.type });
     if (m.kind === 'trail') return;
@@ -357,6 +365,10 @@ G.Player = class Player {
     if (this.invuln > 0) this.invuln -= dt;
     if (this.reviveSafe > 0) this.reviveSafe -= dt;
     if (this.protectT > 0) this.protectT -= dt;
+    if (this.guardT > 0) this.guardT -= dt;
+    if (this.burrowT > 0) this.burrowT -= dt;
+    // Gyro Ball: how still you are (1 standing, 0 running), smoothed so it doesn't flicker.
+    this.stillK = (this.stillK || 0) + ((this.walking ? 0 : 1) - (this.stillK || 0)) * Math.min(1, dt * 3);
     if (this.reviveBoostT > 0) this.reviveBoostT -= dt;
     if (this.flash > 0) this.flash -= dt;
     if (this.attackFace > 0) this.attackFace -= dt;
@@ -517,6 +529,14 @@ G.Player = class Player {
       ctx.restore();
     }
 
+    // Dig: underground, only a mound of earth moving about.
+    if (this.burrowT > 0 && !this.dead) {
+      ctx.save(); ctx.globalAlpha = 0.6; ctx.fillStyle = '#6e4c1e';
+      ctx.beginPath(); ctx.ellipse(this.x, this.y, this.r * 1.2, this.r * 0.5, 0, 0, 6.2832); ctx.fill();
+      ctx.restore();
+      if (Math.random() < 0.3) G.FX.px(this.x + G.U.rand(-this.r, this.r), this.y - 2, '#aa7c3c', { vy: -25, life: 0.3 });
+      return;
+    }
     const shielded = !this.dead && (this.protectUntil || 0) > performance.now();
     const alpha = this.invuln > 0 && !this.dead && !shielded ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
     this.anim.draw(ctx, this.x, this.y, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
@@ -536,7 +556,7 @@ G.Player = class Player {
     }
 
     // Buff arcs around the feet.
-    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a', fell: '#c7e04a' };
+    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a', fell: '#c7e04a', surge: '#c6b08a' };
     let i = 0;
     for (const k in this.buffs) {
       const b = this.buffs[k];

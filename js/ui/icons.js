@@ -262,7 +262,17 @@ G.Icons = (() => {
     dash:       ['#.#..', '.#.#.', '..#.#', '.#.#.', '#.#..'],
     trail:      ['#....', '.....', '..#..', '.....', '....#'],
     cone:       ['....#', '..###', '#####', '..###', '....#'],
-    burst:      ['#.#.#', '.###.', '##.##', '.###.', '#.#.#']
+    burst:      ['#.#.#', '.###.', '##.##', '.###.', '#.#.#'],
+    charge:     ['..#..', '.#.#.', '#.#.#', '.#.#.', '..#..'],
+    ricochet:   ['#....', '.#..#', '..##.', '.....', '.....'],
+    cage:       ['#####', '#.#.#', '#.#.#', '#.#.#', '#####'],
+    wall:       ['.#...', '.#...', '.#...', '.#...', '.#...'],
+    burrow:     ['.....', '..#..', '.###.', '#####', '#####'],
+    swarm:      ['#...#', '..#..', '#...#', '..#..', '#...#'],
+    roll:       ['.###.', '#..##', '#.#.#', '##..#', '.###.'],
+    throw:      ['....#', '...#.', '#.#..', '.#...', '#....'],
+    spin:       ['..#..', '.....', '#.#.#', '.....', '..#..'],
+    counter:    ['#...#', '.#.#.', '..#..', '.#.#.', '#...#']
   };
 
   // ---------------- render ----------------
@@ -414,7 +424,9 @@ G.Icons = (() => {
   }
 
   const KIND_NAME = { projectile: 'Projectile', melee: 'Melee', beam: 'Beam', orbit: 'Orbit', nova: 'Nova', aura: 'Aura', buff: 'Buff',
-    boomerang: 'Boomerang', chain: 'Chain', mine: 'Mine', meteor: 'Meteor', turret: 'Turret', dash: 'Dash', trail: 'Trail', cone: 'Cone', burst: 'Burst' };
+    boomerang: 'Boomerang', chain: 'Chain', mine: 'Mine', meteor: 'Meteor', turret: 'Turret', dash: 'Dash', trail: 'Trail', cone: 'Cone', burst: 'Burst',
+    charge: 'Charge', ricochet: 'Ricochet', cage: 'Cage', wall: 'Wall', burrow: 'Burrow', swarm: 'Swarm', roll: 'Roll', throw: 'Throw',
+    spin: 'Spin', counter: 'Counter' };
 
   /** Small "attack kind" tag (symbol + name) for cards. Empty if the player turned it off in Settings. */
   function kindTag(kind) {

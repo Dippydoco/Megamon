@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-18T23:29Z', title: '40 new moves and 10 new ways to attack', new: [
+    'Every type now has more moves to choose from, with a mix of physical and special ones. They all show a NEW tag in the Codex.',
+    'Grass: Seed Bomb, Solar Beam. Electric: Spark, Thunder Punch, Zing Zap, Electro Ball, Thunder Cage. Psychic: Zen Headbutt, Psyshield Bash, Reflect. Poison: Cross Poison. Ground: Dig, Sand Tomb, Scorching Sands. Flying: Drill Peck, Air Slash, Air Cutter. Bug: Infestation, Signal Beam. Rock: Rollout, Power Gem, Ancient Power, Sandstorm. Ice: Ice Punch, Icicle Spear. Fighting: Seismic Toss, Vacuum Wave. Ghost: Shadow Claw, Spirit Shackle, Ominous Wind. Dragon: Dragon Claw, Dragon Darts, Breaking Swipe. Fairy: Play Rough, Spirit Break, Disarming Voice. Steel: Gyro Ball, Mirror Shot. Dark: Sucker Punch, Fiery Wrath.',
+    'New ways to attack: Charge (Solar Beam winds up, then fires a huge beam), Ricochet (bounces from foe to foe), Cage (traps a group inside), Wall (Reflect blocks enemy shots; Mirror Coat sends them back), Burrow (Dig: underground, then up under a group), Swarm (bugs that hunt on their own), Roll (Rollout grows the longer you keep moving), Throw (Seismic Toss hurls a foe into the others), Spin (Gyro Ball hits harder the slower you move) and Counter (Sucker Punch strikes the first foe that comes close).'
+  ], fix: [
+    'Trail moves (Flame Wheel, Toxic, Zing Zap) could stop leaving puddles if you stood still right after coming back from a rift.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T22:53Z', title: 'Frozen after beating Zygarde', fix: [
     'Beating Zygarde could freeze the game for good: its item drops are pulled in all at once, and a new item could replace the "choose an item" screen while it was open. After choosing, the game stayed paused with nothing on screen. Items now wait their turn, and if the game is ever paused for a choice with no screen open, it carries on by itself. In co-op this could freeze the whole group.'
   ] },

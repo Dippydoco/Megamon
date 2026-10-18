@@ -248,6 +248,13 @@ G.VFX = (() => {
       P.set(5, 5, 'w');
       P.outline();
     } },
+    // Infestation: a tiny bug with wings that flutter (2 frames).
+    mite: { w: 9, h: 7, frames: 2, dir: true, gen(P, f) {
+      P.fill((x, y) => { const e = Math.hypot((x - 4.5) / 3, (y - 3.5) / 2); return e <= 1 ? (x > 5 ? 'd' : 'm') : null; });
+      P.set(7, 3, 'd'); P.set(8, 2, 'o'); P.set(8, 4, 'o');
+      if (f) { P.set(3, 0, 'w'); P.set(4, 0, 'w'); P.set(3, 6, 'w'); P.set(4, 6, 'w'); } else { P.set(2, 1, 'l'); P.set(2, 5, 'l'); }
+      P.outline();
+    } },
     // Absorb: a seed with a light stripe and a little sprout at the back.
     seed: { w: 11, h: 7, dir: true, gen(P) {
       P.fill((x, y) => { const e = Math.hypot((x - 6) / 4.4, (y - 3) / 2.6); return e <= 1 ? (y < 3 ? 'l' : 'm') : null; });
@@ -410,7 +417,48 @@ G.VFX = (() => {
     'dragon-breath': { proj: 'fire', trail: 'ember' },
     'pursuit':       { proj: 'crescent', trail: 'wisp' },
     'hyper-beam':    { beam: 'ball', pal: 'aura', life: 0.6 },      // (life: the beam stays on screen longer)
-    'draco-meteor':  { proj: 'rock', trail: 'ember' }
+    'draco-meteor':  { proj: 'rock', trail: 'ember' },
+    // 19-10-2026 (Batch 2)
+    'seed-bomb':      { proj: 'seed', trail: 'dirt' },
+    'spark':          { proj: 'bolt' },
+    'thunder-punch':  { melee: 'impact' },
+    'zing-zap':       { aura: 'bolt' },
+    'zen-headbutt':   { melee: 'impact' },
+    'psyshield-bash': { proj: 'ring' },
+    'cross-poison':   { melee: 'claw' },
+    'scorching-sands': { proj: 'blob', trail: 'ember' },
+    'drill-peck':     { melee: 'feather' },
+    'air-slash':      { proj: 'crescent' },
+    'air-cutter':     { proj: 'wind' },
+    'signal-beam':    { beam: 'star' },
+    'ancient-power':  { proj: 'rock', trail: 'dirt' },
+    'sandstorm':      { aura: 'rock' },
+    'ice-punch':      { melee: 'impact' },
+    'icicle-spear':   { proj: 'shard', trail: 'frost' },
+    'vacuum-wave':    { proj: 'ring' },
+    'shadow-claw':    { melee: 'claw' },
+    'spirit-shackle': { proj: 'needle', trail: 'wisp' },
+    'ominous-wind':   { proj: 'wind' },
+    'dragon-claw':    { melee: 'claw' },
+    'dragon-darts':   { proj: 'shard', trail: 'ember' },
+    'breaking-swipe': { melee: 'impact' },
+    'play-rough':     { melee: 'impact' },
+    'spirit-break':   { proj: 'star' },
+    'disarming-voice': { proj: 'heart' },
+    'solar-beam':     { beam: 'star', life: 0.45 },
+    'electro-ball':   { proj: 'ball', trail: 'spark' },
+    'thunder-cage':   { aura: 'bolt' },
+    'reflect':        {},
+    'dig':            { aura: 'rock' },
+    'sand-tomb':      { aura: 'rock' },
+    'infestation':    { proj: 'mite' },
+    'rollout':        { proj: 'rock' },
+    'power-gem':      { proj: 'shard', trail: 'spark' },
+    'seismic-toss':   { melee: 'impact' },
+    'gyro-ball':      { proj: 'ball' },
+    'mirror-shot':    { proj: 'shard', trail: 'spark' },
+    'sucker-punch':   { melee: 'impact' },
+    'fiery-wrath':    { proj: 'fire', pal: 'dark', trail: 'wisp' }
   };
 
   const TYPE_SHAPE = {

@@ -34,7 +34,14 @@ G.RunLog = (() => {
     'bite', 'dark-pulse', 'night-shade', 'bonemerang', 'psycho-cut', 'spikes', 'toxic-spikes', 'hail', 'meteor-mash',
     'will-o-wisp', 'substitute', 'aerial-ace', 'flame-wheel', 'bubble-beam', 'hex', 'absorb', 'acid-spray',
     'pin-missile', 'ice-shard', 'frost-breath', 'drain-punch', 'dragon-breath', 'pursuit', 'hyper-beam', 'explosion',
-    'protect', 'recover', 'thunder-wave', 'draco-meteor'
+    'protect', 'recover', 'thunder-wave', 'draco-meteor',
+    // 19-10-2026 (Batch 2)
+    'seed-bomb', 'spark', 'thunder-punch', 'zing-zap', 'zen-headbutt', 'psyshield-bash', 'cross-poison', 'scorching-sands',
+    'drill-peck', 'air-slash', 'air-cutter', 'signal-beam', 'ancient-power', 'sandstorm', 'ice-punch', 'icicle-spear',
+    'vacuum-wave', 'shadow-claw', 'spirit-shackle', 'ominous-wind', 'dragon-claw', 'dragon-darts', 'breaking-swipe',
+    'play-rough', 'spirit-break', 'disarming-voice', 'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig',
+    'sand-tomb', 'infestation', 'rollout', 'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch',
+    'fiery-wrath'
   ];
   const IDX = new Map(CODES.map((id, i) => [id, i]));
   const code = id => (IDX.has(id) ? IDX.get(id).toString(36) : id);
