@@ -1,31 +1,31 @@
 rules_version = '2';
 
-// Reglas de seguridad de PokéSurvivor.
-//   saves/{uid}            partida: sólo su dueño
-//   names/{apodo}          reserva de apodos únicos (en minúsculas)
-//   profiles/{uid}         apodo público de cada jugador
-//   friendships/{a_b}      solicitudes y amistades entre dos jugadores
-//   runs/{uid}             cuándo empezó tu última partida (anti-trampas del ranking)
-//   lb/{tabla}/e/{id}      ranking de tiempo aguantado
-//   reports/{tabla__id__uid}  reportes de marcas sospechosas (sólo los lee el admin)
-//   lbs/{tabla}            resumen con el top 50 de cada tabla
-//   pres/{uid}             en línea (aproximado) · inv/{para_de} invitaciones
-//   chats/{a_b}            chat privado entre amigos (últimos 25 mensajes)
-// Todo lo demás está cerrado.
+// PokéSurvivor security rules.
+//   saves/{uid}            save: owner only
+//   names/{nickname}       reservation of unique nicknames (lowercase)
+//   profiles/{uid}         each player's public nickname
+//   friendships/{a_b}      requests and friendships between two players
+//   runs/{uid}             when your last run started (leaderboard anti-cheat)
+//   lb/{table}/e/{id}      time-survived leaderboard
+//   reports/{table__id__uid}  reports of suspicious records (only the admin reads them)
+//   lbs/{table}            summary with the top 50 of each table
+//   pres/{uid}             online (approximate) · inv/{to_from} invitations
+//   chats/{a_b}            private chat between friends (last 25 messages)
+// Everything else is closed.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function signedIn() { return request.auth != null; }
     function me() { return request.auth.uid; }
-    // Moderación (pantalla oculta del juego, js/ui/mod-ui.js): sólo esta cuenta.
+    // Moderation (hidden screen in the game, js/ui/mod-ui.js): this account only.
     function admin() { return signedIn() && me() in ['Hn5Mdk51FGN9Rkj1BDMVcOvF1N53']; }
 
-    // ---------- partida guardada ----------
-    // Sólo su dueño la lee y la escribe. Ya no se marca a nadie solo (14-10-2026:
-    // los márgenes contra partidas imposibles dejaban fuera del ranking a gente
-    // legal). Lo único que deja a alguien sin ranking es que el admin lo banee
-    // (ban = true; el campo viejo "sus" ya no cuenta para nada). El jugador no
-    // puede quitarse el baneo: si está, sus guardados tienen que llevarlo.
+    // ---------- saved game ----------
+    // Only its owner reads and writes it. Nobody is flagged automatically any more (14-10-2026:
+    // the margins against impossible runs kept legitimate players off the
+    // leaderboard). The only thing that removes someone from the leaderboard is an admin ban
+    // (ban = true; the old "sus" field no longer counts for anything). The player can't
+    // remove the ban themselves: if it is set, their saves must keep it.
     match /saves/{uid} {
       allow read, delete: if signedIn() && me() == uid;
       allow read: if admin();
@@ -34,7 +34,7 @@ service cloud.firestore {
         && request.resource.data.get('ban', false) == false;
       allow update: if signedIn() && me() == uid && validSaveDoc() && saneSave(request.resource.data.save)
         && request.resource.data.get('ban', false) == resource.data.get('ban', false);
-      // El admin sólo puede banear o desbanear (y quitar la marca vieja).
+      // The admin can only ban or unban (and remove the old flag).
       allow update: if admin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ban', 'sus'])
         && request.resource.data.get('ban', false) is bool;
@@ -48,7 +48,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
     }
     function tk(s, k) { return s.get('tickets', {}).get(k, 0); }
-    // Sólo que los números tengan sentido (el juego ya los limpia al cargar).
+    // Just that the numbers make sense (the game already cleans them on load).
     function saneSave(s) {
       return s.get('coins', 0) is number && s.get('coins', 0) >= 0
         && tk(s, 't1') is number && tk(s, 't1') >= 0
@@ -67,7 +67,7 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == me();
     }
 
-    // Perfil público: apodo, 3 favoritos, título, mejores marcas y medallas.
+    // Public profile: nickname, 3 favourites, title, best records and medals.
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn()
@@ -87,7 +87,7 @@ service cloud.firestore {
     }
 
     // ---------- amigos ----------
-    // Un documento por pareja, con id "uidMenor_uidMayor".
+    // One document per pair, with id "lowerUid_higherUid".
 
     match /friendships/{pid} {
       allow read: if signedIn() && (resource == null || me() in resource.data.users);
@@ -103,7 +103,7 @@ service cloud.firestore {
         && pid == request.resource.data.users[0] + '_' + request.resource.data.users[1]
         && request.resource.data.names is map
         && request.resource.data.at == request.time;
-      // Sólo quien la recibe puede aceptarla.
+      // Only the recipient can accept it.
       allow update: if signedIn()
         && resource.data.to == me()
         && resource.data.status == 'pending'
@@ -113,8 +113,8 @@ service cloud.firestore {
     }
 
     // ---------- chat privado ----------
-    // Un documento por pareja de amigos (mismo id que la amistad) con sus últimos 25
-    // mensajes y hasta dónde ha leído cada uno. Sólo entre amigos confirmados.
+    // One document per pair of friends (same id as the friendship) with their last 25
+    // messages and how far each one has read. Only between confirmed friends.
     function chatOk(pid, d) {
       return d.keys().hasOnly(['users', 'msgs', 'seen'])
         && d.users is list && d.users.size() == 2
@@ -125,7 +125,7 @@ service cloud.firestore {
         && d.seen is map
         && get(/databases/$(database)/documents/friendships/$(pid)).data.status == 'ok';
     }
-    // El último mensaje es tuyo y razonable (no se pueden poner mensajes con tu nombre en el de otro).
+    // The last message is yours and reasonable (you can't put messages under your name in someone else's).
     function chatLastOk(d) {
       return d.msgs.size() == 0
         || (d.msgs[d.msgs.size() - 1].f == me()
@@ -143,8 +143,8 @@ service cloud.firestore {
     }
 
     // ---------- historial de partidas ----------
-    // Copia de las últimas partidas de cada jugador para que los demás la vean desde su perfil.
-    // Sólo su dueño la escribe; cualquiera con sesión la lee.
+    // Copy of each player's latest runs so others can see them from their profile.
+    // Only its owner writes it; anyone signed in reads it.
     match /histories/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && me() == uid
@@ -156,7 +156,7 @@ service cloud.firestore {
 
     // ---------- ranking ----------
 
-    // Al empezar cada partida (en grupo, el anfitrión) el servidor apunta la hora.
+    // When each run starts (in a group, the host) the server records the time.
     match /runs/{uid} {
       allow read, delete: if signedIn() && me() == uid;
       allow create, update: if signedIn() && me() == uid
@@ -164,13 +164,13 @@ service cloud.firestore {
         && request.resource.data.startedAt == request.time;
     }
 
-    // Una entrada sólo se puede mejorar, nunca empeorar. Anti-trampas:
-    //   - no puede durar más que el tiempo real desde que empezó tu partida
-    //     (runs/{uid}), con 30 s de margen; ni más de 1 h (la Sentencia de
-    //     Arceus acaba las partidas hacia el minuto 31-32; 1 h por si alguien
-    //     muy bueno aguanta mucho más)
-    //   - nivel y derrotados con margen de sobra (un grupo de 4 muy bueno)
-    //   - la cuenta no puede estar baneada por el admin (saves/{uid}.ban)
+    // An entry can only improve, never get worse. Anti-cheat:
+    //   - it can't last longer than the real time since your run started
+    //     (runs/{uid}), with a 30 s margin; nor more than 1 h (Arceus's
+    //     Judgment ends runs around minute 31-32; 1 h in case someone
+    //     very good survives much longer)
+    //   - level and defeated count with plenty of margin (a very good group of 4)
+    //   - the account can't be banned by the admin (saves/{uid}.ban)
     function validEntry(board, id) {
       let d = request.resource.data;
       let run = get(/databases/$(database)/documents/runs/$(me())).data;
@@ -197,12 +197,12 @@ service cloud.firestore {
       allow delete: if signedIn() && (me() in resource.data.uids || admin());
     }
 
-    // Resumen con el top 50 de cada tabla (lo que se lee al mirar el ranking).
+    // Summary with the top 50 of each table (what is read when viewing the leaderboard).
     //   top: { id: { t, uids, names, dex, shiny, lv, kills } }
-    //   me:  la fila que añades o mejoras (debe coincidir con tu marca validada,
-    //        escrita en la misma transacción)
-    //   ev:  la fila que sale del top (sólo si tiene menos tiempo que la tuya)
-    // Al borrar la cuenta: me = '' y ev = una fila tuya que se quita.
+    //   me:  the row you add or improve (must match your validated record,
+    //        written in the same transaction)
+    //   ev:  the row that drops out of the top (only if it has less time than yours)
+    // When deleting the account: me = '' and ev = one of your rows that is removed.
     function validTop(board) {
       let d = request.resource.data;
       let old = resource == null ? {} : resource.data.top;
@@ -212,7 +212,7 @@ service cloud.firestore {
         && d.me is string && d.ev is string
         && (d.me == '' ? (removeMine(d, old, changed) || adminRemove(d, old)) : addMine(board, d, old, changed));
     }
-    // Moderación: el admin sólo puede QUITAR filas del top.
+    // Moderation: the admin can only REMOVE rows from the top.
     function adminRemove(d, old) {
       return admin() && old.keys().hasAll(d.top.keys()) && d.top.diff(old).changedKeys().size() == 0;
     }
@@ -234,7 +234,7 @@ service cloud.firestore {
       allow create, update: if signedIn() && validTop(board);
     }
 
-    // Presencia aproximada: "en línea" si at es de hace menos de unos minutos.
+    // Approximate presence: "online" if at is from less than a few minutes ago.
     match /pres/{uid} {
       allow read: if signedIn();
       allow create, update: if signedIn() && me() == uid
@@ -248,7 +248,7 @@ service cloud.firestore {
       allow delete: if signedIn() && me() == uid;
     }
 
-    // Invitaciones a una sala: id "para_de". Sólo entre amigos confirmados.
+    // Room invitations: id "to_from". Only between confirmed friends.
     match /inv/{id} {
       allow read: if signedIn() && (resource == null || me() == resource.data.to || me() == resource.data.from);
       allow create, update: if signedIn()
@@ -263,8 +263,8 @@ service cloud.firestore {
     }
 
     // ---------- reportes ----------
-    // Un reporte por jugador y marca (id "tabla__marca__tuUid"). Los lee y
-    // borra el admin desde la pantalla oculta de moderación.
+    // One report per player and record (id "table__record__yourUid"). The admin reads and
+    // deletes them from the hidden moderation screen.
     match /reports/{rid} {
       allow read, delete: if admin();
       allow create: if signedIn()
@@ -278,7 +278,7 @@ service cloud.firestore {
         && rid == request.resource.data.board + '__' + request.resource.data.e + '__' + me();
     }
 
-    // Para borrar todas tus marcas al borrar la cuenta (consulta de grupo).
+    // To delete all your records when deleting the account (collection group query).
     match /{path=**}/e/{id} {
       allow read: if signedIn();
     }

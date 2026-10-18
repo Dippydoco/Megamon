@@ -1,7 +1,7 @@
 /* ============ util.js — helpers compartidos ============ */
 window.G = window.G || {};
 
-/** Altura a la que vuelan proyectiles y efectos sobre el plano del suelo. */
+/** Height at which projectiles and effects fly above the ground plane. */
 G.LIFT = 18;
 
 G.U = {
@@ -11,7 +11,7 @@ G.U = {
   randInt(a, b) { return Math.floor(a + Math.random() * (b - a + 1)); },
   pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; },
 
-  /** Elige n elementos distintos al azar. */
+  /** Picks n distinct elements at random. */
   pickN(arr, n) {
     const c = arr.slice();
     const out = [];
@@ -22,29 +22,29 @@ G.U = {
   dist(ax, ay, bx, by) { return Math.hypot(bx - ax, by - ay); },
   dist2(ax, ay, bx, by) { const dx = bx - ax, dy = by - ay; return dx * dx + dy * dy; },
 
-  /** Normaliza un vector; devuelve [0,0] si es nulo. */
+  /** Normalises a vector; returns [0,0] if it's zero. */
   norm(x, y) { const m = Math.hypot(x, y); return m > 1e-6 ? [x / m, y / m] : [0, 0]; },
 
-  /** Interpolación independiente del framerate. */
+  /** Framerate-independent interpolation. */
   damp(a, b, rate, dt) { return b + (a - b) * Math.exp(-rate * dt); },
 
-  /** Hash determinista 2D -> [0,1). Para generar el mapa siempre igual. */
+  /** Deterministic 2D hash -> [0,1). To generate the same map every time. */
   hash(x, y, seed = 0) {
-    // Todo en enteros de 32 bits con Math.imul: es la función más llamada
-    // al hornear el mapa, y así V8 no sale nunca de la ruta rápida.
+    // Everything in 32-bit integers with Math.imul: it's the most-called function
+    // when baking the map, and this way V8 never leaves the fast path.
     let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ Math.imul(seed | 0, 2246822519);
     h = Math.imul(h ^ (h >>> 13), 1274126177);
     h ^= h >>> 16;
     return (h >>> 0) / 4294967296;
   },
 
-  /** "3:07" a partir de segundos. */
+  /** "3:07" from seconds. */
   mmss(s) {
     const m = Math.floor(s / 60);
     return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   },
 
-  /** Colores de tipo Pokémon (para proyectiles, tags y efectos). */
+  /** Pokémon type colours (for projectiles, tags and effects). */
   TYPE_COLOR: {
     normal: '#b0a99f', fire: '#ff7b3d', water: '#4b9bff', grass: '#5fcb6a',
     electric: '#ffd33d', ice: '#7fe0e0', fighting: '#e0533d', poison: '#b45ec4',

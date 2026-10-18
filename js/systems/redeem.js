@@ -1,15 +1,15 @@
-/* ============ redeem.js — códigos canjeables ============
- * Los códigos viven en js/data/codes.js, como HUELLAS (SHA-256), no en texto:
- * quien lea el archivo no ve los códigos. Cada código se canjea UNA vez por
- * cuenta (se apunta en save.codes) y da tickets y/o monedas.
+/* ============ redeem.js — redeemable codes ============
+ * The codes live in js/data/codes.js as FINGERPRINTS (SHA-256), not as text:
+ * whoever reads the file can't see the codes. Each code is redeemed ONCE per
+ * account (it's noted in save.codes) and gives tickets and/or coins.
  *
- * OJO: esto corre en el navegador, así que frena a curiosos, no a alguien que
- * sepa tocar el código. Vale para regalar tickets a amigos.
+ * NOTE: this runs in the browser, so it stops the curious, not someone who
+ * knows how to touch the code. It's fine for giving tickets to friends.
  */
 G.Redeem = (() => {
   const SALT = 'megamon-codes:';
 
-  // SHA-256 en JavaScript puro (funciona igual con https, http y doble clic).
+  // SHA-256 in plain JavaScript (works the same with https, http and double-click).
   const K = [
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
     0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
@@ -46,7 +46,7 @@ G.Redeem = (() => {
     return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
   }
 
-  /** Mayúsculas y sin espacios ni guiones: "mega-mon 10" y "MEGAMON10" son el mismo código. */
+  /** Upper case, no spaces or hyphens: "mega-mon 10" and "MEGAMON10" are the same code. */
   const normalize = code => String(code || '').toUpperCase().replace(/[\s\-_]/g, '');
   const hashOf = code => sha256(SALT + normalize(code));
 
@@ -61,7 +61,7 @@ G.Redeem = (() => {
     const dd = (G.CODES || []).find(c => c.h === dh && c.demo);
     if (dd) {
       const on = !demoMode();
-      try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch (e) { /* nada */ }
+      try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch (e) { /* nothing */ }
       return { ok: true, demo: on };
     }
     if (!s || G.DB.guest) return { ok: false, error: 'Entra con tu cuenta para canjear códigos (como invitado no se guardaría).' };

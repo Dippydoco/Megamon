@@ -1,5 +1,5 @@
-/* ============ upgrades.js — mejoras permanentes entre runs ============
- * Se compran con Pokémonedas en el menú. `per` es lo que da cada nivel.
+/* ============ upgrades.js — permanent upgrades between runs ============
+ * Bought with Poké Coins in the menu. `per` is what each level gives.
  */
 G.Upgrades = (() => {
   const LIST = [
@@ -26,9 +26,9 @@ G.Upgrades = (() => {
     return Math.round(u.base * Math.pow(u.grow, lvl) / 10) * 10;
   }
 
-  /** Niveles comprados -> modificadores para G.Player. */
+  /** Levels bought -> modifiers for G.Player. */
   function perks(levels = {}) {
-    // Nunca por encima del máximo (una partida editada a mano no da más poder).
+    // Never above the maximum (a hand-edited save doesn't give more power).
     const L = id => Math.max(0, Math.min(BY[id].max, Math.floor(+levels[id] || 0)));
     return {
       hp: L('hp') * 8,

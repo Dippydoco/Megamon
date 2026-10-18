@@ -1,24 +1,24 @@
-/* ============ chat.js — chat con amigos y chat de sala ============
- * Dos chats distintos:
+/* ============ chat.js — friends chat and room chat ============
+ * Two different chats:
  *
- *   Chat de sala   Por el mismo canal directo (WebRTC) de la sala / partida en grupo.
- *                  No se guarda en ningún sitio: al cerrar la sala desaparece. Va por
- *                  el anfitrión: el invitado se lo manda y él lo reparte.
- *   Chat privado   Firestore  chats/{uidA_uidB}  { users, msgs: [{ f, t, at }], seen: { uid: ms } }
- *                  Un único documento por pareja de amigos con sus últimos 25 mensajes
- *                  (los viejos se tiran al llegar los nuevos), así que no crece nunca.
- *                  Una sola escucha (consulta por tus chats) para todos los amigos y sólo
- *                  se pone en marcha cuando ya tienes algún amigo. `seen` guarda hasta
- *                  dónde leyó cada uno (los "sin leer").
+ *   Room chat      Over the room's / group run's same direct channel (WebRTC).
+ *                  It isn't stored anywhere: when the room closes it disappears. It goes through
+ *                  the host: the guest sends it to them and they share it out.
+ *   Private chat   Firestore  chats/{uidA_uidB}  { users, msgs: [{ f, t, at }], seen: { uid: ms } }
+ *                  A single document per pair of friends with their last 25 messages
+ *                  (old ones are dropped as new ones arrive), so it never grows.
+ *                  A single listener (query for your chats) for all friends, and it only
+ *                  starts once you have a friend. `seen` stores how far
+ *                  each one has read (the "unread").
  *
- * Silenciar a un amigo se guarda en este navegador (no sube nada).
- * Los textos se muestran siempre como texto (nunca como HTML).
+ * Muting a friend is stored in this browser (nothing is uploaded).
+ * Texts are always shown as text (never as HTML).
  */
 G.Chat = (() => {
-  const MAX_LEN = 140;                  // caracteres por mensaje
-  const DM_KEEP = 25;                   // mensajes que se guardan por pareja
-  const ROOM_KEEP = 60;                 // mensajes de sala que se recuerdan (sólo en memoria)
-  const DM_GAP = 1200, ROOM_GAP = 700;  // ms mínimos entre dos mensajes tuyos
+  const MAX_LEN = 140;                  // characters per message
+  const DM_KEEP = 25;                   // messages stored per pair
+  const ROOM_KEEP = 60;                 // room messages remembered (in memory only)
+  const DM_GAP = 1200, ROOM_GAP = 700;  // minimum ms between two of your messages
 
   const listeners = new Set();
   const emit = (what, a, b) => listeners.forEach(fn => { try { fn(what, a, b); } catch (e) { console.warn(e); } });
@@ -26,30 +26,30 @@ G.Chat = (() => {
   // Control and invisible/line-separator characters (built as a string so the minifier can't turn the escapes into raw characters).
   const BAD = new RegExp('[\\u0000-\\u001f\\u007f\\u200b-\\u200f\\u2028-\\u202e]', 'g');
 
-  /** Limpia un texto: sin saltos ni caracteres de control, espacios juntos, tope de largo. */
+  /** Cleans a text: no line breaks or control characters, collapsed spaces, length cap. */
   function clean(t) {
     return String(t == null ? '' : t).replace(BAD, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_LEN);
   }
 
-  // ---------------- silenciados (sólo en este navegador) ----------------
+  // ---------------- muted (in this browser only) ----------------
 
   let muted = null;
   const mKey = () => 'ps.mute.' + (G.Social.uid || '');
   function loadMuted() {
     if (muted) return muted;
     muted = new Set();
-    try { for (const u of JSON.parse(localStorage.getItem(mKey()) || '[]')) muted.add(u); } catch (e) { /* nada */ }
+    try { for (const u of JSON.parse(localStorage.getItem(mKey()) || '[]')) muted.add(u); } catch (e) { /* nothing */ }
     return muted;
   }
   const isMuted = u => loadMuted().has(u);
   function setMuted(u, on) {
     const m = loadMuted();
     if (on) m.add(u); else m.delete(u);
-    try { localStorage.setItem(mKey(), JSON.stringify([...m])); } catch (e) { /* nada */ }
+    try { localStorage.setItem(mKey(), JSON.stringify([...m])); } catch (e) { /* nothing */ }
     emit('mute', u);
   }
 
-  // ---------------- chat de sala ----------------
+  // ---------------- room chat ----------------
 
   let roomLog = [];                     // { u, name, t, at }
   let lastRoomSend = 0;
@@ -72,7 +72,7 @@ G.Chat = (() => {
     return line;
   }
 
-  /** Mandas un mensaje a tu sala. → { ok } | { ok:false, error } */
+  /** You send a message to your room. → { ok } | { ok:false, error } */
   function sendRoom(text) {
     const room = G.Social.room;
     text = clean(text);
@@ -92,12 +92,12 @@ G.Chat = (() => {
     const room = G.Social.room;
     if (!room) return;
     if (G.Net.isHost) {
-      // Un invitado te escribe: se reparte a los demás (con su uid de verdad: el del canal).
+      // A guest writes to you: it's shared to the others (with their real uid: the channel's).
       if (!room.members.some(m => m.uid === from)) return;
       const text = clean(msg.t);
       if (!text) return;
       const c = G.Cosmetics.validColor(msg.c);
-      if (!isMuted(from)) addRoom(from, text, c);      // (silenciado: no lo ves, pero se reparte a los demás)
+      if (!isMuted(from)) addRoom(from, text, c);      // (muted: you don't see it, but it's shared to the others)
       G.Net.broadcast({ k: 'ch', u: from, t: text, c }, from);
     } else if (from === room.host && typeof msg.u === 'string' && msg.u !== G.Social.uid) {
       if (isMuted(msg.u)) return;
@@ -134,7 +134,7 @@ G.Chat = (() => {
         const prev = chats.get(other);
         const msgs = Array.isArray(d.msgs) ? d.msgs : [];
         const seen = +((d.seen || {})[uid]) || 0;
-        // El "visto" que acabas de marcar aquí no se pisa con uno más viejo del servidor.
+        // The "seen" you just marked here isn't overwritten by an older one from the server.
         chats.set(other, { msgs, seen: Math.max(seen, prev ? prev.seen : 0) });
         emit('dm', other);
         const last = msgs[msgs.length - 1];
@@ -150,10 +150,10 @@ G.Chat = (() => {
     emit('dm'); emit('room');
   }
 
-  /** Mensajes de un amigo (los últimos 25, antiguos primero). */
+  /** A friend's messages (the last 25, oldest first). */
   const history = other => (chats.get(other) || { msgs: [] }).msgs;
 
-  /** Mensajes sin leer de un amigo (los silenciados no cuentan). */
+  /** A friend's unread messages (muted ones don't count). */
   function unread(other) {
     if (isMuted(other)) return 0;
     const c = chats.get(other);
@@ -184,7 +184,7 @@ G.Chat = (() => {
     return { ok: true };
   }
 
-  /** Marca como leído lo que ha escrito ese amigo (una escritura, y sólo si había algo). */
+  /** Marks what that friend wrote as read (one write, and only if there was something). */
   async function markRead(other) {
     const c = chats.get(other);
     if (!c) return;
@@ -197,10 +197,10 @@ G.Chat = (() => {
     catch (e) { console.warn('[Chat] visto:', e.code || e.message); }
   }
 
-  /** Al quitar un amigo (o borrar la cuenta) se borra también su conversación. */
+  /** When removing a friend (or deleting the account) their conversation is deleted too. */
   async function purge(other) {
     chats.delete(other);
-    try { await G.DB.fb.fs.collection('chats').doc(pidOf(G.Social.uid, other)).delete(); } catch (e) { /* no había */ }
+    try { await G.DB.fb.fs.collection('chats').doc(pidOf(G.Social.uid, other)).delete(); } catch (e) { /* there wasn't one */ }
     emit('dm', other);
   }
 

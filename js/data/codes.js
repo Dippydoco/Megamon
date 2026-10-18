@@ -1,16 +1,16 @@
-/* ============ codes.js — códigos canjeables (Ajustes > Código) ============
- * Cada código se guarda como huella SHA-256, no en texto, así que no se puede
- * leer aquí. Para añadir uno nuevo, desde la carpeta del proyecto:
+/* ============ codes.js — redeemable codes (Settings > Code) ============
+ * Each code is stored as a SHA-256 fingerprint, not as text, so it can't be
+ * read here. To add a new one, from the project folder:
  *
- *     node tools/make_code.js MICODIGO t1=5 t10=1 coins=200 until=2026-12-31
+ *     node tools/make_code.js MYCODE t1=5 t10=1 coins=200 until=2026-12-31
  *
- * y pega la línea que imprime dentro de la lista de abajo.
- *   t1     tickets normales        coins  monedas
- *   t10    tickets ×10             until  (opcional) último día para canjearlo, AAAA-MM-DD
- * Cada cuenta puede canjear cada código UNA vez. No distingue mayúsculas ni guiones.
+ * and paste the line it prints into the list below.
+ *   t1     normal tickets          coins  coins
+ *   t10    ×10 tickets             until  (optional) last day to redeem it, YYYY-MM-DD
+ * Each account can redeem each code ONCE. Case and hyphens don't matter.
  */
 G.CODES = [
-  // CHINESEPARLIAMENT  ->  433 tickets normales (los amarillos)
+  // CHINESEPARLIAMENT  ->  433 normal tickets (the yellow ones)
   { h: '6b96515e2b085a96c6f147e0bc6993c056cd2e30443e5de7aaef476399136b24', t1: 433 },
   // Demo-mode code (multi-use, never spent): turns the gacha's dummy pulls on/off on this device.
   { h: '0f08f16718b5fd451156c1deb691ea1a88a38ecc2926ab0e9fb3f2a178ae8d93', demo: true },

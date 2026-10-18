@@ -1,9 +1,9 @@
-/* ============ ui.js — utilidades comunes de la interfaz ============
- * - Mostrar / ocultar pantallas.
- * - Sprites animados de PMD dentro de <canvas> del DOM (menú, colección,
- *   gacha...). Se registran aquí y el bucle principal los anima con tick().
- * - Sonidos de interfaz (por delegación: cualquier botón suena solo).
- * - Panel de sonido, avisos (toast), monedas, chips de tipo, estrellas.
+/* ============ ui.js — shared interface utilities ============
+ * - Showing / hiding screens.
+ * - Animated PMD sprites inside DOM <canvas> elements (menu, collection,
+ *   gacha...). They're registered here and the main loop animates them with tick().
+ * - Interface sounds (by delegation: any button plays on its own).
+ * - Sound panel, notices (toast), coins, type chips, stars.
  */
 G.UI = (() => {
   const $ = id => document.getElementById(id);
@@ -19,7 +19,7 @@ G.UI = (() => {
   function hideAll() { for (const s of SCREENS) $(s).classList.add('hidden'); }
   function isOpen(id) { return !$(id).classList.contains('hidden'); }
 
-  /** Barra superior (monedas, usuario, sonido) sólo fuera de las runs. */
+  /** Top bar (coins, user, sound) only outside runs. */
   function chrome(on) {
     $('topbar').classList.toggle('hidden', !on);
     $('credits-line').classList.toggle('hidden', !on);
@@ -33,8 +33,8 @@ G.UI = (() => {
     $('coins').textContent = s ? s.coins.toLocaleString('es') : '0';
     const t = (s && s.tickets) || { t1: 0, t10: 0 };
     $('tickets-pill').innerHTML = `${G.Icons.html('ticket', 18)} ${t.t1} &nbsp;${G.Icons.html('ticket10', 18)} ${t.t10}`;
-    // Punto de sincronización: verde = guardado en la nube, amarillo = guardando,
-    // rojo = sin conexión (se guarda en local y se sube al volver).
+    // Sync dot: green = saved in the cloud, yellow = saving,
+    // red = offline (saved locally and uploaded when back).
     const st = G.DB.guest ? 'guest' : G.DB.syncState;
     const TIP = { ok: 'Guardado en la nube', syncing: 'Guardando…', pending: 'Guardando…',
                   offline: 'Sin conexión: se subirá al volver', local: 'Guardado sólo en este navegador', guest: 'Invitado: no se guarda' };
@@ -56,10 +56,10 @@ G.UI = (() => {
     return types.map(t => `<span class="type" style="background:${G.U.TYPE_COLOR[t]}">${G.U.TYPE_NAME[t]}</span>`).join('');
   }
 
-  /** Rareza: la Poké Ball que le corresponde (ver G.Icons.rarity). */
+  /** Rarity: its matching Poké Ball (see G.Icons.rarity). */
   function stars(n, size = 12) { return G.Icons.rarity(n, size > 16 ? 24 : 12); }
 
-  // ---------------- sonido de la interfaz ----------------
+  // ---------------- interface sound ----------------
 
   const CLICKABLE = '.btn, .menu-item, .tab, .chip, .card, .cell:not(.locked), .answer, .gen-tab';
   let lastHover = null;
@@ -74,13 +74,13 @@ G.UI = (() => {
       const el = e.target.closest(CLICKABLE);
       if (!el) return;
       if (el.disabled) { G.Audio.sfx('error'); return; }
-      // Los botones con su propio sonido (comprar, tirar, elegir...) lo ponen ellos.
+      // Buttons with their own sound (buy, pull, choose...) play it themselves.
       if (el.dataset.sfx === 'none') return;
       G.Audio.sfx(el.matches('[data-back]') ? 'back' : el.dataset.sfx || 'click');
     }, true);
   }
 
-  /** Controles de volumen (se usan en la barra superior y en la pausa). */
+  /** Volume controls (used in the top bar and in the pause menu). */
   function soundControls(box) {
     const st = G.Audio.settings;
     box.innerHTML = `
@@ -100,7 +100,7 @@ G.UI = (() => {
     $('btn-sound').innerHTML = G.Icons.html(G.Audio.settings.muted ? 'mute' : 'sound', 20);
   }
 
-  // ---------------- aviso legal ----------------
+  // ---------------- legal notice ----------------
 
   const CONTACT = 'jpieratorregrosa@gmail.com';
   const REPO = 'https://github.com/Dippydoco/Megamon';
@@ -119,10 +119,10 @@ G.UI = (() => {
   }
 
   /**
-   * "¿Seguro que quieres borrar la cuenta?". Las cuentas de nombre y
-   * contraseña escriben su contraseña (Firebase pide confirmar quién eres);
-   * las de Google la confirman en la ventana de Google al seguir.
-   * Devuelve { pass } o null si se cancela.
+   * "Are you sure you want to delete the account?". Name and password
+   * accounts type their password (Firebase asks to confirm who you are);
+   * Google ones confirm it in Google's window when continuing.
+   * Returns { pass } or null if cancelled.
    */
   function confirmDelete() {
     if (!G.DB.nameAccount) return Promise.resolve(confirm(G.T('Se borrarán tu cuenta y toda tu partida, para siempre. ¿Seguro?')) ? { pass: '' } : null);
@@ -216,24 +216,24 @@ G.UI = (() => {
     };
   }
 
-  // ---------------- sprites en canvas del DOM ----------------
+  // ---------------- sprites in DOM canvases ----------------
 
   const live = new Set();
-  // Sólo se animan los canvas que están a la vista (la colección tiene cientos).
+  // Only visible canvases are animated (the collection has hundreds).
   const seen = new WeakMap();
   const io = 'IntersectionObserver' in window
     ? new IntersectionObserver(es => es.forEach(e => seen.set(e.target, e.isIntersecting)), { rootMargin: '80px' })
     : null;
 
   /**
-   * Anima un Pokémon dentro de un <canvas>.
-   * opts: { anim='Idle', dir=0, shiny, silhouette, lively (ataca de vez en
-   *         cuando), spin (va girando), shadow=true,
-   *         scale=2   tamaño de píxel FIJO (×2 como en el juego): todos los
-   *                   Pokémon de una vista salen con el mismo píxel, aunque
-   *                   los gigantes no quepan enteros
-   *         hero      vista de un solo Pokémon: puede reducir la escala para
-   *                   que quepa, porque ahí no se compara con nada }
+   * Animates a Pokémon inside a <canvas>.
+   * opts: { anim='Idle', dir=0, shiny, silhouette, lively (attacks every
+   *         so often), spin (keeps turning), shadow=true,
+   *         scale=2   FIXED pixel size (×2 as in the game): all the
+   *                   Pokémon in a view come out with the same pixel, even if
+   *                   the giant ones don't fit whole
+   *         hero      single-Pokémon view: it can reduce the scale so
+   *                   it fits, because there's nothing to compare it with there }
    */
   function sprite(cv, dex, opts = {}) {
     for (const s of live) if (s.cv === cv) live.delete(s);
@@ -249,8 +249,8 @@ G.UI = (() => {
   function tick(dt) {
     for (const s of live) {
       if (!s.cv.isConnected) { live.delete(s); if (io) io.unobserve(s.cv); continue; }
-      if (s.cv.offsetParent === null) continue;            // pantalla oculta
-      if (io && seen.get(s.cv) === false) continue;         // fuera de la vista
+      if (s.cv.offsetParent === null) continue;            // hidden screen
+      if (io && seen.get(s.cv) === false) continue;         // out of view
       s.a.update(dt);
 
       if (s.opts.lively) {
@@ -267,13 +267,13 @@ G.UI = (() => {
       ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.imageSmoothingEnabled = false;
 
-      // Escala entera para que los píxeles queden nítidos.
+      // Integer scale so the pixels stay crisp.
       const m = G.Sprites.animMeta(s.dex, 'Idle');
       const ay = m ? m.ay : 24;
       let k = s.opts.scale || 2;
       if (s.opts.hero) k = Math.max(1, Math.min(k, Math.floor(cv.height * 0.8 / ay)));
       s.a.scale = k / G.Sprites.PX;
-      // Si no cabe de pie, se centra el cuerpo en el recuadro.
+      // If it doesn't fit standing up, the body is centred in the box.
       const big = ay * k > cv.height * 0.8;
       const fx = cv.width / 2, fy = big ? cv.height / 2 + ay * k * 0.45 : cv.height * 0.88;
 
@@ -291,7 +291,7 @@ G.UI = (() => {
         s.a.draw(ctx, fx, fy);
       }
 
-      // Centelleos alrededor de los shiny: cada uno nace en un sitio al azar.
+      // Sparkles around shinies: each one appears at a random spot.
       if (s.opts.shiny && !s.opts.silhouette) {
         s.tw = s.tw || [];
         s.sparkT -= dt;
@@ -310,7 +310,7 @@ G.UI = (() => {
     }
   }
 
-  /** Crea un <canvas> con un sprite animado (para rejillas). */
+  /** Creates a <canvas> with an animated sprite (for grids). */
   function spriteCanvas(dex, w, h, opts) {
     const cv = document.createElement('canvas');
     cv.width = w; cv.height = h;

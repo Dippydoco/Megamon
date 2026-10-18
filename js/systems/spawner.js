@@ -1,30 +1,30 @@
-/* ============ spawner.js — oleadas, jefes y shinies ============
- * Los enemigos aparecen en un anillo justo fuera de la vista, así que nunca
- * se materializan en pantalla. Cada ~45 s hay una "marea": una avalancha
- * concentrada desde un lado concreto, para romper el ritmo.
+/* ============ spawner.js — waves, bosses and shinies ============
+ * Enemies appear in a ring just outside the view, so they never
+ * materialise on screen. Every ~45 s there's a "surge": a concentrated
+ * rush from one particular side, to break the rhythm.
  *
- * Cada enemigo tiene 1/4096 de salir shiny (como en los juegos clásicos).
- * Una run mata 1.500–4.000, así que sale uno cada 1–3 partidas.
+ * Each enemy has a 1/4096 chance to be shiny (as in the classic games).
+ * A run kills 1,500–4,000, so one shows up every 1–3 runs.
  *
- * Cooperativo (sólo en el anfitrión): aparecen alrededor de un jugador vivo
- * al azar, fuera de la vista de TODOS, y hay más y más fuertes según cuántos
- * jugáis (ver G.Coop.scaleRate / scaleHp).
+ * Co-op (host only): they appear around a random living player,
+ * out of EVERYONE's view, and there are more and stronger ones depending on how many
+ * of you are playing (see G.Coop.scaleRate / scaleHp).
  */
 G.Spawner = (() => {
-  // Tope de enemigos a la vez (antes 420: con tantos se ralentizaba). Cuando
-  // se llega al tope, los que siguen saliendo son "élite" (más vida, daño y
-  // experiencia), así la dificultad no baja.
+  // Cap on enemies at once (previously 420: with that many it slowed down). When
+  // the cap is reached, those that keep spawning are "elite" (more health, damage and
+  // experience), so the difficulty doesn't drop.
   const ELITE_FROM = 0.85;
   let CAP = 64;                 // grows a little with a 5th player
-  // Menos Pokémon pero más fuertes (la pantalla no se satura): salen ~24% de
-  // los de antes, cada uno con más vida, daño y experiencia.
+  // Fewer Pokémon but stronger (the screen doesn't get cluttered): ~24% of
+  // the previous number spawn, each with more health, damage and experience.
   const DENSITY = 0.24, DMG_K = 2.2, XP_K = 5.6;
-  // La resistencia extra crece con la run: al principio ×3,3 y hasta ×5
-  // hacia el minuto 6, cuando ya tienes ataques para tumbarlos.
+  // The extra toughness grows with the run: ×3.3 at the start and up to ×5
+  // around minute 6, when you already have attacks to take them down.
   const hpK = t => 3.3 + Math.min(1.7, t / 210);
   const SHINY_RATE = 1 / 4096;
   let acc = 0, bossIdx = 0, surgeT = 32, announce = null, announceT = 0, announceDur = 0, announceDex = 0, preloadT = 0;
-  let forceShiny = 0;           // para pruebas: los N próximos salen shiny
+  let forceShiny = 0;           // for testing: the next N come out shiny
 
   function reset() {
     acc = 0; bossIdx = 0; surgeT = 32; announce = null; announceT = 0; preloadT = 0;
@@ -32,7 +32,7 @@ G.Spawner = (() => {
     G.Sprites.preload(G.Enemies.upcomingDex(0, 80));
   }
 
-  /** Enemigos por segundo según el minuto de la run. */
+  /** Enemies per second by the run's minute. */
   function rate(t) {
     return (1.6 + t * 0.028 + Math.pow(t / 60, 1.6) * 0.5) * DENSITY;
   }
@@ -44,13 +44,13 @@ G.Spawner = (() => {
 
   let players = [];
 
-  /** ¿Lo vería algún jugador? (para no aparecer delante de nadie) */
+  /** Would any player see it? (so it doesn't appear in front of anyone) */
   function seenByAnyone(x, y) {
     const r = G.Camera.outerRadius() - 30;
     return players.some(o => G.U.dist2(o.x, o.y, x, y) < r * r);
   }
 
-  /** Punto del anillo donde quepa: no dentro de paredes ni en el agua. */
+  /** A point on the ring where it fits: not inside walls or in water. */
   function freePoint(pl, angle, flying) {
     for (let i = 0; i < 8; i++) {
       const a = angle + (i === 0 ? 0 : G.U.rand(-0.9, 0.9));
@@ -61,7 +61,7 @@ G.Spawner = (() => {
     return null;
   }
 
-  /** Jugador alrededor del que sale el siguiente enemigo. */
+  /** The player the next enemy spawns around. */
   function anchor() {
     const alive = players.filter(o => !o.dead);
     return alive.length ? G.U.pick(alive) : players[0];
@@ -110,25 +110,25 @@ G.Spawner = (() => {
     return e;
   }
 
-  /** @param who  el jugador o la lista de jugadores (cooperativo) */
+  /** @param who  the player or the list of players (co-op) */
   function update(dt, who, t) {
     players = Array.isArray(who) ? who : [who];
     CAP = players.length > 4 ? 76 : 64;
     if (announceT > 0) announceT -= dt;
-    // En la arena de la grieta no sale nada más (y el reloj de jefes espera).
-    // En la Sentencia de Arceus, sólo sus legendarios (systems/judgment.js).
+    // In the rift arena nothing else spawns (and the boss clock waits).
+    // In Arceus's Judgment, only its legendaries (systems/judgment.js).
     if (G.Rift.inArena || G.Judgment.active) return;
 
-    // Precarga lo que va a salir en el próximo minuto.
+    // Preloads what will appear in the next minute.
     preloadT -= dt;
     if (preloadT <= 0) { preloadT = 10; G.Sprites.preload(G.Enemies.upcomingDex(t, 60)); }
 
-    // --- jefes ---
+    // --- bosses ---
     const b = G.Enemies.BOSSES[bossIdx];
     if (b && t >= b.at) { spawnBoss(anchor(), t, b); bossIdx++; }
 
-    // Combate de jefe: las oleadas bajan al 25% y no hay mareas, para que el
-    // jefe sea un momento propio y se le pueda apuntar entre la multitud.
+    // Boss fight: waves drop to 25% and there are no surges, so the
+    // boss gets a moment of its own and can be targeted among the crowd.
     const bossFight = G.EnemyMgr.bossAlive();
 
     // --- goteo normal ---
@@ -152,15 +152,15 @@ G.Spawner = (() => {
     }
   }
 
-  /** Unos cuantos de golpe desde un lado (al empezar una horda). */
+  /** A bunch at once from one side (when a horde starts). */
   function burst(n) {
     const base = Math.random() * 6.2832, target = anchor() || G.Game.player, t = G.Game.st.time;
     for (let i = 0; i < n && G.EnemyMgr.count < CAP + 10; i++) spawnOne(target, t, base + G.U.rand(-0.6, 0.6));
   }
 
   /**
-   * Un rezagado vuelve a salir por delante del jugador (hacia donde corre),
-   * fuera de la vista. Devuelve false si no hay sitio (entonces se quita).
+   * A straggler reappears ahead of the player (where they're running),
+   * out of view. Returns false if there's no room (then it's removed).
    */
   function ahead(e, pl) {
     if (!players.length) players = [pl];
@@ -173,8 +173,8 @@ G.Spawner = (() => {
     return true;
   }
 
-  /** Aviso grande en pantalla (también lo usan el bioma y los shinies). */
-  /** @param local  sólo en este ordenador (no se manda a los compañeros) */
+  /** Big on-screen notice (also used by the biome and the shinies). */
+  /** @param local  only on this computer (not sent to teammates) */
   function say(text, secs = 2.6, local = false, dex = 0) {
     announce = text; announceT = secs; announceDur = secs; announceDex = dex || 0;
     if (G.Coop.isHost && !local) G.Coop.say(text, secs, dex);
@@ -182,7 +182,7 @@ G.Spawner = (() => {
 
   function banner() { return announceT > 0 ? { text: announce, t: announceT, dur: announceDur, dex: announceDex } : null; }
 
-  /** Invitado en cooperativo: sólo corre el reloj del aviso. */
+  /** Co-op guest: only the notice's timer runs. */
   function tickBanner(dt) { if (announceT > 0) announceT -= dt; }
 
   return { reset, update, ahead, burst, tickBanner, banner, say, rate, SHINY_RATE, CAP,

@@ -1,31 +1,31 @@
-/* ============ progress.js — misiones, logros y estadísticas de cuenta ============
- * El juego avisa de lo que pasa con G.Progress.event(tipo, datos):
+/* ============ progress.js — missions, achievements and account stats ============
+ * The game reports what happens with G.Progress.event(type, data):
  *
- *   kill      { types, boss, legend }  (también en las copias del cooperativo)
- *   chest     cofre con candado abierto
- *   item      { id }        objeto equipado
- *   evolve    { move }      movimiento evolucionado
- *   rift      { type }      pelea de grieta ganada
+ *   kill      { types, boss, legend }  (also on co-op copies)
+ *   chest     locked chest opened
+ *   item      { id }        item equipped
+ *   evolve    { move }      move evolved
+ *   rift      { type }      rift fight won
  *   runEnd    { time, level, coins, types, group }
- *   judge     llegas a la Sentencia de Arceus (minuto 30)
- *   judgeEnd  { time, bosses }  aguantado ante Arceus (al acabar la partida)
- *   missionDone { daily }   (lo lanza claim)
+ *   judge     you reach Arceus's Judgment (minute 30)
+ *   judgeEnd  { time, bosses }  survived against Arceus (when the run ends)
+ *   missionDone { daily }   (fired by claim)
  *
- * y esto actualiza en la partida guardada:
+ * and this updates in the save:
  *   stats.bossesTotal · riftWins · evolutions · missionsDone · groupRuns
- *   stats.judged · judgeTime (mejor tiempo ante Arceus) · judgeBosses (mejor nº de jefes)
- *   legends{dex} · arenas{tipo} · itemsFound{id} · evoMoves{id} · ach{id}
+ *   stats.judged · judgeTime (best time against Arceus) · judgeBosses (best no. of bosses)
+ *   legends{dex} · arenas{type} · itemsFound{id} · evoMoves{id} · ach{id}
  *   missions { day, daily[], rerolled, week, weekly[] }
  *
- * Misiones: 3 diarias + 2 semanales, sorteadas con una semilla de la fecha y
- * la cuenta (en cualquier ordenador salen las mismas). El premio se recoge
- * a mano; los logros se dan solos al conseguirlos.
+ * Missions: 3 daily + 2 weekly, drawn with a seed from the date and
+ * the account (the same ones come up on any computer). The reward is collected
+ * by hand; achievements are given automatically when earned.
  */
 G.Progress = (() => {
   const TYPES = Object.keys(G.U.TYPE_NAME);
   let achT = 0, toastQ = [], toastT = 0;
 
-  // ---------------- misiones ----------------
+  // ---------------- missions ----------------
 
   function rng(seedStr) {
     let h = 2166136261;
@@ -46,7 +46,7 @@ G.Progress = (() => {
     return out;
   }
 
-  /** Crea las misiones del día / semana si han cambiado. */
+  /** Creates the day's / week's missions if they've changed. */
   function ensure(s) {
     if (!s) return;
     const ids = G.Ranking.periodIds();
@@ -81,7 +81,7 @@ G.Progress = (() => {
     }
   }
 
-  /** Recoge el premio de una misión terminada. */
+  /** Collects the reward of a finished mission. */
   function claim(m, weekly = false) {
     const s = G.DB.save;
     if (!s || m.claimed || !done(m)) return false;
@@ -93,7 +93,7 @@ G.Progress = (() => {
     return true;
   }
 
-  /** Cambia una diaria sin terminar por otra (una vez al día). */
+  /** Swaps an unfinished daily for another (once a day). */
   function reroll(i) {
     const s = G.DB.save;
     ensure(s);
@@ -165,21 +165,21 @@ G.Progress = (() => {
     }
     advance(s.missions.daily, kind, d);
     advance(s.missions.weekly, kind, d);
-    // Los logros se miran como mucho una vez por segundo (hay cientos de bajas).
+    // Achievements are checked at most once a second (there are hundreds of kills).
     if (kind !== 'kill' || d.boss || d.legend) checkAch();
     else if (performance.now() - achT > 1000) checkAch();
   }
 
-  /** Un enemigo ha caído (anfitrión, solitario o copia en el invitado). */
+  /** An enemy has fallen (host, solo or copy on the guest). */
   function kill(e) {
-    // Los legendarios de la Sentencia de Arceus no cuentan como jefes (ni para
-    // misiones ni para logros de jefes): tienen su propio contador.
+    // The legendaries of Arceus's Judgment don't count as bosses (neither for
+    // missions nor for boss achievements): they have their own counter.
     if (G.Judgment.active && e.boss) { G.Judgment.bossDown(); event('kill', { types: e.types || [], boss: false, legend: 0 }); return; }
     const legend = e.legend || (G.Rift.inArena && e.boss) ? e.dex : 0;
     event('kill', { types: e.types || [], boss: !!e.boss, legend });
   }
 
-  // ---------------- logros ----------------
+  // ---------------- achievements ----------------
 
   function checkAch() {
     const s = G.DB.save;
@@ -195,13 +195,13 @@ G.Progress = (() => {
     }
   }
 
-  /** Títulos que tienes (de los logros conseguidos). */
+  /** Titles you have (from earned achievements). */
   function titles() {
     const s = G.DB.save;
     return G.AchDefs.LIST.filter(a => a.title && s && s.ach && s.ach[a.id]).map(a => a.title);
   }
 
-  /** Premios de misiones por recoger (para el aviso del menú). */
+  /** Mission rewards waiting to be collected (for the menu notice). */
   function pending() {
     const s = G.DB.save;
     if (!s) return 0;
@@ -209,7 +209,7 @@ G.Progress = (() => {
     return [...s.missions.daily, ...s.missions.weekly].filter(m => done(m) && !m.claimed).length;
   }
 
-  // ---------------- avisos ----------------
+  // ---------------- notices ----------------
 
   function notify(title, sub, ach) {
     toastQ.push({ title, sub, ach });

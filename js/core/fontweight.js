@@ -1,9 +1,9 @@
-/* ============ fontweight.js — letra normal en los textos pequeños ============
- * La tipografía Pixelify en negrita cierra casi del todo la boca de la "C" y, en
- * tamaños pequeños, se confunde con una "O". En el canvas (HUD, flechas, avisos...)
- * todo texto de 17 px o menos que pida negrita (600+) se dibuja con el peso normal
- * (400). Los textos de HTML lo hacen con las reglas del final de css/style.css.
- * Los títulos y avisos grandes siguen en negrita.
+/* ============ fontweight.js — regular weight for small text ============
+ * The Pixelify typeface in bold almost closes the mouth of the "C" and, at
+ * small sizes, it gets confused with an "O". On the canvas (HUD, arrows, notices...)
+ * any text of 17 px or less that asks for bold (600+) is drawn with the regular weight
+ * (400). HTML text does it with the rules at the end of css/style.css.
+ * Titles and big notices stay bold.
  */
 (() => {
   const MAX_PX = 17;

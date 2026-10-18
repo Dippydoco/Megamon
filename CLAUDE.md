@@ -1,35 +1,34 @@
-# PokéSurvivor — cómo se trabaja y se publica
+# PokéSurvivor — how we work and publish
 
-Normas fijas del dueño del proyecto. Se aplican SIEMPRE.
+Fixed rules from the project owner. They ALWAYS apply.
 
-## Publicar una versión
-1. Se edita `dev.html` (nunca `index.html`, que se genera).
+## Publishing a version
+1. Edit `dev.html` (never `index.html`, which is generated).
 2. `node tools/build.js && node tools/export_data.js && python tools/make_seo_pages.py`
-   - `build.js` genera `index.html`, `js/app.min.js` y **`version.json`** (la huella de esta versión).
-3. Commit (sin "Co-Authored-By" ni ninguna firma de IA) y `git push origin main` sólo cuando el dueño lo pida.
+   - `build.js` generates `index.html`, `js/app.min.js` and **`version.json`** (this version's fingerprint).
+3. Commit (no "Co-Authored-By" or any AI signature) and `git push origin main` only when the owner asks.
 
-## Actualización automática de los jugadores (obligatorio)
-Al publicar, todos los jugadores deben pasar a la versión nueva sin perder nada
-(`js/core/updater.js`, mira `version.json` cada 5 min):
-- **Fuera de partida** (menú, sala de cooperativo incluida): aviso de 5 s y la página se recarga.
-  Si está en el gacha, la tienda de mejoras, los ajustes o escribiendo en un campo, espera a que termine.
-- **En partida**: no se toca. Al acabar, la run se guarda como siempre y, al volver al menú, se recarga.
-- **Empezar partida** (Jugar, Empezar partida de la sala): antes se mira `version.json` (`Updater.gate()`); si hay
-  versión nueva, se recarga en vez de empezar.
-- Antes de recargar se sube a la nube lo pendiente.
-No quitar `updater.js` ni la escritura de `version.json` en `tools/build.js`.
+## Automatic update for players (mandatory)
+When publishing, every player must move to the new version without losing anything
+(`js/core/updater.js` checks `version.json` every 5 min):
+- **Outside a run** (menu, including the co-op room): 5 s notice, then the page reloads.
+  If they are in the gacha, the upgrade shop, the settings or typing in a field, it waits until they finish.
+- **In a run**: left alone. When it ends, the run is saved as usual and the page reloads on returning to the menu.
+- **Starting a run** (Play, Start in the room): `version.json` is checked first (`Updater.gate()`); if there is a
+  new version, the page reloads instead of starting.
+- Anything pending is uploaded to the cloud before reloading.
+Do not remove `updater.js` or the `version.json` write in `tools/build.js`.
 
-## Novedades (changelog)
-Cada cambio de juego o arreglo de fallos va también en `js/data/changelog.js`
-(español e inglés, en `new` / `chg` / `fix` de la fecha de hoy), con su hora de publicación en
-`at` (UTC, `date -u +%Y-%m-%dT%H:%MZ`). Los cambios de
-servidores, base de datos o costes NO van ahí.
+## What's new (changelog)
+Every gameplay change or bug fix also goes in `js/data/changelog.js`
+(Spanish and English, under `new` / `chg` / `fix` for today's date), with its publish time in
+`at` (UTC, `date -u +%Y-%m-%dT%H:%MZ`). Server, database or cost changes do NOT go there.
 
-## Servidores
-- Firebase: proyecto **pokesurvivor-free** (autenticación normal: cuentas gratis sin límite).
-  **Nunca** activar "Identity Platform" ni nada que lo active (funciones de bloqueo, MFA,
-  "Actualizar para habilitar"): cobra por usuario. El proyecto viejo pokesurvivor-jpter se borró el 13-10-2026 (con su facturación).
-- Cloudflare: SÓLO el dominio pokesurvivor.com (comprado allí, DNS gratis). El Worker y el TURN
-  (Cloudflare Realtime) se quitaron el 15-10-2026: el cooperativo va sólo con conexión directa
-  (STUN gratis de Google). No volver a añadir nada de pago.
-- Mantenimiento: `MAINTENANCE` en `js/main.js` (con `?dev` se puede entrar para probar).
+## Servers
+- Firebase: project **pokesurvivor-free** (standard authentication: free accounts, no limit).
+  **Never** enable "Identity Platform" or anything that turns it on (blocking functions, MFA,
+  "Upgrade to enable"): it charges per user. The old project pokesurvivor-jpter was deleted on 13-10-2026 (with its billing).
+- Cloudflare: ONLY the domain pokesurvivor.com (bought there, free DNS). The Worker and the TURN server
+  (Cloudflare Realtime) were removed on 15-10-2026: co-op uses direct connection only
+  (Google's free STUN). Do not add anything paid again.
+- Maintenance: `MAINTENANCE` in `js/main.js` (with `?dev` you can still get in to test).

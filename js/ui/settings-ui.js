@@ -1,7 +1,7 @@
-/* ============ settings-ui.js — pantalla de Ajustes (PC y móvil) ============
- * Se abre por encima de lo que haya (menú o pausa) y al cerrar vuelve ahí.
- * Pestañas: Sonido · Gráficos · Controles · Cuenta · Acerca de.
- * Los ajustes son de este dispositivo (G.Settings / G.Audio en el navegador).
+/* ============ settings-ui.js — Settings screen (PC and mobile) ============
+ * Opens on top of whatever is there (menu or pause) and goes back there on closing.
+ * Tabs: Sound · Graphics · Controls · Account · About.
+ * Settings belong to this device (G.Settings / G.Audio in the browser).
  */
 G.SettingsUI = (() => {
   const $ = G.UI.$;
@@ -16,7 +16,7 @@ G.SettingsUI = (() => {
     $('btn-settings').innerHTML = G.Icons.html('gear', 20);
     $('btn-settings').onclick = () => open();
     $('btn-pause-settings').onclick = () => open('sound');
-    // Pantalla completa (si el navegador la permite; en iPhone, cómo conseguirla).
+    // Full screen (if the browser allows it; on iPhone, how to get it).
     if (canFull() || iosTip()) {
       $('btn-full').classList.remove('hidden');
       $('btn-full').innerHTML = G.Icons.html('full', 20);
@@ -32,11 +32,11 @@ G.SettingsUI = (() => {
   function close() { $('scr-settings').classList.add('hidden'); }
   const isOpen = () => !$('scr-settings').classList.contains('hidden');
 
-  // ---------------- pantalla completa ----------------
+  // ---------------- full screen ----------------
   function canFull() { return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled); }
   function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
-  // iPhone: Safari no deja poner una web a pantalla completa (por eso a veces
-  // no salía la opción). Sí se puede abriéndola desde la pantalla de inicio.
+  // iPhone: Safari doesn't let a website go full screen (that's why the option
+  // sometimes didn't appear). It can be done by opening it from the home screen.
   const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = () => !!navigator.standalone || (window.matchMedia && matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches);
   function iosTip() { return IOS && !canFull() && !standalone(); }
@@ -47,8 +47,8 @@ G.SettingsUI = (() => {
     else {
       const el = document.documentElement;
       const p = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-      // En móvil, además se intenta fijar la pantalla en horizontal.
-      if (p && p.then) p.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* nada */ } }).catch(() => {});
+      // On mobile, it also tries to lock the screen to landscape.
+      if (p && p.then) p.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* nothing */ } }).catch(() => {});
     }
     setTimeout(() => { if (isOpen()) render(); }, 300);
   }
@@ -134,7 +134,7 @@ G.SettingsUI = (() => {
     wire(box);
   }
 
-  /** Canjear un código (js/systems/redeem.js): tickets y/o monedas, una vez por cuenta. */
+  /** Redeem a code (js/systems/redeem.js): tickets and/or coins, once per account. */
   function renderCode(box) {
     if (G.DB.guest) {
       box.innerHTML = section('Código', 'Como <b>invitado</b> no se guarda el progreso, así que no se pueden canjear códigos. Crea una cuenta o entra con la tuya.')
@@ -211,7 +211,7 @@ G.SettingsUI = (() => {
     };
   }
 
-  /** Cerrar sesión (si estás en una partida, se abandona). */
+  /** Sign out (if you're in a run, it's abandoned). */
   function leave() {
     if (G.DB.guest && !confirm('Eres invitado: se perderá todo el progreso. ¿Salir?')) return;
     if (G.Game.state !== 'ui') G.Game.quit && G.Game.quit();

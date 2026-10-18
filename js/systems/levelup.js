@@ -1,8 +1,8 @@
-/* ============ levelup.js — las tres cartas de subida de nivel ============
- * Tipos de carta:
- *   new   aprender un movimiento nuevo (sólo si quedan huecos de los 4; un vínculo libera huecos)
- *   up    mejorar un movimiento que ya tienes
- *   stat  mejora permanente de la run
+/* ============ levelup.js — the three level-up cards ============
+ * Card kinds:
+ *   new   learn a new move (only if there are free slots out of 4; a bond frees slots)
+ *   up    upgrade a move you already have
+ *   stat  permanent upgrade for the run
  */
 G.LevelUp = (() => {
 
@@ -27,14 +27,14 @@ G.LevelUp = (() => {
       apply: pl => pl.heal(pl.maxHp * 0.45) }
   ];
 
-  /** Construye el conjunto de cartas candidatas, con pesos. */
+  /** Builds the set of candidate cards, with weights. */
   function candidates(pl) {
     const out = [];
 
-    // --- movimientos nuevos ---
+    // --- new moves ---
     if (pl.slots.length < pl.maxMoves) {
-      // Con 2 potenciadores ya no se ofrecen más: los buff no hacen daño y
-      // llenar los 4 huecos con ellos deja la run sin salida.
+      // With 2 boosters no more are offered: buffs don't deal damage and
+      // filling the 4 slots with them leaves the run with no way out.
       const buffs = pl.moves.filter(m => m.kind === 'buff').length;
       const pool = G.Moves.poolFor(pl.mon).filter(id =>
         !pl.hasMove(id) && !(pl.banned && pl.banned.has(id)) && !(buffs >= 2 && G.Moves.BY_ID[id].kind === 'buff'));
@@ -50,8 +50,8 @@ G.LevelUp = (() => {
       }
     }
 
-    // --- evoluciones: movimiento al máximo + su condición cumplida ---
-    const waiting = {};                   // stat -> movimiento que la espera para evolucionar
+    // --- evolutions: move at max + its condition met ---
+    const waiting = {};                   // stat -> move waiting for it to evolve
     for (const m of pl.moves) {
       const ev = G.Moves.evoInfo(m, pl.statsTaken);
       if (!ev) continue;
@@ -70,7 +70,7 @@ G.LevelUp = (() => {
       });
     }
 
-    // --- mejoras de movimientos que ya tienes ---
+    // --- upgrades for moves you already have ---
     for (const m of pl.moves) {
       const txt = G.Moves.nextUpText(m);
       if (!txt) continue;
@@ -84,10 +84,10 @@ G.LevelUp = (() => {
     }
 
     // --- stats ---
-    // Las que desbloquean una evolución salen siempre y con aviso.
-    // Cada mejora tiene un tope de veces (`max`): en partidas muy largas se
-    // acumulaban sin fin (velocidad, recarga y experiencia por las nubes) y el
-    // juego acababa colgándose. Las que piden una evolución salen siempre.
+    // Those that unlock an evolution always come up, with a notice.
+    // Each upgrade has a cap on how many times (`max`): in very long runs they
+    // piled up endlessly (speed, cooldown and experience through the roof) and the
+    // game ended up freezing. Those an evolution needs always come up.
     const room = s => !s.max || (pl.statsTaken[s.id] || 0) < s.max;
     const pickStats = G.U.pickN(STATS.filter(s => !waiting[s.id] && room(s)), 5).concat(STATS.filter(s => waiting[s.id]));
     for (const s of pickStats) {
@@ -106,12 +106,12 @@ G.LevelUp = (() => {
     return out;
   }
 
-  /** Devuelve 3 cartas distintas, elegidas por peso. */
+  /** Returns 3 distinct cards, chosen by weight. */
   function offer(pl, n = 3) {
     const pool = candidates(pl);
     const picked = [];
     const used = new Set();
-    // Si hay una evolución lista, su carta dorada sale siempre.
+    // If an evolution is ready, its golden card always comes up.
     const evo = pool.findIndex(c => c.type === 'evo');
     if (evo >= 0) { const c = pool.splice(evo, 1)[0]; used.add(c.key); picked.push(c); }
 

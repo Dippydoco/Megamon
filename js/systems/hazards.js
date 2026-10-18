@@ -1,15 +1,15 @@
-/* ============ hazards.js — ataques con aviso de los enemigos ============
- * Un peligro se dibuja primero en el suelo como AVISO (se va llenando) y, al
- * cumplirse el tiempo, golpea a quien esté dentro:
+/* ============ hazards.js — enemies' warned attacks ============
+ * A hazard is first drawn on the ground as a WARNING (it fills up) and, when
+ * the time is up, it hits whoever is inside:
  *
- *   zone  círculo (zonas de Tierra/Fuego/Veneno, explosiones, caídas de salto)
- *   beam  rayo recto desde el enemigo (Eléctrico, Psíquico, Dragón, Hielo)
+ *   zone  circle (Ground/Fire/Poison zones, explosions, leap landings)
+ *   beam  straight beam from the enemy (Electric, Psychic, Dragon, Ice)
  *
- * Cada ordenador dibuja los peligros y comprueba sólo SU Pokémon. En
- * cooperativo los crea el anfitrión y los manda con 'hz'.
+ * Each computer draws the hazards and checks only ITS Pokémon. In
+ * co-op the host creates them and sends them with 'hz'.
  *
- * Los de Arceus (systems/judgment.js) quitan un % de la vida (pct) sin mirar
- * tipos ni defensa (pure), y la Sentencia cae como un pilar de luz (vis).
+ * Arceus's ones (systems/judgment.js) take a % of health (pct) regardless of
+ * types or defence (pure), and the Judgment falls as a pillar of light (vis).
  */
 G.Hazards = (() => {
   let list = [];
@@ -56,7 +56,7 @@ G.Hazards = (() => {
   function detonate(h) {
     const near = G.Camera.sees(h.x, h.y, 120);
     if (h.vis === 'pillar') {
-      // Pilar de luz que cae del cielo.
+      // Pillar of light falling from the sky.
       G.FX.beam(h.x, h.y, -Math.PI / 2, 420, h.r * 1.1, h.color, G.VFX.forType('electric'));
       G.FX.ring(h.x, h.y, 4, h.r * 1.3, '#fff3c8', 0.4, 5);
       G.FX.burst(h.x, h.y - 6, h.color, 10, 180);
@@ -71,7 +71,7 @@ G.Hazards = (() => {
     }
   }
 
-  /** Avisos en el suelo (debajo de los Pokémon). */
+  /** Warnings on the ground (below the Pokémon). */
   function draw(ctx) {
     const blink = Math.sin(performance.now() / 60) > 0;
     for (const h of list) {

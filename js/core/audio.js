@@ -1,24 +1,24 @@
-/* ============ audio.js — sintetizador, secuenciador y efectos de sonido ============
- * Todo el sonido se genera en el momento con Web Audio: no hay ficheros.
+/* ============ audio.js — synthesizer, sequencer and sound effects ============
+ * All sound is generated on the fly with Web Audio: there are no files.
  *
- *   G.Audio.music('village')   cambia de tema con fundido (ver data/music.js)
- *   G.Audio.sfx('coin')        efecto de sonido (con límite de repetición)
+ *   G.Audio.music('village')   switches theme with a crossfade (see data/music.js)
+ *   G.Audio.sfx('coin')        sound effect (with a repeat limit)
  *   G.Audio.setVolume('music' | 'sfx', 0..1) · toggleMute()
  *
- * Los navegadores no dejan sonar nada hasta el primer clic o tecla, así que
- * el contexto se crea entonces y arranca la música que estuviera pedida.
- * El volumen se guarda en localStorage (es del navegador, no de la cuenta).
+ * Browsers don't allow any sound until the first click or key press, so
+ * the context is created then and starts whatever music was requested.
+ * The volume is stored in localStorage (it belongs to the browser, not the account).
  */
 G.Audio = (() => {
   const KEY = 'ps.audio';
   let ctx = null, master, outNode, musicBus, sfxBus, reverb, wet;
   let settings = { music: 0.55, sfx: 0.7, muted: false };
-  try { Object.assign(settings, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nada */ }
+  try { Object.assign(settings, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nothing */ }
   let noiseBuf = null;
 
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (e) { /* nada */ } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch (e) { /* nothing */ } }
 
-  // ---------------- arranque ----------------
+  // ---------------- startup ----------------
 
   function init() {
     if (ctx) return true;
@@ -33,9 +33,9 @@ G.Audio = (() => {
     musicBus = ctx.createGain(); sfxBus = ctx.createGain();
     musicBus.connect(master); sfxBus.connect(master);
 
-    // Reverb: respuesta al impulso generada (ruido que se apaga en 1,8 s).
-    // Se rellena un momento después, a trozos: hacerlo de golpe bloqueaba la
-    // carga de la página (~75 ms). Hasta entonces la música suena sin eco.
+    // Reverb: a generated impulse response (noise fading out over 1.8 s).
+    // It's filled a moment later, in pieces: doing it all at once blocked the
+    // page load (~75 ms). Until then the music plays without echo.
     reverb = ctx.createConvolver();
     const len = Math.floor(ctx.sampleRate * 1.8);
     const ir = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -59,26 +59,26 @@ G.Audio = (() => {
 
   function unlock() {
     if (!init()) return;
-    // 'suspended' o 'interrupted' (iPhone al volver de otra app): se reanuda.
+    // 'suspended' or 'interrupted' (iPhone returning from another app): it resumes.
     if (ctx.state !== 'running') ctx.resume().catch(() => {});
     if (wanted && !current) startSong(wanted);
   }
-  // En móvil, tocar la pantalla (pointerdown) no cuenta como gesto para el
-  // sonido: sí levantar el dedo (pointerup / touchend). Se escuchan todos.
+  // On mobile, touching the screen (pointerdown) doesn't count as a gesture for
+  // sound: lifting the finger (pointerup / touchend) does. All of them are listened to.
   for (const ev of ['pointerdown', 'pointerup', 'touchend', 'keydown']) addEventListener(ev, unlock, { capture: true });
 
   function applyVolumes() {
     if (!ctx) return;
     const t = ctx.currentTime;
     musicBus.gain.setTargetAtTime(settings.muted ? 0 : settings.music * 0.7, t, 0.05);
-    // Los efectos se generan bajitos: ×2,4 los pone a la par de la música (medido).
+    // Effects are generated quietly: ×2.4 brings them level with the music (measured).
     sfxBus.gain.setTargetAtTime(settings.muted ? 0 : settings.sfx * 2.4, t, 0.05);
   }
 
   function setVolume(which, v) { settings[which] = G.U.clamp(v, 0, 1); save(); applyVolumes(); }
   function toggleMute() { settings.muted = !settings.muted; save(); applyVolumes(); return settings.muted; }
 
-  // ---------------- piezas básicas ----------------
+  // ---------------- basic pieces ----------------
 
   const midiFreq = m => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -128,13 +128,13 @@ G.Audio = (() => {
       const o1 = osc('triangle', f, t, t + d + 0.3, g);
       const g2 = ctx.createGain(); g2.gain.value = 0.18; g2.connect(g);
       const o2 = osc('sine', f * 2, t, t + d + 0.3, g2);
-      // Vibrato que entra poco a poco, como un flautista.
+      // Vibrato that comes in gradually, like a flautist.
       const lfo = ctx.createOscillator(); lfo.frequency.value = 5.3;
       const lg = ctx.createGain(); lg.gain.setValueAtTime(0, t);
       lg.gain.linearRampToValueAtTime(f * 0.007, t + Math.min(0.35, d));
       lfo.connect(lg); lg.connect(o1.frequency); lg.connect(o2.frequency);
       lfo.start(t); lfo.stop(t + d + 0.35);
-      // Soplo al atacar la nota.
+      // A breath when attacking the note.
       const bp = filt('bandpass', f * 2.2, 2, g);
       const ng = ctx.createGain(); ng.gain.setValueAtTime(0.25, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
       ng.connect(bp); noise(t, 0.09, ng);
@@ -235,9 +235,9 @@ G.Audio = (() => {
   }
 
   /**
-   * Compila una canción de data/music.js a una lista de eventos por paso
-   * (semicorchea). Melodías: "A4:4 C5:2 -:2" (nota:duración en semicorcheas).
-   * Bajo y arpegios salen de los acordes con patrones de 16 caracteres.
+   * Compiles a song from data/music.js into a list of events per step
+   * (sixteenth note). Melodies: "A4:4 C5:2 -:2" (note:duration in sixteenths).
+   * Bass and arpeggios come from the chords with 16-character patterns.
    */
   function compile(song) {
     const bars = song.bars || song.chords.length;
@@ -320,22 +320,22 @@ G.Audio = (() => {
     current = null;
   }
 
-  /** Cambia de tema (con fundido). null = silencio. */
+  /** Switches theme (with a crossfade). null = silence. */
   function music(name) {
     if (wanted === name) return;
     wanted = name;
-    if (!ctx) return;                    // arrancará al primer clic
+    if (!ctx) return;                    // will start on the first click
     stopCurrent();
     if (name) startSong(name);
   }
 
-  // Planificador: programa con 150 ms de antelación.
+  // Scheduler: schedules 150 ms ahead.
   setInterval(() => {
     if (!ctx || !current || ctx.state !== 'running') return;
     const c = current, sd = 60 / c.song.bpm / 4;
     while (c.next < ctx.currentTime + 0.15) {
       const i = c.step % c.song.steps;
-      // Swing: retrasa las corcheas a contratiempo.
+      // Swing: delays the off-beat eighth notes.
       const t = c.next + (i % 4 === 2 ? c.song.swing * sd : 0);
       for (const e of c.song.ev[i]) {
         if (e.drum) INST[e.inst](t, e.v, c.bus);
@@ -346,7 +346,7 @@ G.Audio = (() => {
     }
   }, 25);
 
-  // ---------------- efectos de sonido ----------------
+  // ---------------- sound effects ----------------
 
   const last = {};
   let xpCombo = 0, xpT = 0, voices = 0;
@@ -428,7 +428,7 @@ G.Audio = (() => {
     legend:  () => { arp('square', [523, 659, 784, 1047, 1319, 1568], 0.08, 0.3, 0.05); SFX.shiny(); },
     gameover: () => arp('triangle', [523, 440, 349, 262], 0.2, 0.35, 0.08),
     biome:   () => [392, 494, 587, 784].forEach(f => INST.pad(ctx.currentTime, f, 1.2, 1.4, sfxBus)),
-    // La Sentencia de Arceus (systems/judgment.js).
+    // Arceus's Judgment (systems/judgment.js).
     quake:   () => { hiss(2.4, 0.18, 'lowpass', 320, 50); tone('sine', 52, 30, 2.2, 0.22); },
     toll() {
       const t = ctx.currentTime;
@@ -450,7 +450,7 @@ G.Audio = (() => {
     buy:     () => { SFX.coin(); arp('triangle', [659, 784, 1047], 0.05, 0.12, 0.06); }
   };
 
-  // Separación mínima entre repeticiones del mismo efecto (ms).
+  // Minimum gap between repeats of the same effect (ms).
   const MIN_GAP = { hit: 45, faint: 60, xp: 35, coin: 50, grass: 70, shot: 70, hover: 40, break: 60, judge: 80 };
 
   function sfx(name, opts) {
@@ -460,13 +460,13 @@ G.Audio = (() => {
     const now = performance.now();
     const key = name === 'shot' && opts ? 'shot' + opts.kind : name;
     if (now - (last[key] || 0) < (MIN_GAP[name] || 0)) return;
-    if (voices > 24) return;                    // tope de voces simultáneas
+    if (voices > 24) return;                    // cap on simultaneous voices
     last[key] = now;
     voices++; setTimeout(() => voices--, 150);
-    try { fn(opts); } catch (e) { /* un efecto nunca debe romper el juego */ }
+    try { fn(opts); } catch (e) { /* an effect must never break the game */ }
   }
 
-  /** Para pruebas: mide pico y RMS de la salida durante `ms` milisegundos. */
+  /** For testing: measures the output's peak and RMS over `ms` milliseconds. */
   function debugMeter(ms = 2000) {
     if (!ctx) return Promise.resolve(null);
     const an = ctx.createAnalyser();
@@ -487,22 +487,22 @@ G.Audio = (() => {
     });
   }
 
-  /** Para grabar vídeos: la salida final como MediaStream (MediaRecorder). */
+  /** For recording videos: the final output as a MediaStream (MediaRecorder). */
   /**
-   * Para grabar vídeos: el sonido del juego como MediaStream.
-   * @param solo  sólo a la grabación (deja de sonar por los altavoces)
+   * For recording videos: the game's sound as a MediaStream.
+   * @param solo  only to the recording (stops playing through the speakers)
    */
   function debugStream(solo = false) {
     if (!ctx) return null;
     const d = ctx.createMediaStreamDestination();
     outNode.connect(d);
-    if (solo) { try { outNode.disconnect(ctx.destination); } catch (e) { /* ya estaba */ } }
+    if (solo) { try { outNode.disconnect(ctx.destination); } catch (e) { /* it already was */ } }
     return d.stream;
   }
 
   return {
     music, sfx, setVolume, toggleMute, unlock, debugMeter, debugStream,
-    /** ¿Ya puede sonar? (el navegador sólo deja tras tocar algo, salvo excepciones) */
+    /** Can it play yet? (the browser only allows it after touching something, with exceptions) */
     canPlay() { return !!ctx && ctx.state === 'running'; },
     get settings() { return settings; },
     get running() { return !!ctx && ctx.state === 'running'; },

@@ -1,49 +1,49 @@
-/* ============ ranking.js — clasificación de tiempo aguantado ============
- * Firestore (pensado para gastar lo mínimo del plan gratuito):
+/* ============ ranking.js — time-survived leaderboard ============
+ * Firestore (designed to use as little of the free plan as possible):
  *
- *   lbs/{tabla}        RESUMEN: el top 50 de la tabla en UN documento
+ *   lbs/{table}        SUMMARY: the table's top 50 in ONE document
  *                      { top: { id: { t, uids, names, dex, shiny, lv, kills } }, me, ev }
- *                      Ver una pestaña del ranking = 1 lectura (antes ~52).
- *   lb/{tabla}/e/{id}  la marca de cada jugador o equipo (la que sirve para
- *                      calcular tu puesto si no estás en el top 50)
+ *                      Viewing a leaderboard tab = 1 read (previously ~52).
+ *   lb/{table}/e/{id}  each player's or team's record (the one used to
+ *                      work out your rank if you're not in the top 50)
  *
- *   tabla = modo + periodo:
- *     s_d20261008   solitario, hoy            g_...   en grupo
- *     s_w2026-41    semana ISO                s_m202610  mes
- *     s_all2        histórico   (la tabla anual se quitó el 2026-10-10)
- *     s_all2_p25    histórico sólo con Pikachu (el filtro por Pokémon sólo
- *                   existe en el histórico: así cada partida escribe la mitad)
- *                   (all2 desde la Sentencia de Arceus: con el final en el
- *                    minuto 30, el histórico empezó de cero; las tablas viejas
- *                    s_all y s_all_pN se quedan en el servidor sin usarse)
- *   id = tu uid (solitario) o los uid del equipo ordenados y unidos con "_".
+ *   table = mode + period:
+ *     s_d20261008   solo, today               g_...   group
+ *     s_w2026-41    ISO week                  s_m202610  month
+ *     s_all2        all-time   (the yearly table was removed on 2026-10-10)
+ *     s_all2_p25    all-time with Pikachu only (the per-Pokémon filter only
+ *                   exists in the all-time table: that way each run writes half as much)
+ *                   (all2 since Arceus's Judgment: with the end at
+ *                    minute 30, the all-time table started from scratch; the old tables
+ *                    s_all and s_all_pN stay on the server unused)
+ *   id = your uid (solo) or the team's uids sorted and joined with "_".
  *
- * Ahorros:
- *   - Lo leído se guarda 30 min en el navegador (cambiar de pestaña y volver: 0).
- *   - Tus mejores marcas se recuerdan en el navegador: al acabar una partida
- *     no hay que leer nada para saber si has mejorado, y sólo se escribe
- *     donde mejoras.
- *   - El resumen sólo se toca si tu marca entra en el top 50.
- *   - En diario, semanal y mensual sólo se guardan las marcas del top 50: si
- *     no entras no se escribe nada y tu puesto sale como "fuera del top 50".
- *     Tu puesto exacto, aunque estés el 3.000, sólo en el histórico. Con mucha
- *     gente jugando, ahorra unas 6 de cada 10 escrituras del ranking.
+ * Savings:
+ *   - What's read is cached for 30 min in the browser (switching tabs and back: 0).
+ *   - Your best records are remembered in the browser: at the end of a run
+ *     nothing needs reading to know whether you've improved, and it only writes
+ *     where you improve.
+ *   - The summary is only touched if your record gets into the top 50.
+ *   - In daily, weekly and monthly only top-50 records are stored: if
+ *     you don't get in nothing is written and your rank shows as "outside the top 50".
+ *     Your exact rank, even if you're 3,000th, only in the all-time table. With lots of
+ *     people playing, it saves about 6 in 10 leaderboard writes.
  *
- * Los periodos se cuentan en hora de España (Europe/Madrid).
+ * Periods are counted in Spanish time (Europe/Madrid).
  */
 G.Ranking = (() => {
   const TZ = 'Europe/Madrid';
   const PERIODS = [['d', 'Diario'], ['w', 'Semanal'], ['m', 'Mensual'], ['a', 'Histórico']];
-  // Periodos en los que sólo se guarda el top 50 (ver arriba).
-  // ('p' = histórico de un Pokémon: casi cada partida entraba en el de su
-  //  Pokémon y escribía; ahora también sólo el top 50.)
+  // Periods in which only the top 50 is stored (see above).
+  // ('p' = a Pokémon's all-time table: almost every run got into its
+  //  Pokémon's and wrote; now also only the top 50.)
   const TOP_ONLY = new Set(['d', 'w', 'm', 'p']);
   const TOP = 50;
-  // Las runs de menos de 2 minutos no se suben (nunca entran en un top que
-  // importe y eran muchas lecturas y escrituras para nada: los que empiezan
-  // mueren a menudo en el primer minuto; era 1 min hasta el 14-10-2026).
+  // Runs shorter than 2 minutes aren't uploaded (they never get into a top that
+  // matters and they were many reads and writes for nothing: beginners
+  // often die in the first minute; it was 1 min until 14-10-2026).
   const MIN_T = 120;
-  const TTL = 30 * 60 * 1000;            // caché de lo leído (30 min: menos lecturas de Firestore)
+  const TTL = 30 * 60 * 1000;            // cache of what's been read (30 min: fewer Firestore reads)
 
   const fbx = () => G.DB.online ? G.DB.fb : null;
 
@@ -55,7 +55,7 @@ G.Ranking = (() => {
     return { y: +p.year, m: +p.month, d: +p.day };
   }
 
-  /** Semana ISO (lunes a domingo) de una fecha y-m-d. */
+  /** ISO week (Monday to Sunday) of a y-m-d date. */
   function isoWeek(y, m, d) {
     const t = new Date(Date.UTC(y, m - 1, d));
     const day = t.getUTCDay() || 7;
@@ -64,7 +64,7 @@ G.Ranking = (() => {
     return { year: t.getUTCFullYear(), week: Math.ceil(((t - y0) / 86400000 + 1) / 7) };
   }
 
-  const ALL = 'all2';                     // histórico (ver arriba)
+  const ALL = 'all2';                     // all-time (see above)
   function periodIds(date = new Date()) {
     const { y, m, d } = madridDate(date);
     const w = isoWeek(y, m, d);
@@ -73,17 +73,17 @@ G.Ranking = (() => {
   }
 
   /*
-   * Nombres de las tablas: los de periodIds() salvo semana y mes, que llevan
-   * una "j" (desde la Sentencia de Arceus, 14-10-2026: empezaron de cero como el
-   * histórico, que tenían marcas de antes del final del minuto 30). periodIds()
-   * se queda igual porque también lo usan las misiones (progress.js).
+   * Table names: those from periodIds() except week and month, which carry
+   * a "j" (since Arceus's Judgment, 14-10-2026: they started from scratch like the
+   * all-time table, which had records from before the minute-30 ending). periodIds()
+   * stays the same because the missions use it too (progress.js).
    */
   function boardIds(date) {
     const p = periodIds(date);
     return Object.assign({}, p, { w: p.w + 'j', m: p.m + 'j' });
   }
 
-  /** El filtro por Pokémon sólo existe en el histórico. */
+  /** The per-Pokémon filter only exists in the all-time table. */
   function board(mode, period, dex) {
     return mode + '_' + boardIds()[period] + (dex && period === 'a' && mode.length === 1 ? '_p' + dex : '');
   }
@@ -91,11 +91,11 @@ G.Ranking = (() => {
   const col = b => fbx().fs.collection('lb').doc(b).collection('e');
   const sumRef = b => fbx().fs.collection('lbs').doc(b);
 
-  // ---------------- caché en el navegador ----------------
+  // ---------------- browser cache ----------------
 
   const mem = new Map();                 // clave -> { at, v }
-  // Tu puesto exacto (fuera del top 50) cuesta 1 lectura por cada 1.000 marcas
-  // que tienes por delante: se guarda 6 h, y se vuelve a mirar antes si mejoras.
+  // Your exact rank (outside the top 50) costs 1 read for every 1,000 records
+  // ahead of you: it's kept for 6 h, and checked again sooner if you improve.
   const RANK_TTL = 6 * 3600 * 1000;
   const ttlOf = k => (k.startsWith('r:') ? RANK_TTL : TTL);
   function cacheGet(k) {
@@ -108,7 +108,7 @@ G.Ranking = (() => {
     mem.set(k, c);
     try { localStorage.setItem('ps.rk.c.' + k, JSON.stringify(c)); } catch (e) { /* lleno */ }
   }
-  /** Borra lo caducado (la caché del navegador no crece sin límite). */
+  /** Deletes what's expired (the browser cache doesn't grow without limit). */
   function cachePrune() {
     try {
       for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -117,28 +117,28 @@ G.Ranking = (() => {
         const c = JSON.parse(localStorage.getItem(k) || 'null');
         if (!c || Date.now() - c.at > ttlOf(k.slice(8))) localStorage.removeItem(k);
       }
-    } catch (e) { /* nada */ }
+    } catch (e) { /* nothing */ }
   }
   cachePrune();
 
-  // Tus mejores marcas por tabla (para no leer antes de escribir).
-  // (best2 desde 2026-10-12: se quitaron del ranking las marcas rotas; así quien
-  //  tenía una vuelve a mirar su marca real y puede volver a entrar.)
+  // Your best records per table (so there's no read before writing).
+  // (best2 since 2026-10-12: the broken records were removed from the leaderboard; this way anyone
+  //  who had one looks up their real record again and can get back in.)
   const bestKey = () => 'ps.rk.best2.' + (fbx() ? fbx().uid : '');
   function bests() { try { return JSON.parse(localStorage.getItem(bestKey()) || '{}'); } catch (e) { return {}; } }
   function saveBests(b) {
-    // Sólo se conservan las tablas de los periodos actuales y las históricas.
+    // Only the tables for the current periods and the all-time ones are kept.
     const cur = Object.values(boardIds());
     for (const k of Object.keys(b)) if (!cur.some(p => k.split(':')[0].split('_')[1] === p)) delete b[k];
     try { localStorage.setItem(bestKey(), JSON.stringify(b)); } catch (e) { /* lleno */ }
   }
 
-  // ---------------- umbral de cada tabla ----------------
+  // ---------------- each table's threshold ----------------
   /*
-   * La marca más baja del top 50 de cada tabla, cuando está llena. Sólo puede
-   * subir con el tiempo, así que un valor viejo sigue sirviendo: si tu marca
-   * no lo supera, seguro que no entra y no hace falta leer nada (cada resumen
-   * pesa ~30 KB y al acabar una partida se miraban hasta 5; 13-10-2026).
+   * The lowest record in each table's top 50, when it's full. It can only
+   * rise over time, so an old value is still useful: if your record
+   * doesn't beat it, it definitely won't get in and nothing needs reading (each summary
+   * weighs ~30 KB and up to 5 were checked at the end of a run; 13-10-2026).
    */
   const THR = 'ps.rk.thr';
   function thresholds() { try { return JSON.parse(localStorage.getItem(THR) || '{}'); } catch (e) { return {}; } }
@@ -150,7 +150,7 @@ G.Ranking = (() => {
     const t = thresholds();
     if ((t[b] || 0) >= low) return;
     t[b] = low;
-    // Sólo las tablas de los periodos de ahora (y las históricas).
+    // Only the tables for the current periods (and the all-time ones).
     const cur = Object.values(boardIds());
     for (const k of Object.keys(t)) if (!cur.some(p => k.split('_')[1] === p)) delete t[k];
     try { localStorage.setItem(THR, JSON.stringify(t)); } catch (e) { /* lleno */ }
@@ -169,12 +169,12 @@ G.Ranking = (() => {
   // ---------------- anti-trampas ----------------
 
   /**
-   * Al empezar la PRIMERA partida de la sesión (en grupo, el anfitrión) el
-   * servidor apunta la hora: ninguna marca puede durar más que el tiempo real
-   * desde entonces (firestore.rules, validEntry). Una vez por sesión y no en
-   * cada partida (14-10-2026: eran casi 150.000 escrituras al día de más; es
-   * igual de seguro, porque la sesión siempre empieza antes que la partida).
-   * Antes se espera a que acabe de subirse la marca de la partida anterior.
+   * When the FIRST run of the session starts (in a group, the host) the
+   * server records the time: no record can last longer than the real time
+   * since then (firestore.rules, validEntry). Once per session and not on
+   * every run (14-10-2026: it was almost 150,000 extra writes a day; it's
+   * just as safe, because the session always starts before the run).
+   * It first waits for the previous run's record to finish uploading.
    */
   let busy = Promise.resolve(), runMarked = '';
   function runStarted(mode) {
@@ -188,10 +188,10 @@ G.Ranking = (() => {
       });
     busy.then(() => go(0));
   }
-  /** La subida de una marca (para que la partida siguiente espere a que acabe). */
+  /** A record's upload (so the next run waits for it to finish). */
   function track(p) { busy = p.catch(() => {}); return p; }
 
-  /** Guarda la entrada en cada tabla donde mejore. → periodos mejorados */
+  /** Saves the entry in each table where it improves. → periods improved */
   async function store(boards, id, entry) {
     const fb = fbx();
     const better = [];
@@ -201,21 +201,21 @@ G.Ranking = (() => {
       const vk = vkOf(b), v = entry[vk];
       try {
         const topOnly = TOP_ONLY.has(period);
-        // Si no llegas a la 50.ª marca que conoce este navegador, no entras: en
-        // diario, semanal, mensual y por Pokémon no hay nada que hacer (ni leer).
+        // If you don't reach the 50th record this browser knows of, you don't get in: in
+        // daily, weekly, monthly and per-Pokémon there's nothing to do (or read).
         const thr = thresholds()[b] || 0;
         if (topOnly && thr && v <= thr) return;
-        // ¿Ya tenías una marca mejor? En el histórico, si este navegador no lo
-        // sabe, se mira una vez tu marca (pequeña). En las demás lo dice el
-        // resumen, que se lee igualmente dentro de la transacción de abajo.
+        // Did you already have a better record? In the all-time table, if this browser doesn't
+        // know, your record is checked once (small). In the others the
+        // summary says so, which is read anyway inside the transaction below.
         if (known[key] === undefined && !topOnly) {
           const old = await col(b).doc(id).get();
           known[key] = old.exists ? (old.data()[vk] || 0) : 0;
         }
         if ((known[key] || 0) >= v) return;
         const data = Object.assign({}, entry, { at: firebase.firestore.FieldValue.serverTimestamp() });
-        // Si la tabla ya está llena y no llegas al top 50, no hace falta tocar el resumen
-        // (y en diario, semanal y mensual, ni siquiera se guarda la marca).
+        // If the table is already full and you don't reach the top 50, the summary needn't be touched
+        // (and in daily, weekly and monthly, the record isn't even stored).
         const cached = cacheGet('s:' + b);
         if (thr && v <= thr && !(cached && id in cached)) {
           if (!topOnly) await col(b).doc(id).set(data);
@@ -226,15 +226,15 @@ G.Ranking = (() => {
           await fb.fs.runTransaction(async tx => {
             const s = await tx.get(sumRef(b));
             const top = Object.assign({}, s.exists ? s.data().top : {});
-            // (Sin "shiny" si no hay ninguno: el resumen pesa menos.)
+            // (No "shiny" if there aren't any: the summary weighs less.)
             const mine = { t: entry.t, uids: entry.uids, names: entry.names, dex: entry.dex, lv: entry.lv, kills: entry.kills, at: Date.now() };
             if (entry.shiny.some(Boolean)) mine.shiny = entry.shiny;
             let ev = '';
-            // Ya estabas con una marca mejor (otro ordenador): nada que escribir.
+            // You were already there with a better record (another computer): nothing to write.
             if (id in top && (top[id][vk] || 0) >= v) { entered = false; newTop = top; return; }
             if (!(id in top) && Object.keys(top).length >= TOP) {
               const low = sorted(top, vk).pop();
-              if ((low[vk] || 0) >= v) {                                // no entra en el top
+              if ((low[vk] || 0) >= v) {                                // doesn't get into the top
                 if (!topOnly) tx.set(col(b).doc(id), data);
                 entered = false; newTop = top; return;
               }
@@ -250,7 +250,7 @@ G.Ranking = (() => {
         }
         known[key] = v;
         if (/^g/.test(b)) known[b + ':*'] = Math.max(known[b + ':*'] || 0, v);
-        mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nada */ }
+        mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nothing */ }
         if (vk === 't' && period && period !== 'p' && !better.includes(period)) better.push(period);
       } catch (e) { console.warn('[Ranking] no se pudo guardar en', b, e.code || e.message); }
     }));
@@ -279,7 +279,7 @@ G.Ranking = (() => {
     return better;
   }
 
-  /** La sube el anfitrión, con todo el equipo. */
+  /** The host uploads it, with the whole team. */
   function submitGroup(r) { return track(submitGroupNow(r)); }
   async function submitGroupNow(r) {
     const fb = fbx();
@@ -299,8 +299,8 @@ G.Ranking = (() => {
 
   // ---------------- leer ----------------
 
-  /** El top 50 de una tabla (1 lectura, o 0 si se leyó hace menos de 30 min). */
-  const inflight = new Map();             // tabla -> lectura en curso (la lista y tu puesto la comparten)
+  /** A table's top 50 (1 read, or 0 if it was read less than 30 min ago). */
+  const inflight = new Map();             // table -> read in progress (the list and your rank share it)
   async function summary(b) {
     const c = cacheGet('s:' + b);
     if (c !== undefined) return c;
@@ -316,8 +316,8 @@ G.Ranking = (() => {
   }
 
   /**
-   * Mejores marcas de una tabla.
-   * @param friendsOnly  sólo tú y tus amigos
+   * A table's best records.
+   * @param friendsOnly  only you and your friends
    */
   async function top(mode, period, dex, friendsOnly) {
     const rows = await topRows(mode, period, dex, friendsOnly);
@@ -345,12 +345,12 @@ G.Ranking = (() => {
         const d = await col(b).doc(r.id).get();
         const at = d.exists ? atMs(d.data().at) : 0;
         if (at) { r.at = at; c[k] = at; }
-      } catch (e) { /* sin fecha */ }
+      } catch (e) { /* no date */ }
     }));
     try {
       if (Object.keys(c).length > 800) c = Object.fromEntries(Object.entries(c).slice(-400));
       localStorage.setItem(KEY, JSON.stringify(c));
-    } catch (e) { /* nada */ }
+    } catch (e) { /* nothing */ }
   }
 
   async function topRows(mode, period, dex, friendsOnly) {
@@ -362,9 +362,9 @@ G.Ranking = (() => {
     if (!friendsOnly) return rows.slice(0, TOP);
     const circle = [fb.uid, ...G.Social.friends.filter(f => f.status === 'ok').map(f => f.uid)].slice(0, 30);
     const inTop = rows.filter(r => r.uids.some(u => circle.includes(u)));
-    // En diario, semanal, mensual y por Pokémon no hay marcas fuera del top 50.
+    // In daily, weekly, monthly and per-Pokémon there are no records outside the top 50.
     if (TOP_ONLY.has(period) || dex) return inTop;
-    // Los amigos que no están en el top 50: se buscan aparte (y se guardan 30 min).
+    // Friends who aren't in the top 50: looked up separately (and cached for 30 min).
     const ck = 'f:' + b + ':' + circle.slice().sort().join(',');
     let extra = cacheGet(ck);
     if (extra === undefined) {
@@ -383,13 +383,13 @@ G.Ranking = (() => {
     return [...all.values()].sort((a, c) => (c[vk] || 0) - (a[vk] || 0)).slice(0, TOP);
   }
 
-  /** Tu puesto en la tabla (aunque no salgas en el top). → { pos, t, row } | null */
+  /** Your rank in the table (even if you're not in the top). → { pos, t, row } | null */
   async function myRank(mode, period, dex) {
     const fb = fbx();
     if (!fb) return null;
     if (mode.length > 1) dex = null;
     const b = board(mode, period, dex), vk = vkOf(b);
-    // ¿Estás en el top 50? Entonces el puesto sale del resumen, sin gastar nada.
+    // Are you in the top 50? Then the rank comes from the summary, at no cost.
     const rows = sorted(await summary(b), vk);
     const i = rows.findIndex(r => r.uids.includes(fb.uid));
     if (i >= 0) return { pos: i + 1, t: rows[i][vk], row: rows[i] };
@@ -397,7 +397,7 @@ G.Ranking = (() => {
     const ck = 'r:' + b;
     const c = cacheGet(ck);
     if (c !== undefined) return c;
-    // Si este navegador ya sabe que no tienes marca en esta tabla, no se mira.
+    // If this browser already knows you have no record in this table, it isn't checked.
     const kb = bests(), mk = b + ':' + (mode[0] === 's' ? fb.uid : '*');
     if (kb[mk] === 0) { cacheSet(ck, null); return null; }
     let mine = null;
@@ -417,9 +417,9 @@ G.Ranking = (() => {
   }
 
   /**
-   * Cuántas entradas tienen más tiempo. La versión "compat" del SDK no trae
-   * count(), así que se usa la API REST de agregación (1 lectura por cada
-   * 1.000 entradas, en vez de leerlas todas). Sólo se usa si no estás en el top 50.
+   * How many entries have more time. The SDK's "compat" version doesn't have
+   * count(), so the REST aggregation API is used (1 read for every
+   * 1,000 entries, instead of reading them all). Only used if you're not in the top 50.
    */
   async function countAbove(b, t, vk = 't') {
     const fb = fbx();
@@ -442,7 +442,7 @@ G.Ranking = (() => {
     }
   }
 
-  /** Al borrar la cuenta: quita tus filas de los resúmenes que conoce este navegador. */
+  /** When deleting the account: removes your rows from the summaries this browser knows of. */
   async function removeMine() {
     const fb = fbx();
     if (!fb) return;
@@ -456,18 +456,18 @@ G.Ranking = (() => {
       const top = s.data().top || {};
       for (const [id, v] of Object.entries(top)) {
         if (!(v.uids || []).includes(fb.uid)) continue;
-        // Una fila por escritura (las reglas sólo dejan quitar una cada vez).
+        // One row per write (the rules only allow removing one at a time).
         const next = Object.assign({}, top); delete next[id];
         tx.set(sumRef(b), { top: next, me: '', ev: id });
         return;
       }
     }).catch(() => {})));
-    try { localStorage.removeItem(bestKey()); } catch (e) { /* nada */ }
+    try { localStorage.removeItem(bestKey()); } catch (e) { /* nothing */ }
   }
 
-  // ---------------- reportes y moderación ----------------
+  // ---------------- reports and moderation ----------------
 
-  /** Reporta una marca sospechosa (una vez por marca y jugador). → true si se ha enviado */
+  /** Reports a suspicious record (once per record and player). → true if it was sent */
   const repKey = () => 'ps.rk.rep.' + (fbx() ? fbx().uid : '');
   function reported() { try { return new Set(JSON.parse(localStorage.getItem(repKey()) || '[]')); } catch (e) { return new Set(); } }
   async function report(b, row) {
@@ -476,7 +476,7 @@ G.Ranking = (() => {
     const key = b + '__' + row.id;
     const done = reported();
     if (!done.has(key)) {
-      // (Si ya lo habías reportado desde otro ordenador, el servidor no deja repetirlo: da igual.)
+      // (If you had already reported it from another computer, the server won't allow a repeat: no matter.)
       await fb.fs.collection('reports').doc(key + '__' + fb.uid)
         .set({ board: b, e: row.id, names: row.names.slice(0, 5), t: row.t | 0, by: fb.uid, at: now() }).catch(() => {});
       done.add(key);
@@ -485,11 +485,11 @@ G.Ranking = (() => {
     return true;
   }
 
-  // Cuenta de moderación (firestore.rules, admin()): la pantalla oculta de js/ui/mod-ui.js.
+  // Moderation account (firestore.rules, admin()): the hidden screen in js/ui/mod-ui.js.
   const ADMINS = ['Hn5Mdk51FGN9Rkj1BDMVcOvF1N53'];
   const isAdmin = () => !!fbx() && ADMINS.includes(fbx().uid);
 
-  /** Admin: los reportes, juntos por marca (los más reportados primero). */
+  /** Admin: the reports, grouped by record (most reported first). */
   async function reports() {
     const s = await fbx().fs.collection('reports').orderBy('at', 'desc').limit(400).get();
     const by = new Map();
@@ -501,13 +501,13 @@ G.Ranking = (() => {
     return [...by.values()].sort((a, b) => b.n - a.n || b.at - a.at);
   }
 
-  /** Admin: la fila de una marca en el top 50 de su tabla (o null si ya no está). */
+  /** Admin: a record's row in its table's top 50 (or null if it's no longer there). */
   async function entryInfo(b, e) {
     const top = await summary(b);
     return top[e] ? rowOf(e, top[e]) : null;
   }
 
-  /** Admin: quita una marca de una tabla (la marca y su fila del top 50). */
+  /** Admin: removes a record from a table (the record and its top-50 row). */
   async function removeEntry(b, e) {
     const fb = fbx();
     await col(b).doc(e).delete().catch(() => {});
@@ -521,7 +521,7 @@ G.Ranking = (() => {
     cacheSet('s:' + b, undefined);
   }
 
-  /** Admin: quita la marca de un jugador o equipo de todas las tablas de ahora (y de `also`). */
+  /** Admin: removes a player's or team's record from all current tables (and from `also`). */
   async function removeEverywhere(e, mode, dexes = [], also = null) {
     const ids = boardIds();
     const boards = new Set(PERIODS.flatMap(([p]) => [mode + '_' + ids[p], mode + 'k_' + ids[p]]));
@@ -531,9 +531,9 @@ G.Ranking = (() => {
   }
 
   /**
-   * Admin: quita de TODAS las tablas las marcas de más de `maxT` segundos (las
-   * filas de cada top 50 y las marcas sueltas del histórico). Con la Sentencia
-   * de Arceus nadie legal pasa de ~32 min. → { rows, boards }
+   * Admin: removes from ALL tables the records longer than `maxT` seconds (the
+   * rows of each top 50 and the loose records in the all-time table). With Arceus's
+   * Judgment nobody legitimate goes past ~32 min. → { rows, boards }
    */
   async function purgeAbove(maxT, onProgress) {
     const fs = fbx().fs;
@@ -555,9 +555,9 @@ G.Ranking = (() => {
       });
       await Promise.all(bad.map(id => fs.collection('lb').doc(d.id).collection('e').doc(id).delete().catch(() => {})));
       rows += bad.length; boards++;
-      mem.delete('s:' + d.id); try { localStorage.removeItem('ps.rk.c.s:' + d.id); } catch (e) { /* nada */ }
+      mem.delete('s:' + d.id); try { localStorage.removeItem('ps.rk.c.s:' + d.id); } catch (e) { /* nothing */ }
     }
-    // Las marcas del histórico que no están en el top 50 (sirven para el puesto exacto).
+    // All-time records that aren't in the top 50 (used for the exact rank).
     for (const b of ['s_' + ALL, 'g_' + ALL]) {
       const q = await col(b).where('t', '>', maxT).get();
       await Promise.all(q.docs.map(e => e.ref.delete().catch(() => {})));
@@ -566,11 +566,11 @@ G.Ranking = (() => {
     return { rows, boards };
   }
 
-  /** Admin: banea o desbanea una cuenta del ranking (baneada = no puede subir marcas). */
+  /** Admin: bans or unbans an account from the leaderboard (banned = can't upload records). */
   function setMarked(uid, on) { return fbx().fs.collection('saves').doc(uid).update({ ban: !!on }); }
-  /** Admin: borra reportes ya vistos. */
+  /** Admin: deletes reports already seen. */
   function dismiss(ids) { return Promise.all(ids.map(id => fbx().fs.collection('reports').doc(id).delete().catch(() => {}))); }
-  /** Admin: cuentas baneadas del ranking. */
+  /** Admin: accounts banned from the leaderboard. */
   async function markedAccounts() {
     const s = await fbx().fs.collection('saves').where('ban', '==', true).limit(100).get();
     return s.docs.map(d => { const v = d.data().save || {}; return { uid: d.id, name: v.name || '?', coins: v.coins || 0,

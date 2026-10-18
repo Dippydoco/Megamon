@@ -1,74 +1,74 @@
-# Publicar el juego gratis en GitHub Pages
+# Publishing the game for free on GitHub Pages
 
-El juego es una web estática: GitHub Pages la sirve gratis en
+The game is a static website: GitHub Pages serves it for free at
 `https://jpter78.github.io/pokesurvivor/`.
 
-## 1. Crear el repositorio (una vez)
+## 1. Create the repository (once)
 
-1. Entra en <https://github.com/new> con la cuenta **JPTER78**.
-2. Nombre: `pokesurvivor` · **Public** · **sin** README, .gitignore ni licencia
-   (ya vienen en el proyecto).
-3. Crear repositorio.
+1. Go to <https://github.com/new> with the **JPTER78** account.
+2. Name: `pokesurvivor` · **Public** · **no** README, .gitignore or licence
+   (they're already in the project).
+3. Create repository.
 
-## 2. Subir el proyecto
+## 2. Upload the project
 
-Desde la carpeta del proyecto (el repositorio local ya está creado y con el
-primer commit hecho):
+From the project folder (the local repository is already created, with the
+first commit made):
 
 ```
 git remote add origin https://github.com/JPTER78/pokesurvivor.git
 git push -u origin main
 ```
 
-La primera vez se abre una ventana para iniciar sesión en GitHub.
-Son unos 75 MB, puede tardar unos minutos.
+The first time, a window opens to sign in to GitHub.
+It's about 75 MB, so it can take a few minutes.
 
-## 3. Activar GitHub Pages
+## 3. Turn on GitHub Pages
 
-En el repositorio: **Settings → Pages** →
-*Source*: **Deploy from a branch** → *Branch*: **main**, carpeta **/ (root)** → **Save**.
+In the repository: **Settings → Pages** →
+*Source*: **Deploy from a branch** → *Branch*: **main**, folder **/ (root)** → **Save**.
 
-En uno o dos minutos estará en <https://jpter78.github.io/pokesurvivor/>.
+In a minute or two it will be at <https://jpter78.github.io/pokesurvivor/>.
 
-## 4. Conectar con Firebase
+## 4. Connect to Firebase
 
-Si ya seguiste [FIREBASE.md](FIREBASE.md), añade `jpter78.github.io` a los
-**dominios autorizados** de Authentication (paso 5) y sube el
-`firebase-config.js` rellenado:
+If you have already followed [FIREBASE.md](FIREBASE.md), add `jpter78.github.io` to
+Authentication's **authorised domains** (step 5) and upload the
+filled-in `firebase-config.js`:
 
 ```
 git add js/core/firebase-config.js
-git commit -m "Conectar con Firebase"
+git commit -m "Connect to Firebase"
 git push
 ```
 
-## 5. Que salga en Google
+## 5. Getting it on Google
 
-1. <https://search.google.com/search-console> → **Añadir propiedad** →
-   *Prefijo de la URL* → `https://jpter78.github.io/pokesurvivor/`.
-2. Verificación: el método **Etiqueta HTML** te da una línea `<meta ...>`;
-   pégala dentro de `<head>` en `index.html`, haz `git push`, y pulsa Verificar.
-3. **Inspección de URLs** → pega la dirección → **Solicitar indexación**.
+1. <https://search.google.com/search-console> → **Add property** →
+   *URL prefix* → `https://jpter78.github.io/pokesurvivor/`.
+2. Verification: the **HTML tag** method gives you a `<meta ...>` line;
+   paste it inside `<head>` in `index.html`, run `git push`, and click Verify.
+3. **URL inspection** → paste the address → **Request indexing**.
 
-Google tarda de días a semanas en mostrarlo, y al principio sólo aparece si se
-busca el nombre exacto.
+Google takes days to weeks to show it, and at first it only appears when people
+search for the exact name.
 
-## Actualizar el juego más adelante
+## Updating the game later
 
-Cada vez que cambies algo:
+Every time you change something:
 
 ```
 git add -A
-git commit -m "Qué has cambiado"
+git commit -m "What you changed"
 git push
 ```
 
-GitHub Pages se actualiza solo en uno o dos minutos.
+GitHub Pages updates on its own in a minute or two.
 
-## Recordatorios
+## Reminders
 
-- **Nada de dinero**: ni anuncios, ni donaciones a cambio de nada, ni pagos.
-  Lo exige la licencia de los sprites (CC BY-NC) y es lo que más reduce el
-  riesgo de que Nintendo pida retirarlo.
-- Si llega una reclamación de derechos al correo del aviso legal, atiéndela
-  rápido: retirar lo que pidan suele cerrar el asunto.
+- **No money**: no ads, no donations in exchange for anything, no payments.
+  The sprites' licence (CC BY-NC) requires it, and it's what most reduces the
+  risk of Nintendo asking for it to be taken down.
+- If a rights claim arrives at the legal notice email, deal with it
+  quickly: removing what they ask for usually closes the matter.

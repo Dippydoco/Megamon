@@ -1,9 +1,9 @@
-/* ============ run-ui.js — cartas de nivel, pausa y fin de run ============ */
+/* ============ run-ui.js — level-up cards, pause and end of run ============ */
 G.RunUI = (() => {
   const $ = G.UI.$;
   let offers = null, offerCb = null, coopMode = false;
 
-  /** @param coop  en grupo: tras elegir, se queda esperando a los demás */
+  /** @param coop  in a group: after choosing, it waits for the others */
   function showLevelUp(level, list, cb, coop = false) {
     offerCb = cb; coopMode = coop;
     $('lvl-num').textContent = level;
@@ -17,12 +17,12 @@ G.RunUI = (() => {
   }
 
   /**
-   * Cambiar las cartas: 1 vez gratis por partida y 1 más por cada jefe
-   * derrotado (en grupo cuentan los jefes del equipo; cada uno tiene los suyos).
+   * Reroll the cards: 1 free time per run and 1 more for each boss
+   * defeated (in a group the team's bosses count; each player has their own).
    */
   function rerollsLeft() {
     const p = G.Game.player;
-    // 1 gratis + los comprados en Mejoras (antes, 1 más por cada jefe).
+    // 1 free + those bought in Upgrades (previously, 1 more for each boss).
     return p ? Math.max(0, 1 + (p.rerollBonus || 0) - (p.rerolls || 0)) : 0;
   }
 
@@ -78,7 +78,7 @@ G.RunUI = (() => {
         `<div class="ico" style="background:${c.color}33">${G.Icons.html(c.icon, 32)}</div>
          <div class="txt"><div class="nm">${c.title} ${tag}${owned}${c.kind ? ' ' + G.Icons.kindTag(c.kind) : ''}</div><div class="ds">${c.desc}</div></div>
          <div class="key">${i + 1}</div>`;
-      el.dataset.sfx = 'none';             // el juego pone su propio sonido al elegir
+      el.dataset.sfx = 'none';             // the game plays its own sound on choosing
       el.onclick = () => pick(i);
       box.appendChild(el);
     });
@@ -91,14 +91,14 @@ G.RunUI = (() => {
     $('lvl-reroll').classList.add('hidden');
     $('lvl-skip').classList.add('hidden');
     if (coopMode) {
-      // Se queda la carta elegida a la vista mientras eligen los demás.
+      // The chosen card stays visible while the others choose.
       $('cards').querySelectorAll('.card').forEach((el, j) => el.classList.toggle('picked', j === i));
       $('cards').classList.add('done');
     } else G.UI.hide('scr-levelup');
     cb(c);
   }
 
-  /** Cooperativo: quién falta por elegir. */
+  /** Co-op: who still has to choose. */
   function setWaiting(names) {
     const me = G.Social.me ? G.Social.me.name : '';
     const others = names.filter(n => n !== me);
@@ -116,8 +116,8 @@ G.RunUI = (() => {
   }
 
   /**
-   * Mensaje de apoyo (Ko-fi) al acabar: tras un récord o cada 10 partidas,
-   * nunca en la primera y como mucho una vez al día. Se cierra con la X.
+   * Support message (Ko-fi) at the end: after a record or every 10 runs,
+   * never on the first and at most once a day. Closed with the X.
    */
   function askSupport(r) {
     if (!G.Funding || !G.Funding.url) return false;
@@ -219,11 +219,11 @@ G.RunUI = (() => {
     G.UI.show('scr-over');
   }
 
-  /** Has encontrado un objeto llevando ya otro: ¿con cuál te quedas? */
+  /** You found an item while already holding one: which do you keep? */
   function showItemChoice(cur, next, cb) {
     const box = $('item-cards');
     box.innerHTML = '';
-    // Sin objeto (cur = null): se ofrece el nuevo para aceptarlo o descartarlo.
+    // No item (cur = null): the new one is offered to accept or discard.
     const opts = cur ? [[cur, 'Quedarme con'], [next, 'Cambiar a']] : [[next, 'Take'], [null, 'Discard']];
     opts.forEach(([id, verb], i) => {
       const it = id ? G.Items.BY[id] : null;
@@ -291,13 +291,13 @@ G.RunUI = (() => {
     G.UI.show('scr-item');
   }
 
-  // ---------------- vínculo: qué movimientos se fusionan ----------------
+  // ---------------- bond: which moves are fused ----------------
 
   let bond = null;          // { opt, cb, first, list }
 
   /**
-   * @param opt  pl.bondOptions(): 'add' (uno suelto al grupo) o 'pair' (dos sueltos, en dos pasos)
-   * @param cb   recibe la lista de movimientos que se juntan
+   * @param opt  pl.bondOptions(): 'add' (one loose move to the group) or 'pair' (two loose ones, in two steps)
+   * @param cb   receives the list of moves that are joined
    */
   function showBond(opt, cb) {
     bond = { opt, cb, first: null, list: [] };

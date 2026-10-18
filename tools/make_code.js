@@ -1,9 +1,9 @@
-/* Crea la línea de un código canjeable para js/data/codes.js
+/* Creates the line for a redeemable code for js/data/codes.js
  *
- *   node tools/make_code.js MICODIGO t1=5 t10=1 coins=200 until=2026-12-31
+ *   node tools/make_code.js MYCODE t1=5 t10=1 coins=200 until=2026-12-31
  *
- * (t1, t10, coins y until son opcionales.) Usa la misma huella que
- * js/systems/redeem.js: SHA-256 de "megamon-codes:" + el código normalizado.
+ * (t1, t10, coins and until are optional.) Uses the same fingerprint as
+ * js/systems/redeem.js: SHA-256 of "megamon-codes:" + the normalised code.
  */
 const crypto = require('crypto');
 const [code, ...opts] = process.argv.slice(2);
@@ -15,6 +15,6 @@ for (const o of opts) {
   const [k, v] = o.split('=');
   if (['t1', 't10', 'coins'].includes(k) && /^\d+$/.test(v)) parts.push(`${k}: ${v}`);
   else if (k === 'until' && /^\d{4}-\d{2}-\d{2}$/.test(v)) parts.push(`until: '${v}'`);
-  else { console.error('Opción no válida: ' + o); process.exit(1); }
+  else { console.error('Invalid option: ' + o); process.exit(1); }
 }
 console.log(`  // ${norm}\n  { ${parts.join(', ')} },`);

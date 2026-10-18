@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Descarga los sprites estilo Mundo Misterioso de SpriteCollab (normal y shiny)
-a assets/pokemon/ y genera js/data/sprites-meta.js.
+Downloads the Mystery Dungeon style sprites from SpriteCollab (normal and shiny)
+to assets/pokemon/ and generates js/data/sprites-meta.js.
 
-    python tools/fetch_sprites.py            # todos los que existan (1-1025)
-    python tools/fetch_sprites.py 1 151      # sólo un rango de la Pokédex
+    python tools/fetch_sprites.py            # all that exist (1-1025)
+    python tools/fetch_sprites.py 1 151      # only a range of the Pokédex
 
-Se puede interrumpir y relanzar: lo ya bajado se reutiliza (tools/cache/).
+It can be interrupted and restarted: what's already downloaded is reused (tools/cache/).
 
-Fuente: https://github.com/PMDCollab/SpriteCollab  (CC BY-NC 4.0)
-Créditos: python tools/fetch_credits.py
+Source: https://github.com/PMDCollab/SpriteCollab  (CC BY-NC 4.0)
+Credits: python tools/fetch_credits.py
 
-Formato de SpriteCollab:
-  sprite/{dex}/            sprite normal
-  sprite/{dex}/0000/0001/  sprite shiny (forma 0000, variante 0001)
-  - columnas = fotogramas, filas = 8 direcciones
-    (Down, DownRight, Right, UpRight, Up, UpLeft, Left, DownLeft; verificado
-     con los -Offsets.png)
-  - cada animación tiene su propio tamaño de fotograma, así que se alinean por
-    el ancla al suelo, que se saca del -Shadow.png
+SpriteCollab format:
+  sprite/{dex}/            normal sprite
+  sprite/{dex}/0000/0001/  shiny sprite (form 0000, variant 0001)
+  - columns = frames, rows = 8 directions
+    (Down, DownRight, Right, UpRight, Up, UpLeft, Left, DownLeft; verified
+     against the -Offsets.png)
+  - each animation has its own frame size, so they are aligned by
+    the ground anchor, taken from the -Shadow.png
 
-Las hojas se guardan como PNG con paleta (sin pérdida): ocupan la mitad.
+Sheets are stored as palette PNG (lossless): they take half the space.
 """
 import io
 import json
@@ -118,14 +118,14 @@ def ground_anchor(png, w, h):
 
 
 def save_optimized(png, path):
-    """Guarda como PNG con paleta exacta (sin pérdida). Devuelve (ancho, alto)."""
+    """Saves as PNG with an exact palette (lossless). Returns (width, height)."""
     im = Image.open(io.BytesIO(png)).convert('RGBA')
     cols = im.getcolors(256)
-    if cols is None:                          # más de 256 colores: tal cual
+    if cols is None:                          # more than 256 colours: as is
         im.save(path, 'PNG', optimize=True)
         return im.size
     colors = [c for _, c in cols]
-    # El transparente primero: algunos lectores lo agradecen.
+    # Transparent first: some readers prefer it.
     colors.sort(key=lambda c: c[3])
     idx = {c: i for i, c in enumerate(colors)}
     pim = Image.new('P', im.size)
@@ -140,8 +140,8 @@ def save_optimized(png, path):
 
 
 def download_set(url_base, out_dir, anims, geometry_from=None):
-    """Baja las animaciones de WANT desde url_base. `geometry_from` reutiliza
-    las anclas del sprite normal (el shiny es el mismo dibujo recoloreado)."""
+    """Downloads the WANT animations from url_base. `geometry_from` reuses
+    the normal sprite's anchors (the shiny is the same drawing recoloured)."""
     os.makedirs(out_dir, exist_ok=True)
     meta = {}
     for want in WANT:
@@ -199,7 +199,7 @@ def do_dex(job):
         shiny = download_set(f'{BASE}/{tag}/0000/0001', os.path.join(out_dir, 's'), sanims, normal)
         if REQUIRED <= set(shiny) or ('Idle' in shiny and 'Walk' in shiny):
             meta['sh'] = 1
-            # Sólo se guarda la geometría shiny si difiere de la normal.
+            # The shiny geometry is only stored if it differs from the normal one.
             diff = {k: v for k, v in shiny.items() if normal.get(k) != v}
             if diff:
                 meta['sa'] = diff
@@ -227,7 +227,7 @@ def main():
             continue
         s = e.get('subgroups', {}).get('0000', {}).get('subgroups', {}).get('0001', {})
         jobs.append((dex, {'Idle', 'Walk'} <= set(s.get('sprite_files', {}))))
-    print(f'{len(jobs)} Pokemon con sprites en {lo}-{hi} ({sum(1 for _, s in jobs if s)} con shiny)')
+    print(f'{len(jobs)} Pokemon with sprites in {lo}-{hi} ({sum(1 for _, s in jobs if s)} with shiny)')
 
     metas, missing, done = {}, [], 0
     with ThreadPoolExecutor(max_workers=16) as ex:
@@ -240,7 +240,7 @@ def main():
             if done % 50 == 0 or done == len(jobs):
                 print(f'  {done}/{len(jobs)}', flush=True)
 
-    # Compatibilidad con cachés antiguas: anota qué le falta al shiny.
+    # Compatibility with old caches: notes what the shiny is missing.
     for dex, m in metas.items():
         if m.get('sh') and 'sm' not in m:
             sdir = os.path.join(OUT_ASSETS, str(dex), 's')
@@ -248,25 +248,25 @@ def main():
             if miss:
                 m['sm'] = miss
 
-    # Funde con lo que ya hubiera en caché fuera del rango pedido.
+    # Merges with whatever was already cached outside the requested range.
     for fn in os.listdir(CACHE):
         d = int(fn.split('.')[0])
         if d not in metas and os.path.isdir(os.path.join(OUT_ASSETS, str(d))):
             metas[d] = json.load(open(os.path.join(CACHE, fn), encoding='utf-8'))
 
     lines = [
-        '/* ============ sprites-meta.js — GENERADO, no editar a mano ============',
-        ' * Lo produce tools/fetch_sprites.py a partir de los AnimData.xml de',
-        ' * SpriteCollab. Va en un .js y no en un .json porque fetch() está',
-        ' * bloqueado en file:// y el juego se abre con doble clic.',
+        '/* ============ sprites-meta.js — GENERATED, do not edit by hand ============',
+        ' * Produced by tools/fetch_sprites.py from SpriteCollab\'s AnimData.xml',
+        ' * files. It is a .js and not a .json because fetch() is',
+        ' * blocked on file:// and the game is opened by double-clicking.',
         ' *',
-        ' * Por Pokémon:    s ShadowSize · a animaciones · sh=1 si hay shiny',
-        ' *                 sa geometría shiny que difiera de la normal (raro)',
-        ' *                 sm animaciones que le faltan al shiny',
-        ' * Por animación:  w,h fotograma · n fotogramas · r filas',
-        ' *                 d duración de cada fotograma (1/60 s)',
-        ' *                 ax,ay ancla al suelo dentro del fotograma',
-        ' * Filas: 0 Down · 1 DownRight · 2 Right · 3 UpRight',
+        ' * Per Pokémon:    s ShadowSize · a animations · sh=1 if there is a shiny',
+        ' *                 sa shiny geometry that differs from the normal one (rare)',
+        ' *                 sm animations missing from the shiny',
+        ' * Per animation:  w,h frame · n frames · r rows',
+        ' *                 d duration of each frame (1/60 s)',
+        ' *                 ax,ay ground anchor inside the frame',
+        ' * Rows: 0 Down · 1 DownRight · 2 Right · 3 UpRight',
         ' *        4 Up   · 5 UpLeft    · 6 Left  · 7 DownLeft',
         ' */',
         'G.SPRITE_META = {',
@@ -278,7 +278,7 @@ def main():
         f.write('\n'.join(lines))
 
     size = sum(os.path.getsize(os.path.join(dp, fn)) for dp, _, fns in os.walk(OUT_ASSETS) for fn in fns)
-    print(f'\n{len(metas)} Pokemon ({sum(1 for m in metas.values() if m.get("sh"))} con shiny), {size / 1e6:.1f} MB')
+    print(f'\n{len(metas)} Pokemon ({sum(1 for m in metas.values() if m.get("sh"))} with shiny), {size / 1e6:.1f} MB')
     if missing:
         print(f'Fallaron ({len(missing)}): {missing}')
 

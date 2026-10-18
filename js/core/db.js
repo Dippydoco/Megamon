@@ -1,28 +1,28 @@
-/* ============ db.js — base de datos: Firebase (nube) o local ============
- * TODO el acceso a datos persistentes pasa por aquí. El resto del juego sólo
- * usa G.DB.*.
+/* ============ db.js — database: Firebase (cloud) or local ============
+ * ALL access to persistent data goes through here. The rest of the game only
+ * uses G.DB.*.
  *
- * Dos modos (se decide en ready()):
+ * Two modes (decided in ready()):
  *
- *   NUBE  (Firebase Authentication + Cloud Firestore)
- *     Si hay configuración en js/core/firebase-config.js y el juego se abre
- *     desde una web (http/https, también localhost). La partida se guarda en
- *     saves/{uid} y se puede seguir en cualquier ordenador.
- *       - Usuario + contraseña: Firebase pide un email, así que el nombre se
- *         convierte en uno interno (nunca se le envía nada).
- *       - Cuenta de Google.
- *     Además se guarda una copia local para poder jugar sin conexión; al
- *     sincronizar se FUSIONA (ver merge): las colecciones se unen y nunca se
- *     pierde un Pokémon ni un shiny.
+ *   CLOUD  (Firebase Authentication + Cloud Firestore)
+ *     If there's configuration in js/core/firebase-config.js and the game is opened
+ *     from a website (http/https, localhost too). The save is stored in
+ *     saves/{uid} and can be continued on any computer.
+ *       - Username + password: Firebase asks for an email, so the name is
+ *         turned into an internal one (nothing is ever sent to it).
+ *       - Google account.
+ *     A local copy is also kept so you can play offline; when
+ *     syncing it MERGES (see merge): collections are combined and a Pokémon
+ *     or a shiny is never lost.
  *
  *   LOCAL (localStorage)
- *     Si no hay configuración o se abre con doble clic (file://). Igual que
- *     antes: cuentas y partidas sólo en este navegador.
- *       ps.accounts      { clave: { name, salt, hash, created } }
- *       ps.save.<clave>  partida de esa cuenta
- *       ps.session       última cuenta con sesión iniciada
+ *     If there's no configuration or it's opened by double-click (file://). As
+ *     before: accounts and saves only in this browser.
+ *       ps.accounts      { key: { name, salt, hash, created } }
+ *       ps.save.<key>    that account's save
+ *       ps.session       the last account with a session
  *
- * El modo invitado juega con una partida en memoria que no se guarda.
+ * Guest mode plays with an in-memory save that isn't stored.
  */
 G.DB = (() => {
   const K_ACC = 'ps.accounts', K_SES = 'ps.session', K_SAVE = 'ps.save.';
@@ -30,12 +30,12 @@ G.DB = (() => {
   const VERSION = 3;
   const START_COINS = 500;
   const SDK = 'https://www.gstatic.com/firebasejs/13.0.0/';
-  const NAME_DOMAIN = 'jugadores.pokesurvivor.net';   // sólo para el email interno
+  const NAME_DOMAIN = 'jugadores.pokesurvivor.net';   // only for the internal email
 
   let mode = 'local';       // 'cloud' | 'local'
-  let localReason = '';     // por qué no hay nube: 'file' | 'config' | 'host' | 'error'
+  let localReason = '';     // why there's no cloud: 'file' | 'config' | 'host' | 'error'
   let user = null;          // nombre visible
-  let key = null;           // clave local (minúsculas) o uid de Firebase
+  let key = null;           // local key (lowercase) or Firebase uid
   let guest = false;
   let save = null;
   let storageOk = true;
@@ -50,9 +50,9 @@ G.DB = (() => {
     const s = JSON.stringify(v);
     try { localStorage.setItem(k, s); return true; }
     catch (e) {
-      // Navegador lleno (sobre todo por lo que guarda el ranking): se libera lo
-      // prescindible y se reintenta. Antes la copia de la partida dejaba de
-      // guardarse sin avisar y, al recargar, se volvía a la de la nube.
+      // Browser storage full (mostly from what the leaderboard stores): the
+      // dispensable is freed and it retries. Previously the save copy stopped
+      // being stored without warning and, on reloading, it went back to the cloud one.
       try {
         for (let i = localStorage.length - 1; i >= 0; i--) {
           const key = localStorage.key(i);
@@ -62,49 +62,49 @@ G.DB = (() => {
       } catch (e2) { storageOk = false; return false; }
     }
   }
-  function remove(k) { try { localStorage.removeItem(k); } catch (e) { /* nada */ } }
+  function remove(k) { try { localStorage.removeItem(k); } catch (e) { /* nothing */ } }
 
-  // ---------------- partida ----------------
+  // ---------------- save ----------------
 
   function newSave(name) {
     return {
       v: VERSION,
       name,
       created: Date.now(),
-      updated: Date.now(),    // última modificación (para fusionar)
+      updated: Date.now(),    // last modification (for merging)
       coins: START_COINS,
       owned: {},              // dex -> { at, from: 'starter'|'gacha'|'wild' }
       shiny: {},              // dex -> { at, from } — variantes shiny conseguidas
-      partner: null,          // dex del Pokémon con el que juegas
-      partnerShiny: false,    // jugar con su versión shiny (si la tienes)
-      starter: null,          // dex que te tocó en el test
+      partner: null,          // dex of the Pokémon you play with
+      partnerShiny: false,    // play with its shiny version (if you have it)
+      starter: null,          // dex you got in the test
       personality: null,      // { trait, scores }
-      upgrades: {},           // (antiguo) mejoras de la cuenta; ahora van por Pokémon
-      pupg: {},               // dex -> { id -> nivel }: mejoras de cada Pokémon
-      tickets: { t1: 0, t10: 0 },   // tickets del gacha (x1 y x10)
-      codes: {},              // huella del código -> fecha: códigos canjeados (js/systems/redeem.js)
-      pity: {},               // generación del banner -> tiradas sin ★5
-      legends: {},            // dex -> fecha: legendarios vencidos en grietas
-      history: [],            // últimas partidas (más reciente primero, máx. HISTORY_MAX): ver cleanHistory()
-      arceus: {},             // dex -> fecha: Pokémon con los que se ha llegado a Arceus (estrella dorada)
-      arenas: {},             // tipo -> fecha: arenas de grieta ganadas
-      itemsFound: {},         // id -> fecha: objetos equipables encontrados
-      evoMoves: {},           // id -> fecha: movimientos evolucionados alguna vez
-      ach: {},                // id -> fecha: logros conseguidos
-      missions: {},           // misiones del día / semana (systems/progress.js)
-      profile: { favs: [], title: '' },   // perfil público: 3 favoritos y título
+      upgrades: {},           // (old) account upgrades; now they're per Pokémon
+      pupg: {},               // dex -> { id -> level }: each Pokémon's upgrades
+      tickets: { t1: 0, t10: 0 },   // gacha tickets (x1 and x10)
+      codes: {},              // code fingerprint -> date: redeemed codes (js/systems/redeem.js)
+      pity: {},               // banner generation -> pulls without a ★5
+      legends: {},            // dex -> date: legendaries defeated in rifts
+      history: [],            // latest runs (most recent first, max. HISTORY_MAX): see cleanHistory()
+      arceus: {},             // dex -> date: Pokémon that have reached Arceus (gold star)
+      arenas: {},             // type -> date: rift arenas won
+      itemsFound: {},         // id -> date: held items found
+      evoMoves: {},           // id -> date: moves ever evolved
+      ach: {},                // id -> date: achievements earned
+      missions: {},           // the day's / week's missions (systems/progress.js)
+      profile: { favs: [], title: '' },   // public profile: 3 favourites and title
       stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
                bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 }
     };
   }
 
-  // ---------------- historial de partidas ----------------
+  // ---------------- run history ----------------
   /*
-   * Cada partida acaba en save.history (la más reciente primero, hasta HISTORY_MAX):
-   *   id fecha (ms) · d dex · sh shiny · t segundos · lv nivel · k derrotados · b jefes · c monedas
-   *   dd daño hecho · dt daño recibido · m [[movimiento, nivel]] · it objeto · x 1 = caíste (0 = abandonaste)
-   *   g 1 = en grupo · mt [[nombre, dex, shiny]] compañeros · ar [segundos, legendarios] ante Arceus (o 0)
-   *   kb quién te derrotó { d dex, n nombre, a ataque, ty tipo, h daño, e efecto } (o 0): ver systems/killer.js
+   * Each run ends up in save.history (most recent first, up to HISTORY_MAX):
+   *   id date (ms) · d dex · sh shiny · t seconds · lv level · k defeated · b bosses · c coins
+   *   dd damage dealt · dt damage taken · m [[move, level]] · it item · x 1 = you fell (0 = you quit)
+   *   g 1 = in a group · mt [[name, dex, shiny]] teammates · ar [seconds, legendaries] against Arceus (or 0)
+   *   kb who defeated you { d dex, n name, a attack, ty type, h damage, e effect } (or 0): see systems/killer.js
    */
   const HISTORY_MAX = 100;
   function cleanHistory(list) {
@@ -130,20 +130,20 @@ G.DB = (() => {
     }
     return out.sort((a, b) => b.id - a.id).slice(0, HISTORY_MAX);
   }
-  /** Apunta una partida acabada al principio del historial. */
+  /** Records a finished run at the start of the history. */
   function addHistory(entry) {
     if (!save) return;
     save.history = cleanHistory([entry, ...(save.history || [])]);
   }
 
-  /** Rellena campos que falten en partidas de versiones anteriores. */
+  /** Fills in fields missing from saves of earlier versions. */
   function migrate(s, name) {
     const base = newSave(name || s.name);
     for (const k in base) if (s[k] == null) s[k] = base[k];
     for (const k in base.stats) if (s.stats[k] == null) s.stats[k] = base.stats[k];
-    // v1 -> v2: había un único banner (Kanto) con el pity como número.
+    // v1 -> v2: there was a single banner (Kanto) with the pity as a number.
     if (typeof s.pity === 'number') s.pity = { 1: s.pity };
-    // v2 -> v3: las mejoras eran de la cuenta; pasan al compañero de entonces.
+    // v2 -> v3: upgrades belonged to the account; they go to the partner at the time.
     if (!s.pupgDone) {
       if (s.partner && Object.values(s.upgrades || {}).some(v => v > 0)) {
         s.pupg[s.partner] = Object.assign({}, s.upgrades);
@@ -158,10 +158,10 @@ G.DB = (() => {
   }
 
   /**
-   * Quita lo imposible de una partida editada a mano (la copia del navegador
-   * se puede tocar): números negativos o raros, mejoras por encima del
-   * máximo y Pokémon que no existen. Lo que sí sea posible lo frena el
-   * servidor (firestore.rules, saves).
+   * Removes the impossible from a hand-edited save (the browser copy
+   * can be tampered with): negative or odd numbers, upgrades above the
+   * maximum and Pokémon that don't exist. Whatever is possible is stopped by the
+   * server (firestore.rules, saves).
    */
   function sanitize(s) {
     const n = v => (Number.isFinite(+v) && +v > 0 ? Math.floor(+v) : 0);
@@ -181,7 +181,7 @@ G.DB = (() => {
     if (G.DEX_BY) for (const coll of ['owned', 'shiny']) {
       for (const d of Object.keys(s[coll] || {})) if (!G.DEX_BY[d]) delete s[coll][d];
     }
-    // Atajos: 4 huecos con un movimiento que exista (o null), sin repetir.
+    // Shortcuts: 4 slots with a move that exists (or null), without repeats.
     if (s.pbind && typeof s.pbind === 'object') {
       for (const d of Object.keys(s.pbind)) {
         const l = Array.isArray(s.pbind[d]) ? s.pbind[d].slice(0, 4) : [];
@@ -193,7 +193,7 @@ G.DB = (() => {
         });
       }
     } else s.pbind = {};
-    // Veto: listas de movimientos que existen, sin repetir, como mucho 3.
+    // Veto: lists of moves that exist, without repeats, at most 3.
     if (s.pban && typeof s.pban === 'object') {
       for (const d of Object.keys(s.pban)) {
         const l = Array.isArray(s.pban[d]) ? s.pban[d] : [];
@@ -211,30 +211,30 @@ G.DB = (() => {
   }
 
   /**
-   * Fusiona dos versiones de la misma partida (p. ej. una jugada sin
-   * conexión y la de la nube). Nunca se pierde nada conseguido:
-   *   - colecciones (owned, shiny): unión
-   *   - mejoras y estadísticas: el máximo de cada una
-   *   - monedas, compañero, pity...: los de la versión más reciente
-   * Es idempotente: fusionar dos veces da lo mismo.
+   * Merges two versions of the same save (e.g. one played offline
+   * and the cloud one). Nothing earned is ever lost:
+   *   - collections (owned, shiny): union
+   *   - upgrades and stats: the maximum of each
+   *   - coins, partner, pity...: those of the most recent version
+   * It's idempotent: merging twice gives the same result.
    */
   /*
-   * LIBRETA de monedas y tickets (14-10-2026). Antes las monedas y los tickets
-   * eran "los de la versión más reciente": si un aparato con datos viejos (el
-   * móvil con la pestaña abierta de ayer) guardaba algo, su número ganaba y se
-   * perdía lo conseguido en el otro (un jugador pasó de 36 tickets a 3).
-   * Ahora cada aparato apunta en save.led[aparato] lo que ha ganado y gastado
-   * de cada cosa ([ganado, gastado], sólo crecen) y el saldo es la suma de
-   * todos: al fusionar se toma el mayor de cada apunte y no se pierde nada.
-   *   led.base: el saldo que había antes de la libreta (o al empezar).
-   *   led.old:  cambios de una versión anterior del juego (pestañas sin actualizar).
+   * LEDGER of coins and tickets (14-10-2026). Previously coins and tickets
+   * were "those of the most recent version": if a device with old data (the
+   * phone with yesterday's tab open) saved something, its number won and
+   * what was earned on the other was lost (one player went from 36 tickets to 3).
+   * Now each device records in save.led[device] what it has earned and spent
+   * of each thing ([earned, spent], they only grow) and the balance is the sum of
+   * all of them: when merging the highest of each entry is taken and nothing is lost.
+   *   led.base: the balance there was before the ledger (or at the start).
+   *   led.old:  changes from an earlier version of the game (tabs not updated).
    */
   const CUR = {
     c: [s => s.coins, (s, v) => { s.coins = v; }],
     t1: [s => s.tickets.t1, (s, v) => { s.tickets.t1 = v; }],
     t10: [s => s.tickets.t10, (s, v) => { s.tickets.t10 = v; }]
   };
-  // Este aparato (navegador): un nombre al azar que se queda guardado.
+  // This device (browser): a random name that stays saved.
   const DEV = (() => {
     let d = read('ps.dev');
     if (typeof d !== 'string' || !/^[a-z0-9]{6,12}$/.test(d)) { d = 'd' + Math.random().toString(36).slice(2, 10); write('ps.dev', d); }
@@ -253,7 +253,7 @@ G.DB = (() => {
     const p = e[k] = e[k] || [0, 0];
     if (d > 0) p[0] = num(p[0]) + d; else p[1] = num(p[1]) - d;
   }
-  /** La libreta de una partida (sin tocarla); lo que no cuadre, a `dev`. */
+  /** A save's ledger (without touching it); whatever doesn't add up goes to `dev`. */
   function ledOf(s, dev) {
     if (!isObj(s.led)) {
       const b = balOf(s), base = {};
@@ -261,11 +261,11 @@ G.DB = (() => {
       return { base };
     }
     const led = JSON.parse(JSON.stringify(s.led)), b = balOf(s);
-    // Un saldo en negativo (lo mismo gastado en dos aparatos sin conexión) se ve como 0.
+    // A negative balance (the same spent on two devices offline) shows as 0.
     for (const k in CUR) addTo(led, dev, k, b[k] - Math.max(0, ledSum(led, k)));
     return led;
   }
-  /** Apunta en la libreta de ESTE aparato lo que ha cambiado desde la última vez. */
+  /** Records in THIS device's ledger what has changed since last time. */
   function fold(s) {
     if (!s) return s;
     s.led = ledOf(s, DEV);
@@ -278,7 +278,7 @@ G.DB = (() => {
     const newer = (a.updated || 0) >= (b.updated || 0) ? a : b;
     const older = newer === a ? b : a;
     const r = JSON.parse(JSON.stringify(newer));
-    // Monedas y tickets: el mayor de cada apunte de cada aparato, y el saldo es la suma.
+    // Coins and tickets: the highest of each entry from each device, and the balance is the sum.
     const la = ledOf(a, 'old'), lb = ledOf(b, 'old'), led = {};
     for (const src of [la, lb]) for (const dev in src) for (const k in src[dev]) {
       const p = ((led[dev] = led[dev] || {})[k] = led[dev][k] || [0, 0]), q = src[dev][k];
@@ -300,14 +300,14 @@ G.DB = (() => {
       for (const k in older.pupg[d]) mine[k] = Math.max(mine[k] || 0, older.pupg[d][k]);
     }
     r.pupgDone = r.pupgDone || older.pupgDone;
-    // Lo conseguido nunca se pierde: unión de legendarios, arenas, objetos, logros...
+    // What's earned is never lost: union of legendaries, arenas, items, achievements...
     for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach']) {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }
-    // Historial: unión de las partidas de las dos copias (por fecha), con el tope.
+    // History: union of both copies' runs (by date), with the cap.
     r.history = cleanHistory([...(r.history || []), ...(older.history || [])]);
-    // Misiones del mismo día/semana: el mayor progreso y lo ya recogido.
+    // Missions from the same day/week: the highest progress and whatever was already collected.
     const mo = older.missions || {}, mr = r.missions = r.missions || {};
     for (const [per, list] of [['day', 'daily'], ['week', 'weekly']]) {
       if (mr[per] !== mo[per] || !mr[list] || !mo[list]) continue;
@@ -328,11 +328,11 @@ G.DB = (() => {
     return r;
   }
 
-  /** Sustituye el contenido de `save` sin cambiar el objeto (otros módulos lo tienen). */
-  // Copia `s` sobre la partida SIN cambiar los objetos de dentro (mejoras,
-  // Pokémon...): las pantallas abiertas guardan referencias a ellos. Antes se
-  // sustituían y una compra hecha justo después de subir la partida se
-  // apuntaba en la copia vieja: se cobraban las monedas y la mejora se perdía.
+  /** Replaces the contents of `save` without changing the object (other modules hold it). */
+  // Copies `s` onto the save WITHOUT changing the objects inside (upgrades,
+  // Pokémon...): open screens keep references to them. Previously they were
+  // replaced, and a purchase made just after uploading the save was
+  // recorded on the old copy: the coins were charged and the upgrade was lost.
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
   function assignDeep(dst, src) {
     for (const k of Object.keys(dst)) if (!(k in src)) delete dst[k];
@@ -412,7 +412,7 @@ G.DB = (() => {
     return true;
   }
 
-  /** Partida de una cuenta local antigua, si el nombre y la contraseña coinciden. */
+  /** An old local account's save, if the name and password match. */
   async function legacySave(name, pass) {
     const k = (name || '').toLowerCase();
     const acc = (read(K_ACC) || {})[k];
@@ -423,31 +423,31 @@ G.DB = (() => {
   }
 
   // =====================================================================
-  //                               MODO NUBE
+  //                               CLOUD MODE
   // =====================================================================
 
   let auth = null, fs = null, rtdb = null, uid = null, unlisten = null;
   let pushT = 0, retryT = 0, pending = false, pushing = null, lastPush = 0;
-  // Como mucho una subida cada 30 min (con miles de jugadores, cada 5 min
-  // eran decenas de miles de escrituras por hora); lo que cuesta algo
-  // (gacha, mejoras), a los 30 s. La copia local se guarda siempre al momento (y se fusiona con la
-  // nube al volver a entrar), y al ocultar o cerrar la pestaña se sube lo pendiente.
-  // Tras tiradas y compras se sube a los 3 min (era 30 s: quien hacía muchas tiradas
-  // guardaba 2 veces por minuto y eran millones de escrituras al día). Lo hecho sigue
-  // en la copia del navegador al momento, y se sube al salir de la pestaña.
-  // Desde el 13-10-2026, lo normal cada 2 h (era 30 min: 216.000 jugadores al día
-  // guardaban unas 12 millones de veces); al cerrar la pestaña, siempre; al
-  // cambiar de pestaña, si hace más de 30 min.
-  // Lo que vale algo (tiradas, compras, Pokémon nuevos, shinies, premios,
-  // récords que entran en un top) se sube enseguida, y al acabar cada partida
-  // como mucho cada 30 min:
-  // con 2 h, quien abría el juego en otro aparato (o en el navegador de otra
-  // app) veía la copia vieja de la nube y creía que lo había perdido.
+  // At most one upload every 30 min (with thousands of players, every 5 min
+  // was tens of thousands of writes an hour); what costs something
+  // (gacha, upgrades), after 30 s. The local copy is always saved immediately (and merged with the
+  // cloud when signing in again), and on hiding or closing the tab what's pending is uploaded.
+  // After pulls and purchases it uploads after 3 min (it was 30 s: anyone doing lots of pulls
+  // saved twice a minute and it was millions of writes a day). What's done stays
+  // in the browser copy immediately, and is uploaded on leaving the tab.
+  // Since 13-10-2026, normally every 2 h (it was 30 min: 216,000 players a day
+  // saved about 12 million times); on closing the tab, always; on
+  // switching tabs, if it's been more than 30 min.
+  // Whatever is worth something (pulls, purchases, new Pokémon, shinies, rewards,
+  // records that get into a top) is uploaded straight away, and at the end of each run
+  // at most every 30 min:
+  // with 2 h, anyone opening the game on another device (or in another
+  // app's browser) saw the old cloud copy and thought they'd lost it.
   const PUSH_GAP = 2 * 3600 * 1000, PUSH_GAP_URGENT = 15 * 1000, PUSH_GAP_RUN = 30 * 60 * 1000, HIDE_GAP = 30 * 60 * 1000;
   let syncState = 'local';           // 'ok' | 'syncing' | 'pending' | 'offline' | 'local'
   const listeners = new Set();
 
-  function setSync(s) { syncState = s; listeners.forEach(fn => { try { fn(s); } catch (e) { /* nada */ } }); }
+  function setSync(s) { syncState = s; listeners.forEach(fn => { try { fn(s); } catch (e) { /* nothing */ } }); }
 
   function loadScript(src) {
     return new Promise((res, rej) => {
@@ -459,12 +459,12 @@ G.DB = (() => {
   }
 
   /*
-   * La nube (Firebase) sólo desde la web oficial: el
-   * código está en GitHub, y una copia publicada en otra web sin cambiar
-   * firebase-config.js guardaría sus cuentas y partidas en NUESTRO proyecto
-   * (y lo pagaríamos nosotros). Ahí el juego va en modo local. Lo que lo
-   * cierra de verdad es la clave de la API restringida a estos dominios en
-   * Google Cloud; esto frena las copias que ni lo miran (14-10-2026).
+   * The cloud (Firebase) only from the official website: the
+   * code is on GitHub, and a copy published on another website without changing
+   * firebase-config.js would store its accounts and saves in OUR project
+   * (and we'd pay for it). There the game runs in local mode. What
+   * really locks it down is the API key restricted to these domains in
+   * Google Cloud; this stops copies that don't even look (14-10-2026).
    */
   const HOSTS = ['dippydoco.github.io', 'localhost', '127.0.0.1'];
 
@@ -476,16 +476,16 @@ G.DB = (() => {
     await loadScript(SDK + 'firebase-app-compat.js');
     await loadScript(SDK + 'firebase-auth-compat.js');
     await loadScript(SDK + 'firebase-firestore-compat.js');
-    // Base de datos en tiempo real: amigos en línea, invitaciones y salas.
+    // Realtime database: friends online, invitations and rooms.
     if (cfg.databaseURL) await loadScript(SDK + 'firebase-database-compat.js');
     firebase.initializeApp(cfg);
     auth = firebase.auth();
     fs = firebase.firestore();
-    // Algunas redes y antivirus cortan las actualizaciones en directo (amigos,
-    // invitaciones): Firebase prueba otra forma de recibirlas si hace falta.
-    try { fs.settings({ experimentalAutoDetectLongPolling: true }); } catch (e) { /* ya estaba */ }
+    // Some networks and antivirus programs cut live updates (friends,
+    // invitations): Firebase tries another way of receiving them if needed.
+    try { fs.settings({ experimentalAutoDetectLongPolling: true }); } catch (e) { /* it already was */ }
     rtdb = cfg.databaseURL ? firebase.database() : null;
-    // Sólo para pruebas: { ..., emulator: true } usa el emulador local de Firebase.
+    // Only for testing: { ..., emulator: true } uses the local Firebase emulator.
     if (cfg.emulator) {
       auth.useEmulator('http://127.0.0.1:9099');
       fs.useEmulator('127.0.0.1', 8080);
@@ -494,27 +494,27 @@ G.DB = (() => {
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     auth.languageCode = 'es';
     addEventListener('online', () => { if (pending) pushNow(); });
-    // Al salir de la pestaña o cerrarla se sube lo pendiente, pero no más de una
-    // vez cada 10 min: la gente cambia de pestaña a menudo y cada partida se
-    // subía cada ~9 min en vez de cada 30 (12-10-2026, el mayor gasto de
-    // Firebase). Lo que no se sube sigue en la copia de este navegador y se
-    // sube al volver a entrar.
+    // On leaving or closing the tab what's pending is uploaded, but no more than
+    // once every 10 min: people switch tabs often and each save was
+    // uploaded every ~9 min instead of every 30 (12-10-2026, Firebase's biggest
+    // cost). Whatever isn't uploaded stays in this browser's copy and is
+    // uploaded on signing in again.
     const hideFlush = () => { if (pending && Date.now() - lastPush > HIDE_GAP) pushNow(); };
     let hiddenAt = 0;
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); hideFlush(); }
       else if (hiddenAt && Date.now() - hiddenAt > PULL_GAP) pullSoon();
     });
-    // Al cerrar o recargar la página, lo pendiente se sube siempre.
+    // On closing or reloading the page, what's pending is always uploaded.
     addEventListener('pagehide', () => { if (pending) pushNow(); });
     return true;
   }
 
   /*
-   * Al volver al juego tras más de 30 min fuera (el móvil con la pestaña
-   * abierta de ayer), se baja la partida de la nube y se junta con la de aquí
-   * (1 lectura): así se ve lo conseguido en el otro aparato. En plena partida
-   * se espera a volver al menú.
+   * On returning to the game after more than 30 min away (the phone with
+   * yesterday's tab open), the cloud save is downloaded and merged with the one here
+   * (1 read): that way what was earned on the other device shows up. Mid-run
+   * it waits until you're back at the menu.
    */
   const PULL_GAP = 30 * 60 * 1000;
   let lastPull = 0, pullT = 0;
@@ -532,7 +532,7 @@ G.DB = (() => {
     }).catch(e => console.warn('[DB] no se pudo bajar la partida:', e.code || e.message));
   }
 
-  /** Firebase pide email: el nombre se codifica en uno interno, único y válido. */
+  /** Firebase asks for an email: the name is encoded into an internal, unique and valid one. */
   function nameToEmail(name) {
     const hex = [...new TextEncoder().encode(name.trim().toLowerCase())].map(b => b.toString(16).padStart(2, '0')).join('');
     return hex + '@' + NAME_DOMAIN;
@@ -548,7 +548,7 @@ G.DB = (() => {
   /** The copy that goes to Firestore: run history has lists of lists (moves, teammates), which Firestore refuses, so they go as JSON strings. */
   const packSave = s => Object.assign({}, s, { history: (s.history || []).map(e => Object.assign({}, e, { m: JSON.stringify(e.m || []), mt: JSON.stringify(e.mt || []) })) });      // Firestore no admite undefined
 
-  /** Abre la partida de la nube de un usuario recién autenticado. */
+  /** Opens the cloud save of a user who has just authenticated. */
   async function openCloud(u, opts = {}) {
     uid = u.uid;
     const cached = read(K_CLOUD + uid);
@@ -557,7 +557,7 @@ G.DB = (() => {
       const snap = await docRef().get();
       remote = snap.exists ? snap.data().save : null;
     } catch (e) {
-      if (!cached) throw e;                // sin conexión y sin copia: no hay nada que abrir
+      if (!cached) throw e;                // offline and no copy: there's nothing to open
       online = false;
     }
     let s = merge(cached && fold(migrate(cached)), remote && migrate(remote));
@@ -570,37 +570,37 @@ G.DB = (() => {
     key = uid; user = save.name; guest = false;
     write(K_CLOUD + uid, save);
     lastPull = Date.now();
-    // Sólo se sube si hay algo que la nube no tenga (cuenta nueva, progreso de
-    // este ordenador sin subir...), y SIN esperar: antes el menú no salía hasta
-    // terminar la subida, y con Firebase lento se tardaba hasta 9 s en entrar.
-    // (Comparar el texto entero daba "distinto" casi siempre y se subía en cada
-    // entrada: ahora sólo si esta copia es más nueva que la de la nube.)
+    // It only uploads if there's something the cloud doesn't have (a new account, progress
+    // from this computer not yet uploaded...), and WITHOUT waiting: previously the menu didn't appear until
+    // the upload finished, and with Firebase slow it took up to 9 s to get in.
+    // (Comparing the whole text almost always gave "different" and it uploaded on every
+    // sign-in: now only if this copy is newer than the cloud's.)
     const same = remote && !opts.legacy && (!cached || (cached.updated || 0) <= (remote.updated || 0));
-    lastPush = Date.now();       // la primera compra o ticket no sube al momento: espera como las demás
+    lastPush = Date.now();       // the first purchase or ticket doesn't upload immediately: it waits like the others
     if (!online) { pending = true; setSync('offline'); scheduleRetry(); }
     else if (same) setSync('ok');
     else pushNow();
   }
 
   /*
-   * Ya no se escucha el documento en vivo (cada cambio costaba una lectura).
-   * Si juegas en dos ordenadores, las partidas se fusionan al entrar y en
-   * cada subida (transacción con merge()).
+   * The document is no longer listened to live (each change cost a read).
+   * If you play on two computers, the saves are merged when signing in and on
+   * each upload (a transaction with merge()).
    */
   function stopListening() { if (unlisten) { unlisten(); unlisten = null; } }
 
   /*
-   * Si el admin ha baneado la cuenta del ranking (ban = true en la nube, ver
-   * firestore.rules), cada guardado tiene que conservarlo: se copia de la nube.
-   * Nunca se sube dos veces en menos de 65 s; mientras, todo está en el navegador.
+   * If the admin has banned the account from the leaderboard (ban = true in the cloud, see
+   * firestore.rules), every save has to keep it: it's copied from the cloud.
+   * It never uploads twice in less than 65 s; meanwhile, everything is in the browser.
    */
   const K_OK = 'ps.cloudok.', MIN_GAP = 65000;
   const sinceOk = () => Date.now() - (+read(K_OK + uid) || 0);
 
-  /** Sube la partida fusionándola con lo que haya en la nube (transacción). */
+  /** Uploads the save, merging it with whatever is in the cloud (transaction). */
   function pushNow() {
     if (mode !== 'cloud' || guest || !save || !uid) return Promise.resolve();
-    // Si ya hay una subida en marcha, se hace otra justo después (para lo que haya cambiado mientras).
+    // If an upload is already under way, another is done right after it (for whatever changed meanwhile).
     if (pushing) { pending = true; return pushing.then(() => (pending ? pushNow() : undefined)); }
     clearTimeout(pushT); pushT = 0; pushDue = 0;
     if (navigator.onLine === false) {
@@ -625,14 +625,14 @@ G.DB = (() => {
       if (snap.exists && snap.data().ban === true) doc.ban = true;
       tx.set(ref, doc);
     });
-    // Si la red se cae a medias, Firestore puede quedarse esperando: tope de 12 s.
+    // If the network drops halfway, Firestore can be left waiting: 12 s cap.
     const timeout = new Promise((_, rej) => setTimeout(() => rej({ code: 'unavailable' }), 12000));
     let failed = false;
     pushing = Promise.race([tr, timeout]).then(() => {
       fails = 0;
       write(K_OK + uid, Date.now());
-      // Se FUSIONA con lo de ahora (no se sobrescribe): si has cambiado algo
-      // mientras se subía (elegir compañero, una compra...), no se pierde.
+      // It MERGES with the current one (doesn't overwrite): if you changed something
+      // while it was uploading (choosing a partner, a purchase...), it isn't lost.
       if (merged && save) { applyInPlace(merge(plain(fold(save)), merged)); write(K_CLOUD + uid, save); }
       setSync(pending ? 'pending' : 'ok');
       if (G.UI && G.UI.refreshCoins) G.UI.refreshCoins();
@@ -643,13 +643,13 @@ G.DB = (() => {
       scheduleRetry();
     }).finally(() => {
       pushing = null;
-      // (Si ha fallado, el reintento ya está programado con su espera creciente.)
+      // (If it failed, the retry is already scheduled with its growing wait.)
       if (!failed && pending && syncState === 'pending') schedulePush(Math.max(1500, PUSH_GAP - (Date.now() - lastPush)));
     });
     return pushing;
   }
 
-  // Si ya había una subida programada antes, se respeta (una compra no espera a la siguiente partida).
+  // If an upload was already scheduled earlier, it's respected (a purchase doesn't wait for the next run).
   let pushDue = 0;
   function schedulePush(ms) {
     const due = Date.now() + ms;
@@ -658,9 +658,9 @@ G.DB = (() => {
     pushT = setTimeout(() => { pushT = 0; pushDue = 0; pushNow(); }, ms);
   }
   /**
-   * Reintento con espera creciente: 15 s, 30 s, 1 min, 2 min... hasta 10 min.
-   * Con muchos jugadores, reintentar siempre a los 15 s cuando Firebase falla
-   * (cupo agotado, caída) multiplicaba las lecturas (pasó el 10-10-2026).
+   * Retry with a growing wait: 15 s, 30 s, 1 min, 2 min... up to 10 min.
+   * With many players, always retrying after 15 s when Firebase fails
+   * (quota used up, outage) multiplied the reads (it happened on 10-10-2026).
    */
   let fails = 0;
   function scheduleRetry() {
@@ -684,7 +684,7 @@ G.DB = (() => {
       'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes.',
       'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication > Configuración > Dominios autorizados).',
       'auth/operation-not-allowed': 'Ese método de inicio de sesión no está activado en Firebase.',
-      // Registro de cuentas nuevas desactivado en Firebase (Authentication > Configuración).
+      // New account sign-up disabled in Firebase (Authentication > Settings).
       'auth/admin-restricted-operation': 'Ahora mismo no se pueden crear cuentas nuevas. Si ya tienes cuenta, entra normal; si no, puedes jugar como invitado.',
       'auth/requires-recent-login': 'Por seguridad, vuelve a iniciar sesión y repite la operación.',
       'permission-denied': 'La base de datos rechazó el acceso (revisa las reglas de Firestore).',
@@ -695,12 +695,12 @@ G.DB = (() => {
   }
 
   // =====================================================================
-  //                           API PÚBLICA
+  //                           PUBLIC API
   // =====================================================================
 
   let readyP = null;
 
-  /** Arranca la base de datos y recupera la sesión anterior. → true si hay sesión. */
+  /** Starts the database and recovers the previous session. → true if there's a session. */
   function ready() {
     if (readyP) return readyP;
     readyP = (async () => {
@@ -721,7 +721,7 @@ G.DB = (() => {
     const min = mode === 'cloud' ? 6 : 4;
     if ((pass || '').length < min) return { ok: false, error: `La contraseña debe tener al menos ${min} caracteres.` };
     if (mode === 'local') return registerLocal(name, pass);
-    // Tope de cuentas del mes (Firebase cobra a partir de 50.000 al mes).
+    // Monthly account cap (Firebase charges from 50,000 a month).
     try {
       const legacy = await legacySave(name, pass);
       const cred = await auth.createUserWithEmailAndPassword(nameToEmail(name), pass);
@@ -750,7 +750,7 @@ G.DB = (() => {
     } catch (e) { return { ok: false, error: authError(e) }; }
   }
 
-  /** Cambia el nombre que se ve en la partida (al elegir apodo). */
+  /** Changes the name shown in the save (when choosing a nickname). */
   function setName(n) {
     if (!save || guest) return;
     save.name = n; user = n;
@@ -765,10 +765,10 @@ G.DB = (() => {
   }
 
   /**
-   * Guarda la partida actual (no hace nada en modo invitado). En el navegador,
-   * al momento; en la nube:
-   * @param urgent  true: lo que vale algo (tiradas, compras, Pokémon, premios): enseguida
-   *                'run': al acabar una partida (como mucho cada 30 min) · false: cada 2 h
+   * Saves the current game (does nothing in guest mode). In the browser,
+   * immediately; in the cloud:
+   * @param urgent  true: what's worth something (pulls, purchases, Pokémon, rewards): straight away
+   *                'run': at the end of a run (at most every 30 min) · false: every 2 h
    */
   function commit(urgent = false) {
     if (guest || !key || !save) return false;
@@ -783,15 +783,15 @@ G.DB = (() => {
     return true;
   }
 
-  /** Funciones que se ejecutan al cerrar sesión o borrar la cuenta (amigos, salas...). */
+  /** Functions that run on signing out or deleting the account (friends, rooms...). */
   const leaveHooks = [];
 
   async function logout() {
-    for (const fn of leaveHooks) { try { await fn('logout'); } catch (e) { /* nada */ } }
+    for (const fn of leaveHooks) { try { await fn('logout'); } catch (e) { /* nothing */ } }
     if (mode === 'cloud' && !guest && save) {
-      if (pending) { try { await pushNow(); } catch (e) { /* queda la copia local */ } }
+      if (pending) { try { await pushNow(); } catch (e) { /* the local copy remains */ } }
       stopListening();
-      try { await auth.signOut(); } catch (e) { /* nada */ }
+      try { await auth.signOut(); } catch (e) { /* nothing */ }
     } else if (mode === 'local' && !guest) {
       commit();
       remove(K_SES);
@@ -804,11 +804,11 @@ G.DB = (() => {
   function nameAccount() { return !!(auth && auth.currentUser && (auth.currentUser.email || '').endsWith('@' + NAME_DOMAIN)); }
 
   /*
-   * Recuperar la cuenta: las de nombre y contraseña no tienen correo de verdad
-   * (no se les puede mandar un enlace), así que se les ofrece VINCULAR su Gmail:
-   * si un día olvidan la contraseña, entran con Google y es la misma cuenta.
-   * Lo hace el sistema de cuentas de Firebase (gratis): ni una lectura ni una
-   * escritura de la base de datos.
+   * Recovering the account: name-and-password accounts don't have a real email
+   * (a link can't be sent to them), so they're offered to LINK their Gmail:
+   * if they ever forget the password, they sign in with Google and it's the same account.
+   * Firebase's account system does it (free): not a single database read or
+   * write.
    */
   function hasGoogle() {
     const u = auth && auth.currentUser;
@@ -829,8 +829,8 @@ G.DB = (() => {
   }
 
   /**
-   * Borra la cuenta y la partida (en la nube o en este navegador).
-   * @param pass  contraseña (cuentas de nombre y contraseña)
+   * Deletes the account and the save (in the cloud or in this browser).
+   * @param pass  password (name-and-password accounts)
    */
   async function deleteAccount(pass) {
     if (guest || !key) return { ok: false, error: 'No hay cuenta que borrar.' };
@@ -843,10 +843,10 @@ G.DB = (() => {
       return { ok: true };
     }
     try {
-      // Primero se confirma quién eres: Firebase sólo deja borrar la cuenta si
-      // se ha entrado hace poco. Antes se borraban los datos y luego fallaba
-      // ese último paso: la cuenta quedaba vacía pero existía y su nombre no
-      // se podía volver a usar.
+      // First it confirms who you are: Firebase only allows deleting the account if
+      // you signed in recently. Previously the data was deleted and then
+      // that last step failed: the account was left empty but still existed and its name
+      // couldn't be used again.
       const cu = auth.currentUser;
       if (nameAccount()) {
         if (!pass) return { ok: false, error: 'Escribe tu contraseña.' };
@@ -865,7 +865,7 @@ G.DB = (() => {
     } catch (e) { return { ok: false, error: authError(e) }; }
   }
 
-  // ---------------- helpers de partida ----------------
+  // ---------------- save helpers ----------------
 
   function owns(dex) { return !!(save && save.owned[dex]); }
 
@@ -875,14 +875,14 @@ G.DB = (() => {
 
   function ownsShiny(dex) { return !!(save && save.shiny && save.shiny[dex]); }
 
-  /** Mejoras compradas para un Pokémon: { id -> nivel }. */
+  /** Upgrades bought for a Pokémon: { id -> level }. */
   function upgradesOf(dex) {
     if (!save) return {};
     save.pupg = save.pupg || {};
     return save.pupg[dex] || (save.pupg[dex] = {});
   }
 
-  /** Da la versión shiny (y la normal, si no la tenía). Devuelve true si es nueva. */
+  /** Gives the shiny version (and the normal one, if it wasn't owned). Returns true if it's new. */
   function grantShiny(dex, from) {
     grant(dex, from);
     if (save.shiny[dex]) return false;
@@ -895,11 +895,11 @@ G.DB = (() => {
     owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, cleanHistory, HISTORY_MAX,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },
-    /** Acceso de bajo nivel para los módulos de red (sólo en modo nube). */
+    /** Low-level access for the network modules (cloud mode only). */
     get fb() { return mode === 'cloud' ? { auth, fs, rtdb, uid, emulator: !!(G.FIREBASE_CONFIG || {}).emulator } : null; },
-    /** ¿Está disponible lo online (amigos, ranking, multijugador)? */
+    /** Are the online features (friends, leaderboard, multiplayer) available? */
     get online() { return mode === 'cloud' && !guest && !!uid && !!save; },
-    /** ¿La cuenta es de usuario y contraseña (no de Google)? */
+    /** Is the account a username-and-password one (not Google)? */
     get nameAccount() { return nameAccount(); },
     get hasGoogle() { return hasGoogle(); }, linkGoogle,
     get mode() { return mode; },

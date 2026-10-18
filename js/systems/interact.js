@@ -1,18 +1,18 @@
-/* ============ interact.js — altares, manantiales, cofres con candado y trampas ============
- * Los objetos los coloca world.js (raros, en el suelo libre); aquí está lo que
- * pasa al tocarlos. Todo se mira alrededor de TU Pokémon:
+/* ============ interact.js — altars, springs, locked chests and traps ============
+ * world.js places the objects (rare, on free ground); what happens when you
+ * touch them is here. Everything is checked around YOUR Pokémon:
  *
- *   altar     da un poder de 25 s (Furia, Rayo, Imán, Prisa o Guardian) y se apaga; el altar dorado
- *             (Gold) da un combo de monedas a todo el equipo y sólo lo puede usar uno
- *   spring    cura mientras estás encima; se agota y se recarga sola
- *   bigchest  quédate a su lado CHEST_TIME segundos (mientras te atacan) y se
- *             abre: monedas, tickets y experiencia para subir un nivel
- *   trap      salta al pisarla (tú o un enemigo) y afecta a todo lo cercano:
- *             veneno, pegajosa (ralentiza) o explosiva
+ *   altar     gives a 25 s power (Fury, Lightning, Magnet, Haste or Guardian) and goes dark; the golden
+ *             altar (Gold) gives a coin combo to the whole team and only one player can use it
+ *   spring    heals while you stand on it; runs dry and refills on its own
+ *   bigchest  stay next to it for CHEST_TIME seconds (while you're attacked) and it
+ *             opens: coins, tickets and enough experience to level up
+ *   trap      triggers when stepped on (by you or an enemy) and affects everything nearby:
+ *             poison, sticky (slows) or explosive
  *
- * Cooperativo: altares y manantiales son de cada uno (en cada ordenador); el
- * cofre y las trampas se rompen como cualquier objeto y el anfitrión reparte
- * el botín y el daño a los enemigos (ver world.destroyProp y coop.propBroken).
+ * Co-op: altars and springs belong to each player (on each computer); the
+ * chest and traps break like any object and the host shares out
+ * the loot and the damage to enemies (see world.destroyProp and coop.propBroken).
  */
 G.Interact = (() => {
   const CHEST_TIME = 3.5;
@@ -78,8 +78,8 @@ G.Interact = (() => {
       switch (p.type) {
         case 'spring': spring(dt, pl, p, d2); break;
         case 'altar':
-          // Contando el tamaño de tu Pokémon: uno grande (Reshiram, Zekrom...) choca
-          // con el altar antes de llegar a 30 y no lo podía activar.
+          // Accounting for your Pokémon's size: a big one (Reshiram, Zekrom...) bumps into
+          // the altar before getting within 30 and couldn't activate it.
           if (!p.used && !pl.dead && d2 < Math.max(30, p.r + pl.r + 14) ** 2) usePower(pl, p);
           break;
         case 'bigchest':
@@ -142,8 +142,8 @@ G.Interact = (() => {
   }
 
   /**
-   * Una trampa salta (en cada ordenador; ver la cabecera). El daño a enemigos
-   * sólo lo hace quien manda; a ti te afecta si estás dentro.
+   * A trap triggers (on every computer; see the header). Damage to enemies
+   * is only done by whoever is in charge; it affects you if you're inside.
    */
   function trapEffect(p) {
     const x = p.x, y = p.y - 8, k = p.kind;

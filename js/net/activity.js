@@ -1,7 +1,7 @@
-/* ============ activity.js — qué estás haciendo (para la lista de amigos) ============
- * Mira cada pocos segundos en qué pantalla estás (menú, gacha, mejoras, partida...) y se lo
- * dice a G.Social.setActivity, que sólo escribe cuando cambia (y como mucho una vez por minuto).
- * En una partida manda además cuándo empezó, para que los amigos vean cuánto lleva.
+/* ============ activity.js — what you're doing (for the friends list) ============
+ * Every few seconds it checks which screen you're on (menu, gacha, upgrades, run...) and tells
+ * G.Social.setActivity, which only writes when it changes (and at most once a minute).
+ * During a run it also sends when it started, so friends can see how long it's been going.
  */
 G.Activity = (() => {
   const SCREEN = [['scr-gacha', 'gacha'], ['scr-upgrades', 'upgrades'], ['scr-dex', 'dex'],

@@ -1,28 +1,28 @@
-/* ============ rift.js — grietas y arena del legendario ============
+/* ============ rift.js — rifts and the legendary's arena ============
  *
- * De vez en cuando (pocas veces por partida) se abre una GRIETA cerca de un
- * jugador. Dura GRIETA_TTL segundos; si entras, te lleva (con todo el grupo)
- * a una arena cerrada en el Mundo Distorsión, contra un Pokémon LEGENDARIO.
+ * Every so often (a few times per run) a RIFT opens near a
+ * player. It lasts GRIETA_TTL seconds; if you step in, it takes you (with the whole group)
+ * to a closed arena in the Distortion World, against a LEGENDARY Pokémon.
  *
- *   ganas    el legendario suelta tickets (el ×10, la mitad de las veces) y monedas, y cada uno se lleva un
- *            VÍNCULO (fusiona movimientos, ver Player.fuse); a los pocos
- *            segundos volvéis al mapa donde estabais y se elige la fusión
- *   pierdes  (caéis todos o se acaba el tiempo) volvéis sin premio, con algo
- *            de vida; la partida sigue
+ *   win      the legendary drops tickets (the ×10, half the time) and coins, and each player gets a
+ *            BOND (fuses moves, see Player.fuse); a few
+ *            seconds later you return to where you were on the map and choose the fusion
+ *   lose     (everyone falls or time runs out) you return with no reward and some
+ *            health; the run continues
  *
- * Mientras dura la arena, los enemigos del mapa se guardan (EnemyMgr.stash) y
- * no aparecen nuevos; al volver todo sigue como estaba.
+ * While the arena lasts, the map's enemies are stored (EnemyMgr.stash) and
+ * no new ones appear; on returning everything is as it was.
  *
- * Cooperativo: lo decide el anfitrión. Mensajes (ver coop.js):
- *   'rift' x y ttl · 'riftx' · 'arena' cfg · 'aw' (ganada) · 'al' (perdida)
- *   'zm' (Portal de Zygarde: empieza la transformación en Mega Zygarde)
- *   y del invitado al anfitrión 're' (he entrado en la grieta).
+ * Co-op: the host decides. Messages (see coop.js):
+ *   'rift' x y ttl · 'riftx' · 'arena' cfg · 'aw' (won) · 'al' (lost)
+ *   'zm' (Zygarde Portal: the transformation into Mega Zygarde begins)
+ *   and from guest to host 're' (I've entered the rift).
  */
 G.Rift = (() => {
-  // (0.14 hasta el 11-10-2026: más grietas para que se vean los vínculos)
-  // Menos azar (12-10-2026): cada vez que no sale, la siguiente es más
-  // probable (20 %, 40 %, 60 %, 80 %, 100 %): como mucho 2,5 min sin grieta.
-  // Desde 2 min antes de la Sentencia de Arceus (minuto 30) ya no se abren.
+  // (0.14 until 11-10-2026: more rifts so bonds are seen)
+  // Less luck (12-10-2026): each time it doesn't come up, the next is more
+  // likely (20 %, 40 %, 60 %, 80 %, 100 %): at most 2.5 min without a rift.
+  // From 2 min before Arceus's Judgment (minute 30) they no longer open.
   const CHECK = 30, CHANCE = 0.2, TTL = 45;
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
   const MEGA_DEX = 9718;    // Mega Zygarde sprite (assets/pokemon/9718, tools/fetch_zygarde_mega.py)
@@ -34,7 +34,7 @@ G.Rift = (() => {
   const ZY_TIME = 180;      // Zygarde Portal fight: more time, much tougher boss
   const arenaTime = () => (arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let rift = null;          // { x, y, ttl, t }
-  const EXIT_SAFE = 3;      // segundos de inmunidad al salir de la grieta
+  const EXIT_SAFE = 3;      // seconds of immunity on leaving the rift
   let arena = null;         // { tx, ty, r, dex, shiny, x, y, back, biome, t, phase, endT, bossId }
   let checkT = CHECK, asked = false, downT = 0, misses = 0;
   const authority = () => !G.Coop.active || G.Coop.isHost;
@@ -42,7 +42,7 @@ G.Rift = (() => {
 
   function reset() { rift = null; arena = null; checkT = CHECK; asked = false; downT = 0; misses = 0; }
 
-  // ---------------- grieta en el mapa ----------------
+  // ---------------- rift on the map ----------------
 
   function update(dt, pl, time) {
     if (rift) {
@@ -54,7 +54,7 @@ G.Rift = (() => {
       checkT -= dt;
       if (checkT <= 0) {
         checkT = CHECK;
-        if (G.EnemyMgr.bossAlive()) return;           // con un jefe vivo no cuenta como intento
+        if (G.EnemyMgr.bossAlive()) return;           // with a boss alive it doesn't count as an attempt
         if (Math.random() < CHANCE * (1 + misses)) { misses = 0; open(); }
         else misses++;
       }
@@ -75,11 +75,11 @@ G.Rift = (() => {
     }
   }
 
-  /** Aparece la grieta (también la que manda el anfitrión). */
+  /** The rift appears (including the one the host sends). */
   function show(x, y, ttl) {
     rift = { x, y, ttl, t: 0 };
     asked = false;
-    // (El aviso grande lo dibuja hud.js mientras rift.t < 4,5 s.)
+    // (The big notice is drawn by hud.js while rift.t < 4.5 s.)
     G.Audio.sfx('rift');
     G.FX.ring(x, y, 6, 80, '#b48aff', 0.7, 5);
   }
@@ -93,26 +93,26 @@ G.Rift = (() => {
 
   // ---------------- arena ----------------
 
-  /** Quien manda: elige legendario y lugar, y avisa a todos. */
-  let nextType = null;          // pruebas/vídeos: tipo de la próxima arena
+  /** Whoever is in charge: chooses the legendary and the place, and tells everyone. */
+  let nextType = null;          // testing/videos: type of the next arena
 
   function start(forceType, zy) {
     if (arena) return;
     forceType = forceType || nextType; nextType = null;
     let pool = G.DEX.filter(p => p.leg && G.SPRITE_META[p.dex]);
     if (forceType && pool.some(p => p.types.includes(forceType))) pool = pool.filter(p => p.types.includes(forceType));
-    // Los legendarios que aún no has vencido salen 4 veces más (menos repetidos).
+    // Legendaries you haven't defeated yet come up 4 times more often (fewer repeats).
     const beaten = (G.DB.save && G.DB.save.legends) || {};
     const ws = pool.map(p => (beaten[p.dex] ? 1 : 4));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), mi = 0;
     while (mi < pool.length - 1 && (r -= ws[mi]) > 0) mi++;
     const mon = zy ? G.DEX_BY[718] : pool[mi];
-    const here = zy || rift || G.Game.player;      // la salida: donde estaba la grieta (igual para todos)
+    const here = zy || rift || G.Game.player;      // the exit: where the rift was (the same for everyone)
     const cfg = {
       bx: Math.round(here.x), by: Math.round(here.y),
       tx: 5000 + Math.floor(Math.random() * 3000), ty: 5000 + Math.floor(Math.random() * 3000), r: ARENA_R,
       dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < 1 / 512,
-      // La arena es la de uno de sus tipos, al azar.
+      // The arena is one of its types', at random.
       type: zy ? 'zygarde' : (forceType || G.U.pick(mon.types))
     };
     if (zy) { cfg.hard = 1; cfg.zy = 1; cfg.btype = G.U.pick(mon.types); }     // btype: counts as a rift of that type for goals
@@ -121,7 +121,7 @@ G.Rift = (() => {
     spawnLegend();
   }
 
-  /** En cada ordenador: viaje a la arena. */
+  /** On each computer: the trip to the arena. */
   function begin(cfg) {
     const pl = G.Game.player;
     const ts = TS();
@@ -137,11 +137,11 @@ G.Rift = (() => {
     G.Hazards.clear();
     G.World.setArena({ tx: cfg.tx, ty: cfg.ty, r: cfg.r, type: cfg.type });
     G.World.setBiome(G.Tiles.arenaBiome(cfg.type), true);
-    // Cada arena trae su clima (el volcán, sol; el glaciar, nieve...).
+    // Each arena brings its weather (the volcano, sun; the glacier, snow...).
     const th = G.Tiles.ARENA_THEMES[cfg.type];
     if (th && th.weather) G.Weather.force(th.weather, ZY_TIME + 15);
-    // (La salida es el sitio donde estaba la grieta, el mismo para todos.)
-    // Todos al sur de la arena, en fila; el legendario aparece al norte.
+    // (The exit is where the rift was, the same for everyone.)
+    // Everyone at the south of the arena, in a row; the legendary appears to the north.
     const ps = G.Game.everyone();
     ps.forEach((p, i) => { p.x = arena.x + (i - (ps.length - 1) / 2) * 34; p.y = arena.y + ts * 3; });
     G.Camera.x = pl.x; G.Camera.y = pl.y;
@@ -172,8 +172,8 @@ G.Rift = (() => {
     const e = new G.Enemy(def, arena.x, arena.y - ts * 3.5, { hp: 1, spd: 1, dmg: 1 }, true);
     e.legend = true;
     e.hard = hard;
-    // Choca con las paredes y columnas como tú: si volara por encima de las
-    // rocas, tus disparos no podrían alcanzarle (bug de Celebi).
+    // It collides with walls and columns like you: if it flew over the
+    // rocks, your shots couldn't reach it (the Celebi bug).
     e.flying = false;
     if (arena.shiny) e.makeShiny();
     G.EnemyMgr.add(e);
@@ -183,7 +183,7 @@ G.Rift = (() => {
     G.Audio.sfx('boss');
   }
 
-  /** Nadie sale del círculo de la arena (por si algo empuja demasiado). */
+  /** Nobody leaves the arena's circle (in case something pushes too hard). */
   function keepInside() {
     const ts = TS(), max = (arena.r - 1.4) * ts;
     for (const e of G.EnemyMgr.all()) {
@@ -282,17 +282,17 @@ G.Rift = (() => {
     G.Audio.sfx('back');
   }
 
-  /** En cada ordenador: vuelta al mapa. */
+  /** On each computer: back to the map. */
   function finish() {
     const pl = G.Game.player;
     const a = arena;
     arena = null;
     G.World.setBiome(a.biome, true);
     G.Weather.clear();
-    // Invitado: no se borra nada. El anfitrión avisa de los de la arena que se
-    // van y de los del mapa que vuelven; si el invitado terminaba su cuenta
-    // atrás un poco más tarde (pasa casi siempre), borraba los que acababan de
-    // volver y no se veían hasta que caían (sólo sus ataques).
+    // Guest: nothing is deleted. The host announces the arena's enemies that
+    // leave and the map's ones that return; if the guest finished its count-
+    // down a little later (it almost always does), it deleted the ones that had just
+    // returned and they couldn't be seen until they fell (only their attacks).
     if (authority()) G.EnemyMgr.restore();
     G.Projectiles.clear();
     G.Combat.clearFields();
@@ -300,7 +300,7 @@ G.Rift = (() => {
     for (const p of G.Game.everyone()) { p.x = a.back.x; p.y = a.back.y; }
     pl.x = a.back.x; pl.y = a.back.y;
     if (pl.dead) pl.revive(0.3);
-    // Unos segundos sin poder recibir daño al salir (los enemigos vuelven de golpe).
+    // A few seconds of not taking damage on leaving (enemies come back all at once).
     for (const p of G.Game.everyone()) p.invuln = Math.max(p.invuln || 0, EXIT_SAFE);
     pl.invuln = Math.max(pl.invuln || 0, EXIT_SAFE);
     G.Camera.x = pl.x; G.Camera.y = pl.y;
@@ -308,9 +308,9 @@ G.Rift = (() => {
     if (pl.bonds > 0) G.Game.offerBond();
   }
 
-  // ---------------- dibujo ----------------
+  // ---------------- drawing ----------------
 
-  /** La grieta, para ordenarla por Y con el resto de la escena. */
+  /** The rift, to sort it by Y with the rest of the scene. */
   /** Zygarde arena: glowing rings, light under each monolith, the portal you came through, and the transformation effects. */
   function zyDraw(ctx) {
     const ts = TS(), t = arena.t, mega = !!arena.megaDone;
@@ -411,9 +411,9 @@ G.Rift = (() => {
     debugOpen() { open(); },
     /** Tests: the Zygarde Portal fight right now, as if you had stepped on a portal where you stand. */
     debugZygarde() { const p = G.Game.player; start(null, { x: p.x, y: p.y }); },
-    /** Para pruebas: arena de un tipo ya. */
+    /** For testing: an arena of one type right now. */
     debugArena(type) { start(type); },
-    /** Para vídeos: la próxima grieta en la que entres será de este tipo. */
+    /** For videos: the next rift you enter will be of this type. */
     debugNextType(type) { nextType = type; }
   };
 })();

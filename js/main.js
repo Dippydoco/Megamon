@@ -1,13 +1,13 @@
-/* ============ main.js — arranque ============ */
+/* ============ main.js — startup ============ */
 (() => {
-  // Si un archivo no llega a cargarse (conexión móvil que se corta), mejor
-  // avisar que arrancar a medias.
+  // If a file fails to load (a mobile connection dropping), it's better
+  // to warn than to start half-loaded.
   const NEED = ['U', 'I18n', 'Settings', 'DB', 'Audio', 'Input', 'Touch', 'Sprites', 'Camera', 'Moves', 'Enemies', 'Upgrades', 'Items',
                 'World', 'FX', 'Projectiles', 'EnemyMgr', 'Pickups', 'Player', 'Combat', 'Spawner', 'LevelUp', 'Gacha',
                 'Rift', 'Weather', 'Progress', 'Hazards', 'Social', 'Net', 'Coop', 'Ranking', 'Icons', 'UI', 'HUD',
                 'MenuUI', 'RunUI', 'SettingsUI', 'Funding', 'SupportUI', 'Game', 'Flow'];
   function broken() {
-    // (En la versión publicada G no está en window: va encerrado, ver tools/build.js.)
+    // (In the published version G isn't on window: it's wrapped, see tools/build.js.)
     const miss = NEED.filter(k => typeof G !== 'object' || !G[k]);
     if (!miss.length) return false;
     const el = document.getElementById('boot');
@@ -16,9 +16,9 @@
     return true;
   }
 
-  // Mantenimiento (mudanza a servidores nuevos): no se entra ni se inicia
-  // sesión, así no se escribe nada mientras se copian las cuentas y partidas.
-  // Para probar en local: añade ?dev a la dirección.
+  // Maintenance (moving to new servers): no getting in or signing
+  // in, so nothing is written while accounts and saves are being copied.
+  // To test locally: add ?dev to the address.
   const MAINTENANCE = false;
   function maintenance() {
     if (!MAINTENANCE || /[?&]dev\b/.test(location.search)) return false;
@@ -38,14 +38,14 @@
     if (maintenance()) return;
     if (broken()) return;
     G.I18n.startDom();
-    // Espera a la fuente pixel para que la UI no salte al cargarla.
+    // Waits for the pixel font so the UI doesn't jump when it loads.
     const ready = document.fonts && document.fonts.load ? document.fonts.load('16px Pixelify') : Promise.resolve();
     ready.catch(() => {}).then(() => G.Flow.boot());
   }
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  // Instalable como app (PWA). Sólo con http(s): abierto con doble clic (file://) no hace falta.
+  // Installable as an app (PWA). Only over http(s): opened by double-click (file://) it isn't needed.
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('[PWA]', e.message)));
   }

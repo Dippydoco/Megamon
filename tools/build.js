@@ -1,12 +1,12 @@
-/* Empaqueta el juego para publicarlo: un solo JS minificado en vez de ~60.
+/* Packages the game for publishing: a single minified JS instead of ~60.
  *   node tools/build.js
  *
- * - dev.html es la página "fuente": carga cada script por separado (para
- *   programar y depurar cómodamente). SE EDITA dev.html, no index.html.
- * - index.html se genera a partir de dev.html, cambiando el bloque de scripts
- *   por js/app.min.js (con la huella en la URL para que no se quede en caché).
- * - node tools/build.js --sin-seo  ->  sin lo de SEO (hasta tener pokesurvivor.com).
- * - Después hay que regenerar en/index.html: python tools/make_seo_pages.py
+ * - dev.html is the "source" page: it loads each script separately (for
+ *   comfortable programming and debugging). EDIT dev.html, not index.html.
+ * - index.html is generated from dev.html, replacing the block of scripts
+ *   with js/app.min.js (with the fingerprint in the URL so it isn't cached).
+ * - node tools/build.js --sin-seo  ->  without the SEO parts (until pokesurvivor.com exists).
+ * - Afterwards en/index.html has to be regenerated: python tools/make_seo_pages.py
  */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { execFileSync } = require('child_process');
@@ -16,20 +16,20 @@ const BEGIN = '<!-- scripts:begin -->', END = '<!-- scripts:end -->';
 
 const dev = fs.readFileSync(DEV, 'utf8');
 const i = dev.indexOf(BEGIN), j = dev.indexOf(END);
-if (i < 0 || j < 0) throw new Error('dev.html no tiene las marcas ' + BEGIN + ' / ' + END);
+if (i < 0 || j < 0) throw new Error('dev.html is missing the markers ' + BEGIN + ' / ' + END);
 const block = dev.slice(i, j + END.length);
 const files = [...block.matchAll(/<script[^>]*src="(js\/[^"]+\.js)"/g)].map(m => m[1]);
 
-// Une los archivos en orden; cada uno separado por ';' por si alguno no acaba en punto y coma.
+// Joins the files in order; each separated by ';' in case one doesn't end in a semicolon.
 let joined = files.map(f => `/* ${f} */\n` + fs.readFileSync(path.join(ROOT, f), 'utf8')).join('\n;\n');
-// Anti-trampas: en la versión publicada el juego va ENCERRADO en una función:
-// G deja de existir en la consola del navegador (F12), y con él los atajos para
-// hacerse invencible, saltar el reloj, etc. (dev.html sigue igual, para programar).
-//   --expose   sin encerrar ni ofuscar (para las pruebas automáticas)
+// Anti-cheat: in the published version the game is WRAPPED in a function:
+// G no longer exists in the browser console (F12), and with it the shortcuts to
+// become invincible, skip the clock, etc. (dev.html stays as it is, for programming).
+//   --expose   no wrapping or obfuscation (for automated tests)
 const EXPOSE = process.argv.includes('--expose');
 if (!EXPOSE) {
   const WIN_G = 'window.G = window.G || {};';
-  if (!joined.includes(WIN_G)) throw new Error('util.js ya no crea G como se esperaba: revisa build.js');
+  if (!joined.includes(WIN_G)) throw new Error('util.js no longer creates G as expected: check build.js');
   joined = '(() => {\n' + joined.replace(WIN_G, 'var G = {};') + '\n})();\n';
 }
 const tmp = path.join(ROOT, 'tools', 'cache', 'app.js');
@@ -40,9 +40,9 @@ const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const shell = process.platform === 'win32';
 execFileSync(npx, ['--yes', 'terser@5', tmp, '--compress', 'passes=1', '--mangle', '--comments', 'false', '--ecma', '2020', '-o', outJs],
   { stdio: 'inherit', shell });
-// Y ofuscado: el código queda ilegible y se rompe solo si lo reformatean para
-// tocarlo. Las cadenas, en una tabla codificada (sólo una parte, para no frenar
-// el juego). Semilla fija: el mismo código da siempre el mismo archivo.
+// And obfuscated: the code becomes unreadable and breaks if it is reformatted to
+// tamper with it. Strings go in an encoded table (only some of them, so the game
+// isn't slowed down). Fixed seed: the same code always gives the same file.
 if (!EXPOSE) {
   execFileSync(npx, ['--yes', 'javascript-obfuscator@4.1.1', outJs, '--output', outJs,
     '--compact', 'true', '--self-defending', 'true', '--seed', '7',
@@ -60,15 +60,15 @@ const hash = crypto.createHash('sha1').update(min).update(css).digest('hex').sli
 let html = dev.slice(0, i) + `<script>window.PS_BUILD=${JSON.stringify({ v: hash, at: new Date().toISOString() })};</script>\n<script defer src="js/app.min.js?v=${hash}"></script>` + dev.slice(j + END.length);
 html = html.replace('href="css/style.css"', `href="css/style.css?v=${hash}"`);
 html = html.replace(/<meta name="robots" content="noindex">\s*/, '');
-// --sin-seo: sin canonical/redes/datos estructurados ni enlaces a las páginas
-// (para publicar antes de tener el dominio pokesurvivor.com).
+// --sin-seo: no canonical/social/structured data or links to the pages
+// (for publishing before the pokesurvivor.com domain exists).
 const SIN_SEO = process.argv.includes('--sin-seo');
 html = SIN_SEO ? html.replace(/<!-- seo:begin -->[\s\S]*?<!-- seo:end -->\n?/g, '') : html.replace(/<!-- seo:(begin|end) -->\n?/g, '');
 html = html.replace(/<!-- dev.html: página fuente[^>]*-->/, '<!-- GENERADO desde dev.html por tools/build.js: no editar a mano (se edita dev.html). -->');
 fs.writeFileSync(OUT, html);
-// Versión publicada: los jugadores la miran cada 5 min y, si cambia, el juego se
-// actualiza solo (en el menú, o al acabar la partida). Ver js/core/updater.js.
-// --forzar: versión obligatoria, también corta las partidas en curso (guardándolas).
+// Published version: players check it every 5 min and, if it changes, the game
+// updates itself (in the menu, or when the run ends). See js/core/updater.js.
+// --forzar: mandatory version, also interrupts runs in progress (saving them).
 const FORZAR = process.argv.includes('--forzar');
 fs.writeFileSync(path.join(ROOT, 'version.json'), JSON.stringify(Object.assign({ v: hash, at: new Date().toISOString() }, FORZAR ? { force: true } : {})) + '\n');
-console.log(`${FORZAR ? '[OBLIGATORIA] ' : ''}${SIN_SEO ? '[sin SEO] ' : ''}${EXPOSE ? '[SIN PROTEGER, sólo pruebas] ' : ''}ok: ${files.length} scripts · ${(joined.length / 1024).toFixed(0)} KB -> ${(min.length / 1024).toFixed(0)} KB (app.min.js?v=${hash})`);
+console.log(`${FORZAR ? '[MANDATORY] ' : ''}${SIN_SEO ? '[no SEO] ' : ''}${EXPOSE ? '[UNPROTECTED, tests only] ' : ''}ok: ${files.length} scripts · ${(joined.length / 1024).toFixed(0)} KB -> ${(min.length / 1024).toFixed(0)} KB (app.min.js?v=${hash})`);

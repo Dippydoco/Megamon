@@ -1,17 +1,17 @@
-/* ============ layout-ui.js — colocar los botones (móvil) ============
- * Ajustes > Controles > Colocar los botones: se ven los ataques (con el
- * objeto), la pausa y, si es fijo, el joystick, y se arrastran a donde se
- * quiera. Se guarda el centro de cada cosa en proporción a la pantalla
- * (G.Settings 'pad'); lo que no se mueve se queda en su sitio de siempre.
- * El HUD (hud.js) y el joystick (touch.js) leen esas posiciones.
- * Las medidas copian las del HUD: si cambian allí, cambiarlas aquí.
+/* ============ layout-ui.js — placing the buttons (mobile) ============
+ * Settings > Controls > Place the buttons: shows the attacks (with the
+ * item), pause and, if it's fixed, the joystick, and they can be dragged wherever
+ * you like. The centre of each one is stored relative to the screen
+ * (G.Settings 'pad'); anything not moved stays in its usual place.
+ * The HUD (hud.js) and the joystick (touch.js) read those positions.
+ * The measurements copy the HUD's: if they change there, change them here.
  */
 G.LayoutUI = (() => {
-  const S = 58, GAP = 9, ITEM_GAP = 18, N = 4;          // como en hud.js
+  const S = 58, GAP = 9, ITEM_GAP = 18, N = 4;          // as in hud.js
   const BAR_W = S + ITEM_GAP + N * S + (N - 1) * GAP;
   let el = null, pos = null, moved = null, mode = 'float';
 
-  /** Dónde está cada cosa ahora mismo (centro en px), con lo guardado o lo de siempre. */
+  /** Where each thing is right now (centre in px), using what's saved or the default. */
   function current(k, w, h) {
     const p = G.Touch.spot(k);
     if (k === 'stick') { const b = G.Touch.stickBase(w, h); return [b.x, b.y]; }
@@ -26,7 +26,7 @@ G.LayoutUI = (() => {
     return [w - 52 - Math.min(44, sa.right) + 20, 12 + Math.min(20, sa.top) + 20];
   }
 
-  /** Lo mismo que hace el HUD para que no se salga de la pantalla. */
+  /** The same as the HUD does so it doesn't go off the screen. */
   function fit(k, x, y, w, h) {
     if (k === 'bar') return [G.U.clamp(x, 6 + BAR_W / 2, Math.max(6 + BAR_W / 2, w - BAR_W / 2 - 6)), G.U.clamp(y, 24 + S / 2, h - S / 2 - 6)];
     if (k === 'pause') return [G.U.clamp(x, 24, w - 24), G.U.clamp(y, 30, h - 24)];
@@ -81,7 +81,7 @@ G.LayoutUI = (() => {
       e.preventDefault();
       off = [e.clientX - pos[k][0], e.clientY - pos[k][1]];
       node.classList.add('held');
-      try { node.setPointerCapture(e.pointerId); } catch (err) { /* nada */ }
+      try { node.setPointerCapture(e.pointerId); } catch (err) { /* nothing */ }
     });
     node.addEventListener('pointermove', e => {
       if (!off) return;

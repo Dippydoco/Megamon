@@ -1,13 +1,13 @@
-# Créditos
+# Credits
 
 ## Sprites
 
-Los sprites estilo *Pokémon Mundo Misterioso* vienen de
-[SpriteCollab](https://github.com/PMDCollab/SpriteCollab), bajo licencia
+The *Pokémon Mystery Dungeon* style sprites come from
+[SpriteCollab](https://github.com/PMDCollab/SpriteCollab), under the licence
 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/):
-uso **no comercial** y con atribución a sus artistas.
+**non-commercial** use with attribution to their artists.
 
-| Artista | Contacto | Sprites (nº de Pokédex) |
+| Artist | Contact | Sprites (Pokédex no.) |
 |---|---|---|
 | 3Monika4 | <@270755102178934785> | 20, 61, 63 |
 | 3P1C |  | 27, 498 |
@@ -124,12 +124,12 @@ uso **no comercial** y con atribución a sus artistas.
 | YoukaiMinori | <@91001329228464128> | 252, 253 |
 | ◥θ┴θ◤ | DC:<@215638650434617345> | 157, 445, 501, 504, 505, 566, 577, 595, 627, 650, 651, 658, 661, 676, 684, 707, 724, 726, 728, 729, 730, 761, 763, 790, 823, 872, 907, 991 |
 
-## Datos
+## Data
 
-Stats base y nombres en español: [PokeAPI](https://pokeapi.co/),
-descargados una vez y guardados en `js/data/pokedex.js`.
+Base stats and Spanish names: [PokeAPI](https://pokeapi.co/),
+downloaded once and stored in `js/data/pokedex.js`.
 
-## Marca
+## Trademark
 
-Pokémon es propiedad de Nintendo, Creatures Inc. y GAME FREAK.
-Este es un proyecto de fan sin ánimo de lucro.
+Pokémon is the property of Nintendo, Creatures Inc. and GAME FREAK.
+This is a non-profit fan project.

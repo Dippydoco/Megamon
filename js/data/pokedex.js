@@ -1,10 +1,10 @@
-/* ============ pokedex.js — GENERADO, no editar a mano ============
- * Lo produce tools/fetch_pokedex.py. Los datos se bajaron una vez de
- * PokeAPI y viven aqui: el juego no hace ninguna peticion a internet.
+/* ============ pokedex.js — GENERATED, do not edit by hand ============
+ * Produced by tools/fetch_pokedex.py. The data was downloaded once from
+ * PokeAPI and lives here: the game makes no requests to the internet.
  *
- * hp/spd/atk son stats de juego derivados de los stats base.
- * rarity 1-5 para el gacha · gen = generación (banner) · starter = test
- * leg = legendario o singular (sólo salen en las grietas)
+ * hp/spd/atk are game stats derived from the base stats.
+ * rarity 1-5 for the gacha · gen = generation (banner) · starter = test
+ * leg = legendary or mythical (they only appear in rifts)
  */
 G.DEX = [
   {"dex":1,"name":"Bulbasaur","types":["grass","poison"],"hp":90,"spd":97,"atk":1.06,"rarity":1,"bst":318,"starter":true,"gen":1},

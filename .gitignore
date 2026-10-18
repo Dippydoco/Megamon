@@ -1,23 +1,23 @@
-# Vídeos de demostración (pesan mucho; se pueden subir aparte)
+# Demo videos (they're large; they can be uploaded separately)
 videos/
 
-# Cachés de los scripts de descarga
+# Caches from the download scripts
 tools/cache/
 __pycache__/
 
-# Firebase / emulador / logs
+# Firebase / emulator / logs
 .firebase/
 *-debug.log
 *.log
 node_modules/
 
-# Sistema
+# System
 Thumbs.db
 desktop.ini
 .DS_Store
 
-# Contactos privados (emails de terceros): nunca al repositorio público
+# Private contacts (third parties' emails): never in the public repository
 docs/CONTACTOS_CREADORES.md
 
-# Caché local de wrangler (Cloudflare)
+# wrangler's local cache (Cloudflare)
 .wrangler/

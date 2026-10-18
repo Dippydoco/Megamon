@@ -1,8 +1,8 @@
-/* ============ hud.js — interfaz dentro del canvas ============
- * Se dibuja en coordenadas de PANTALLA (sin la transformación de cámara).
+/* ============ hud.js — interface inside the canvas ============
+ * Drawn in SCREEN coordinates (without the camera transform).
  */
 G.HUD = (() => {
-  let HUD_SCALE = 1.55;       // tamaño del bloque de arriba a la izquierda (vida, compañeros, buffs)
+  let HUD_SCALE = 1.55;       // size of the top-left block (health, teammates, buffs)
   const F = (w, s) => `${w} ${s}px Pixelify,"Segoe UI",system-ui,sans-serif`;
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -27,13 +27,13 @@ G.HUD = (() => {
   }
 
   function draw(ctx, w, h, pl, st) {
-    HUD_SCALE = w < 640 ? 1.2 : w < 1000 ? 1.4 : 1.55;      // en pantallas estrechas, menos para no tapar el reloj
+    HUD_SCALE = w < 640 ? 1.2 : w < 1000 ? 1.4 : 1.55;      // on narrow screens, smaller so it doesn't cover the clock
     ctx.save();
     ctx.textBaseline = 'alphabetic';
     G.Touch.clearButtons();
     const touch = G.Touch.active;
 
-    // ---------- barra de experiencia (borde superior) ----------
+    // ---------- experience bar (top edge) ----------
     const xpF = pl.xp / pl.xpNext;
     ctx.fillStyle = 'rgba(0,0,0,.5)';
     ctx.fillRect(0, 0, w, 7);
@@ -42,20 +42,20 @@ G.HUD = (() => {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w * G.U.clamp(xpF, 0, 1), 7);
 
-    // ---------- vida + nivel + buffs (arriba a la izquierda, a escala HUD_SCALE) ----------
+    // ---------- health + level + buffs (top left, at HUD_SCALE) ----------
     const px = 16, py = 20;
     portraitDt = Math.min(0.1, (performance.now() - portraitT) / 1000);
     portraitT = performance.now();
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
-    // Tu tarjeta: igual que las de los compañeros (icono de tu Pokémon, nombre, vida), con el nivel.
+    // Your card: like the teammates' (your Pokémon's icon, name, health), with the level.
     drawCard(ctx, px, py, {
       key: 'me', pl, name: pl.mon.name, nameCol: '#eaf2ff', color: '#ffcb3d', tag: 'Lv. ' + pl.level,
       hp: pl.hp, maxHp: pl.maxHp, dead: pl.dead, barCol: '#ff5f6d'
     });
 
-    // Buffs activos y poder de altar: píldoras con icono + texto. Si no caben en
-    // una fila (hasta el final de la barra de vida) pasan a la siguiente, sin solaparse.
+    // Active buffs and altar power: pills with an icon + text. If they don't fit in
+    // one row (up to the end of the health bar) they move to the next, without overlapping.
     const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
     const LBL = { atk: 'ATK', spd: 'SPD', def: 'DEF', regen: 'REGEN' };
     const ICO = { atk: 'fist', spd: 'boot', def: 'shield', regen: 'sprout' };
@@ -88,7 +88,7 @@ G.HUD = (() => {
     const coopTop = rows ? py + CARD_H + CARD_GAP + rows * (PH + 4) + 2 : py + CARD_H + CARD_GAP;
     ctx.restore();
 
-    // ---------- reloj / bioma / kills ----------
+    // ---------- clock / biome / kills ----------
     ctx.textAlign = 'center';
     ctx.font = F(800, 26);
     ctx.fillStyle = 'rgba(255,255,255,.95)';
@@ -97,7 +97,7 @@ G.HUD = (() => {
     ctx.fillStyle = '#8fa3c4';
     ctx.fillText(G.World.biomeName().toUpperCase() + '  ·  ' + pl.kills + ' DERROTADOS  ·  ' + pl.coins + ' MONEDAS', w / 2, 58);
 
-    // ---------- clima (arriba a la derecha) ----------
+    // ---------- weather (top right) ----------
     const wx = G.Weather.current;
     let wxBox = null;           // the weather chip's rectangle, for its hover tooltip
     if (wx) {
@@ -114,17 +114,17 @@ G.HUD = (() => {
       ctx.fillText(txt, x0 + 32, y0 + 17);
     }
 
-    // ---------- barra del jefe (arriba en el centro): icono, nombre grande y vida ----------
+    // ---------- boss bar (top centre): icon, big name and health ----------
     const boss = G.EnemyMgr.all().find(e => e.boss && !e.dead);
     if (boss) {
       const bw = Math.min(480, w - 190), bx0 = (w - bw) / 2, IS = 48, by = 64;
       const pulseB = 0.5 + 0.5 * Math.sin(performance.now() / 300);
-      // Icono del jefe
+      // Boss icon
       roundRect(ctx, bx0 - IS - 10, by, IS, IS, 9);
       ctx.fillStyle = 'rgba(40,10,10,.75)'; ctx.fill();
       ctx.strokeStyle = 'rgba(255,203,61,' + (0.6 + 0.4 * pulseB) + ')'; ctx.lineWidth = 2.5; ctx.stroke();
       portraitBox(ctx, 'boss-hud', boss, bx0 - IS - 10, by, IS);
-      // Nombre y porcentaje
+      // Name and percentage
       ctx.font = F(800, 19);
       ctx.textAlign = 'left';
       ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
@@ -138,7 +138,7 @@ G.HUD = (() => {
       bar(ctx, bx0, by + 28, bw, 20, boss.hp / boss.maxHp, '#ffcb3d');
     }
 
-    // ---------- flechas a los jefes que no se ven (en el borde de la pantalla) ----------
+    // ---------- arrows to bosses that can't be seen (at the edge of the screen) ----------
     {
       const camB = G.Camera, tB = performance.now() / 1000;
       for (const e of G.EnemyMgr.all()) {
@@ -153,7 +153,7 @@ G.HUD = (() => {
         ctx.save();
         ctx.translate(ex, ey);
         ctx.lineJoin = 'round';
-        // Círculo con el icono del jefe
+        // Circle with the boss's icon
         ctx.beginPath(); ctx.arc(0, 0, 25, 0, 6.2832);
         ctx.fillStyle = 'rgba(30,8,8,.85)'; ctx.fill();
         ctx.strokeStyle = 'rgba(255,203,61,' + (0.65 + 0.35 * beat) + ')'; ctx.lineWidth = 3; ctx.stroke();
@@ -161,7 +161,7 @@ G.HUD = (() => {
         ctx.beginPath(); ctx.arc(0, 0, 23, 0, 6.2832); ctx.clip();
         portraitBox(ctx, 'boss-arrow-' + e.id, e, -23, -23, 46);
         ctx.restore();
-        // Flecha grande hacia el jefe, por fuera del círculo
+        // Big arrow towards the boss, outside the circle
         ctx.fillStyle = 'rgba(255,90,70,' + (0.8 + 0.2 * beat) + ')';
         ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.lineWidth = 3;
         ctx.beginPath();
@@ -169,7 +169,7 @@ G.HUD = (() => {
         ctx.lineTo(Math.cos(a + 0.6) * 28, Math.sin(a + 0.6) * 28);
         ctx.lineTo(Math.cos(a - 0.6) * 28, Math.sin(a - 0.6) * 28);
         ctx.closePath(); ctx.stroke(); ctx.fill();
-        // Nombre y distancia, al lado contrario de la flecha para que no se salga
+        // Name and distance, on the opposite side of the arrow so it doesn't go off screen
         ctx.font = F(800, 15);
         const ca = Math.cos(a), sa = Math.sin(a);
         ctx.textAlign = ca > 0.3 ? 'right' : ca < -0.3 ? 'left' : 'center';
@@ -181,7 +181,7 @@ G.HUD = (() => {
       }
     }
 
-    // ---------- espectador: caído en grupo, miras a un compañero ----------
+    // ---------- spectator: down in a group, you watch a teammate ----------
     const spec = G.Game.spectating;
     if (spec) {
       // Sits above the move bar (its slots and the active move's name), which grew with the larger slots.
@@ -200,7 +200,7 @@ G.HUD = (() => {
       ctx.font = F(700, 11); ctx.fillStyle = '#c9d4ea';
       ctx.fillText(spec.count > 1 ? spec.index + ' / ' + spec.count + ' · Q / E to switch' : 'Waiting for a teammate to revive you', cx, cy + 15);
       if (spec.count > 1) {
-        // Botones ◀ ▶ (ratón o toque)
+        // ◀ ▶ buttons (mouse or touch)
         for (const [dir, bx] of [[-1, cx - tw / 2 - 64 - bs - 8], [1, cx + tw / 2 + 64 + 8]]) {
           roundRect(ctx, bx, cy - bs / 2, bs, bs, 12);
           ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
@@ -217,8 +217,8 @@ G.HUD = (() => {
       ctx.restore();
     }
 
-    // ---------- aviso ----------
-    // ---------- shinies fuera de pantalla: destello en el borde ----------
+    // ---------- notice ----------
+    // ---------- off-screen shinies: a sparkle at the edge ----------
     const cam = G.Camera, pulse = 0.6 + Math.sin(performance.now() / 160) * 0.4;
     for (const e of G.EnemyMgr.shinies()) {
       const sx = (e.x - cam.left()) * cam.scale, sy = (e.y - cam.top()) * cam.scale;
@@ -242,8 +242,8 @@ G.HUD = (() => {
 
     if (G.Coop.active) drawCoop(ctx, w, h, pl, px, coopTop);
 
-    // Grieta: flecha grande que late en el borde si no se ve, y si se ve, una
-    // flecha que bota encima; en la arena, cuenta atrás.
+    // Rift: a big pulsing arrow at the edge if it can't be seen, and if it can, an
+    // arrow bouncing above it; in the arena, a countdown.
     const rift = G.Rift.rift;
     if (rift) {
       const sx = (rift.x - cam.left()) * cam.scale, sy = (rift.y - 40 - cam.top()) * cam.scale;
@@ -293,7 +293,7 @@ G.HUD = (() => {
         ctx.fillStyle = '#e2d0ff';
         ctx.fillText(label, lx, ly);
       } else {
-        // Encima de la grieta: flecha hacia abajo que bota.
+        // Above the rift: a bouncing downward arrow.
         const by = sy - 46 - Math.abs(Math.sin(now * 4)) * 10;
         ctx.translate(sx, by);
         ctx.beginPath(); ctx.moveTo(-15, -12); ctx.lineTo(15, -12); ctx.lineTo(0, 8); ctx.closePath();
@@ -313,10 +313,10 @@ G.HUD = (() => {
       ctx.fillText('GRIETA · ' + G.U.mmss(G.Rift.timeLeft), w / 2, boss ? 130 : 76);
     }
 
-    // Eventos: cuenta atrás, flecha al Pokémon perdido / a la marca y a los duendes.
+    // Events: countdown, arrow to the lost Pokémon / the marker and to the goblins.
     G.Events.drawHud(ctx, w, h, pl, F);
 
-    // Aviso propio al abrirse una grieta (no lo tapan los otros avisos).
+    // Its own notice when a rift opens (the other notices don't cover it).
     if (rift && rift.t < 4.5) {
       const a = Math.min(1, rift.t * 4, (4.5 - rift.t) * 2), pop = 1 + Math.max(0, 0.25 - rift.t) * 1.6;
       const y0 = h * 0.2;
@@ -335,7 +335,7 @@ G.HUD = (() => {
       ctx.restore();
     }
 
-    // Grupo: alguien está eligiendo vínculo u objeto y la partida está parada para todos.
+    // Group: someone is choosing a bond or item and the run is paused for everyone.
     const choosers = G.Coop.active ? G.Game.waitingChoosers : [];
     if (choosers.length) {
       const names = choosers.length > 2 ? choosers.slice(0, 2).join(', ') + ' +' + (choosers.length - 2) : choosers.join(' & ');
@@ -365,8 +365,8 @@ G.HUD = (() => {
       const age = Math.max(0, (ban.dur || ban.t) - ban.t), pop = 1 + 0.22 * Math.max(0, 1 - age / 0.3);
       ctx.save();
       ctx.globalAlpha = a;
-      // Siempre centrado (antes heredaba la alineación de lo último dibujado, p.
-      // ej. la flecha de un duende del tesoro, y salía descolocado).
+      // Always centred (previously it inherited the alignment of the last thing drawn, e.g.
+      // a treasure goblin's arrow, and came out misplaced).
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       let size = w < 640 ? 24 : 34;
       const ic = ban.dex && G.DEX_BY[ban.dex] ? 60 : 0;          // room for the event Pokémon's badge
@@ -396,16 +396,16 @@ G.HUD = (() => {
       ctx.restore();
     }
 
-    // ---------- ranura de movimientos ----------
+    // ---------- move slots ----------
     const S = w < 640 ? 58 : 72, GAP = w < 640 ? 9 : 12, K = S / 54;      // bigger on wider screens
     const n = Math.max(1, pl.slots.length);
     const totalW = n * S + (n - 1) * GAP;
     let sx = (w - totalW) / 2;
-    // Por encima de la barra de inicio del iPhone (allí los toques a veces no llegan).
+    // Above the iPhone's home bar (taps there sometimes don't arrive).
     let sy = h - S - 18 - (touch ? Math.min(28, G.Touch.safeArea().bottom) : 0);
-    // En móvil, donde la haya puesto el jugador: el bloque objeto + todos los
-    // huecos (aunque aún no estén llenos), por su centro, como en el editor
-    // (layout-ui.js); los ataques nuevos van saliendo hacia la derecha.
+    // On mobile, wherever the player has put it: the item block + all the
+    // slots (even if they aren't filled yet), by their centre, as in the editor
+    // (layout-ui.js); new attacks appear towards the right.
     const pb = touch && G.Touch.spot('bar');
     if (pb) {
       const nAll = Math.max(n, pl.maxMoves), bw = S + 18 + nAll * S + (nAll - 1) * GAP;
@@ -424,16 +424,16 @@ G.HUD = (() => {
       const on = i === pl.active;
       const x = sx + i * (S + GAP);
       const y = on ? sy - 6 : sy;
-      // Tocar (o hacer clic en) un icono activa ese movimiento.
+      // Tapping (or clicking) an icon activates that move.
       if (m) G.Touch.addButton(x, y, S, S, () => { if (G.Game.state === 'playing' && pl.active !== i) { pl.setActive(i); G.Audio.sfx('click'); } }, GAP / 2 + 3);
       const col = m ? G.U.TYPE_COLOR[m.type] : '#4a5468';
 
-      // fondo
+      // background
       roundRect(ctx, x, y, S, S, 12);
       ctx.fillStyle = on ? 'rgba(20,30,50,.95)' : 'rgba(10,16,28,.8)';
       ctx.fill();
       ctx.lineWidth = on ? 2.5 : fused || (m && m.evolved) ? 2 : 1.2;
-      // Vínculo: borde rosa. Evolucionado: dorado.
+      // Bond: pink border. Evolved: gold.
       ctx.strokeStyle = fused ? BOND : m && m.evolved ? '#ffd23f' : on ? col : 'rgba(140,170,210,.22)';
       ctx.stroke();
 
@@ -442,7 +442,7 @@ G.HUD = (() => {
                   lines: g.map(gm => (fused ? gm.name + ': ' : '') + (gm.def.desc || '') + (gm.lvl ? ' (Lv. ' + gm.lvl + '/' + gm.def.maxLvl + ')' : '')) });
 
       if (fused) {
-        // Vínculo: los movimientos en una cuadrícula de 2×2, cada uno con su recarga.
+        // Bond: the moves in a 2×2 grid, each with its own cooldown.
         const C = Math.round(22 * K), P = (S - C * 2) / 3;
         g.forEach((gm, k) => {
           const cx = x + P + (k % 2) * (C + P), cy = y + P + Math.floor(k / 2) * (C + P);
@@ -450,12 +450,12 @@ G.HUD = (() => {
           const f = cdOf(gm);
           if (f > 0) { ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(cx, cy, C, C * f); }
           if (gm.evolved) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1; ctx.strokeRect(cx + 0.5, cy + 0.5, C - 1, C - 1); }
-          // Destello al lanzarse.
+          // Flash when cast.
           const fl = 1 - (performance.now() - (gm.castAt || 0)) / 180;
           if (fl > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (fl * 0.55).toFixed(2) + ')'; ctx.fillRect(cx, cy, C, C); }
         });
       } else {
-        // recarga: se vacía de abajo a arriba
+        // cooldown: empties from the bottom up
         const cdFrac = cdOf(m);
         if (cdFrac > 0) {
           ctx.save();
@@ -465,12 +465,12 @@ G.HUD = (() => {
           ctx.restore();
         }
 
-        // emblema del tipo + insignia de la familia
+        // type emblem + family badge
         // Icons only scale in whole steps (16 px each): on the bigger slots use 3x so the disc fills the box and the kind tag is easier to see.
         const IS = S >= 64 ? 48 : 32;
         G.Icons.draw(ctx, 'move:' + m.id, x + (S - IS) / 2, y + (S - IS) / 2 - (IS > 32 ? 5 : 2), IS);
 
-        // nivel del movimiento (puntitos)
+        // move level (little dots)
         const dots = m.def.maxLvl;
         const dw = Math.round(4 * K), dgap = 2;
         const tw = dots * dw + (dots - 1) * dgap;
@@ -486,7 +486,7 @@ G.HUD = (() => {
       ctx.textAlign = 'left';
       ctx.fillText(String(i + 1), x + 4, y + 12 * K);
 
-      // nombre encima del activo (con un vínculo: "Ascuas +2")
+      // name above the active one (with a bond: "Ember +2")
       if (on) {
         ctx.font = F(800, Math.round(13 * K));
         ctx.textAlign = 'center';
@@ -500,7 +500,7 @@ G.HUD = (() => {
       }
     }
 
-    // ---------- vínculo guardado (aún no hay dos movimientos sueltos) ----------
+    // ---------- bond saved (there aren't two loose moves yet) ----------
     if (pl.bonds > 0) {
       const bx = sx + totalW + 12, by = sy + S / 2 - 12;
       G.Icons.draw(ctx, 'bond', bx, by, 24);
@@ -512,7 +512,7 @@ G.HUD = (() => {
       }
     }
 
-    // ---------- objeto equipado (a la izquierda de los movimientos) ----------
+    // ---------- equipped item (to the left of the moves) ----------
     {
       let ix = sx - S - 18;
       const iy = sy;
@@ -588,7 +588,7 @@ G.HUD = (() => {
       }
     }
 
-    // ---------- botón de pausa (táctil) ----------
+    // ---------- pause button (touch) ----------
     if (touch) {
       const sa = G.Touch.safeArea();
       const pp = G.Touch.spot('pause');
@@ -602,7 +602,7 @@ G.HUD = (() => {
       G.Touch.addButton(bx, by, bs, bs, () => G.Game.togglePause(), 8);
     }
 
-    // pista de controles
+    // controls hint
     if (st.time < 14) {
       ctx.font = F(600, 10);
       ctx.textAlign = 'center';
@@ -614,16 +614,16 @@ G.HUD = (() => {
     ctx.restore();
   }
 
-  // ---------------- cooperativo ----------------
+  // ---------------- co-op ----------------
 
   /**
-   * - Vida de cada compañero debajo de la tuya.
-   * - Flecha en el borde de la pantalla hacia los que no se ven, con su nombre
-   *   y a cuántos metros están (roja y parpadeando si está caído).
-   * - Si has caído tú: aviso y barra de "te están levantando".
+   * - Each teammate's health below yours.
+   * - An arrow at the edge of the screen towards those you can't see, with their name
+   *   and how many metres away they are (red and blinking if they're down).
+   * - If you're down: a notice and a "being revived" bar.
    */
-  // Tarjeta de jugador (tú y tus compañeros): recuadro con el icono de su Pokémon, nombre,
-  // vida en números y barra. Se dibuja ya en el espacio escalado del HUD.
+  // Player card (you and your teammates): a box with their Pokémon's icon, name,
+  // health in numbers and a bar. Drawn already in the HUD's scaled space.
   const CARD_W = 216, CARD_H = 34, CARD_GAP = 6, CARD_IC = 28;
   const portraits = new Map();
   let portraitT = performance.now(), portraitDt = 0;
@@ -639,7 +639,7 @@ G.HUD = (() => {
     return p;
   }
 
-  /** Dibuja el Pokémon `o` (de frente, en reposo) dentro de un recuadro (x, y, size) ya recortado. */
+  /** Draws Pokémon `o` (facing front, idle) inside an already clipped box (x, y, size). */
   function portraitBox(ctx, key, o, x, y, size) {
     const pt = portrait(key, o);
     pt.update(portraitDt);
@@ -656,7 +656,7 @@ G.HUD = (() => {
     const o = c.pl, t = performance.now() / 1000;
     roundRect(ctx, x, y, CARD_W, CARD_H, 8);
     ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill();
-    // Icono del Pokémon (de frente, en un recuadro redondeado)
+    // The Pokémon's icon (facing front, in a rounded box)
     const ix = x + 3, iy = y + (CARD_H - CARD_IC) / 2;
     roundRect(ctx, ix, iy, CARD_IC, CARD_IC, 7);
     ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fill();
@@ -681,7 +681,7 @@ G.HUD = (() => {
         ctx.textAlign = 'left';
       }
     }
-    // Nombre (y nivel), vida y barra
+    // Name (and level), health and bar
     const tx = x + CARD_IC + 10;
     ctx.textAlign = 'left';
     ctx.font = F(800, 11);
@@ -711,7 +711,7 @@ G.HUD = (() => {
     const cam = G.Camera;
     const t = performance.now() / 1000;
     let y = top;
-    // Lista de compañeros (a la izquierda, hacia abajo): una tarjeta por jugador.
+    // List of teammates (on the left, going down): one card per player.
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
     for (const m of G.Coop.mates) {
@@ -773,7 +773,7 @@ G.HUD = (() => {
       ctx.restore();
     }
 
-    // Tú, caído.
+    // You, down.
     if (pl.dead) {
       ctx.save();
       ctx.textAlign = 'center';

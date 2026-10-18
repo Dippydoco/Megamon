@@ -1,4 +1,4 @@
-/* ============ menu.js — menú principal, colección y mejoras ============ */
+/* ============ menu.js — main menu, collection and upgrades ============ */
 G.MenuUI = (() => {
   const $ = G.UI.$;
   const GEN_NAMES = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Teselia', 'Kalos', 'Alola', 'Galar', 'Paldea'];
@@ -58,7 +58,7 @@ G.MenuUI = (() => {
     };
   }
 
-  // ---------------- menú principal ----------------
+  // ---------------- main menu ----------------
 
   function open() {
     const s = G.DB.save;
@@ -71,7 +71,7 @@ G.MenuUI = (() => {
     $('menu-partner').classList.toggle('shiny', shiny);
     $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '') + (reachedArceus(mon.dex) ? ' ' + arcStar(24) : '');
     $('menu-partner-info').innerHTML = G.UI.typeChips(mon.types) + ' ' + G.UI.stars(mon.rarity);
-    // Normal / shiny a mano, aquí mismo (en el móvil no se encontraba en la ficha).
+    // Normal / shiny by hand, right here (on mobile it couldn't be found in the details).
     const seg = $('menu-shiny');
     seg.classList.toggle('hidden', !G.DB.ownsShiny(mon.dex));
     seg.lastChild.innerHTML = G.Icons.html('shiny', 12) + ' Shiny';
@@ -81,7 +81,7 @@ G.MenuUI = (() => {
         if ((b.dataset.v === '1') === shiny) return;
         s.partnerShiny = b.dataset.v === '1';
         G.DB.commit();
-        G.Social.refreshMember();         // si estás en una sala, los demás lo ven al momento
+        G.Social.refreshMember();         // if you're in a room, the others see it straight away
         G.Audio.sfx('confirm');
         open();
       };
@@ -98,12 +98,12 @@ G.MenuUI = (() => {
       (G.DB.guest ? '<br><span style="color:#ffb0b8">Modo invitado: no se guarda</span>' : '');
 
     socialLine();
-    // Premios de misiones por recoger.
+    // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
     $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' premio por recoger' : ' premios por recoger') : 'Misiones, logros y perfil';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
-    // Con cuenta en la nube: amigos en línea, invitaciones y (una vez) el apodo.
+    // With a cloud account: friends online, invitations and (once) the nickname.
     if (G.DB.online && !G.Social.started) {
       G.Social.start().then(r => {
         if (r === 'need-nick' && !G.NickUI.skipped && G.UI.isOpen('scr-menu')) G.NickUI.open();
@@ -113,7 +113,7 @@ G.MenuUI = (() => {
     G.InvitePop.refresh();
   }
 
-  /** Texto bajo "Amigos" y "Jugar": quién está en línea, solicitudes, sala. */
+  /** Text below "Friends" and "Play": who's online, requests, room. */
   function socialLine() {
     const room = G.Social.room;
     const play = document.querySelector('#scr-menu [data-go=play] small');
@@ -130,7 +130,7 @@ G.MenuUI = (() => {
     $('menu-friends-sub').classList.toggle('gold', req > 0 || msgs > 0);
   }
 
-  // ---------------- colección ----------------
+  // ---------------- collection ----------------
 
   function openDex() {
     G.UI.show('scr-dex', true);
@@ -139,7 +139,7 @@ G.MenuUI = (() => {
     const owned = Object.keys(s.owned).filter(d => G.DEX_BY[d]).length;
     $('dex-total').textContent = `${owned} / ${G.DEX.length}`;
 
-    // Pestañas de generación, con cuántos tienes de cada una.
+    // Generation tabs, with how many you have of each.
     const tabs = $('dex-gens');
     tabs.innerHTML = '';
     GEN_NAMES.forEach((name, i) => {
@@ -170,8 +170,8 @@ G.MenuUI = (() => {
     showDetail(dexSel);
   }
 
-  // Pokémon añadidos hace poco: llevan una etiqueta "NEW" en el Pokédex.
-  // (Para quitarla, borra el número de aquí. Añadidos el 17-10-2026.)
+  // Recently added Pokémon: they carry a "NEW" tag in the Pokédex.
+  // (To remove it, delete the number here. Added on 17-10-2026.)
   const NEW_DEX = new Set([593, 865, 879, 948, 1025]);
 
   /** Gold star: this Pokémon has reached Arceus in a run. */
@@ -204,7 +204,7 @@ G.MenuUI = (() => {
         const known = !!s.owned[p.dex];
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
-      } else if (p.gen !== dexGen && dexFilter !== 'new') continue;      // el filtro New enseña todas las generaciones
+      } else if (p.gen !== dexGen && dexFilter !== 'new') continue;      // the New filter shows every generation
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
       if (dexFilter === 'own' && !own) continue;
       if (dexFilter === 'miss' && own) continue;
@@ -235,7 +235,7 @@ G.MenuUI = (() => {
     if (!grid.children.length) grid.innerHTML = query ? '<p class="sub" style="grid-column:1/-1">No Pokémon you own match that.</p>' : '<p class="sub" style="grid-column:1/-1">Ninguno con este filtro.</p>';
   }
 
-  // Variante que se está viendo en la ficha (normal o shiny).
+  // Variant being viewed in the details (normal or shiny).
   let viewShiny = false;
 
   function showDetail(dex) {
@@ -289,7 +289,7 @@ G.MenuUI = (() => {
       s.partner = dex;
       s.partnerShiny = hasSh && viewShiny;
       G.DB.commit();
-      G.Social.refreshMember();           // si estás en una sala, los demás lo ven al momento
+      G.Social.refreshMember();           // if you're in a room, the others see it straight away
       G.UI.toast(p.name + (s.partnerShiny ? ' shiny' : '') + ' es ahora tu compañero');
       renderGrid(); showDetail(dex);
     };
@@ -374,7 +374,7 @@ G.MenuUI = (() => {
     go();
   }
 
-  // ---------------- mejoras ----------------
+  // ---------------- upgrades ----------------
 
   let upgDex = null;
 
@@ -382,7 +382,7 @@ G.MenuUI = (() => {
     G.UI.show('scr-upgrades', true);
     const s = G.DB.save;
     if (!upgDex || !s.owned[upgDex]) upgDex = s.partner;
-    // Selector con tus Pokémon: el compañero primero, luego los que ya tienen mejoras.
+    // Picker with your Pokémon: the partner first, then those that already have upgrades.
     const sel = $('upg-mon');
     const lv = d => Object.values(s.pupg[d] || {}).reduce((a, b) => a + b, 0);
     const mons = Object.keys(s.owned).map(Number).filter(d => G.DEX_BY[d])
@@ -420,7 +420,7 @@ G.MenuUI = (() => {
           ${maxed ? 'Máx.' : `<span class="coin"></span> ${cost}`}</button></div>`;
       if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; renderUpgrades(); };
       el.querySelector('[data-buy]').onclick = () => {
-        // Se vuelve a leer todo al pulsar (la partida puede haber cambiado desde que se dibujó).
+        // Everything is read again on pressing (the save may have changed since it was drawn).
         const sv = G.DB.save, lv = G.DB.upgradesOf(upgDex), now = lv[u.id] || 0;
         if (now >= u.max) { renderUpgrades(); return; }
         const price = G.Upgrades.cost(u.id, now);
@@ -439,8 +439,8 @@ G.MenuUI = (() => {
     box.appendChild(bindPanel());
   }
 
-  // ---------------- atajos: hueco fijo para cada movimiento ----------------
-  // save.pbind[dex] = [movimiento del hueco 1, del 2, del 3, del 4] (o null).
+  // ---------------- shortcuts: a fixed slot for each move ----------------
+  // save.pbind[dex] = [move for slot 1, for 2, for 3, for 4] (or null).
   function bindPanel() {
     const s = G.DB.save;
     s.pbind = s.pbind || {};
@@ -460,7 +460,7 @@ G.MenuUI = (() => {
         const l = (s.pbind[upgDex] || [null, null, null, null]).slice(0, 4);
         while (l.length < 4) l.push(null);
         const i = +sel.dataset.slot, id = sel.value || null;
-        // Un movimiento sólo puede estar en un hueco.
+        // A move can only be in one slot.
         for (let j = 0; j < 4; j++) if (id && l[j] === id) l[j] = null;
         l[i] = id;
         s.pbind[upgDex] = l;
@@ -472,8 +472,8 @@ G.MenuUI = (() => {
     return el;
   }
 
-  // ---------------- veto: movimientos bloqueados ----------------
-  // Lista por Pokémon en save.pban[dex]; con N niveles de Veto, N movimientos.
+  // ---------------- veto: blocked moves ----------------
+  // List per Pokémon in save.pban[dex]; with N levels of Veto, N moves.
   let banOpen = false;
   function banList() {
     const s = G.DB.save;

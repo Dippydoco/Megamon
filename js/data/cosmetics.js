@@ -1,4 +1,4 @@
-/* ============ cosmetics.js — adornos del perfil y del chat ============
+/* ============ cosmetics.js — profile and chat decorations ============
  * Profile banner and border (shown on your public profile) and the colour of your name in chat.
  * Only the id is stored (profile.banner / profile.frame / profile.chatColor); the look is here and in
  * css/style.css ([data-banner] / [data-frame]). A few are unlocked by playing.

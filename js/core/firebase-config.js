@@ -1,16 +1,16 @@
-/* ============ firebase-config.js — conexión con tu proyecto de Firebase ============
- * Pega aquí la configuración de tu app web de Firebase (Consola de Firebase >
- * Configuración del proyecto > Tus apps > SDK setup and configuration > Config).
- * Los pasos completos están en docs/FIREBASE.md.
+/* ============ firebase-config.js — connection to your Firebase project ============
+ * Paste your Firebase web app's configuration here (Firebase Console >
+ * Project settings > Your apps > SDK setup and configuration > Config).
+ * The full steps are in docs/FIREBASE.md.
  *
- * Estos datos NO son secretos: Firebase los diseña para ir en la web. Lo que
- * protege las partidas son las reglas de Firestore (firestore.rules).
+ * These values are NOT secret: Firebase designs them to live in the website. What
+ * protects the saves are the Firestore rules (firestore.rules).
  *
- * Si se pone a null, el juego funciona en modo local (sólo en el navegador).
+ * If it's set to null, the game works in local mode (browser only).
  */
-// Proyecto Firebase propio de Megamon (megamon-2164e). Estos datos no son secretos:
-// Firebase los diseña para ir en la web; lo que protege las partidas son las
-// reglas de Firestore y de Realtime Database.
+// Megamon's own Firebase project (megamon-2164e). These values aren't secret:
+// Firebase designs them to live in the website; what protects the saves are the
+// Firestore and Realtime Database rules.
 G.FIREBASE_CONFIG = {
   apiKey: 'AIzaSyD5cjBD5L7Bbnu0QTV-MUjNaTrrZZs9cEk',
   authDomain: 'megamon-2164e.firebaseapp.com',
@@ -21,12 +21,12 @@ G.FIREBASE_CONFIG = {
   databaseURL: 'https://megamon-2164e-default-rtdb.europe-west1.firebasedatabase.app'
 };
 
-/* Ejemplo de cómo debe quedar:
+/* Example of how it should look:
 G.FIREBASE_CONFIG = {
   apiKey: 'AIza...',
-  authDomain: 'tu-proyecto.firebaseapp.com',
-  projectId: 'tu-proyecto',
-  storageBucket: 'tu-proyecto.firebasestorage.app',
+  authDomain: 'your-project.firebaseapp.com',
+  projectId: 'your-project',
+  storageBucket: 'your-project.firebasestorage.app',
   messagingSenderId: '1234567890',
   appId: '1:1234567890:web:abc123'
 };

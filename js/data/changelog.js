@@ -1,13 +1,13 @@
-/* ============ changelog.js — novedades del juego ============
- * Lo que ve la gente en el botón "Novedades" de la barra de arriba: cambios
- * de juego y fallos arreglados (nada de servidores ni bases de datos).
- * La fecha más nueva, arriba. CADA CAMBIO va en su propia entrada (su propio
- * título), para que se distinga uno de otro; dentro, por apartados:
- *   new  lo nuevo · chg  cambios y ajustes · fix  fallos arreglados
- * Cada entrada lleva `at`: la hora de publicación en UTC (AAAA-MM-DDTHH:MMZ); el juego la
- * enseña en la hora de quien lo mira. Se puede sacar con `date -u +%Y-%m-%dT%H:%MZ`.
- * Cada línea en español y en inglés; T('texto') la pone igual en los dos
- * (el grupo juega en inglés: lo nuevo se escribe sólo en inglés).
+/* ============ changelog.js — what's new in the game ============
+ * What people see behind the "What's new" button in the top bar: gameplay
+ * changes and bugs fixed (nothing about servers or databases).
+ * Newest date at the top. EACH CHANGE gets its own entry (its own
+ * title), so they can be told apart; inside, by section:
+ *   new  what's new · chg  changes and tweaks · fix  bugs fixed
+ * Each entry has `at`: the publish time in UTC (YYYY-MM-DDTHH:MMZ); the game
+ * shows it in the viewer's local time. You can get it with `date -u +%Y-%m-%dT%H:%MZ`.
+ * Each line in Spanish and English; T('text') sets it the same in both
+ * (the group plays in English: new entries are written in English only).
  */
 G.CHANGELOG = (() => {
 const T = s => [s, s];

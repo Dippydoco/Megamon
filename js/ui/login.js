@@ -1,4 +1,4 @@
-/* ============ login.js — inicio: entrar, crear cuenta o invitado ============ */
+/* ============ login.js — start: sign in, create account or guest ============ */
 G.LoginUI = (() => {
   const $ = G.UI.$;
   let mode = 'login';
@@ -24,7 +24,7 @@ G.LoginUI = (() => {
       $('login-err').textContent = '';
       $('forgot-note').classList.toggle('hidden');
     };
-    // Vincular Gmail para poder recuperar la cuenta (ver offerRecovery).
+    // Link Gmail so the account can be recovered (see offerRecovery).
     $('rec-link').onclick = async () => {
       $('rec-err').textContent = '';
       $('rec-link').disabled = true;
@@ -36,7 +36,7 @@ G.LoginUI = (() => {
     };
     $('rec-later').onclick = () => $('scr-recover').classList.add('hidden');
     $('rec-never').onclick = () => {
-      try { localStorage.setItem('ps.recover.no.' + G.DB.fb.uid, '1'); } catch (e) { /* nada */ }
+      try { localStorage.setItem('ps.recover.no.' + G.DB.fb.uid, '1'); } catch (e) { /* nothing */ }
       $('scr-recover').classList.add('hidden');
     };
     $('btn-google').onclick = async () => {
@@ -50,20 +50,20 @@ G.LoginUI = (() => {
   }
 
   /**
-   * Al entrar (o recién creada la cuenta) con nombre y contraseña, si aún no
-   * hay Gmail vinculado: "¿te da miedo perder tu cuenta?". Una vez por sesión,
-   * hasta que lo vincule o diga que no le vuelvan a preguntar.
+   * On signing in (or right after creating the account) with name and password, if there's
+   * no Gmail linked yet: "afraid of losing your account?". Once per session,
+   * until they link it or say not to be asked again.
    */
   let offered = false;
   function offerRecovery() {
     if (offered || G.DB.mode !== 'cloud' || !G.DB.fb || !G.DB.nameAccount || G.DB.hasGoogle) return;
-    try { if (localStorage.getItem('ps.recover.no.' + G.DB.fb.uid)) return; } catch (e) { /* nada */ }
+    try { if (localStorage.getItem('ps.recover.no.' + G.DB.fb.uid)) return; } catch (e) { /* nothing */ }
     offered = true;
     $('rec-err').textContent = '';
     $('scr-recover').classList.remove('hidden');
   }
 
-  /** Explica dónde se guarda la partida según el modo de la base de datos. */
+  /** Explains where the save is stored depending on the database mode. */
   function modeNote() {
     if (G.DB.mode === 'cloud') return 'Tu partida se guarda en la nube: entra desde cualquier ordenador. Como invitado no se guarda.';
     const why = G.DB.localReason === 'file'

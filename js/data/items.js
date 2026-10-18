@@ -1,12 +1,12 @@
-/* ============ items.js — objetos equipables (uno por run) ============
- * Se encuentran en los cofres (a veces en los normales, a menudo en los de
- * candado) y los sueltan los jefes. Sólo puedes llevar UNO; si encuentras
- * otro, eliges con cuál quedarte. Duran lo que dura la run.
+/* ============ items.js — held items (one per run) ============
+ * Found in chests (sometimes in normal ones, often in locked
+ * ones) and dropped by bosses. You can only hold ONE; if you find
+ * another, you choose which to keep. They last as long as the run.
  *
- *   on(pl)   se lo pones (lo que hace mientras lo llevas)
- *   off(pl)  se lo quitas (deshace lo de on)
- * Los que reaccionan a algo (golpe mortal, daño hecho...) los mira el
- * jugador con pl.hasItem(id).
+ *   on(pl)   you put it on (what it does while you hold it)
+ *   off(pl)  you take it off (undoes what on did)
+ * Those that react to something (a fatal hit, damage dealt...) are checked by
+ * the player with pl.hasItem(id).
  */
 G.Items = (() => {
   const LIST = [
@@ -33,7 +33,7 @@ G.Items = (() => {
       on: () => {}, off: () => {} },
     { id: 'assaultvest', name: 'Chaleco Asalto', desc: '+20% de reducción de daño recibido.',
       on: p => { p.dmgReduce += 0.2; }, off: p => { p.dmgReduce -= 0.2; } },
-    // ---- 17-10-2026 (efectos en combat.js, player.js e interact.js) ----
+    // ---- 17-10-2026 (effects in combat.js, player.js and interact.js) ----
     { id: 'scopelens', name: 'Scope Lens', desc: '+20% critical hit chance.', on: () => {}, off: () => {} },
     { id: 'flameorb', name: 'Flame Orb', desc: 'Your hits have a 30% chance to burn the enemy.', on: () => {}, off: () => {} },
     { id: 'toxicorb', name: 'Toxic Orb', desc: 'Your hits have a 30% chance to poison the enemy.', on: () => {}, off: () => {} },
@@ -46,7 +46,7 @@ G.Items = (() => {
   const BY = {};
   for (const it of LIST) BY[it.id] = it;
 
-  /** Uno al azar, distinto del que ya llevas. */
+  /** One at random, different from the one you already hold. */
   function roll(except) {
     const pool = LIST.filter(i => i.id !== except);
     return G.U.pick(pool).id;

@@ -1,13 +1,13 @@
-/* ============ mod-ui.js — moderación del ranking (pantalla oculta) ============
- * Sólo la ve la cuenta de moderación (G.Ranking.isAdmin, y firestore.rules
- * admin(): aunque alguien abriera esta pantalla, el servidor no le dejaría
- * hacer nada). Se abre con el botón "Moderación" del ranking.
+/* ============ mod-ui.js — leaderboard moderation (hidden screen) ============
+ * Only the moderation account sees it (G.Ranking.isAdmin, and firestore.rules
+ * admin(): even if someone opened this screen, the server wouldn't let them
+ * do anything). It's opened with the leaderboard's "Moderation" button.
  *
- *   Reportes          marcas reportadas por los jugadores, las más reportadas
- *                     primero: borrar la marca, banear (no puede volver a
- *                     subir marcas, y se borra su marca de todas las tablas de
- *                     ahora) o descartar el reporte.
- *   Baneados          las cuentas baneadas del ranking; se pueden desbanear.
+ *   Reports           records reported by players, most reported
+ *                     first: delete the record, ban (they can't upload
+ *                     records again, and their record is deleted from all current
+ *                     tables) or dismiss the report.
+ *   Banned            the accounts banned from the leaderboard; they can be unbanned.
  */
 G.ModUI = (() => {
   const $ = G.UI.$;
@@ -59,7 +59,7 @@ G.ModUI = (() => {
     const dex = (b.match(/_p(\d+)$/) || [])[1];
     return mode + ' · ' + per + (dex && G.DEX_BY[dex] ? ' · only ' + G.DEX_BY[dex].name : '');
   }
-  // Con la Sentencia de Arceus (minuto 30) casi nadie pasa de ~32-33 min.
+  // With Arceus's Judgment (minute 30) almost nobody gets past ~32-33 min.
   const SUSPECT_T = 33 * 60;
 
   async function renderReports(list) {
@@ -69,7 +69,7 @@ G.ModUI = (() => {
       const row = document.createElement('div');
       row.className = 'rk-row mod-row rep';
       const mode = g.board.startsWith('g_') ? 'g' : 's';
-      // Lo que se ve de la marca ahora en su tabla (nivel, derrotados, Pokémon).
+      // What the record currently shows in its table (level, defeated, Pokémon).
       const info = await G.Ranking.entryInfo(g.board, g.e).catch(() => null);
       const t = info ? info.t : g.t;
       const sus = t > SUSPECT_T;

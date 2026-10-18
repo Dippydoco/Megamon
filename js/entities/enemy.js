@@ -1,23 +1,23 @@
-/* ============ enemy.js — Pokémon salvajes y su gestor ============
- * (x, y) son los PIES. Animaciones de Mundo Misterioso:
- *   Walk al moverse · Idle parado · Charge apuntando una embestida ·
- *   Attack al embestir o al golpearte · Shoot al disparar · Hurt al recibir ·
- *   Faint al caer (se queda en el suelo y se desvanece).
+/* ============ enemy.js — wild Pokémon and their manager ============
+ * (x, y) are the FEET. Mystery Dungeon animations:
+ *   Walk when moving · Idle when still · Charge when aiming a charge ·
+ *   Attack when charging or hitting you · Shoot when shooting · Hurt when hit ·
+ *   Faint when falling (it stays on the ground and fades).
  *
- * Los voladores, los fantasma y los jefes ignoran el terreno. El resto choca
- * con paredes y objetos, va más lento en el agua y se quema en la lava.
+ * Flyers, ghosts and bosses ignore terrain. The rest collide
+ * with walls and objects, move slower in water and burn in lava.
  *
- * El gestor mantiene una rejilla espacial (reconstruida cada frame) para la
- * separación entre enemigos y las colisiones de proyectiles.
+ * The manager keeps a spatial grid (rebuilt every frame) for
+ * separating enemies and for projectile collisions.
  */
 (() => {
   let nextId = 1;
-  /** Los jefes se agrandan hasta ~110 de alto, según lo grande que ya sea su sprite. */
+  /** Bosses are enlarged up to ~110 tall, depending on how big their sprite already is. */
   function bossScale(dex) {
     const m = G.Sprites.animMeta(dex, 'Idle');
     const h = (m ? m.ay : 30) * G.Sprites.PX;
-    // En múltiplos de 0,5: con la cámara a ×2 cada píxel de arte ocupa un
-    // número entero de píxeles de pantalla (escalas como 1,37 lo deforman).
+    // In multiples of 0.5: with the camera at ×2 each art pixel takes up a
+    // whole number of screen pixels (scales like 1.37 distort it).
     return G.U.clamp(Math.round(110 / h * 2) / 2, 1, 2);
   }
 
@@ -43,9 +43,9 @@
 
       const types = (G.DEX_BY[def.dex] && G.DEX_BY[def.dex].types) || [];
       this.types = types.length ? types : ['normal'];
-      this.atkType = this.types[0];         // tipo de sus golpes (tabla de tipos)
-      // Vuelan por encima de rocas y agua sólo los que FLOTAN en su sprite (un
-      // Rowlet camina aunque sea Volador). Los jefes, por su tamaño, también.
+      this.atkType = this.types[0];         // type of its hits (type chart)
+      // Only those that FLOAT in their sprite fly over rocks and water (a
+      // Rowlet walks even though it's a Flying type). Bosses, because of their size, too.
       this.flying = boss || G.Sprites.hovers(def.dex);
 
       this.flash = 0;
@@ -56,7 +56,7 @@
       this.kx = 0; this.ky = 0;
       this.touchCd = 0; this.freezeT = 0;
       this.dead = false;
-      this.fade = 0;             // tiempo de desvanecimiento tras caer
+      this.fade = 0;             // fade time after falling
 
       // embestida
       this.phase = 'walk'; this.pt = 0; this.dx = 0; this.dy = 0;
@@ -68,21 +68,21 @@
       this.shiny = false;
       this.sparkT = 0;
       // personalidades
-      this.sc = sc;                       // escala de la run (para sus invocaciones)
-      this.shield = 0; this.shieldT = 0;  // escudo que absorbe daño
-      this.skillCd = G.U.rand(1, 4);      // escudos / saltos
+      this.sc = sc;                       // the run's scale (for its summons)
+      this.shield = 0; this.shieldT = 0;  // shield that absorbs damage
+      this.skillCd = G.U.rand(1, 4);      // shields / leaps
       // Aegislash event (events.js): Shield Forme (takes ~85% less damage, slow) <-> Blade Forme (full damage, fast).
       this.aegisShield = def.behavior === 'aegis'; this.formT = 5;
       this.minions = [];
       this.jump = null;                   // { sx, sy, tx, ty, t, dur }
-      // Rezagados: si se quedan atrás, fuera de la vista, mientras huyes,
-      // vuelven a salir por delante (ver EnemyMgr.update).
+      // Stragglers: if they fall behind, out of view, while you're fleeing,
+      // they reappear ahead (see EnemyMgr.update).
       this.lagT = 0;
     }
 
     cy() { return this.y; }
 
-    /** Lo convierte en shiny: otro sprite, más aguante y mucha más XP. */
+    /** Makes it shiny: another sprite, more toughness and much more XP. */
     makeShiny() {
       this.shiny = true;
       this.anim = new G.Sprites.Animator(this.dex, this.scale, true);
@@ -104,29 +104,29 @@
       return this.aegisShield ? 0.5 : 1.7;
     }
 
-    /** Hora dorada (events.js): doble de experiencia y a veces monedas. */
+    /** Golden hour (events.js): double experience and sometimes coins. */
     makeGolden() {
       if (this.golden || this.boss || this.behavior === 'thief' || this.behavior === 'aegis') return;
       this.golden = true;
       this.xp *= 2;
     }
 
-    /** @param eff  'super' | 'weak' | null (tabla de tipos, sólo para enseñarlo) */
+    /** @param eff  'super' | 'weak' | null (type chart, only to show it) */
     hurt(amount, color = '#fff', dirX = 0, dirY = 0, knock = 0, eff = null) {
       if (this.megaT > 0) return;          // Zygarde is untouchable while it turns into Mega Zygarde (rift.js)
       if (this.dead) return;
       // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
       if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }
       const d = Math.max(1, Math.round(amount));
-      // Copia de un enemigo del anfitrión: el golpe se le manda a él, que es
-      // quien decide si cae. Aquí sólo se ve (número, destello y animación).
+      // Copy of an enemy from the host: the hit is sent to them, since they're
+      // the one who decides whether it falls. Here it's only shown (number, flash and animation).
       if (this.remote) {
         G.Coop.hit(this, d, color, dirX, dirY, knock);
         this.hp = Math.max(1, this.hp - d);
         this.showHurt(d, color, dirX, dirY, eff);
         return;
       }
-      // Escudo: absorbe primero.
+      // Shield: absorbs first.
       if (this.shield > 0) {
         const a = Math.min(this.shield, d);
         this.shield -= a;
@@ -145,10 +145,10 @@
       if (this.hp <= 0) this.die();
     }
 
-    /** Lo que se VE al recibir un golpe. */
+    /** What's SEEN when taking a hit. */
     showHurt(d, color, dirX = 0, dirY = 0, eff = null) {
       this.flash = 0.09;
-      // Muy eficaz: número amarillo y grande. Poco eficaz: gris. Crítico: naranja y grande.
+      // Super effective: a big yellow number. Not very effective: grey. Critical: big and orange.
       G.FX.dmgText(this.x, this.y - this.bodyH - 4, d, eff === 'crit' ? '#ff9a3c' : eff === 'super' ? '#ffe14d' : eff === 'weak' ? '#a3abb8' : color,
                    this.boss || eff === 'super' || eff === 'crit');
       G.FX.spark(this.x, this.y - this.bodyH * 0.5, color, dirX, dirY, 3);
@@ -156,7 +156,7 @@
       G.Audio.sfx('hit');
     }
 
-    /** Stopwatch: se queda quieto (no se mueve, ataca ni anima) unos segundos. */
+    /** Stopwatch: it stays frozen (doesn't move, attack or animate) for a few seconds. */
     freeze(dur) {
       if (this.judge || this.boss) return;
       if (this.remote) { G.Coop.status(this, 'f', dur); return; }
@@ -186,23 +186,23 @@
       const cy = this.y - this.bodyH * 0.5;
       G.FX.burst(this.x, cy, col, this.boss ? 34 : 9, this.boss ? 260 : 120);
       G.FX.ring(this.x, this.y, this.r, this.r * (this.boss ? 6 : 2.6), col, this.boss ? 0.6 : 0.3, this.boss ? 6 : 3);
-      // En una copia, el botín y los shinies los reparte el anfitrión.
+      // On a copy, the host shares out the loot and the shinies.
       if (this.remote) {
         if (this.boss) G.Camera.kick(0.9);
         G.Audio.sfx(this.boss ? 'bossDown' : 'faint');
         if (this.shiny) { G.FX.burst(this.x, cy, '#ffe9a0', 30, 220); G.FX.ring(this.x, this.y, this.r, this.r * 7, '#9ae6ff', 0.7, 5); }
         return;
       }
-      // (Los legendarios de la Sentencia de Arceus sólo dan experiencia.)
+      // (The legendaries of Arceus's Judgment only give experience.)
       if (this.boss && !this.judge) {
         G.Camera.kick(0.9);
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-40, 40), this.y + G.U.rand(-30, 30), 5);
-        // Los jefes siempre sueltan un objeto equipable.
+        // Bosses always drop a held item.
         G.Pickups.drop('item', this.x - 26, this.y - 10, G.Items.roll());
       }
       G.Pickups.dropXp(this.x, this.y, this.xp, this.boss, !!this.legend, !!this.judge);
       if (this.golden && Math.random() < 0.35) G.Pickups.drop('coin', this.x + 6, this.y - 4, 3);
-      // Duende del tesoro: Meowth suelta monedas; Gholdengo, un ticket ×10.
+      // Treasure goblin: Meowth drops coins; Gholdengo, a ×10 ticket.
       if (this.behavior === 'thief') {
         const n = this.def.loot === 'ticket10' ? 6 : 20;
         for (let i = 0; i < n; i++) G.Pickups.drop('coin', this.x + G.U.rand(-36, 36), this.y + G.U.rand(-26, 26), 5);
@@ -216,8 +216,8 @@
         G.Events.armoury();
       }
       if (this.legend) {
-        // El legendario de la grieta: tickets sueltos y monedas (el ×10, como
-        // la mitad de las veces; antes daba 2 siempre).
+        // The rift legendary: loose tickets and coins (the ×10, about
+        // half the time; it used to always give 2).
         for (let i = 0; i < 3; i++) G.Pickups.drop('ticket', this.x + G.U.rand(-30, 30), this.y + G.U.rand(-20, 20), 1);
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-50, 50), this.y + G.U.rand(-35, 35), 8);
         if (this.hard) {
@@ -237,9 +237,9 @@
     }
 
     /**
-     * Copia de un enemigo del anfitrión: va hacia la última posición recibida
-     * (más la velocidad estimada, para que no avance a saltos) y anima según
-     * se mueva o según la animación que tenga en el anfitrión.
+     * Copy of an enemy from the host: it heads to the last position received
+     * (plus the estimated velocity, so it doesn't move in jumps) and animates according to
+     * how it moves or the animation it has on the host.
      */
     netUpdate(dt) {
       this.anim.update(dt);
@@ -267,7 +267,7 @@
       const vx = (this.x - ox) / (dt || 1), vy = (this.y - oy) / (dt || 1);
       const moving = Math.abs(vx) + Math.abs(vy) > 8;
       this.anim.dir = n.dir;
-      // Animaciones de una vez (embestida, disparo...) que ha empezado el anfitrión.
+      // One-off animations (charge, shot...) started by the host.
       if (n.anim !== this.lastNetAnim) {
         this.lastNetAnim = n.anim;
         const a = G.Coop.ANIMS[n.anim];
@@ -277,7 +277,7 @@
     }
 
     update(dt, pl) {
-      // Fuera de pantalla no hace falta animar (sí moverse y pensar).
+      // Off screen there's no need to animate (but it does move and think).
       const seen = G.Camera.sees(this.x, this.y, 120);
       if ((seen || this.dead) && !(this.freezeT > 0)) this.anim.update(dt);
       if (this.flash > 0) this.flash -= dt;
@@ -316,7 +316,7 @@
 
       // --- terreno ---
       let terrainMul = 1;
-      // (El legendario está en su casa: su arena no le afecta. Los de Arceus, tampoco.)
+      // (The legendary is at home: its arena doesn't affect it. Arceus's ones neither.)
       if (!this.flying && !this.legend && !this.judge && G.World.isLiquid(this.x, this.y)) {
         const le = G.World.liquidEffect(this.types);
         if (le.dmg) {
@@ -329,7 +329,7 @@
       const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1);
       let [dx, dy] = G.U.norm(pl.x - this.x, pl.y - this.y);
       const dist = G.U.dist(this.x, this.y, pl.x, pl.y);
-      // Duende del tesoro: huye de ti (en zigzag) en cuanto te acercas.
+      // Treasure goblin: flees from you (zigzagging) as soon as you get close.
       if (this.behavior === 'thief') {
         this.zig = (this.zig || 0) + dt;
         const near = dist < 300, a = Math.atan2(-dy, -dx) + Math.sin(this.zig * 2.2) * 0.7;
@@ -344,14 +344,14 @@
         this.anim.loop('Walk', 1.4);
         return;
       }
-      // Corredor: va a donde VAS a estar (te corta el paso si sólo huyes).
+      // Runner: heads to where you're GOING to be (cuts you off if you just flee).
       if (this.behavior === 'runner' && pl._vx != null) {
         const lead = G.U.clamp(dist / Math.max(60, spd), 0, 1.4);
         [dx, dy] = G.U.norm(pl.x + pl._vx * lead - this.x, pl.y + pl._vy * lead - this.y);
         if (G.Camera.sees(this.x, this.y, 0) && Math.random() < dt * 10) G.FX.px(this.x - dx * 8 + G.U.rand(-4, 4), this.y, '#e8dcc0', { vy: -12, life: 0.35 });
       }
 
-      // --- personalidad (escudos, saltos, explosión) ---
+      // --- personality (shields, leaps, explosion) ---
       if (this.shieldT > 0 && (this.shieldT -= dt) <= 0) this.shield = 0;
       if (this.jump) { this.updateJump(dt); return; }
       if (this.behavior === 'bomber' && this.phase === 'fuse') {
@@ -371,14 +371,14 @@
         }
       }
 
-      // Si lleva rato atascado contra algo, rodea por un lado.
+      // If it's been stuck against something for a while, it goes around one side.
       if (this.sideT > 0) {
         this.sideT -= dt;
         const a = Math.atan2(dy, dx) + this.side * 1.25;
         dx = Math.cos(a); dy = Math.sin(a);
       }
 
-      // Camino alrededor de los obstáculos (los que no vuelan).
+      // A path around obstacles (for those that don't fly).
       if (!this.flying && this.phase !== 'dash' && this.sideT <= 0) {
         const pd = G.Path.dirFor(this, pl);
         if (pd && !(this.keepsDistance() && dist < (this.def.range || 200) * 0.82)) { dx = pd[0]; dy = pd[1]; }
@@ -411,7 +411,7 @@
       } else if (this.keepsDistance()) {
         const range = this.def.range || 200;
         const keep = range * 0.82;
-        // Recta hacia ti (no el camino) para alejarse.
+        // Straight from you (not the path) to get away.
         const [ddx, ddy] = G.U.norm(pl.x - this.x, pl.y - this.y);
         if (dist < keep * 0.75) { vx = -ddx * spd * 0.8; vy = -ddy * spd * 0.8; }
         else if (dist < keep) { vx *= 0.1; vy *= 0.1; animBase = 'Idle'; }
@@ -422,14 +422,14 @@
         }
       }
 
-      // --- integración ---
+      // --- integration ---
       const ox = this.x, oy = this.y;
       this.x += this.kx * dt; this.y += this.ky * dt;
       this.kx *= Math.pow(0.0015, dt); this.ky *= Math.pow(0.0015, dt);
       this.x += vx * dt; this.y += vy * dt;
 
       if (!this.flying && G.World.collide(this)) {
-        // ¿Ha avanzado bastante menos de lo que quería?
+        // Has it moved much less than it wanted to?
         const want = Math.hypot(vx, vy) * dt;
         const got = Math.hypot(this.x - ox, this.y - oy);
         if (want > 0.5 && got < want * 0.35) {
@@ -441,7 +441,7 @@
         } else this.stuckT = 0;
       }
 
-      // --- animación ---
+      // --- animation ---
       const moving = Math.abs(vx) + Math.abs(vy) > 2;
       const faceA = this.phase === 'dash' ? Math.atan2(this.dy, this.dx)
                   : moving ? Math.atan2(vy, vx) : Math.atan2(pl.y - this.y, pl.x - this.x);
@@ -449,13 +449,13 @@
       this.anim.loop(moving ? animBase : 'Idle', moving ? Math.max(0.6, spd / 70) : 1);
     }
 
-    // ---------------- jefes ----------------
-    // Cada jefe (y cada legendario de las grietas) tiene 4 ataques: 2 de
-    // cerca (Pisotón siempre + Embestida o Salto) y 2 de lejos según su tipo.
-    // Va alternando entre ir a por ti y pelear a distancia, así que el que
-    // dispara también se te echa encima y el de cuerpo a cuerpo también
-    // dispara. Todo avisa en el suelo. Por debajo de la mitad de vida se
-    // enfurece: más rápido, menos espera y a veces encadena dos ataques.
+    // ---------------- bosses ----------------
+    // Each boss (and each rift legendary) has 4 attacks: 2
+    // close-range (Stomp always + Charge or Leap) and 2 ranged depending on its type.
+    // It alternates between coming for you and fighting from range, so the one
+    // that shoots also rushes you and the melee one also
+    // shoots. Everything warns on the ground. Below half health it
+    // becomes enraged: faster, less waiting and sometimes it chains two attacks.
 
     bossInit() {
       const T = this.types, has = (...xs) => xs.some(x => T.includes(x));
@@ -477,7 +477,7 @@
       const k = ai.fury ? 1.25 : 1;
       if (ai.cast) return this.bossCast(dt, pl);
       ai.modeT -= dt; ai.cd -= dt * k;
-      // Alterna siempre: en su distancia favorita está más rato (7-9 s) que en la otra (4-5 s).
+      // It always alternates: it stays longer at its favourite distance (7-9 s) than at the other (4-5 s).
       if (ai.modeT <= 0) {
         ai.mode = ai.mode === 'far' ? 'close' : 'far';
         ai.modeT = (ai.mode === 'far') === (ai.farLike > 0.5) ? G.U.rand(7, 9) : G.U.rand(4, 5);
@@ -493,7 +493,7 @@
         let id = null;
         if (ai.mode === 'close') {
           const ok = ai.melee.filter(m => m === 'slam' ? dist < 125 : dist < 320);
-          // De vez en cuando, aunque esté cerca, también dispara.
+          // Now and then, even if it's close, it shoots too.
           id = ok.length && Math.random() < 0.8 ? G.U.pick(ok) : dist < 480 ? G.U.pick(ai.ranged) : null;
         } else {
           id = dist < 115 ? 'slam' : dist < 430 ? G.U.pick(ai.ranged) : null;
@@ -518,24 +518,24 @@
       const ang = Math.atan2(pl.y - this.y, pl.x - this.x);
       const c = ai.cast = { id, t: 0, wind: 0.6 * f, after: 0.35, ang };
       switch (id) {
-        case 'slam':       // pisotón: onda alrededor
+        case 'slam':       // stomp: a wave around it
           c.wind = 0.85 * f;
           G.Hazards.add({ sd: this.dex, kind: 'zone', x: this.x, y: this.y, r: 96 + this.r, delay: c.wind, dmg: this.dmg * 1.3, type, color: col });
           this.anim.play('Charge', { speed: 1.2 });
           break;
-        case 'dash':       // embestida en línea recta
+        case 'dash':       // charge in a straight line
           c.wind = 0.75 * f; c.len = 330; c.dur = 0.32;
           G.Hazards.add({ sd: this.dex, kind: 'beam', x: this.x, y: this.y, angle: ang, len: c.len + this.r, w: this.r * 2 + 16,
                           delay: c.wind + c.dur, dmg: this.dmg * 1.2, type, color: col });
           this.anim.play('Charge', { speed: 1.3 });
           break;
-        case 'leap':       // salto y caída sobre ti
+        case 'leap':       // leap and land on you
           this.jump = { sx: this.x, sy: this.y, tx: pl.x, ty: pl.y, t: -0.5 * f, dur: 0.65 };
           G.Hazards.add({ sd: this.dex, kind: 'zone', x: pl.x, y: pl.y, r: 82, delay: 0.5 * f + 0.65, dmg: this.dmg * 1.25, type, color: col });
           this.anim.play('Charge', { speed: 1.4 });
           ai.cast = null; ai.cd = G.U.rand(1.4, 2) + 0.6;
           break;
-        case 'rain': {     // zonas que caen alrededor de ti
+        case 'rain': {     // zones falling around you
           const n = ai.fury ? 6 : 4;
           for (let i = 0; i < n; i++) {
             const a = i ? Math.random() * 6.2832 : 0, d = i ? G.U.rand(40, 120) : 0;
@@ -545,7 +545,7 @@
           c.wind = 0.5; this.anim.play('Shoot');
           break;
         }
-        case 'beam': {     // rayos en abanico
+        case 'beam': {     // beams in a fan
           const n = ai.fury ? 5 : 3, sp = ai.fury ? 0.42 : 0.5;
           for (let i = 0; i < n; i++) {
             G.Hazards.add({ sd: this.dex, kind: 'beam', x: this.x, y: this.y, angle: ang + (i - (n - 1) / 2) * sp, len: 400, w: 26,
@@ -554,8 +554,8 @@
           c.wind = 1.0; c.after = 0.25; this.anim.play('Charge', { speed: 1.1 });
           break;
         }
-        case 'volley':     // abanico de disparos
-        case 'nova':       // anillo de disparos
+        case 'volley':     // fan of shots
+        case 'nova':       // ring of shots
           c.wind = (id === 'nova' ? 0.7 : 0.5) * f;
           this.anim.play('Charge', { speed: 1.4 });
           G.FX.ring(this.x, this.y, this.r, this.r * 2.4, col, c.wind, 2);
@@ -587,7 +587,7 @@
       const ai = this.ai;
       ai.cast = null;
       ai.cd = G.U.rand(1.3, 2.0);
-      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;    // encadena otro
+      if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;    // chains another
       return [0, 0, 'Idle'];
     }
 
@@ -595,7 +595,7 @@
 
     shotDmg() { return (this.def.shotDmg || 10) * (this.dmg / this.def.dmg); }
 
-    /** Disparo normal de enemigo (uno, o varios en abanico). */
+    /** Normal enemy shot (one, or several in a fan). */
     shoot(ax, ay, spread = 0, n = 1, k = 1) {
       const sp = 190, type = this.atkType;
       const base = Math.atan2(ay, ax);
@@ -612,13 +612,13 @@
       G.FX.ring(this.x, this.y - G.LIFT, 4, 14, '#ff7a9e', 0.2, 2);
     }
 
-    /** Lo que hace cada personalidad cuando le toca (anfitrión / solitario). */
+    /** What each personality does when its turn comes (host / solo). */
     special(pl, dx, dy) {
       const col = G.U.TYPE_COLOR[this.atkType] || '#ff7a9e';
       switch (this.behavior) {
         case 'fan': { const n = this.def.fanN || 5; this.shoot(dx, dy, n === 3 ? 0.6 : 0.9, n, 0.65); break; }
         case 'beamer':
-          // Rayo con aviso: primero se ve la franja en el suelo.
+          // Warned beam: the strip on the ground is seen first.
           G.Hazards.add({ sd: this.dex, kind: 'beam', x: this.x, y: this.y, angle: Math.atan2(dy, dx), len: 360, w: 22,
                           delay: 1.0, dmg: this.shotDmg() * 1.05, type: this.atkType, color: col });
           this.anim.play('Charge', { speed: 1.2 });
@@ -639,15 +639,15 @@
     }
 
     healAround() {
-      // 7 % de la vida (era 15 %: con varios curanderos curaban más de lo que
-      // pegabas), y más cuanto más fuerte pegas, pero cada vez menos: con el
-      // doble de ataque cura un 27 % más, con 10 veces más un 124 %, y como
-      // mucho ×2,5. (Como los enemigos que tienen más vida si haces más daño.)
+      // 7 % of health (it was 15 %: with several healers they healed more than you
+      // hit), and more the harder you hit, but less and less each time: with
+      // double the attack it heals 27 % more, with 10 times more 124 %, and at
+      // most ×2.5. (Like the enemies that have more health if you deal more damage.)
       const pow = Math.max(1, ...G.Game.everyone().map(p => (p.atk > 0 && p.baseAtk > 0 ? p.atk / p.baseAtk : 1)));
       const k = 0.07 * Math.min(2.5, Math.pow(pow, 0.35));
       let n = 0;
       for (const e of G.EnemyMgr.queryCircle(this.x, this.y, 150)) {
-        if (e.dead || e.boss || e.hp >= e.maxHp) continue;      // los jefes no se curan
+        if (e.dead || e.boss || e.hp >= e.maxHp) continue;      // bosses don't heal
         e.hp = Math.min(e.maxHp, e.hp + e.maxHp * k);
         G.FX.burst(e.x, e.y - e.bodyH * 0.6, '#7dffb0', 5, 60);
         n++;
@@ -669,7 +669,7 @@
 
     summon() {
       this.minions = this.minions.filter(m => !m.dead && G.EnemyMgr.get(m.id));
-      // Con el tope general de enemigos (menos Pokémon en pantalla), con un pequeño margen.
+      // With the general enemy cap (fewer Pokémon on screen), with a small margin.
       if (this.minions.length >= 4 || G.EnemyMgr.count > G.Spawner.CAP + 25) return;
       const dex = this.def.minion || this.dex;
       const mon = G.DEX_BY[dex];
@@ -699,7 +699,7 @@
                       color: G.U.TYPE_COLOR[this.atkType] || '#ff7a9e' });
     }
 
-    /** Salto: se agacha, vuela en arco y cae donde estabas. */
+    /** Leap: it crouches, flies in an arc and lands where you were. */
     updateJump(dt) {
       const j = this.jump;
       j.t += dt;
@@ -716,7 +716,7 @@
       }
     }
 
-    /** Lo llama combat.js cuando te toca: anima el golpe. */
+    /** Called by combat.js when it touches you: animates the hit. */
     strike(pl) {
       if (!this.anim.busy()) {
         this.anim.dir = G.Sprites.dirFromAngle(Math.atan2(pl.y - this.y, pl.x - this.x));
@@ -740,15 +740,15 @@
       ctx.save();
       ctx.globalAlpha = alpha;
       G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
-      // Los que flotan ya van en el aire en su sprite: sólo se mecen un poco.
-      // (Y los que saltan, en arco.)
+      // Floaters are already in the air in their sprite: they just bob a little.
+      // (And the leapers, in an arc.)
       const lift = (this.flying && !this.boss ? 1 + Math.sin(this.bob) * 1.5 : 0) + (this.jumpLift || 0);
       this.anim.draw(ctx, this.x, this.y - lift, { flash: this.flash > 0, alpha });
       ctx.restore();
 
       if (this.dead) return;
 
-      // Escudo: burbuja azul.
+      // Shield: a blue bubble.
       if (this.shield > 0 || (this.net && this.net.st & 4)) {
         ctx.save();
         ctx.globalAlpha = 0.35 + Math.sin(this.bob) * 0.08;
@@ -787,7 +787,7 @@
         ctx.restore();
       }
 
-      // Apoyos: icono encima, para saber a quién ir primero.
+      // Supports: an icon above, so you know who to go for first.
       const SUP = { healer: 'heart', shielder: 'shield', summoner: 'friends' };
       if (SUP[this.behavior]) G.Icons.draw(ctx, SUP[this.behavior], Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18)), 12);
 
@@ -808,7 +808,7 @@
 
   G.EnemyMgr = (() => {
     let list = [];            // vivos
-    let corpses = [];         // cayendo / desvaneciéndose
+    let corpses = [];         // falling / fading out
     const CELL = 52;
     const grid = new Map();
 
@@ -827,7 +827,7 @@
     }
     function get(id) { return byId.get(id); }
 
-    /** Copia local de un enemigo del anfitrión (cooperativo). */
+    /** Local copy of an enemy from the host (co-op). */
     function addRemote(o) {
       if (byId.has(o.id)) return byId.get(o.id);
       const def = { dex: o.dex, hp: o.hp, spd: 0, dmg: o.dmg, xp: 0, behavior: o.beh || 'remote' };
@@ -843,17 +843,17 @@
       return e;
     }
 
-    // --- arena de la grieta ---
+    // --- rift arena ---
     let stashed = null;
 
-    /** Guarda los enemigos del mapa mientras dura la arena. */
+    /** Stores the map's enemies while the arena lasts. */
     function stash() {
       stashed = list.filter(e => !e.dead);
       for (const e of stashed) byId.delete(e.id);
       list = []; corpses = [];
     }
 
-    /** Al volver: quita los de la arena y devuelve los del mapa (avisando a los demás). */
+    /** On returning: removes the arena's ones and brings back the map's (telling the others). */
     function restore() {
       for (const e of list) { byId.delete(e.id); if (G.Coop.isHost) G.Coop.enemyGone(e, false); }
       list = []; corpses = [];
@@ -861,14 +861,14 @@
       stashed = null;
     }
 
-    /** Invitado: borra las copias (llegarán otra vez del anfitrión). */
+    /** Guest: deletes the copies (they'll arrive again from the host). */
     function clearRemote() {
       for (const e of list) if (e.remote) byId.delete(e.id);
       list = list.filter(e => !e.remote);
       corpses = corpses.filter(e => !e.remote);
     }
 
-    /** Quita una copia (el anfitrión dice que ha caído o que se ha alejado). */
+    /** Removes a copy (the host says it has fallen or moved away). */
     function removeRemote(id, died) {
       const e = byId.get(id);
       if (!e) return;
@@ -892,7 +892,7 @@
       }
     }
 
-    /** Enemigos vivos cuyo círculo toca este círculo. */
+    /** Living enemies whose circle touches this circle. */
     function queryCircle(x, y, r) {
       const out = [];
       const c0x = Math.floor((x - r) / CELL) - 1, c1x = Math.floor((x + r) / CELL) + 1;
@@ -941,7 +941,7 @@
       }
     }
 
-    /** El jugador vivo más cercano (los caídos no atraen a nadie). */
+    /** The nearest living player (fallen ones don't attract anyone). */
     function nearestPlayer(players, x, y) {
       let best = null, bd = Infinity;
       for (const p of players) {
@@ -953,17 +953,17 @@
     }
 
     /**
-     * @param players  [jugador local, ...compañeros]. Las estadísticas de la
-     *                 run (derrotados, jefes) se apuntan en el primero.
+     * @param players  [local player, ...teammates]. The run's stats
+     *                 (defeated, bosses) are recorded on the first.
      */
-    // Segundos que un rezagado tiene que llevar fuera de la vista antes de volver por delante.
+    // Seconds a straggler has to be out of view before returning ahead.
     const LAG_T = 2.5;
 
     function update(dt, players) {
       if (stopLeft > 0) stopLeft = Math.max(0, stopLeft - dt);
       if (!Array.isArray(players)) players = [players];
       const pl = players[0];
-      // Velocidad suavizada de cada jugador (vale también para los compañeros).
+      // Smoothed velocity of each player (works for teammates too).
       for (const p of players) {
         if (p._px != null && dt > 0) {
           const k = Math.min(1, dt * 5);
@@ -996,7 +996,7 @@
           continue;
         }
         const near = nearestPlayer(players, e.x, e.y) || pl;
-        // El duende del tesoro se escapa si no lo atrapas a tiempo.
+        // The treasure goblin escapes if you don't catch it in time.
         if (e.behavior === 'aegis' && e.life < 16 && !e.warned) { e.warned = true; G.Spawner.say('The Aegislash is about to leave!', 2.4); }
         if ((e.behavior === 'thief' || e.behavior === 'aegis') && (e.life -= dt) <= 0) {
           G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
@@ -1006,9 +1006,9 @@
           continue;
         }
         if (e.boss || e.shiny || G.Rift.inArena) continue;
-        // Rezagados: los que se quedan atrás mientras corres y llevan un rato
-        // FUERA DE LA VISTA (de todos) vuelven a salir por delante de ti. Así
-        // no se puede huir sin más, y nunca desaparece uno que estés viendo.
+        // Stragglers: those that fall behind while you run and have been
+        // OUT OF VIEW (of everyone) for a while reappear ahead of you. That way
+        // you can't simply run away, and one you're looking at never disappears.
         const d2 = G.U.dist2(e.x, e.y, near.x, near.y);
         const R = G.Camera.outerRadius() + 40;
         const unseen = d2 > R * R && !G.Camera.sees(e.x, e.y, 60);
@@ -1028,7 +1028,7 @@
       if (corpses.length > 120) corpses.splice(0, corpses.length - 120);
     }
 
-    /** Lo que hay que dibujar ordenado por Y junto al resto de la escena. */
+    /** What has to be drawn sorted by Y along with the rest of the scene. */
     function drawables(cam) {
       const out = [];
       for (const e of corpses) if (cam.sees(e.x, e.y, 80)) out.push(e);

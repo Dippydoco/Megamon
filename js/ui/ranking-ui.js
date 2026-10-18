@@ -1,7 +1,7 @@
-/* ============ ranking-ui.js — pantalla del ranking ============
- * Pestañas Solo / Grupo, periodo (diario ... histórico), todos o sólo amigos,
- * filtro por Pokémon (sólo en el histórico) y tu puesto abajo aunque no salgas
- * en el top. Lo leído se guarda 30 min (ver ranking.js).
+/* ============ ranking-ui.js — leaderboard screen ============
+ * Solo / Group tabs, period (daily ... all-time), everyone or friends only,
+ * per-Pokémon filter (all-time only) and your rank at the bottom even if you're not
+ * in the top. What's read is cached for 30 min (see ranking.js).
  */
 G.RankingUI = (() => {
   const $ = G.UI.$;
@@ -24,7 +24,7 @@ G.RankingUI = (() => {
     $('rk-mod').onclick = () => G.ModUI.open();
   }
 
-  /** El filtro por Pokémon sólo existe en el histórico: al elegir uno se pasa a esa pestaña. */
+  /** The per-Pokémon filter only exists in the all-time table: picking one switches to that tab. */
   function setDex(d) {
     dex = d;
     if (d) { metric = 't'; if (period !== 'a') period = 'a'; }
@@ -96,7 +96,7 @@ G.RankingUI = (() => {
     rows.forEach((r, i) => list.appendChild(rowEl(r, i + 1, r.uids.includes(uid), b, done)));
     const val = metric === 'k' ? fmtK : fmt;
 
-    // La frase se monta en cada idioma (traducirla por trozos sale rara).
+    // The sentence is built in each language (translating it piece by piece reads oddly).
     const en = G.I18n.lang === 'en';
     const pn = en ? { d: 'today', w: 'this week', m: 'this month', y: 'this year', a: 'of all time' }[period]
                   : { d: 'de hoy', w: 'de esta semana', m: 'de este mes', y: 'de este año', a: 'de siempre' }[period];
@@ -124,7 +124,7 @@ G.RankingUI = (() => {
       `<span class="who"><b translate="no">${r.names.map((n, i) => `<a href="#" class="plink" data-u="${esc(r.uids[i] || '')}">${esc(n)}</a>`).join(' · ')}</b><small>Nv. ${r.lv || 1} · ${kills ? fmt(r.t) + ' survived' : (r.kills || 0).toLocaleString('es') + ' derrotados'}${period === 'a' && r.at ? ' · <span translate="no">' + new Date(r.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span>' : ''}</small></span>
        <span class="time">${kills ? (r.kills || 0).toLocaleString('en-GB') : fmt(r.t)}</span>`);
     el.querySelectorAll('.plink').forEach(a => { a.onclick = e => { e.preventDefault(); G.ProfileUI.show(a.dataset.u); }; });
-    // Reportar una marca sospechosa (no la tuya). Lo revisa el admin (mod-ui.js).
+    // Report a suspicious record (not your own). The admin reviews it (mod-ui.js).
     if (!mine && G.Social.me) {
       const rep = document.createElement('button');
       const sent = done.has(b + '__' + r.id);

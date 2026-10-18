@@ -1,15 +1,15 @@
-/* ============ chat-ui.js — pantallas del chat ============
- *   G.DMUI      chat privado con un amigo (desde Amigos → Chat)
- *   G.RoomChatUI  chat de sala: en la sala de espera y, durante la partida, un cuadro
- *                 pequeño abajo a la izquierda (Intro para escribir, Esc para cerrar)
- * Los textos de otros jugadores se ponen siempre con textContent (nunca como HTML).
+/* ============ chat-ui.js — chat screens ============
+ *   G.DMUI      private chat with a friend (from Friends → Chat)
+ *   G.RoomChatUI  room chat: in the waiting room and, during the run, a small
+ *                 box at the bottom left (Enter to type, Esc to close)
+ * Other players' text is always set with textContent (never as HTML).
  */
 (() => {
   const $ = id => document.getElementById(id);
 
   const clock = at => { try { return new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
 
-  /** Dibuja líneas { mine, name, t, at } en un contenedor y baja al final si ya estabas abajo. */
+  /** Draws lines { mine, name, t, at } in a container and scrolls to the end if you were already at the bottom. */
   function renderLines(box, lines, opts = {}) {
     const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.textContent = '';
@@ -74,7 +74,7 @@
         if (G.UI.isOpen('scr-friends')) G.FriendsUI.render();
         G.MenuUI.refreshSocial && G.MenuUI.refreshSocial();
       });
-      // Si el amigo desaparece de la lista (lo quitó), se vuelve a Amigos.
+      // If the friend disappears from the list (they removed you), go back to Friends.
       G.Social.on(() => { if (G.UI.isOpen('scr-chat') && other && !friend()) { other = null; G.FriendsUI.open(); } });
     }
 
@@ -110,17 +110,17 @@
     return { init, open, render };
   })();
 
-  // ======================= CHAT DE SALA =======================
+  // ======================= ROOM CHAT =======================
 
   G.RoomChatUI = (() => {
-    const SHOW_MS = 10000;                 // en la partida, cada línea se ve 10 s
+    const SHOW_MS = 10000;                 // during the run, each line shows for 10 s
     let runKey = '';
 
     const inRun = () => G.Coop.active && G.Game.state !== 'ui';
     const lines = () => G.Chat.roomLog().map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t, at: l.at, c: l.c }));
 
     function init() {
-      // Sala de espera.
+      // Waiting room.
       $('lobby-chatform').onsubmit = e => {
         e.preventDefault();
         const inp = $('lobby-chatinput');
@@ -128,7 +128,7 @@
         if (r.ok) { inp.value = ''; G.Audio.sfx('select'); } else if (r.error) G.UI.toast(r.error, 1600);
         inp.focus();
       };
-      // Durante la partida.
+      // During the run.
       const form = $('chat-run-form'), inp = $('chat-run-input');
       form.onsubmit = e => {
         e.preventDefault();
@@ -181,7 +181,7 @@
       renderRun();
     }
 
-    /** Las últimas líneas, y sólo las recientes (todas mientras escribes). */
+    /** The last lines, and only recent ones (all of them while you're typing). */
     function renderRun() {
       const typing = !$('chat-run-form').classList.contains('hidden');
       const t = Date.now();
@@ -202,7 +202,7 @@
     return { init, renderLobby };
   })();
 
-  // Se engancha a la inicialización de la parte social.
+  // Hooks into the social part's initialisation.
   const baseInit = G.SocialUI.init;
   G.SocialUI.init = () => { baseInit(); G.DMUI.init(); G.RoomChatUI.init(); };
 })();

@@ -1,5 +1,5 @@
-/* ============ gacha-ui.js — banners por generación y animación de tirada ============
- * La lógica (probabilidades, pity, shiny, repetidos) está en systems/gacha.js.
+/* ============ gacha-ui.js — banners by generation and pull animation ============
+ * The logic (odds, pity, shiny, duplicates) is in systems/gacha.js.
  */
 G.GachaUI = (() => {
   const $ = G.UI.$;
@@ -161,7 +161,7 @@ G.GachaUI = (() => {
     slot.style.display = many ? 'none' : '';
     fx.classList.remove('hidden');
 
-    // La tragaperras (ui/slots.js) y luego las cartas. (With "Use all tickets" there are too many: summary instead.)
+    // The slot machine (ui/slots.js) and then the cards. (With "Use all tickets" there are too many: summary instead.)
     if (!many) await G.Slots.play(slot, res);
     G.Audio.sfx('burst', { rarity: best });
     slot.style.display = 'none';

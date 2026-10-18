@@ -1,25 +1,25 @@
-/* ============ coop.js — partida cooperativa (hasta 5 jugadores) ============
+/* ============ coop.js — co-op run (up to 5 players) ============
  *
- * Quién manda en qué:
- *   ANFITRIÓN   enemigos (aparición, IA, vida, muerte), objetos del suelo,
- *               experiencia y nivel del equipo, reloj, fin de la partida.
- *   CADA UNO    su propio Pokémon: posición, vida, ataques y lo que le golpea.
- *               Sus golpes a enemigos se mandan al anfitrión, que los aplica.
+ * Who's in charge of what:
+ *   HOST        enemies (spawning, AI, health, death), objects on the ground,
+ *               the team's experience and level, the clock, the end of the run.
+ *   EACH PLAYER their own Pokémon: position, health, attacks and what hits it.
+ *               Their hits on enemies are sent to the host, who applies them.
  *
- * Los invitados ven COPIAS de los enemigos del anfitrión (enemy.remote) y los
- * ataques de los compañeros como "fantasmas" que no hacen daño (ver combat.js).
+ * Guests see COPIES of the host's enemies (enemy.remote) and
+ * teammates' attacks as "ghosts" that do no damage (see combat.js).
  *
- * Quién está eligiendo (objeto o vínculo) y quién ha elegido carta de nivel va
- * además en CADA envío (no sólo en un aviso suelto): si un aviso se pierde
- * porque la conexión parpadea, el siguiente envío lo arregla y nadie se queda
- * esperando a otro para siempre (pasaba en 2026-10).
+ * Who is choosing (item or bond) and who has picked a level card also goes
+ * in EVERY send (not just in a one-off notice): if a notice is lost
+ * because the connection blinks, the next send fixes it and nobody is left
+ * waiting for someone else forever (it happened in 2026-10).
  *
- * Mensajes (por net.js, unas 15 veces por segundo; 5 si va por el relé):
- *   invitado -> anfitrión  { k:'f', p:[estado], ev:[eventos] }
- *   anfitrión -> invitado  { k:'f', t, lv, xp, xn, ki, bo, co, p:{uid:[estado]},
- *                            e:[[id,x,y,vida,anim,dir,estados]], ev:[eventos],
- *                            ja:[x,y,anim,dir] (Arceus, sólo en la Sentencia) }
- *   anfitrión -> todos     { k:'start', seed, host, members:[{uid,name,dex,shiny}] }
+ * Messages (via net.js, about 15 times a second; 5 if it's over the relay):
+ *   guest -> host       { k:'f', p:[state], ev:[events] }
+ *   host -> guest       { k:'f', t, lv, xp, xn, ki, bo, co, p:{uid:[state]},
+ *                         e:[[id,x,y,health,anim,dir,statuses]], ev:[events],
+ *                         ja:[x,y,anim,dir] (Arceus, only in the Judgment) }
+ *   host -> everyone    { k:'start', seed, host, members:[{uid,name,dex,shiny}] }
  */
 G.Coop = (() => {
   const ANIMS = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint'];
@@ -28,39 +28,39 @@ G.Coop = (() => {
   // (was 3; the free Spark plan has no per-GB cost, but keep an eye on the usage).
   const RATE_FAST = 1 / 15, RATE_SLOW = 1 / 6;
   const rateFor = u => (G.Net.slow(u) ? RATE_SLOW : RATE_FAST);
-  const NEAR = 950;                     // radio de enemigos que se mandan a cada uno
+  const NEAR = 950;                     // radius of enemies sent to each player
 
   let active = false, host = false, me = null, hostUid = null;
   let local = null;                     // tu Player
   const mates = new Map();              // uid -> { uid, name, color, pl, connected, q:[], flushT, xpMul }
-  let outEv = [];                       // invitado: eventos para el anfitrión
+  let outEv = [];                       // guest: events for the host
   let flushT = 0;
-  let hitFrom = null;                   // invitado cuyo golpe se está aplicando (no repetirle el número)
-  let api = {};                         // callbacks del juego (game.js)
-  let waiting = new Set();              // subida de nivel: quién falta por elegir
-  let holds = new Set();                // quién está eligiendo una fusión (la partida se para para todos)
-  // El anfitrión mueve a los enemigos: si cambia de pestaña (o se le congela),
-  // todo se para para todos. Antes los enemigos se quedaban quietos y los demás
-  // seguían jugando con una ventaja enorme.
+  let hitFrom = null;                   // guest whose hit is being applied (don't repeat the number to them)
+  let api = {};                         // the game's callbacks (game.js)
+  let waiting = new Set();              // level-up: who still has to choose
+  let holds = new Set();                // who is choosing a fusion (the run pauses for everyone)
+  // The host moves the enemies: if they switch tabs (or freeze),
+  // everything stops for everyone. Previously the enemies stood still and the others
+  // kept playing with a huge advantage.
   let hostAway = false, stalled = false, lastHostAt = 0;
-  // Cartas de nivel: número de la ronda (anfitrión), la última que te ha llegado
-  // y la última que has elegido (invitado). Y el último "quién elige" aplicado.
+  // Level cards: the round number (host), the last one that reached you
+  // and the last one you chose (guest). And the last "who's choosing" applied.
   let levelSeq = 0, levelNow = 1, seenSeq = 0, doneSeq = 0, lastHo = '';
   const STALL_MS = 2500;
   let members = [];
 
-  // ---------------- escalado de dificultad ----------------
+  // ---------------- difficulty scaling ----------------
 
   // Up to 4 players it grows in a straight line; the 5th adds a bit less spawn rate (the enemy cap
   // and the host's connection are the limit) but a bit more health, so fights do not melt.
   const scaleRate = n => 1 + 0.75 * Math.min(3, Math.max(0, n - 1)) + 0.5 * Math.max(0, n - 4);
   const scaleHp = n => 1 + 0.3 * Math.min(3, Math.max(0, n - 1)) + 0.35 * Math.max(0, n - 4);
 
-  // ---------------- arranque / fin ----------------
+  // ---------------- start / end ----------------
 
   /**
    * @param cfg   { seed, host, members }
-   * @param pl    tu Player (ya creado)
+   * @param pl    your Player (already created)
    * @param cb    { levelStart(lv), resume(), waiting(names), over(data), lost(msg), team(t), shiny(dex) }
    */
   function begin(cfg, pl, cb) {
@@ -92,11 +92,11 @@ G.Coop = (() => {
     mates.clear(); outEv = []; waiting = new Set(); holds = new Set();
   }
 
-  /** Te vas de la partida (los demás siguen). */
+  /** You leave the run (the others carry on). */
   function leave() {
     if (!active) return;
     if (host) {
-      // Si se va el anfitrión, la partida termina para todos.
+      // If the host leaves, the run ends for everyone.
       emit(['ov', Object.assign(api.summary ? api.summary() : {}, { why: 'host' })]);
       flushAll();
     } else {
@@ -106,7 +106,7 @@ G.Coop = (() => {
     end();
   }
 
-  // ---------------- lista de jugadores ----------------
+  // ---------------- player list ----------------
 
   function players() {
     const out = [local];
@@ -116,9 +116,9 @@ G.Coop = (() => {
   function puppets() { const out = []; for (const m of mates.values()) if (m.connected) out.push(m.pl); return out; }
 
   /**
-   * Multiplicador de la experiencia del equipo: la media de los bonus de
-   * cada uno, y repartida entre los que sois (en grupo cae mucho más, y si no
-   * se subiría de nivel el triple de rápido que en solitario).
+   * The team's experience multiplier: the average of each player's
+   * bonuses, shared out among however many of you there are (in a group it drops a lot, otherwise
+   * you'd level up three times as fast as in solo).
    */
   function xpFactor() {
     let s = local.xpMul, n = 1;
@@ -126,12 +126,12 @@ G.Coop = (() => {
     return (s / n) / local.xpMul / (1 + 0.6 * (n - 1));
   }
 
-  // ---------------- estado de un jugador ----------------
+  // ---------------- a player's state ----------------
 
   const r1 = v => Math.round(v), r2 = v => Math.round(v * 100) / 100;
 
   function myState() {
-    // Con un vínculo se manda la órbita si la hay (es lo único que los demás no ven por los 'c').
+    // With a bond the orbit is sent if there is one (it's the only thing the others don't see through the 'c's).
     const g = local.activeGroup();
     const m = g.find(x => x.kind === 'orbit') || g[0];
     return [r1(local.x), r1(local.y), r2(local.moveAngle), local.walking ? 1 : 0, r1(local.hp), r1(local.maxHp),
@@ -145,15 +145,15 @@ G.Coop = (() => {
              mag: a[9], aim: a[10], xpMul: a[11], rev: a[12], ch: a[13], ld: a[14], ar: a[15] };
   }
 
-  // ---------------- envío ----------------
+  // ---------------- sending ----------------
 
-  /** Anfitrión: evento para todos los invitados (menos `except`). */
+  /** Host: event for all guests (except `except`). */
   function emit(ev, except) {
     if (!host) return;
     for (const m of mates.values()) if (m.connected && m.uid !== except) m.q.push(ev);
   }
 
-  /** Anfitrión: evento sólo para los que están cerca (números de daño). */
+  /** Host: event only for those nearby (damage numbers). */
   function emitNear(ev, x, y, except) {
     for (const m of mates.values()) {
       if (!m.connected || m.uid === except) continue;
@@ -186,9 +186,9 @@ G.Coop = (() => {
                 p, e: enemyList(m.pl), ev };
     const gd = G.Interact.goldState();      // Gold shrine combo (everyone sees it)
     if (gd) f.gd = gd;
-    const ja = G.Judgment.netState();       // Arceus en la Sentencia
+    const ja = G.Judgment.netState();       // Arceus in the Judgment
     if (ja) f.ja = ja;
-    // Siempre: quién está eligiendo y, si hay cartas de nivel, cuáles (ver arriba).
+    // Always: who's choosing and, if there are level cards, which ones (see above).
     f.ho = holdNames();
     if (waiting.size) f.lu = [levelSeq, levelNow];
     return f;
@@ -202,7 +202,7 @@ G.Coop = (() => {
     outEv = [];
   }
 
-  /** Cada fotograma (también en la pantalla de subida de nivel). */
+  /** Every frame (also on the level-up screen). */
   function tick(dt) {
     if (!active) return;
     if (host) {
@@ -224,7 +224,7 @@ G.Coop = (() => {
     }
   }
 
-  // ---------------- recepción ----------------
+  // ---------------- receiving ----------------
 
   G.Net.on((from, msg) => {
     if (!msg) return;
@@ -250,7 +250,7 @@ G.Coop = (() => {
     if (api.mateLeft) api.mateLeft(m);
   }
 
-  // --- en el anfitrión ---
+  // --- on the host ---
 
   /** Remembers how fast and how often a teammate's state arrives, so their puppet can glide between updates. */
   function track(old, n) {
@@ -316,21 +316,21 @@ G.Coop = (() => {
     }
   }
 
-  /** Anfitrión: lo que dice cada envío del invitado manda sobre avisos que se hayan perdido. */
+  /** Host: what each guest send says overrides notices that may have been lost. */
   function reconcile(from, n) {
-    if (n.ch === undefined) return;                        // versión vieja del juego
+    if (n.ch === undefined) return;                        // old version of the game
     if (n.ch && !holds.has(from)) holdOn(from);
     else if (!n.ch && holds.has(from)) holdOff(from);
     if (waiting.has(from) && n.ld >= levelSeq) picked(from);
   }
 
-  // --- en el invitado ---
+  // --- on the guest ---
 
-  /** Invitado: se para (o sigue) según si el anfitrión está. */
+  /** Guest: pauses (or carries on) depending on whether the host is there. */
   function updateAway() { if (api.away) api.away(hostAway || stalled ? nameOf(hostUid) : null); }
 
-  // Anfitrión: al irse de la pestaña avisa a todos al momento (después ya no
-  // podrá mandar nada) y al volver, que sigue.
+  // Host: when leaving the tab it tells everyone straight away (afterwards it won't
+  // be able to send anything) and, on returning, that it's carrying on.
   document.addEventListener('visibilitychange', () => {
     if (!active || !host) return;
     emit(['ha', document.hidden ? 1 : 0]);
@@ -343,7 +343,7 @@ G.Coop = (() => {
     for (const ev of msg.ev || []) applyHostEvent(ev);
     G.Interact.goldNet(msg.gd || null);
     if (msg.ja) G.Judgment.netApply(msg.ja);
-    // Quién elige y las cartas de nivel, aunque se haya perdido algún aviso.
+    // Who's choosing and the level cards, even if some notice was lost.
     if (msg.ho) {
       const k = msg.ho.join('|');
       if (k !== lastHo) { lastHo = k; api.hold && api.hold(msg.ho); }
@@ -417,20 +417,20 @@ G.Coop = (() => {
     }
   }
 
-  // ---------------- ganchos que llaman los módulos del juego ----------------
+  // ---------------- hooks called by the game's modules ----------------
 
-  /** Tu ataque: los demás lo repiten como fantasma. */
+  /** Your attack: the others replay it as a ghost. */
   function cast(pl, m) {
     if (!active || pl !== local) return;
     if (host) emit(['c', me, m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0]);
     else outEv.push(['c', m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0]);
   }
 
-  // invitado
+  // guest
   function hit(e, d, color, dx, dy, knock) { outEv.push(['h', e.id, d, color, r1(dx), r1(dy), knock || 0]); }
   function status(e, kind, val) { outEv.push(['s', e.id, kind, val]); }
 
-  // anfitrión
+  // host
   function hurtShown(e, d, color) { emitNear(['hn', e.id, d, color], e.x, e.y, hitFrom); }
   function enemyAdded(e) {
     emit(['ne', e.id, e.dex, r1(e.x), r1(e.y), e.boss ? 1 : 0, e.shiny ? 1 : 0, Math.ceil(e.maxHp), r2(e.dmg), e.behavior, e.life > 0 ? Math.ceil(e.life) : 0]);
@@ -446,7 +446,7 @@ G.Coop = (() => {
     else outEv.push(['pb', p.tx, p.ty]);
   }
 
-  /** Anfitrión: alguien ha cogido un objeto. Devuelve true si es para ti. */
+  /** Host: someone picked up an object. Returns true if it's for you. */
   function collected(p, who) {
     emit(['pc', p.id]);
     if (p.kind === 'magnet') emit(['mag']);
@@ -460,7 +460,7 @@ G.Coop = (() => {
 
   function shinyCaught(e) { emit(['sh', e.dex]); }
 
-  // ---------------- subida de nivel compartida ----------------
+  // ---------------- shared level-up ----------------
 
   function levelStart(level) {
     waiting = new Set([me]);
@@ -480,7 +480,7 @@ G.Coop = (() => {
     api.waiting(names);
   }
 
-  /** Alguien ha elegido carta (anfitrión). */
+  /** Someone has picked a card (host). */
   function picked(u) {
     if (!waiting.delete(u)) return;
     if (waiting.size) { sendWaiting(); return; }
@@ -489,37 +489,37 @@ G.Coop = (() => {
     api.resume();
   }
 
-  // ---------------- fusiones: pausa para todos ----------------
-  // Mientras alguien elige qué movimientos fusiona (vínculo de un legendario),
-  // la partida se para para todos, como con las cartas de nivel.
+  // ---------------- fusions: pause for everyone ----------------
+  // While someone chooses which moves to fuse (a legendary's bond),
+  // the run pauses for everyone, as with the level cards.
 
   function holdNames() { return [...holds].map(nameOf); }
 
-  /** Anfitrión: `u` empieza a elegir. */
+  /** Host: `u` starts choosing. */
   function holdOn(u) {
     holds.add(u);
     emit(['hp', holdNames()]); flushAll();
     api.hold && api.hold(holdNames());
   }
 
-  /** Anfitrión: `u` ha terminado (o se ha ido). */
+  /** Host: `u` has finished (or left). */
   function holdOff(u) {
     if (!holds.delete(u)) return;
     emit(['hp', holdNames()]); flushAll();
     api.hold && api.hold(holdNames());
   }
 
-  /** Tú empiezas / terminas de elegir fusión. */
+  /** You start / finish choosing a fusion. */
   function holdStart() { if (host) holdOn(me); else { outEv.push(['hs']); flushClient(true); } }
   function holdEnd() { if (host) holdOff(me); else { outEv.push(['he']); flushClient(true); } }
 
-  /** Has elegido tu carta. */
+  /** You've chosen your card. */
   function localPicked() {
     if (host) picked(me);
     else { doneSeq = seenSeq; outEv.push(['lp']); flushClient(true); }
   }
 
-  /** Anfitrión: se acabó para todos. */
+  /** Host: it's over for everyone. */
   function over(data) {
     emit(['ov', data]);
     flushAll();
@@ -530,7 +530,7 @@ G.Coop = (() => {
     ANIMS, COLORS, begin, end, leave, tick, players, puppets, xpFactor, scaleRate, scaleHp,
     cast, hit, status, hurtShown, enemyAdded, enemyGone, enemyShot, pickupAdded, pickupGone, say,
     propBroken, collected, shinyCaught, levelStart, localPicked, over, holdStart, holdEnd,
-    /** Anfitrión: evento para todos. Invitado: evento para el anfitrión. */
+    /** Host: event for everyone. Guest: event for the host. */
     broadcast(ev) { emit(ev); },
     toHost(ev) { if (active && !host) { outEv.push(ev); flushClient(true); } },
     mate(u) { return mates.get(u); },

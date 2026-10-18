@@ -1,7 +1,7 @@
-/* ============ support-ui.js — "Apoyar el proyecto" ============
- * Botón con un corazón en la barra del menú (sólo si hay cuenta de Ko-fi en
- * js/data/funding.js) y una ventana que explica, con números, a qué va el
- * dinero. No se cobra nada dentro del juego: el pago es en Ko-fi.
+/* ============ support-ui.js — "Support the project" ============
+ * A button with a heart in the menu bar (only if there's a Ko-fi account in
+ * js/data/funding.js) and a window that explains, with numbers, where the
+ * money goes. Nothing is charged inside the game: payment is on Ko-fi.
  */
 G.SupportUI = (() => {
   const $ = G.UI.$;
@@ -18,7 +18,7 @@ G.SupportUI = (() => {
     $('sup-close').onclick = close;
   }
 
-  // Sin enlaces ni donaciones: el botón es una broma.
+  // No links or donations: the button is a joke.
   function open() {
     $('sup-body').innerHTML = `
       <p style="text-align:center;font-size:22px;margin:18px 0 8px">Buy Ryan a Taco Bell</p>

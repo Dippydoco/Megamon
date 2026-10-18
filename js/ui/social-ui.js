@@ -1,9 +1,9 @@
-/* ============ social-ui.js — apodo, amigos, sala e invitaciones ============ */
+/* ============ social-ui.js — nickname, friends, room and invitations ============ */
 (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  /** ¿Se puede usar lo online? Si no, explica por qué. */
+  /** Can the online features be used? If not, explains why. */
   function needOnline() {
     if (G.DB.online) return true;
     G.UI.toast(G.DB.guest ? 'Crea una cuenta para jugar con amigos y salir en el ranking.'
@@ -11,7 +11,7 @@
     return false;
   }
 
-  // ======================= APODO =======================
+  // ======================= NICKNAME =======================
 
   G.NickUI = (() => {
     let then = null, skipped = false;
@@ -32,7 +32,7 @@
       $('nick-later').onclick = () => { skipped = true; then = null; G.MenuUI.open(); };
     }
 
-    /** @param next  qué abrir después de elegirlo */
+    /** @param next  what to open after choosing it */
     function open(next) {
       then = next || null;
       G.UI.show('scr-nick');
@@ -44,14 +44,14 @@
     return { init, open, get skipped() { return skipped; } };
   })();
 
-  /** Abre `fn` si tienes apodo; si no, pide el apodo primero. */
+  /** Opens `fn` if you have a nickname; if not, asks for the nickname first. */
   function withNick(fn) {
     if (!needOnline()) return;
     if (G.Social.me) { fn(); return; }
     G.Social.start().then(r => { if (r === 'ok') fn(); else G.NickUI.open(fn); });
   }
 
-  // ======================= AMIGOS =======================
+  // ======================= FRIENDS =======================
 
   G.FriendsUI = (() => {
     function init() {
@@ -78,7 +78,7 @@
 
     function open() { withNick(() => { G.UI.show('scr-friends', true); msg(''); render(); G.Social.refreshPresence(); }); }
 
-    /** "hace 5 min", "hace 2 h", "hace 3 días". */
+    /** "5 min ago", "2 h ago", "3 days ago". */
     function ago(t) {
       const m = Math.max(1, Math.round((G.Social.now() - t) / 60000));
       if (m < 60) return 'hace ' + m + ' min';
@@ -166,8 +166,8 @@
               if (r.ok) G.LobbyUI.open();
             });
           }
-          // Quitar amigo: hay que pulsar dos veces (la primera pide confirmar y se desarma sola),
-          // y va separado de "Invitar" para no darle sin querer.
+          // Removing a friend takes two taps (the first asks to confirm and disarms itself),
+          // and it's kept apart from "Invite" so it isn't hit by accident.
           let armed = false, armT = 0;
           const rm = btn('Remove', 'ghost', () => {
             if (armed) { clearTimeout(armT); G.Social.remove(f.uid); return; }
@@ -185,7 +185,7 @@
     return { init, open, render };
   })();
 
-  // ======================= SALA =======================
+  // ======================= ROOM =======================
 
   G.LobbyUI = (() => {
     let membersKey = '';
@@ -211,7 +211,7 @@
       };
       $('lobby-start').onclick = start;
       $('lobby-start').dataset.sfx = 'confirm';
-      // Conecta / desconecta la red al entrar o salir de una sala.
+      // Connects / disconnects the network when entering or leaving a room.
       G.Social.on(what => {
         const room = G.Social.room;
         if (room) {
@@ -265,7 +265,7 @@
         ? 'Eres el anfitrión. Invita a tus amigos (hasta ' + G.Social.MAX_PLAYERS + ') y empezad cuando estéis.'
         : 'Estás en la sala de ' + ((ms.find(m => m.uid === room.host) || {}).name || '…') + '. El anfitrión empezará la partida.';
 
-      // Las tarjetas sólo se rehacen si cambian los miembros (los sprites no parpadean).
+      // The cards are only rebuilt if the members change (so the sprites don't flicker).
       const key = ms.map(m => m.uid + ':' + m.dex + ':' + (m.shiny ? 1 : 0)).join('|');
       const box = $('lobby-members');
       if (key !== membersKey) {
@@ -292,7 +292,7 @@
         el.className = 'conn' + (gl ? (gl.cls === 'ok' ? '' : ' ' + gl.cls) : t === 'Conectando…' ? ' wait' : '');
       });
 
-      // Invitar (sólo el anfitrión y si queda sitio).
+      // Invite (host only, and if there's room).
       const canInvite = room.isHost && ms.length < G.Social.MAX_PLAYERS;
       $('lobby-inv-title').classList.toggle('hidden', !canInvite);
       const inv = $('lobby-invite');
@@ -341,8 +341,8 @@
       if (G.Social.room !== room || room.members.length < 2) return;
       const cfg = {
         k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,
-        // Tu propio compañero se toma de tu partida guardada (lo más reciente), no de lo que
-        // ya haya llegado de vuelta de la sala.
+        // Your own partner is taken from your save (the most recent), not from what
+        // has already come back from the room.
         members: room.members.map(m => m.uid === G.Social.uid
           ? { uid: m.uid, name: m.name, dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }
           : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny })
@@ -364,8 +364,8 @@
       $('inv-yes').onclick = async () => {
         if (!cur) return;
         const from = cur.from, who = cur.name;
-        // En plena partida: se pregunta si quieres dejarla; si sí, se cierra (se guarda
-        // lo ganado, como al abandonar) y sólo entonces te unes a la sala.
+        // Mid-run: it asks whether you want to leave it; if so, it's closed (what you earned
+        // is saved, as when abandoning) and only then do you join the room.
         const st = G.Game.state;
         if (st !== 'ui') {
           if (st !== 'over' && !confirm('You are in the middle of a run. Leave it to join ' + who + "'s room? What you have earned so far will be saved.")) return;
@@ -386,7 +386,7 @@
 
     function hide() { cur = null; $('invite-pop').classList.add('hidden'); }
 
-    /** Enseña la invitación más antigua (también en plena partida: al aceptar se pregunta si dejas la run). */
+    /** Shows the oldest invitation (also mid-run: on accepting it asks whether you'll leave the run). */
     function refresh() {
       const room = G.Social.room;
       const list = G.Social.invites.filter(i => !room || i.room !== room.id).sort((a, b) => a.at - b.at);

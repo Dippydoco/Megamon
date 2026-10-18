@@ -1,4 +1,4 @@
-/* ============ test.js — test de personalidad y elección de compañero ============ */
+/* ============ test.js — personality test and partner choice ============ */
 G.TestUI = (() => {
   const $ = G.UI.$;
   let idx = 0, scores = {}, result = null, picked = null;
@@ -53,7 +53,7 @@ G.TestUI = (() => {
     G.UI.show('scr-result');
   }
 
-  /** Abre la rejilla de starters. `fromMenu` = cambiar compañero inicial más tarde. */
+  /** Opens the starters grid. `fromMenu` = changing the starting partner later on. */
   function openStarters() {
     picked = null;
     $('starter-ok').disabled = true;

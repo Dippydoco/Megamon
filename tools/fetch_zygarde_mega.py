@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Descarga el sprite de Mega Zygarde (y su shiny) de SpriteCollab como si fuera un
-Pokémon propio con número 9718 (no está en la Pokédex: sólo lo usa el jefe del
-Portal de Zygarde al transformarse, ver js/systems/rift.js).
+Downloads the Mega Zygarde sprite (and its shiny) from SpriteCollab as if it were
+a Pokémon of its own with number 9718 (it isn't in the Pokédex: only the Zygarde
+Portal boss uses it when it transforms, see js/systems/rift.js).
 
     python tools/fetch_zygarde_mega.py
 
 - Sprite normal:  sprite/0718/0005/        (forma "Mega")
 - Sprite shiny:   sprite/0718/0005/0001/
-Guarda las hojas en assets/pokemon/9718/, la geometría en tools/cache/9718.json
-(así tools/fetch_sprites.py la conserva si se vuelve a ejecutar) y la añade a
-js/data/sprites-meta.js. Se puede repetir sin problema.
+Saves the sheets in assets/pokemon/9718/, the geometry in tools/cache/9718.json
+(so tools/fetch_sprites.py keeps it if it is run again) and adds it to
+js/data/sprites-meta.js. It can be repeated safely.
 """
 import json
 import os
@@ -28,7 +28,7 @@ def main():
     base = f'{F.BASE}/{FORM}'
     xml = F.fetch(f'{base}/AnimData.xml')
     if not xml:
-        sys.exit('No se pudo bajar AnimData.xml de Mega Zygarde')
+        sys.exit('Could not download AnimData.xml for Mega Zygarde')
     anims, shadow = F.parse_animdata(xml.decode('utf-8', 'replace'))
     out = os.path.join(F.OUT_ASSETS, str(DEX))
     normal = F.download_set(base, out, anims)
@@ -55,7 +55,7 @@ def main():
     line = f'  {DEX}: {json.dumps(meta, separators=(",", ":"))},\n'
     s = open(F.OUT_META, encoding='utf-8').read().split('\n')
     s = [l for l in s if not l.startswith(f'  {DEX}: ')]
-    # Antes de la entrada 718 si existe (orden numérico aproximado), si no al final.
+    # Before entry 718 if it exists (approximate numeric order), otherwise at the end.
     idx = next((i for i, l in enumerate(s) if l.startswith('  718: ')), None)
     if idx is None:
         idx = max(i for i, l in enumerate(s) if l.strip() == '};')

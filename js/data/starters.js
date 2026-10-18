@@ -1,8 +1,8 @@
-/* ============ starters.js — compañeros iniciales y test de personalidad ============
- * Como en Mundo Misterioso: unas preguntas deciden tu personalidad, y tu
- * personalidad decide tu compañero. Puedes rechazarlo y elegir otro.
+/* ============ starters.js — starting partners and personality test ============
+ * As in Mystery Dungeon: a few questions decide your personality, and your
+ * personality decides your partner. You can decline it and choose another.
  *
- * Los stats salen de G.DEX; aquí sólo van los rasgos y el movimiento inicial.
+ * Stats come from G.DEX; only the traits and the starting move go here.
  */
 G.STARTERS = [
   { dex: 1,   start: 'vine-whip',     traits: ['leal', 'paciente'] },
@@ -39,13 +39,13 @@ G.STARTERS = [
 G.STARTER_BY = {};
 for (const s of G.STARTERS) G.STARTER_BY[s.dex] = s;
 
-/** Movimiento inicial de cualquier Pokémon (starter o del gacha). */
+/** Starting move of any Pokémon (starter or from the gacha). */
 G.startMoveOf = dex => {
   const s = G.STARTER_BY[dex];
   return s ? s.start : G.Moves.startFor(G.DEX_BY[dex]);
 };
 
-/** Descripción corta de cada rasgo, para la pantalla de resultado. */
+/** Short description of each trait, for the result screen. */
 G.TRAIT_TEXT = {
   valiente:  'No te lo piensas dos veces cuando alguien necesita ayuda.',
   impulsivo: 'Actúas primero y piensas después. ¡A veces sale bien!',
@@ -108,12 +108,12 @@ G.PERSONALITY_TEST = [
     { t: 'Ser el mejor.',                            p: { orgulloso: 2, tenaz: 1 } } ] }
 ];
 
-/** Puntuaciones de rasgos -> { trait, dex } con el compañero que mejor encaja. */
+/** Trait scores -> { trait, dex } with the partner that fits best. */
 G.personalityResult = scores => {
   const trait = Object.keys(scores).sort((a, b) => scores[b] - scores[a])[0];
   let best = [], bestScore = -1;
   for (const s of G.STARTERS) {
-    // El rasgo principal pesa el doble.
+    // The main trait counts double.
     const v = (scores[s.traits[0]] || 0) * 2 + (scores[s.traits[1]] || 0);
     if (v > bestScore) { bestScore = v; best = [s]; }
     else if (v === bestScore) best.push(s);

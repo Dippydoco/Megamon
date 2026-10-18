@@ -1,18 +1,18 @@
-/* ============ net.js — conexión entre los jugadores de una sala ============
- * Topología en estrella: el ANFITRIÓN habla con cada invitado; los invitados
- * sólo hablan con el anfitrión (él reenvía lo que haga falta).
+/* ============ net.js — connection between the players in a room ============
+ * Star topology: the HOST talks to each guest; guests
+ * only talk to the host (it forwards whatever is needed).
  *
- * Dos caminos, a la vez:
- *   directo  WebRTC (canal de datos entre navegadores, sin pasar por ningún
- *            servidor). La negociación (señalización) va por la base de datos.
- *            Sólo con STUN gratuito de Google: si la red no deja conectar
- *            directo (algunos routers y datos móviles), esa pareja no puede
- *            jugar junta. El TURN de Cloudflare se QUITÓ el 15-10-2026 (de pago).
- *   relé     (APAGADO) los mensajes irían por la Realtime Database:
- *            rooms/{sala}/q/{destinatario}/{id}, a 1 $ el GB.
+ * Two paths, at the same time:
+ *   direct   WebRTC (data channel between browsers, without going through any
+ *            server). The negotiation (signalling) goes through the database.
+ *            Only with Google's free STUN: if the network doesn't allow a direct
+ *            connection (some routers and mobile data), that pair can't
+ *            play together. Cloudflare's TURN was REMOVED on 15-10-2026 (paid).
+ *   relay    (OFF) messages would go through the Realtime Database:
+ *            rooms/{room}/q/{recipient}/{id}, at $1 per GB.
  *
- * Se envía por el canal directo si está abierto; si no, por el relé. El que
- * recibe escucha los dos, así que no hace falta ponerse de acuerdo.
+ * It sends over the direct channel if it's open; if not, over the relay. The
+ * receiver listens to both, so there's no need to agree.
  *
  * API:  open(roomId, isHost, hostUid) · close() · send(to, msg) · toHost(msg)
  *       broadcast(msg) · on(fn(from, msg)) · onPeer(fn(uid, state))
@@ -20,29 +20,29 @@
  */
 G.Net = (() => {
   const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
-  const DIRECT_TIMEOUT = 9000;     // ms para conseguir canal directo antes de usar el relé
-  // Relé por la Realtime Database ENCENDIDO otra vez en Megamon (17-10-2026): el proyecto está en el
-  // plan gratuito (Spark), así que no cuesta nada, y sin él dos jugadores en la misma wifi (o con
-  // routers que no dejan la conexión directa) no podían jugar juntos. Sólo se usa si el canal
-  // directo no se consigue; si luego se consigue, se pasa a él. (El original lo apagó: a 1 $ el GB.)
-  // Si el proyecto pasa a un plan de pago, mira el gasto de la Realtime Database.
+  const DIRECT_TIMEOUT = 9000;     // ms to get a direct channel before using the relay
+  // Relay through the Realtime Database turned ON again in Megamon (17-10-2026): the project is on the
+  // free plan (Spark), so it costs nothing, and without it two players on the same wifi (or with
+  // routers that don't allow the direct connection) couldn't play together. It's only used if the direct
+  // channel can't be established; if it's established later, it switches to it. (The original turned it off: at $1 per GB.)
+  // If the project moves to a paid plan, check the Realtime Database spending.
   const ALLOW_RELAY = true, RETRY_MS = 15000;
 
 
-  // Si una conexión directa que ya iba bien se cae, se intenta rehacer durante este
-  // tiempo antes de dar a esa persona por perdida (un corte de wifi de unos segundos
-  // ya no te echa de la partida).
+  // If a direct connection that was working drops, it tries to rebuild it during this
+  // time before giving that person up for lost (a wifi drop of a few seconds
+  // no longer kicks you out of the run).
   const RECOVER_MS = 25000, DISCONNECT_GRACE = 8000;
-  const recover = new Map();       // uid -> hora límite para recuperar la conexión
-  let members = null;              // uids que hay ahora en la sala (según la base de datos)
+  const recover = new Map();       // uid -> deadline for recovering the connection
+  let members = null;              // uids currently in the room (according to the database)
 
-  // Registro de por qué se cae la gente (consola + localStorage 'megamon_netlog').
+  // Log of why people drop (console + localStorage 'megamon_netlog').
   const history = [];
   function note(ev, u, extra) {
     const r = { t: new Date().toISOString().slice(11, 19), ev, u: u ? String(u).slice(0, 6) : '', x: extra || '' };
     history.push(r); if (history.length > 40) history.shift();
     console.warn('[Net]', r.t, ev, r.u, r.x);
-    try { localStorage.setItem('megamon_netlog', JSON.stringify(history)); } catch (e) { /* nada */ }
+    try { localStorage.setItem('megamon_netlog', JSON.stringify(history)); } catch (e) { /* nothing */ }
   }
 
   let rtdb = null, uid = null, roomId = null, isHost = false, hostUid = null;
@@ -91,8 +91,8 @@ G.Net = (() => {
       if (m.sig) onSignal(m.f, m.sig);
       else deliver(m.f, m.d);
     });
-    // Invitado: hueco para el anfitrión desde ya (se sustituye al llegar su
-    // oferta). Así, si no llega nunca, se sigue por el relé y se sabe cuándo se va.
+    // Guest: a slot for the host from now on (replaced when its
+    // offer arrives). That way, if it never arrives, it carries on over the relay and we know when it leaves.
     if (!isHost) {
       const p = { pc: null, dc: null, mode: 'connecting', timer: 0 };
       p.timer = setTimeout(() => { if (p.mode === 'connecting') { p.mode = ALLOW_RELAY ? 'relay' : 'failed'; emitPeer(hostId); } }, DIRECT_TIMEOUT + 3000);
@@ -107,7 +107,7 @@ G.Net = (() => {
     roomId = null; isHost = false; hostUid = null;
   }
 
-  /** El anfitrión llama a esto cuando cambian los miembros de la sala. */
+  /** The host calls this when the room's members change. */
   function syncMembers(uids) {
     if (!roomId) return;
     members = uids;
@@ -115,8 +115,8 @@ G.Net = (() => {
       for (const u of uids) if (u !== uid && !peers.has(u)) connect(u);
       for (const u of [...peers.keys()]) {
         if (uids.includes(u)) continue;
-        // Su plaza en la sala ha desaparecido (por ejemplo un corte de la base de datos),
-        // pero si el canal directo sigue abierto, sigue en la partida.
+        // Their place in the room has disappeared (for example a database outage),
+        // but if the direct channel is still open, they stay in the run.
         const p = peers.get(u);
         if (p && p.mode === 'direct' && p.dc && p.dc.readyState === 'open') { note('room-spot-missing (link still open)', u); continue; }
         drop(u);
@@ -133,7 +133,7 @@ G.Net = (() => {
     peers.set(u, p);
     const dg = diagOf(u);
     dg.tries++; dg.loc = {}; dg.rem = {}; dg.sigOut = 0; dg.sigIn = 0; dg.ice = '-'; dg.gather = '-'; dg.err = []; dg.at = Date.now();
-    // Sin WebRTC (navegador antiguo o bloqueado): directamente por el relé.
+    // No WebRTC (old or blocked browser): straight over the relay.
     let pc;
     try { pc = p.pc = new RTCPeerConnection({ iceServers: ICE }); }
     catch (e) { p.mode = 'relay'; emitPeer(u); return p; }
@@ -148,12 +148,12 @@ G.Net = (() => {
       if (s === 'connected') { clearTimeout(p.discT); return; }
       if (p.mode === 'closed' || peers.get(u) !== p) return;
       if (s === 'disconnected') {
-        // Suele arreglarse solo en unos segundos; si no, se rehace la conexión.
+        // It usually fixes itself in a few seconds; if not, the connection is rebuilt.
         clearTimeout(p.discT);
         p.discT = setTimeout(() => { if (peers.get(u) === p && pc.connectionState !== 'connected') lose(u, p, 'ice-disconnected'); }, DISCONNECT_GRACE);
       } else if (s === 'failed') { clearTimeout(p.discT); lose(u, p, 'ice-failed'); }
     };
-    // Si en unos segundos no hay canal directo, se sigue por el relé.
+    // If there's no direct channel within a few seconds, it carries on over the relay.
     p.timer = setTimeout(() => { if (p.mode === 'connecting') useRelay(u); }, DIRECT_TIMEOUT);
     emitPeer(u);
     return p;
@@ -170,11 +170,11 @@ G.Net = (() => {
     };
   }
 
-  /** Una conexión que iba bien se ha caído: se intenta rehacer antes de rendirse. */
+  /** A connection that was working has dropped: try to rebuild it before giving up. */
   function lose(u, p, why) {
     if (!p || p.mode === 'closed' || peers.get(u) !== p) return;
     note('lost: ' + why, u, 'wasDirect=' + !!p.wasDirect);
-    const gone = isHost && members && !members.includes(u);      // se ha ido de la sala: no hay que esperarle
+    const gone = isHost && members && !members.includes(u);      // they've left the room: no need to wait for them
     if (!gone && (p.wasDirect || recover.has(u))) {
       if (!recover.has(u)) recover.set(u, Date.now() + RECOVER_MS);
       p.mode = 'connecting';
@@ -189,10 +189,10 @@ G.Net = (() => {
     if (!p || p.mode === 'direct' || p.mode === 'closed' || p.mode === 'failed') return;
     const dl = recover.get(u);
     if (dl && Date.now() < dl && !ALLOW_RELAY) {
-      // Recuperando: el anfitrión vuelve a ofrecer la conexión (con otra llamada nueva);
-      // el invitado espera esa oferta hasta el límite.
+      // Recovering: the host offers the connection again (with a new call);
+      // the guest waits for that offer until the deadline.
       clearTimeout(p.timer); clearTimeout(p.discT);
-      try { if (p.pc) p.pc.close(); } catch (e) { /* nada */ }
+      try { if (p.pc) p.pc.close(); } catch (e) { /* nothing */ }
       p.mode = 'connecting';
       if (isHost) p.timer = setTimeout(() => { if (peers.get(u) === p && roomId && (!members || members.includes(u))) { drop(u, true); connect(u); } else if (peers.get(u) === p) { recover.delete(u); useRelay(u); } }, 1500);
       else p.timer = setTimeout(() => { if (peers.get(u) === p && p.mode !== 'direct') useRelay(u); }, Math.max(500, dl - Date.now() + 50));
@@ -200,19 +200,19 @@ G.Net = (() => {
     }
     if (dl) { recover.delete(u); note('gave up recovering', u, p.why || ''); }
     if (ALLOW_RELAY) { p.mode = 'relay'; emitPeer(u); return; }
-    // Sin relé: no se puede jugar con esa persona por ahora. El anfitrión reintenta.
+    // No relay: you can't play with that person for now. The host retries.
     clearTimeout(p.timer);
     p.mode = 'failed';
-    try { if (p.pc) p.pc.close(); } catch (e) { /* nada */ }
+    try { if (p.pc) p.pc.close(); } catch (e) { /* nothing */ }
     emitPeer(u);
     if (isHost) p.timer = setTimeout(() => {
       if (peers.get(u) !== p || p.mode !== 'failed' || !roomId) return;
-      if (members && !members.includes(u)) { drop(u); return; }      // ya no está en la sala
+      if (members && !members.includes(u)) { drop(u); return; }      // no longer in the room
       drop(u, true); connect(u);
     }, RETRY_MS);
   }
 
-  /** Anfitrión: abre conexión con un invitado. */
+  /** Host: opens a connection with a guest. */
   async function connect(u) {
     if (!roomId || peers.has(u)) return;
     const p = newPeer(u);
@@ -225,7 +225,7 @@ G.Net = (() => {
     } catch (e) { useRelay(u); }
   }
 
-  const pendingIce = new Map();     // candidatos que llegan antes que la oferta
+  const pendingIce = new Map();     // candidates arriving before the offer
 
   async function onSignal(from, sig) {
     let p = peers.get(from);
@@ -264,13 +264,13 @@ G.Net = (() => {
     if (!p) return;
     clearTimeout(p.timer);
     p.mode = 'closed';
-    try { if (p.dc) p.dc.close(); } catch (e) { /* nada */ }
-    try { if (p.pc) p.pc.close(); } catch (e) { /* nada */ }
+    try { if (p.dc) p.dc.close(); } catch (e) { /* nothing */ }
+    try { if (p.pc) p.pc.close(); } catch (e) { /* nothing */ }
     peers.delete(u);
     if (!silent) emitPeer(u);
   }
 
-  // ---------------- envío / recepción ----------------
+  // ---------------- send / receive ----------------
 
   function relayPush(to, env) {
     if (!rtdb || !roomId) return;
@@ -282,10 +282,10 @@ G.Net = (() => {
     const p = peers.get(to);
     stats.sent++;
     if (p && p.dc && p.dc.readyState === 'open') {
-      try { p.dc.send(JSON.stringify(msg)); return; } catch (e) { /* cae al relé */ }
+      try { p.dc.send(JSON.stringify(msg)); return; } catch (e) { /* falls back to the relay */ }
     }
-    // Sin relé, los datos de la partida no van por la base de datos (se pierden: esa
-    // pareja no está conectada). Sólo pasa el aviso de empezar.
+    // Without the relay, the run's data doesn't go through the database (it's lost: that
+    // pair isn't connected). Only the start notice goes through.
     if (!ALLOW_RELAY && !(msg && msg.k === 'start')) return;
     stats.relaySent++;
     relayPush(to, { f: uid, d: msg });
@@ -338,7 +338,7 @@ G.Net = (() => {
     on(fn) { handlers.add(fn); }, off(fn) { handlers.delete(fn); },
     onPeer(fn) { peerHandlers.add(fn); },
     mode(u) { const p = peers.get(u); return p ? p.mode : 'closed'; },
-    /** ¿Va por el relé (o no hay conexión)? Entonces se manda menos a menudo. */
+    /** Is it going over the relay (or is there no connection)? Then it's sent less often. */
     slow(u) { const p = peers.get(u); return !p || p.mode !== 'direct'; },
     peers() { return [...peers.keys()]; },
     get open_() { return !!roomId; },
@@ -346,7 +346,7 @@ G.Net = (() => {
     get uid() { return uid; },
     get hostUid() { return hostUid; },
     stats, history,
-    /** Motivo de la última caída de `u` (para avisar al jugador). */
+    /** Reason for `u`'s last drop (to tell the player). */
     why(u) { const p = peers.get(u); return p && p.why || ''; }
   };
 })();

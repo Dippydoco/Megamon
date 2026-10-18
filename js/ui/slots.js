@@ -1,14 +1,14 @@
-/* ============ slots.js — tragaperras pixel art del gacha ============
- * Se dibuja entera en un <canvas> a resolución de arte (176×170) y se escala
- * sin suavizado, como el resto del juego.
+/* ============ slots.js — the gacha's pixel-art slot machine ============
+ * Drawn entirely on a <canvas> at art resolution (176×170) and scaled
+ * without smoothing, like the rest of the game.
  *
- *   palanca → giran los 3 rodillos → paran uno a uno en el símbolo de la
- *   rareza que ha salido (Poké, Super, Ultra, Lujo y Master Ball, como en
- *   G.Icons.rarity; la estrella roja es el shiny). Si es Épica, Legendaria o shiny, el
- *   último rodillo se hace esperar y las luces se vuelven locas.
- *   La ×10 son 10 tiradas rápidas; cada premio cae como una bola a la bandeja.
+ *   lever → the 3 reels spin → they stop one by one on the symbol of the
+ *   rarity that came up (Poké, Great, Ultra, Luxury and Master Ball, as in
+ *   G.Icons.rarity; the red star is the shiny). If it's Epic, Legendary or shiny, the
+ *   last reel keeps you waiting and the lights go wild.
+ *   The ×10 is 10 quick pulls; each prize drops into the tray as a ball.
  *
- * Un clic acelera la animación.
+ * A click speeds up the animation.
  */
 G.Slots = (() => {
   const W = 176, H = 170, CELL = 30;
@@ -33,7 +33,7 @@ G.Slots = (() => {
     });
   }
 
-  /** Anima las tiradas. → Promise que se resuelve al terminar. */
+  /** Animates the pulls. → Promise that resolves when it finishes. */
   async function play(canvas, results) {
     cv = canvas; ctx = cv.getContext('2d');
     fast = false;
@@ -60,7 +60,7 @@ G.Slots = (() => {
       const big = r.rarity >= 4 || r.shiny;
       for (let k = 0; k < 3; k++) {
         if (k === 2 && big) {
-          // Suspense: el último rodillo frena despacio y las luces parpadean.
+          // Suspense: the last reel slows down gently and the lights blink.
           st.frenzy = 1;
           st.led = r.shiny ? '¡¿SHINY?!' : r.rarity === 5 ? '¡¿LEGENDARIO?!' : '¡¿ÉPICO?!';
           st.ledCol = colOf(r);
@@ -71,7 +71,7 @@ G.Slots = (() => {
         await wait(ten ? 0.08 : 0.32);
       }
       st.frenzy = 0;
-      // Premio.
+      // Prize.
       st.win = { col: colOf(r), t: 0 };
       st.led = (r.shiny ? 'SHINY · ' : '') + G.Gacha.RARITY_NAME[r.rarity].toUpperCase();
       st.ledCol = colOf(r);
@@ -109,7 +109,7 @@ G.Slots = (() => {
     }
   }
 
-  // ---------------- dibujo ----------------
+  // ---------------- drawing ----------------
 
   function frame(now) {
     if (!st) return;
@@ -145,7 +145,7 @@ G.Slots = (() => {
     R(11, 155, 140, 6, C.bodyD);
     R(10, 162, 142, 3, C.dark);
 
-    // --- cartel con bombillas ---
+    // --- sign with light bulbs ---
     R(14, 4, 134, 28, C.dark);
     R(15, 5, 132, 26, C.trimD);
     R(18, 8, 126, 20, C.led);
@@ -158,12 +158,12 @@ G.Slots = (() => {
     ctx.fillStyle = C.dark; ctx.fillText('POKé SLOTS', W / 2 + 1, 23);
     ctx.fillStyle = C.trim; ctx.fillText('POKé SLOTS', W / 2, 22);
 
-    // --- ventana de rodillos ---
+    // --- reel window ---
     R(20, 38, 122, 58, C.dark);
     R(21, 39, 120, 56, C.trimD);
     R(23, 41, 116, 52, C.glass);
     st.reels.forEach((rl, k) => drawReel(rl, REEL_X[k]));
-    // Línea de premio.
+    // Prize line.
     const lineCol = st.win ? st.win.col : '#ff5f6d';
     R(22, MID - 1, 3, 2, lineCol); R(137, MID - 1, 3, 2, lineCol);
     if (st.win && st.win.t < 1.2 && Math.floor(st.win.t * 10) % 2 === 0) {
@@ -202,7 +202,7 @@ G.Slots = (() => {
     R(157, top, 4, bot - top, C.chromeD); R(157, top, 2, bot - top, C.chrome);
     disc(159, knobY, 6, C.dark); disc(159, knobY, 5, '#ff4d4d'); R(156, knobY - 3, 2, 2, '#ffd0d0');
 
-    // --- chispas del premio ---
+    // --- prize sparkles ---
     for (const p of st.sparks) R(Math.round(p.x), Math.round(p.y), 2, 2, p.col);
   }
 
@@ -242,7 +242,7 @@ G.Slots = (() => {
       ctx.globalAlpha = 1;
       G.Icons.draw(ctx, rl.sym, x + 6, MID - 12 + by, 24);
     }
-    // Sombra curva del rodillo (arriba y abajo más oscuro).
+    // Curved shadow of the reel (darker at the top and bottom).
     ctx.globalAlpha = 0.28;
     R(x, REEL_Y, REEL_W, 6, C.reelD); R(x, REEL_Y + REEL_H - 6, REEL_W, 6, C.reelD);
     ctx.globalAlpha = 0.18;
