@@ -77,10 +77,18 @@ G.Spawner = (() => {
     return Math.random() < SHINY_RATE;
   }
 
+  // Supports never gang up: at most this many of each alive at once (on the whole map, so in co-op it's for the
+  // whole team: only the host spawns enemies). Their minions are ordinary enemies and don't count.
+  const SUPPORT_MAX = { healer: 3, shielder: 3, summoner: 3 };
+
   function spawnOne(pl, t, angle) {
-    let def = G.U.pick(G.Enemies.bagAt(t));
-    // Healers never gang up: with 3 already alive, pick something else (a few tries).
-    for (let i = 0; i < 4 && def.behavior === 'healer' && G.EnemyMgr.all().filter(x => !x.dead && x.behavior === 'healer').length >= 3; i++) def = G.U.pick(G.Enemies.bagAt(t));
+    const bag = G.Enemies.bagAt(t);
+    const alive = {};
+    for (const x of G.EnemyMgr.all()) if (!x.dead && SUPPORT_MAX[x.behavior]) alive[x.behavior] = (alive[x.behavior] || 0) + 1;
+    const full = b => SUPPORT_MAX[b] && (alive[b] || 0) >= SUPPORT_MAX[b];
+    const open = bag.filter(d => !full(d.behavior));
+    if (!open.length) return null;                 // (only supports left in this tier's bag and all of them are full)
+    const def = G.U.pick(open);
     const pt = freePoint(pl, angle == null ? Math.random() * 6.2832 : angle, isFlyer(def));
     if (!pt) return null;
     const shiny = rollShiny(def.dex);
