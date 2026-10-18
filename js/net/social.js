@@ -616,8 +616,11 @@ G.Social = (() => {
     const ref = fb.fs.collection('histories').doc(uid);
     const done = () => { histPub = key; try { localStorage.setItem(lsKey, key); } catch (e) { /* nada */ } };
     const fail = e => console.warn('[Social] history:', e.code || e.message);
-    if (!on || !list.length) ref.delete().then(done).catch(fail);
-    else ref.set({ at: firebase.firestore.FieldValue.serverTimestamp(), runs: list.slice(0, G.DB.HISTORY_MAX) }).then(done).catch(fail);
+    // Firestore refuses arrays inside arrays (a run has moves and teammates lists), so each run goes up as a JSON string.
+    try {
+      if (!on || !list.length) ref.delete().then(done).catch(fail);
+      else ref.set({ at: firebase.firestore.FieldValue.serverTimestamp(), runs: list.slice(0, G.DB.HISTORY_MAX).map(r => JSON.stringify(r)) }).then(done).catch(fail);
+    } catch (e) { fail(e); }   // never let this break the end of a run
   }
   G.Settings.on(k => { if (k === 'shareHist') publishHistory(); });
 
@@ -629,7 +632,8 @@ G.Social = (() => {
     const c = histCache.get(other);
     if (c && Date.now() - c.at < 3 * 60 * 1000) return c.v;
     const d = await fb.fs.collection('histories').doc(other).get().catch(() => null);
-    const v = d && d.exists ? G.DB.cleanHistory((d.data() || {}).runs) : [];
+    const raw = d && d.exists ? ((d.data() || {}).runs || []) : [];
+    const v = G.DB.cleanHistory(raw.map(r => { try { return typeof r === 'string' ? JSON.parse(r) : r; } catch (e) { return null; } }));
     histCache.set(other, { at: Date.now(), v });
     return v;
   }

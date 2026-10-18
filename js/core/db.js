@@ -108,6 +108,8 @@ G.DB = (() => {
    */
   const HISTORY_MAX = 100;
   function cleanHistory(list) {
+    // In the cloud, `m` and `mt` are stored as JSON strings (Firestore refuses arrays inside arrays): see packSave.
+    const arr = v => { if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return []; } } return Array.isArray(v) ? v : []; };
     const n = v => (Number.isFinite(+v) && +v > 0 ? Math.floor(+v) : 0);
     const out = [], seen = new Set();
     for (const e of Array.isArray(list) ? list : []) {
@@ -116,11 +118,11 @@ G.DB = (() => {
       out.push({
         id: n(e.id), d: n(e.d), sh: e.sh ? 1 : 0, t: Math.min(n(e.t), 86400), lv: n(e.lv), k: n(e.k), b: n(e.b), c: n(e.c),
         dd: n(e.dd), dt: n(e.dt),
-        m: (Array.isArray(e.m) ? e.m : []).filter(x => Array.isArray(x) && typeof x[0] === 'string' && (!G.Moves || G.Moves.BY_ID[x[0]]))
+        m: arr(e.m).filter(x => Array.isArray(x) && typeof x[0] === 'string' && (!G.Moves || G.Moves.BY_ID[x[0]]))
             .slice(0, 12).map(x => [x[0], Math.min(n(x[1]), 99)]),
         it: typeof e.it === 'string' && (!G.Items || !e.it || G.Items.BY[e.it]) ? e.it : '',
         x: e.x ? 1 : 0, g: e.g ? 1 : 0,
-        mt: (Array.isArray(e.mt) ? e.mt : []).filter(x => Array.isArray(x)).slice(0, 4)
+        mt: arr(e.mt).filter(x => Array.isArray(x)).slice(0, 4)
             .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
         ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0,
         kb: e.x && G.Killer ? G.Killer.clean(e.kb) : 0
@@ -542,7 +544,9 @@ G.DB = (() => {
   }
 
   const docRef = () => fs.collection('saves').doc(uid);
-  const plain = s => JSON.parse(JSON.stringify(s));      // Firestore no admite undefined
+  const plain = s => JSON.parse(JSON.stringify(s));
+  /** The copy that goes to Firestore: run history has lists of lists (moves, teammates), which Firestore refuses, so they go as JSON strings. */
+  const packSave = s => Object.assign({}, s, { history: (s.history || []).map(e => Object.assign({}, e, { m: JSON.stringify(e.m || []), mt: JSON.stringify(e.mt || []) })) });      // Firestore no admite undefined
 
   /** Abre la partida de la nube de un usuario recién autenticado. */
   async function openCloud(u, opts = {}) {
@@ -617,7 +621,7 @@ G.DB = (() => {
       const snap = await tx.get(ref);
       const remote = snap.exists ? migrate(snap.data().save) : null;
       merged = remote ? merge(plain(fold(save)), remote) : plain(fold(save));
-      const doc = { save: merged, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), v: VERSION };
+      const doc = { save: packSave(merged), updatedAt: firebase.firestore.FieldValue.serverTimestamp(), v: VERSION };
       if (snap.exists && snap.data().ban === true) doc.ban = true;
       tx.set(ref, doc);
     });
