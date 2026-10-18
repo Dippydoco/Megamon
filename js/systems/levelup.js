@@ -69,6 +69,7 @@ G.LevelUp = (() => {
         title: m.name + ' → ' + ev.name, desc: ev.text,
         apply: p => {
           G.Moves.evolve(m);
+          G.RunLog.evo(m.id);
           G.FX.ring(p.x, p.y, 8, 120, '#ffd23f', 0.8, 6);
           G.FX.burst(p.x, p.y - p.bodyH * 0.5, '#ffe14d', 40, 240);
           G.Audio.sfx('legend');

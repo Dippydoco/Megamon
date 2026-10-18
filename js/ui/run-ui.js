@@ -42,6 +42,7 @@ G.RunUI = (() => {
     if (coopMode) $('cards').classList.add('done');
     else G.UI.hide('scr-levelup');
     G.UI.toast('Level-up skipped (' + skipsLeft() + ' left)');
+    G.RunLog.skip();
     cb({ apply() {} });
   }
 
@@ -55,6 +56,7 @@ G.RunUI = (() => {
 
   function renderCards(list) {
     offers = list;
+    G.RunLog.offer(list);              // run details: what was offered (a reroll calls this again)
     const left = rerollsLeft();
     $('lvl-rr-n').textContent = left;
     $('lvl-reroll').classList.toggle('hidden', left <= 0);
@@ -88,6 +90,7 @@ G.RunUI = (() => {
     if (!offers || !offers[i]) return;
     const c = offers[i], cb = offerCb;
     offers = null; offerCb = null;
+    G.RunLog.pick(i);
     $('lvl-reroll').classList.add('hidden');
     $('lvl-skip').classList.add('hidden');
     if (coopMode) {

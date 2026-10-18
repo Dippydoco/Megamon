@@ -149,6 +149,7 @@ G.Player = class Player {
       return;
     }
     this.active = i;
+    G.RunLog.switched(this);
     G.Projectiles.clearOrbs(this);
     G.Audio.sfx('select');
     // (Not burst moves: they keep their own long cooldown, or switching back and forth would reset it.)
@@ -198,6 +199,7 @@ G.Player = class Player {
     const a = this.slots.indexOf(cur);
     this.active = a >= 0 ? a : this.slots.indexOf(target);
     this.bonds = Math.max(0, this.bonds - 1);
+    G.RunLog.bond(this, target.length);
     G.Projectiles.clearOrbs(this);
     return target;
   }
@@ -314,7 +316,7 @@ G.Player = class Player {
   equip(id) {
     if (this.item) G.Items.BY[this.item].off(this);
     this.item = id;
-    if (id) G.Items.BY[id].on(this);
+    if (id) { G.Items.BY[id].on(this); G.RunLog.item(this, id); }
   }
 
   /** Shell Bell: a little health from the damage you deal (cap 4/s). */
@@ -337,6 +339,7 @@ G.Player = class Player {
     if (this.power) this.power.def.off(this);
     def.on(this);
     this.power = { def, t: dur, dur };
+    G.RunLog.power(this, def.id);
   }
 
   addBuff(stat, amount, dur, maxStacks) {

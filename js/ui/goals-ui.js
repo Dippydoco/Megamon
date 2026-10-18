@@ -53,6 +53,26 @@
       runList(box, list, histState, render);
     }
 
+    /**
+     * Recent runs carry details (systems/runlog.js): each move's share of the damage, with a bar,
+     * its level and how long it was your active move. Older runs just list the moves.
+     */
+    function dmgByMove(e) {
+      const z = e.z;
+      if (!z || !z.mv || !z.mv.length) return '';
+      const rows = z.mv.map(([c, lv, ev, d, a]) => ({ id: G.RunLog.idOf(c), lv, ev, d, a })).filter(r => r.id && G.Moves.BY_ID[r.id]);
+      if (!rows.length) return '';
+      const total = rows.reduce((s, r) => s + r.d, 0) || 1, top = Math.max(...rows.map(r => r.d)) || 1;
+      rows.sort((a, b) => b.d - a.d);
+      return `<div class="hist-dmg"><span>Damage by move</span>${rows.map(r => {
+        const m = G.Moves.BY_ID[r.id], name = r.ev && G.Moves.EVO[r.id] ? G.Moves.EVO[r.id][0] : m.name;
+        return `<div class="hist-dmg-row" title="Active for ${fmt(r.a)} of the run">
+          <i>${G.Icons.html('move:' + r.id, 16)} ${esc(name)} <small>Lv.${r.lv}${r.ev ? ' ★' : ''}</small></i>
+          <b class="hist-dmg-bar"><em style="width:${(r.d / top * 100).toFixed(1)}%;background:${G.U.TYPE_COLOR[m.type]}"></em></b>
+          <small translate="no">${num(r.d)} · ${Math.round(r.d / total * 100)}%</small></div>`;
+      }).join('')}</div>`;
+    }
+
     /** A list of runs (yours, or another player's from their profile). st = { shown, open } keeps the scroll-more and open state. */
     function runList(box, list, st, rerender) {
       const best = Math.max(...list.map(e => e.t));
@@ -85,8 +105,8 @@
               ${e.kb ? `<div style="grid-column:1/-1"><span>Defeated by</span><b translate="no">${esc(e.kb.n)} · ${esc(e.kb.a)}${e.kb.ty ? ' (' + esc(e.kb.ty) + ')' : ''} · ${num(e.kb.h)} damage</b></div>` : ''}
               ${e.ar ? `<div style="grid-column:1/-1"><span>Arceus</span><b>${G.Icons.html('star', 14)} Reached Arceus: ${fmt(e.ar[0])} in the fight · ${e.ar[1]} legendaries beaten</b></div>` : ''}
             </div>
-            <div class="hist-moves"><span>Moves</span>
-              ${e.m.length ? e.m.map(([id, lv]) => `<i>${G.Icons.html('move:' + id, 16)} ${esc(G.Moves.BY_ID[id].name)} Lv.${lv}</i>`).join('') : '<i>—</i>'}</div>
+            ${dmgByMove(e) || `<div class="hist-moves"><span>Moves</span>
+              ${e.m.length ? e.m.map(([id, lv]) => `<i>${G.Icons.html('move:' + id, 16)} ${esc(G.Moves.BY_ID[id].name)} Lv.${lv}</i>`).join('') : '<i>—</i>'}</div>`}
             ${mates.length ? `<div class="hist-mates"><span>Teammates</span><div class="hist-mate-row"></div></div>` : ''}
           </div>`;
         el.querySelector('.hist-mon').appendChild(G.UI.spriteCanvas(e.d, 44, 40, { scale: 1, shiny: !!e.sh }));

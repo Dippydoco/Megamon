@@ -22,7 +22,7 @@ G.Combat = (() => {
     if (pl.dead) return;
     // Bonds: every move in the active slot, each with its own cooldown.
     const group = pl.activeGroup();
-    for (const m of group) tickMove(dt, pl, m, now);
+    for (const m of group) { tickMove(dt, pl, m, now); G.RunLog.active(pl, m.id, dt); }
     // Burst moves charge in the background too (the rest only charge while active).
     // When one is ready it chimes and its slot glows, so you know it's time to switch to it.
     for (const m of pl.moves) {
@@ -44,6 +44,7 @@ G.Combat = (() => {
     }
     m.t = Math.max(0.05, m.cd * pl.cdMul);
     pl.cast(m);
+    G.RunLog.cast(pl, m.id);
     if (G.Coop.active) G.Coop.cast(pl, m);
     // Bond: its icon flashes on the HUD when cast (one that bursts right next to the
     // enemy, like Ember after Quick Attack, can hardly be seen).
@@ -103,7 +104,7 @@ G.Combat = (() => {
   }
 
   function payload(m) {
-    return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type, fx: m.fx || null };
+    return { burn: m.burn || 0, poison: m.poison || 0, slow: m.slow || 0, knock: m.knock || 0, mtype: m.type, fx: m.fx || null, mid: m.id };
   }
 
   /** Type chart × weather for an attack of type `type` against `e`. */
@@ -786,11 +787,11 @@ G.Combat = (() => {
     dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
     const lethal = e.hp <= dmg;
     e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(m.type, e.types)));
-    if (!ghost) pl.onDealt(dmg);
+    if (!ghost) { pl.onDealt(dmg); G.RunLog.dmg(pl, m.id, dmg); }
     pl.dmgDealt += dmg;
     if (dmg > pl.bigHit) pl.bigHit = dmg;
-    if (m.burn) e.applyBurn(m.burn);
-    if (m.poison) e.applyPoison(m.poison);
+    if (m.burn) e.applyBurn(m.burn, m.id);
+    if (m.poison) e.applyPoison(m.poison, m.id);
     if (m.slow) e.applySlow(m.slow);
     if (m.fx) hitFx(pl, e, dmg, m.fx, lethal);
     itemHit(pl, e);
@@ -940,8 +941,9 @@ G.Combat = (() => {
         pl.dmgDealt += p.dmg * k;
         if (p.dmg * k > pl.bigHit) pl.bigHit = p.dmg * k;
         pl.onDealt(p.dmg * k);
-        if (p.burn) e.applyBurn(p.burn);
-        if (p.poison) e.applyPoison(p.poison);
+        G.RunLog.dmg(pl, p.mid, p.dmg * k);
+        if (p.burn) e.applyBurn(p.burn, p.mid);
+        if (p.poison) e.applyPoison(p.poison, p.mid);
         if (p.slow) e.applySlow(p.slow);
         if (p.fx) hitFx(pl, e, p.dmg * k, p.fx, lethal);
         itemHit(pl, e);

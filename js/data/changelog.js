@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T22:23Z', title: 'Damage by move in your run history', new: [
+    'Open a run in Missions → History to see how much damage each of your moves did (burn and poison included), with its share and how long it was your active move. It works for runs from now on, and on other players\' shared histories too.'
+  ], chg: [
+    'Recent runs now also remember the upgrades and level-up cards you took and how the run went, to help balance the game. The privacy notice and the Share my run history setting explain it.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T21:35Z', title: 'Shiny star on your health card', new: [
     'Playing a shiny Pokémon now shows its little red star next to the name on your health card, and on your teammates\' cards in co-op.'
   ] },

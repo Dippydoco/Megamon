@@ -71,6 +71,7 @@ G.Weather = (() => {
 
   function start(kind, dur) {
     cur = { kind, t: 0, dur };
+    G.RunLog.weather(kind);
     const d = KINDS[kind];
     G.Spawner.say(d.name + ': ' + d.hint, 3.4, true);
     G.Audio.sfx('biome');

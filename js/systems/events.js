@@ -72,6 +72,7 @@ G.Events = (() => {
 
   function start(id, time, players) {
     last = id;
+    G.RunLog.event(id);
     if (id === 'horde') {
       const types = G.Enemies.hordeTypes(time);
       if (!types.length) return start('gold', time, players);

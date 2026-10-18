@@ -123,6 +123,7 @@ G.Rift = (() => {
 
   /** On each computer: the trip to the arena. */
   function begin(cfg) {
+    G.RunLog.rift('in', cfg.zy);
     const pl = G.Game.player;
     const ts = TS();
     if (cfg.zy) G.Sprites.preload([MEGA_DEX], 8000, !!cfg.shiny);       // Mega Zygarde's sheets, ready before the change
@@ -263,6 +264,7 @@ G.Rift = (() => {
   function won() {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'won'; arena.endT = 5;
+    G.RunLog.rift('w', arena.zy);
     G.Progress.event('rift', { type: arena.btype || arena.type });
     G.Pickups.pullAll();
     G.Spawner.say('You defeated ' + G.DEX_BY[arena.dex].name + '! Grab your reward…', 3.4, true);
@@ -278,6 +280,7 @@ G.Rift = (() => {
   function lost() {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'lost'; arena.endT = 1.2;
+    G.RunLog.rift('l', arena.zy);
     G.Spawner.say(arena.zy ? 'Zygarde has ended your run…' : 'The rift threw you out…', 2.6, true);
     G.Audio.sfx('back');
   }

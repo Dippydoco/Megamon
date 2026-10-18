@@ -127,6 +127,7 @@ G.Game = (() => {
       if (pool.length) pl.addMove(G.U.pick(pool));
       pl.setActive(0);
     }
+    G.RunLog.start(pl);          // run details for balancing (added to the history entry at the end)
 
     teamStats.clear();
     if (coop) {
@@ -350,8 +351,10 @@ G.Game = (() => {
       dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
       mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
       ar: judge ? [Math.floor(judge.time), judge.bosses] : 0,
-      kb: dead && pl.killer ? pl.killer : 0
+      kb: dead && pl.killer ? pl.killer : 0,
+      z: G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 })
     });
+    portalLost = false;
     if (judge) G.Progress.event('judgeEnd', judge);
     G.Judgment.reset();
     G.Progress.event('runEnd', { time, level: pl.level, coins: pl.coins, types: pl.mon.types, group: coop });
@@ -391,6 +394,7 @@ G.Game = (() => {
    * If something trips, that run isn't uploaded to the leaderboard (silently) and that's all.
    */
   let runReal = 0, tampered = false;
+  let portalLost = false;          // the run ended by losing the Zygarde Portal (run details: end 'p')
   function clean() {
     if (tampered) return false;
     if (time > (performance.now() - runReal) / 1000 + 10) return false;
@@ -745,6 +749,7 @@ G.Game = (() => {
     // The run clock stops inside a rift or portal arena (normal rifts and the Zygarde Portal): the fight there has
     // its own countdown, and the minutes spent in it no longer bring biomes, difficulty or Arceus closer.
     if (!G.Rift.inArena) time += dt;
+    G.RunLog.tick(pl, time);
 
     const b = Math.floor(time / 240);
     if (b !== biome && !G.Rift.inArena && !G.Judgment.active) {
@@ -1407,6 +1412,7 @@ G.Game = (() => {
     failRun() {
       if (state === 'over' || !pl) return;
       if (G.Coop.active) { if (!G.Coop.isHost) return; G.Coop.over(summary()); }
+      portalLost = true;
       endRun(true);
     },
     /** Abandons the run in progress (e.g. when signing out from Settings). */

@@ -179,13 +179,14 @@
       this.slow = Math.max(this.slow, factor);
       this.slowT = Math.max(this.slowT, dur);
     }
-    applyBurn(stacks = 1) {
+    /** @param src  id of the local player's move that applied it (run details credit the ticks to it) */
+    applyBurn(stacks = 1, src = null) {
       if (this.remote) { G.Coop.status(this, 'b', stacks); return; }
-      this.burn = Math.min(8, this.burn + stacks); this.burnT = 3;
+      this.burn = Math.min(8, this.burn + stacks); this.burnT = 3; this.burnSrc = src;
     }
-    applyPoison(stacks = 1) {
+    applyPoison(stacks = 1, src = null) {
       if (this.remote) { G.Coop.status(this, 'p', stacks); return; }
-      this.poison = Math.min(8, this.poison + stacks); this.poisonT = 4;
+      this.poison = Math.min(8, this.poison + stacks); this.poisonT = 4; this.poisonSrc = src;
     }
 
     die() {
@@ -308,14 +309,21 @@
       if (this.vulnT > 0) this.vulnT -= dt;
       if (this.burn > 0) {
         this.burnT -= dt; this.burnTick -= dt;
-        if (this.burnTick <= 0) { this.burnTick = 0.5; this.hurt(1.6 * this.burn * (1 + pl.level * 0.06), '#ff9a4d'); }
+        if (this.burnTick <= 0) {
+          this.burnTick = 0.5;
+          const d = 1.6 * this.burn * (1 + pl.level * 0.06);
+          this.hurt(d, '#ff9a4d');
+          G.RunLog.dot(this.burnSrc, d);
+        }
         if (this.burnT <= 0) this.burn = 0;
       }
       if (this.poison > 0) {
         this.poisonT -= dt; this.poisonTick -= dt;
         if (this.poisonTick <= 0) { this.poisonTick = 0.6; // Bosses, rift legends and Arceus' legends resist: a small share of max HP per stack, hard-capped per tick.
           const big = this.boss || this.legend || this.judge;
-          this.hurt(big ? Math.min(this.maxHp * 0.0012 * this.poison, 3 + 14 * this.poison) : this.maxHp * 0.012 * this.poison + 1, '#d47cf0'); }
+          const d = big ? Math.min(this.maxHp * 0.0012 * this.poison, 3 + 14 * this.poison) : this.maxHp * 0.012 * this.poison + 1;
+          this.hurt(d, '#d47cf0');
+          G.RunLog.dot(this.poisonSrc, d); }
         if (this.poisonT <= 0) this.poison = 0;
       }
       if (this.dead) return;

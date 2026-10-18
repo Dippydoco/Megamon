@@ -1153,3 +1153,11 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   #lab .lab-body { grid-template-columns: 1fr; overflow-y: auto; }
   #lab .lab-tablewrap { min-height: 260px; }
 }
+/* Run history: damage by move (recent runs, systems/runlog.js) */
+.hist-dmg > span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+.hist-dmg-row { display: grid; grid-template-columns: minmax(150px, 1.2fr) 1fr auto; gap: 8px; align-items: center; font-size: 13px; margin: 3px 0; }
+.hist-dmg-row i { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-dmg-row i small { color: var(--muted); }
+.hist-dmg-bar { display: block; height: 8px; background: rgba(0,0,0,.35); border-radius: 6px; overflow: hidden; }
+.hist-dmg-bar em { display: block; height: 100%; border-radius: 6px; }
+.hist-dmg-row > small { color: var(--muted); white-space: nowrap; min-width: 92px; text-align: right; }

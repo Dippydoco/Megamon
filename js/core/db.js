@@ -105,8 +105,10 @@ G.DB = (() => {
    *   dd damage dealt · dt damage taken · m [[move, level]] · it item · x 1 = you fell (0 = you quit)
    *   g 1 = in a group · mt [[name, dex, shiny]] teammates · ar [seconds, legendaries] against Arceus (or 0)
    *   kb who defeated you { d dex, n name, a attack, ty type, h damage, e effect } (or 0): see systems/killer.js
+   *   z  run details for balancing (moves' damage, level-up cards, upgrades...): see systems/runlog.js.
+   *      Only the latest DETAIL_MAX runs keep them, so the save stays small.
    */
-  const HISTORY_MAX = 100;
+  const HISTORY_MAX = 100, DETAIL_MAX = 30;
   function cleanHistory(list) {
     // In the cloud, `m` and `mt` are stored as JSON strings (Firestore refuses arrays inside arrays): see packSave.
     const arr = v => { if (typeof v === 'string') { try { v = JSON.parse(v); } catch (e) { return []; } } return Array.isArray(v) ? v : []; };
@@ -125,10 +127,13 @@ G.DB = (() => {
         mt: arr(e.mt).filter(x => Array.isArray(x)).slice(0, 4)
             .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
         ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0,
-        kb: e.x && G.Killer ? G.Killer.clean(e.kb) : 0
+        kb: e.x && G.Killer ? G.Killer.clean(e.kb) : 0,
+        z: e.z && G.RunLog ? G.RunLog.clean(e.z) : 0
       });
     }
-    return out.sort((a, b) => b.id - a.id).slice(0, HISTORY_MAX);
+    const runs = out.sort((a, b) => b.id - a.id).slice(0, HISTORY_MAX);
+    for (let i = 0; i < runs.length; i++) if (!runs[i].z || i >= DETAIL_MAX) delete runs[i].z;
+    return runs;
   }
   /** Records a finished run at the start of the history. */
   function addHistory(entry) {
@@ -546,7 +551,8 @@ G.DB = (() => {
   const docRef = () => fs.collection('saves').doc(uid);
   const plain = s => JSON.parse(JSON.stringify(s));
   /** The copy that goes to Firestore: run history has lists of lists (moves, teammates), which Firestore refuses, so they go as JSON strings. */
-  const packSave = s => Object.assign({}, s, { history: (s.history || []).map(e => Object.assign({}, e, { m: JSON.stringify(e.m || []), mt: JSON.stringify(e.mt || []) })) });      // Firestore no admite undefined
+  const packSave = s => Object.assign({}, s, { history: (s.history || []).map(e => Object.assign({}, e, { m: JSON.stringify(e.m || []), mt: JSON.stringify(e.mt || []) },
+                                                                                     e.z ? { z: JSON.stringify(e.z) } : {})) });      // Firestore no admite undefined
 
   /** Opens the cloud save of a user who has just authenticated. */
   async function openCloud(u, opts = {}) {
