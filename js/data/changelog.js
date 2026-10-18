@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T22:32Z', title: 'Life Orb reworked', chg: [
+    'Life Orb no longer costs health on every attack. It still gives +50% damage, but now you have 30% less max HP while you hold it (Vigor upgrades taken with it give 30% less too). Swapping it for another item gives that max HP back.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T22:29Z', title: 'Fewer support enemies at once', chg: [
     'At most 3 healers, 3 shield-casters and 3 summoners can be alive at the same time (before, only healers had a limit, and it could slip). In co-op the limit is for the whole map, shared by the team. Summoned minions don\'t count.'
   ] },

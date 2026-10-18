@@ -25,8 +25,12 @@ G.Items = (() => {
       on: p => { p.coinMul *= 1.5; }, off: p => { p.coinMul /= 1.5; } },
     { id: 'luckyegg', name: 'Lucky Egg', desc: '+30% experience.',
       on: p => { p.xpMul *= 1.3; }, off: p => { p.xpMul /= 1.3; } },
-    { id: 'lifeorb', name: 'Life Orb', desc: '+50% damage, but each attack costs a little HP.',
-      on: p => { p.atkMul *= 1.5; }, off: p => { p.atkMul /= 1.5; } },
+    // Life Orb (18-10-2026): it used to cost 1% of your max HP on every attack, which nobody wanted.
+    // Now the price is fixed and up front: 30% less max HP while you hold it (Vigor picks are cut too,
+    // in Player.addMaxHp). Taking it off gives that max HP back, but doesn't heal you.
+    { id: 'lifeorb', name: 'Life Orb', desc: '+50% damage, but 30% less max HP.',
+      on: p => { p.atkMul *= 1.5; const cut = Math.round(p.maxHp * 0.3); p.maxHp -= cut; p.hp = Math.min(p.hp, p.maxHp); p._orbCut = cut; },
+      off: p => { p.atkMul /= 1.5; p.maxHp += p._orbCut || 0; p._orbCut = 0; } },
     { id: 'choicescarf', name: 'Choice Scarf', desc: '+35% speed.',
       on: p => { p.spdMul *= 1.35; }, off: p => { p.spdMul /= 1.35; } },
     { id: 'rockyhelmet', name: 'Rocky Helmet', desc: 'Foes that hit you in melee take damage.',

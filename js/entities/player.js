@@ -214,10 +214,6 @@ G.Player = class Player {
    * speeds it up if the cooldown is shorter than the animation, so it chains.
    */
   cast(m) {
-    // Life Orb: each attack costs a little health (it never knocks you out).
-    if (this.hasItem('lifeorb') && m.kind !== 'orbit' && m.kind !== 'trail' && !this.remote) {
-      this.hp = Math.max(1, this.hp - Math.max(1, this.maxHp * 0.01));
-    }
     const anim = { melee: 'Attack', beam: 'Shoot', projectile: 'Shoot', nova: 'Attack',
                    aura: 'Charge', buff: 'Charge', orbit: 'Charge', boomerang: 'Shoot', chain: 'Shoot',
                    mine: 'Charge', meteor: 'Charge', turret: 'Charge', dash: 'Attack', trail: 'Walk', cone: 'Shoot' }[m.kind] || 'Attack';
@@ -294,7 +290,11 @@ G.Player = class Player {
     if (got >= 1) G.FX.dmgText(this.x, this.y - this.bodyH - 6, '+' + got, '#5fe08a');
   }
 
-  addMaxHp(amount) { this.maxHp += amount; this.hp += amount; }
+  addMaxHp(amount) {
+    // Life Orb: 30% less max HP, also on what you gain while holding it (given back if you take it off).
+    if (this.hasItem('lifeorb')) { const cut = amount * 0.3; amount -= cut; this._orbCut = (this._orbCut || 0) + cut; }
+    this.maxHp += amount; this.hp += amount;
+  }
 
   /** Returns how many levels it went up (several can happen at once). */
   gainXp(amount) {
