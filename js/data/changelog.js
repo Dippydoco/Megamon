@@ -12,6 +12,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T14:34Z', title: T('Bosses resist poison'), chg: [
+    T('Poison now hurts bosses, rift legends, Zygarde and Arceus\' legends about 10x less (it is capped per tick). Normal enemies are unchanged.'),
+  ] },
   { d: '2026-10-18', at: '2026-10-18T14:30Z', title: T('Zygarde is deadly'), chg: [
     T('If everyone falls (or time runs out) in the Zygarde Portal fight, your run now ends instead of sending you back to the map.'),
   ] },

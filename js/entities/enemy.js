@@ -301,7 +301,9 @@
       }
       if (this.poison > 0) {
         this.poisonT -= dt; this.poisonTick -= dt;
-        if (this.poisonTick <= 0) { this.poisonTick = 0.6; this.hurt(this.maxHp * 0.012 * this.poison + 1, '#d47cf0'); }
+        if (this.poisonTick <= 0) { this.poisonTick = 0.6; // Bosses, rift legends and Arceus' legends resist: a small share of max HP per stack, hard-capped per tick.
+          const big = this.boss || this.legend || this.judge;
+          this.hurt(big ? Math.min(this.maxHp * 0.0012 * this.poison, 3 + 14 * this.poison) : this.maxHp * 0.012 * this.poison + 1, '#d47cf0'); }
         if (this.poisonT <= 0) this.poison = 0;
       }
       if (this.dead) return;
