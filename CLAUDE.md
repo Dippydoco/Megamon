@@ -4,7 +4,7 @@ Fixed rules from the project owner. They ALWAYS apply.
 
 ## Publishing a version
 1. Edit `dev.html` (never `index.html`, which is generated).
-2. `node tools/build.js && node tools/export_data.js && python tools/make_seo_pages.py`
+2. `node tools/build.js`
    - `build.js` generates `index.html`, `js/app.min.js` and **`version.json`** (this version's fingerprint).
 3. Commit (no "Co-Authored-By" or any AI signature) and `git push origin main` only when the owner asks.
 
@@ -21,8 +21,13 @@ Do not remove `updater.js` or the `version.json` write in `tools/build.js`.
 
 ## What's new (changelog)
 Every gameplay change or bug fix also goes in `js/data/changelog.js`
-(Spanish and English, under `new` / `chg` / `fix` for today's date), with its publish time in
+(in English, under `new` / `chg` / `fix` for today's date), with its publish time in
 `at` (UTC, `date -u +%Y-%m-%dT%H:%MZ`). Server, database or cost changes do NOT go there.
+
+## Language
+The game, its code comments and its documents are in English only (18-10-2026: the Spanish version, the
+translation layer and the Spanish web pages were removed). Write new text directly in English; there is no
+translation file to update.
 
 ## Servers
 - Firebase: project **pokesurvivor-free** (standard authentication: free accounts, no limit).

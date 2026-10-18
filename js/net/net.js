@@ -252,7 +252,7 @@ G.Net = (() => {
         else { if (!pendingIce.has(from)) pendingIce.set(from, []); pendingIce.get(from).push(sig.c); }
       }
     } catch (e) {
-      console.warn('[Net] señalización:', e.message);
+      console.warn('[Net] signalling:', e.message);
       useRelay(from);
     }
   }
@@ -274,7 +274,7 @@ G.Net = (() => {
 
   function relayPush(to, env) {
     if (!rtdb || !roomId) return;
-    rtdb.ref('rooms/' + roomId + '/q/' + to).push(JSON.stringify(env)).catch(e => { console.warn('[Net] relé:', e.code || e.message); if (dbErrors.length < 5) dbErrors.push(e.code || e.message); });
+    rtdb.ref('rooms/' + roomId + '/q/' + to).push(JSON.stringify(env)).catch(e => { console.warn('[Net] relay:', e.code || e.message); if (dbErrors.length < 5) dbErrors.push(e.code || e.message); });
   }
 
   function send(to, msg) {

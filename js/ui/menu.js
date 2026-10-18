@@ -1,7 +1,7 @@
 /* ============ menu.js — main menu, collection and upgrades ============ */
 G.MenuUI = (() => {
   const $ = G.UI.$;
-  const GEN_NAMES = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Teselia', 'Kalos', 'Alola', 'Galar', 'Paldea'];
+  const GEN_NAMES = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Paldea'];
   let dexFilter = 'all', dexGen = 1, dexSel = null;
 
   // ---- hover tooltip for moves (Pokémon tab and the ban picker): name, type, kind and what it does ----
@@ -52,7 +52,7 @@ G.MenuUI = (() => {
     $('rnd-done').onclick = () => { if (spinning) return; G.UI.hide('scr-random'); open(); };
     G.Social.on(() => { if (G.UI.isOpen('scr-menu')) socialLine(); });
     $('btn-logout').onclick = () => {
-      if (G.DB.guest && !confirm('Eres invitado: se perderá todo el progreso. ¿Salir?')) return;
+      if (G.DB.guest && !confirm('You\'re a guest: all your progress will be lost. Log out?')) return;
       G.Audio.music(null);
       G.DB.logout().then(() => G.Flow.toLogin());
     };
@@ -93,15 +93,15 @@ G.MenuUI = (() => {
 
     const st = s.stats;
     $('menu-stats').innerHTML =
-      `Runs <b style="color:#fff">${st.runs}</b> · Mejor tiempo <b style="color:#fff">${G.U.mmss(st.bestTime)}</b><br>` +
-      `Mejor nivel <b style="color:#fff">${st.bestLevel}</b> · Derrotados <b style="color:#fff">${st.totalKills.toLocaleString('es')}</b>` +
-      (G.DB.guest ? '<br><span style="color:#ffb0b8">Modo invitado: no se guarda</span>' : '');
+      `Runs <b style="color:#fff">${st.runs}</b> · Best time <b style="color:#fff">${G.U.mmss(st.bestTime)}</b><br>` +
+      `Best level <b style="color:#fff">${st.bestLevel}</b> · Defeated <b style="color:#fff">${st.totalKills.toLocaleString('en')}</b>` +
+      (G.DB.guest ? '<br><span style="color:#ffb0b8">Guest mode: nothing is saved</span>' : '');
 
     socialLine();
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' premio por recoger' : ' premios por recoger') : 'Misiones, logros y perfil';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, achievements and profile';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
     // With a cloud account: friends online, invitations and (once) the nickname.
     if (G.DB.online && !G.Social.started) {
@@ -117,13 +117,13 @@ G.MenuUI = (() => {
   function socialLine() {
     const room = G.Social.room;
     const play = document.querySelector('#scr-menu [data-go=play] small');
-    if (play) play.textContent = room ? 'Volver a tu sala (' + room.members.length + '/' + G.Social.MAX_PLAYERS + ')' : 'Entra en la mazmorra';
+    if (play) play.textContent = room ? 'Back to your room (' + room.members.length + '/' + G.Social.MAX_PLAYERS + ')' : 'Enter the dungeon';
     const fr = G.Social.friends;
     const on = fr.filter(f => f.status === 'ok' && f.online).length;
     const req = fr.filter(f => f.status === 'in').length;
     const parts = [];
-    if (on) parts.push(on + ' en línea');
-    if (req) parts.push(req + (req === 1 ? ' solicitud' : ' solicitudes'));
+    if (on) parts.push(on + ' online');
+    if (req) parts.push(req + (req === 1 ? ' request' : ' requests'));
     const msgs = G.Chat ? G.Chat.totalUnread() : 0;
     if (msgs) parts.push(msgs + (msgs === 1 ? ' new message' : ' new messages'));
     $('menu-friends-sub').textContent = parts.length ? parts.join(' · ') : 'Play in a group, up to 5';
@@ -153,7 +153,7 @@ G.MenuUI = (() => {
       tabs.appendChild(b);
     });
 
-    const F = [['all', 'Todos'], ['own', 'Tengo'], ['miss', 'Me faltan'], ['shiny', 'Shiny'], ['new', 'New'],
+    const F = [['all', 'All'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
                ['5', 5], ['4', 4], ['3', 3], ['2', 2], ['1', 1]];
     const fb = $('dex-filters');
     fb.innerHTML = '';
@@ -218,7 +218,7 @@ G.MenuUI = (() => {
       cell.insertAdjacentHTML('beforeend', `<span class="no">${String(p.dex).padStart(3, '0')}</span>`);
       if (NEW_DEX.has(p.dex)) cell.insertAdjacentHTML('beforeend', '<span class="tag-new">NEW</span>');
       if (own && reachedArceus(p.dex)) cell.insertAdjacentHTML('beforeend', `<span class="badge-arc${p.dex === s.partner || sh ? ' shift' : ''}" title="${arcTitle()}">${G.Icons.html('star', 14)}</span>`);
-      if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Compañero">${G.Icons.html('crown', 14)}</span>`);
+      if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Partner">${G.Icons.html('crown', 14)}</span>`);
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Tienes su shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
       cell.appendChild(G.UI.spriteCanvas(p.dex, 92, 80, { scale: 2, silhouette: !own, shadow: own, shiny: useShiny }));
@@ -232,7 +232,7 @@ G.MenuUI = (() => {
       grid.appendChild(cell);
     }
     if (more) grid.insertAdjacentHTML('beforeend', `<p class="sub" style="grid-column:1/-1">…and ${more} more. Type a little more to narrow it down.</p>`);
-    if (!grid.children.length) grid.innerHTML = query ? '<p class="sub" style="grid-column:1/-1">No Pokémon you own match that.</p>' : '<p class="sub" style="grid-column:1/-1">Ninguno con este filtro.</p>';
+    if (!grid.children.length) grid.innerHTML = query ? '<p class="sub" style="grid-column:1/-1">No Pokémon you own match that.</p>' : '<p class="sub" style="grid-column:1/-1">None with this filter.</p>';
   }
 
   // Variant being viewed in the details (normal or shiny).
@@ -266,17 +266,17 @@ G.MenuUI = (() => {
         <div style="margin:6px 0">${own ? G.UI.typeChips(p.types) : ''}</div>
       </div>
       ${own ? `
-        ${bar('Vida', p.hp, max.hp, p.hp)}
-        ${bar('Ataque', p.atk, max.atk, '×' + p.atk.toFixed(2))}
-        ${bar('Velocidad', p.spd, max.spd, p.spd)}
-        <p style="font-size:14px;margin:10px 0 4px">Empieza con <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
+        ${bar('HP', p.hp, max.hp, p.hp)}
+        ${bar('Attack', p.atk, max.atk, '×' + p.atk.toFixed(2))}
+        ${bar('Speed', p.spd, max.spd, p.spd)}
+        <p style="font-size:14px;margin:10px 0 4px">Starts with <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
         <p class="move-icons">
           ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
         ${usingThis
-          ? '<button class="btn grow" disabled style="width:100%">Es tu compañero</button>'
-          : `<button id="dex-pick" class="btn gold" data-sfx="confirm" style="width:100%">Elegir de compañero${viewShiny ? ' (shiny)' : ''}</button>`}
-      ` : `<p class="center" style="color:var(--muted)">Aún no lo tienes.<br>Consíguelo en el banner de <b class="gold">${GEN_NAMES[p.gen - 1]}</b>
-            o derrotándolo cuando salga shiny.</p>`}
+          ? '<button class="btn grow" disabled style="width:100%">It\'s your partner</button>'
+          : `<button id="dex-pick" class="btn gold" data-sfx="confirm" style="width:100%">Choose as partner${viewShiny ? ' (shiny)' : ''}</button>`}
+      ` : `<p class="center" style="color:var(--muted)">You don't have it yet.<br>Get it from the <b class="gold">${GEN_NAMES[p.gen - 1]}</b> banner
+            or by defeating it when it appears as a shiny.</p>`}
     `;
     $('dex-big').style.setProperty('--stage-c', !own ? '#5b83d6' : viewShiny ? '#9ae6ff' : G.U.TYPE_COLOR[p.types[0]]);
     $('dex-big').classList.toggle('shiny', own && viewShiny);
@@ -290,7 +290,7 @@ G.MenuUI = (() => {
       s.partnerShiny = hasSh && viewShiny;
       G.DB.commit();
       G.Social.refreshMember();           // if you're in a room, the others see it straight away
-      G.UI.toast(p.name + (s.partnerShiny ? ' shiny' : '') + ' es ahora tu compañero');
+      G.UI.toast((s.partnerShiny ? 'Shiny ' : '') + p.name + ' is now your partner');
       renderGrid(); showDetail(dex);
     };
   }
@@ -387,7 +387,7 @@ G.MenuUI = (() => {
     const lv = d => Object.values(s.pupg[d] || {}).reduce((a, b) => a + b, 0);
     const mons = Object.keys(s.owned).map(Number).filter(d => G.DEX_BY[d])
       .sort((a, b) => (b === s.partner) - (a === s.partner) || lv(b) - lv(a) || a - b);
-    sel.innerHTML = mons.map(d => `<option value="${d}">${G.DEX_BY[d].name}${d === s.partner ? ' (compañero)' : ''}${lv(d) ? ' · ' + lv(d) + (G.I18n.lang === 'en' ? (lv(d) === 1 ? ' level' : ' levels') : (lv(d) === 1 ? ' nivel' : ' niveles')) : ''}</option>`).join('');
+    sel.innerHTML = mons.map(d => `<option value="${d}">${G.DEX_BY[d].name}${d === s.partner ? ' (partner)' : ''}${lv(d) ? ' · ' + lv(d) + (lv(d) === 1 ? ' level' : ' levels') : ''}</option>`).join('');
     sel.value = upgDex;
     sel.onchange = () => { upgDex = +sel.value; G.Audio.sfx('select'); renderUpgrades(); };
     renderUpgrades();
@@ -415,9 +415,9 @@ G.MenuUI = (() => {
           <div class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</div>
         </div>
         <div class="upg-btns">
-          ${u.id === 'ban' && lvl > 0 ? `<button class="btn small" data-ban>Elegir (${banList().length}/${lvl})</button>` : ''}
+          ${u.id === 'ban' && lvl > 0 ? `<button class="btn small" data-ban>Choose (${banList().length}/${lvl})</button>` : ''}
           <button class="btn small ${maxed ? '' : 'gold'}" data-buy data-sfx="none" ${maxed || s.coins < cost ? 'disabled' : ''}>
-          ${maxed ? 'Máx.' : `<span class="coin"></span> ${cost}`}</button></div>`;
+          ${maxed ? 'Max.' : `<span class="coin"></span> ${cost}`}</button></div>`;
       if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; renderUpgrades(); };
       el.querySelector('[data-buy]').onclick = () => {
         // Everything is read again on pressing (the save may have changed since it was drawn).
@@ -430,7 +430,7 @@ G.MenuUI = (() => {
         G.DB.commit(true);
         G.Audio.sfx('buy');
         G.UI.refreshCoins();
-        G.UI.toast(`${mon.name} · ${u.name}: nivel ${now + 1}`);
+        G.UI.toast(`${mon.name} · ${u.name}: level ${now + 1}`);
         renderUpgrades();
       };
       box.appendChild(el);
@@ -447,13 +447,13 @@ G.MenuUI = (() => {
     const list = s.pbind[upgDex] || [null, null, null, null];
     const mon = G.DEX_BY[upgDex];
     const ids = G.Moves.poolFor(mon).concat([G.startMoveOf(upgDex)]).filter((v, i, a) => a.indexOf(v) === i)
-      .sort((a, b) => G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'es'));
+      .sort((a, b) => G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'en'));
     const el = document.createElement('div');
     el.className = 'panel bind-panel';
-    el.innerHTML = `<b>Atajos de movimientos</b>
-      <p class="sub" style="margin:2px 0 8px">Elige qué movimiento va siempre en cada hueco (teclas 1-4 o los iconos de abajo), para la memoria muscular. Si aún no tienes tantos movimientos, va al hueco más cercano.</p>
+    el.innerHTML = `<b>Move shortcuts</b>
+      <p class="sub" style="margin:2px 0 8px">Choose which move always goes in each slot (keys 1-4 or the icons at the bottom), for muscle memory. If you don't have that many moves yet, it goes to the nearest slot.</p>
       <div class="bind-slots">${[0, 1, 2, 3].map(i => `<label class="bind-slot"><span>${i + 1}</span>
-        <select class="field" data-slot="${i}"><option value="">Libre</option>${ids.map(id =>
+        <select class="field" data-slot="${i}"><option value="">Free</option>${ids.map(id =>
           `<option value="${id}" ${list[i] === id ? 'selected' : ''}>${G.Moves.BY_ID[id].name}</option>`).join('')}</select></label>`).join('')}</div>`;
     el.querySelectorAll('select[data-slot]').forEach(sel => {
       sel.onchange = () => {
@@ -484,18 +484,18 @@ G.MenuUI = (() => {
     const mon = G.DEX_BY[upgDex];
     const start = G.startMoveOf(upgDex);
     const ids = G.Moves.poolFor(mon).filter(id => id !== start)
-      .sort((a, b) => G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'es'));
+      .sort((a, b) => G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'en'));
     const list = banList();
     const el = document.createElement('div');
     el.className = 'panel ban-picker';
-    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Toca los movimientos que no quieres que te salgan en las cartas (${list.length}/${max}). El movimiento de inicio no se puede vetar.</p>
+    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Tap the moves you don't want in your cards (${list.length}/${max}). The starting move can't be banned.</p>
       <div class="ban-moves">${ids.map(id => { const d = G.Moves.BY_ID[id]; const on = list.includes(id);
         return `<button class="chip ${on ? 'on ban' : ''}" data-id="${id}" data-mv="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${on ? ' ' + G.Icons.html('ban', 14) : ''}</button>`; }).join('')}</div>`;
     el.querySelectorAll('[data-id]').forEach(b => {
       b.onclick = () => {
         const l = banList(), id = b.dataset.id, i = l.indexOf(id);
         if (i >= 0) l.splice(i, 1);
-        else if (l.length >= max) { G.UI.toast('Ya tienes ' + max + ' vetados: quita uno primero'); return; }
+        else if (l.length >= max) { G.UI.toast('You already have ' + max + ' banned: remove one first'); return; }
         else l.push(id);
         G.DB.commit();
         G.Audio.sfx('select');

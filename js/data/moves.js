@@ -30,357 +30,357 @@
 (() => {
   const LADDERS = {
     projectile: [
-      { t: '+1 proyectil',                  m: { count: 1, spread: 1.4 } },
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: '+1 proyectil y +1 perforación',   m: { count: 1, pierce: 1, spread: 1.2 } }
+      { t: '+1 projectile',                  m: { count: 1, spread: 1.4 } },
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: '+1 projectile and +1 pierce',   m: { count: 1, pierce: 1, spread: 1.2 } }
     ],
     melee: [
-      { t: '+40% daño',                     m: { dmg: 1.40 } },
-      { t: '+25% alcance',                  m: { radius: 1.25 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: 'Golpea en 360° y +50% daño',    m: { arc: 9, dmg: 1.50 } }
+      { t: '+40% damage',                     m: { dmg: 1.40 } },
+      { t: '+25% range',                  m: { radius: 1.25 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: 'Hits in 360° and +50% damage',    m: { arc: 9, dmg: 1.50 } }
     ],
     beam: [
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: '+30% alcance y grosor',         m: { radius: 1.30, width: 1.30 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: '+50% daño',                     m: { dmg: 1.50 } }
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: '+30% range and width',         m: { radius: 1.30, width: 1.30 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: '+50% damage',                     m: { dmg: 1.50 } }
     ],
     orbit: [
-      { t: '+1 orbe',                       m: { count: 1 } },
-      { t: '+55% daño',                     m: { dmg: 1.55 } },
-      { t: '+25% radio y gira más rápido',  m: { radius: 1.25, speed: 1.35 } },
-      { t: '+1 orbe y +55% daño',           m: { count: 1, dmg: 1.55 } }
+      { t: '+1 orb',                       m: { count: 1 } },
+      { t: '+55% damage',                     m: { dmg: 1.55 } },
+      { t: '+25% radius and spins faster',  m: { radius: 1.25, speed: 1.35 } },
+      { t: '+1 orb and +55% damage',           m: { count: 1, dmg: 1.55 } }
     ],
     nova: [
-      { t: '+4 proyectiles',                m: { count: 4 } },
-      { t: '+40% daño',                     m: { dmg: 1.40 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: '+4 proyectiles y +1 perforación', m: { count: 4, pierce: 1 } }
+      { t: '+4 projectiles',                m: { count: 4 } },
+      { t: '+40% damage',                     m: { dmg: 1.40 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: '+4 projectiles and +1 pierce', m: { count: 4, pierce: 1 } }
     ],
     aura: [
-      { t: '+30% radio',                    m: { radius: 1.30 } },
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: 'Golpea un 40% más a menudo',    m: { cd: 0.70 } },
-      { t: '+30% radio y +50% daño',        m: { radius: 1.30, dmg: 1.50 } }
+      { t: '+30% radius',                    m: { radius: 1.30 } },
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: 'Hits 40% more often',    m: { cd: 0.70 } },
+      { t: '+30% radius and +50% damage',        m: { radius: 1.30, dmg: 1.50 } }
     ],
     boomerang: [
-      { t: '+1 bumerán',                    m: { count: 1 } },
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: '+30% alcance',                  m: { radius: 1.30 } },
-      { t: '+1 bumerán y +40% daño',        m: { count: 1, dmg: 1.40 } }
+      { t: '+1 boomerang',                    m: { count: 1 } },
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: '+30% range',                  m: { radius: 1.30 } },
+      { t: '+1 boomerang and +40% damage',        m: { count: 1, dmg: 1.40 } }
     ],
     chain: [
-      { t: '+2 saltos',                     m: { count: 2 } },
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: '+2 saltos y +40% daño',         m: { count: 2, dmg: 1.40 } }
+      { t: '+2 jumps',                     m: { count: 2 } },
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: '+2 jumps and +40% damage',         m: { count: 2, dmg: 1.40 } }
     ],
     mine: [
-      { t: '+1 mina',                       m: { count: 1 } },
-      { t: '+50% daño',                     m: { dmg: 1.50 } },
-      { t: '+30% radio de explosión',       m: { radius: 1.30 } },
-      { t: '+1 mina y -25% recarga',        m: { count: 1, cd: 0.75 } }
+      { t: '+1 mine',                       m: { count: 1 } },
+      { t: '+50% damage',                     m: { dmg: 1.50 } },
+      { t: '+30% blast radius',       m: { radius: 1.30 } },
+      { t: '+1 mine and -25% cooldown',        m: { count: 1, cd: 0.75 } }
     ],
     meteor: [
-      { t: '+1 meteoro',                    m: { count: 1 } },
-      { t: '+45% daño',                     m: { dmg: 1.45 } },
-      { t: '+30% radio',                    m: { radius: 1.30 } },
-      { t: '+2 meteoros y -20% recarga',    m: { count: 2, cd: 0.80 } }
+      { t: '+1 meteor',                    m: { count: 1 } },
+      { t: '+45% damage',                     m: { dmg: 1.45 } },
+      { t: '+30% radius',                    m: { radius: 1.30 } },
+      { t: '+2 meteors and -20% cooldown',    m: { count: 2, cd: 0.80 } }
     ],
     turret: [
-      { t: '+50% daño',                     m: { dmg: 1.50 } },
-      { t: 'Dispara un 35% más rápido',     m: { rate: 0.74 } },
-      { t: '+1 a la vez',                   m: { count: 1 } },
-      { t: '+50% duración y +40% daño',     m: { dur: 1.50, dmg: 1.40 } }
+      { t: '+50% damage',                     m: { dmg: 1.50 } },
+      { t: 'Fires 35% faster',     m: { rate: 0.74 } },
+      { t: '+1 at a time',                   m: { count: 1 } },
+      { t: '+50% duration and +40% damage',     m: { dur: 1.50, dmg: 1.40 } }
     ],
     dash: [
-      { t: '+40% daño',                     m: { dmg: 1.40 } },
-      { t: '+30% distancia',                m: { radius: 1.30 } },
-      { t: '-25% recarga',                  m: { cd: 0.75 } },
-      { t: '+60% daño y más ancho',         m: { dmg: 1.60, width: 1.40 } }
+      { t: '+40% damage',                     m: { dmg: 1.40 } },
+      { t: '+30% distance',                m: { radius: 1.30 } },
+      { t: '-25% cooldown',                  m: { cd: 0.75 } },
+      { t: '+60% damage and wider',         m: { dmg: 1.60, width: 1.40 } }
     ],
     trail: [
-      { t: '+40% daño',                     m: { dmg: 1.40 } },
-      { t: '+40% duración',                 m: { dur: 1.40 } },
-      { t: 'Charcos un 30% más grandes',    m: { radius: 1.30 } },
-      { t: '+50% daño y +30% radio',        m: { dmg: 1.50, radius: 1.30 } }
+      { t: '+40% damage',                     m: { dmg: 1.40 } },
+      { t: '+40% duration',                 m: { dur: 1.40 } },
+      { t: 'Pools 30% bigger',    m: { radius: 1.30 } },
+      { t: '+50% damage and +30% radius',        m: { dmg: 1.50, radius: 1.30 } }
     ],
     cone: [
-      { t: '+3 disparos',                   m: { count: 3 } },
-      { t: '+40% daño',                     m: { dmg: 1.40 } },
-      { t: '+30% alcance',                  m: { life: 1.30 } },
-      { t: '+3 disparos y +1 perforación',  m: { count: 3, pierce: 1 } }
+      { t: '+3 shots',                   m: { count: 3 } },
+      { t: '+40% damage',                     m: { dmg: 1.40 } },
+      { t: '+30% range',                  m: { life: 1.30 } },
+      { t: '+3 shots and +1 pierce',  m: { count: 3, pierce: 1 } }
     ],
     buff: [
-      { t: '+1 acumulación máxima',         m: { stacks: 1 } },
-      { t: '+40% potencia',                 m: { amount: 1.40 } },
-      { t: '+50% duración',                 m: { dur: 1.50 } },
-      { t: '+1 acumulación y +40% potencia', m: { stacks: 1, amount: 1.40 } }
+      { t: '+1 max stack',         m: { stacks: 1 } },
+      { t: '+40% power',                 m: { amount: 1.40 } },
+      { t: '+50% duration',                 m: { dur: 1.50 } },
+      { t: '+1 stack and +40% power', m: { stacks: 1, amount: 1.40 } }
     ]
   };
 
   const RAW = [
     // ---------------- NORMAL (pool shared by everyone) ----------------
-    { id: 'tackle', name: 'Placaje', type: 'normal', kind: 'melee',
-      desc: 'Embiste en arco a todo lo que tengas delante.',
+    { id: 'tackle', name: 'Tackle', type: 'normal', kind: 'melee',
+      desc: 'A short sweep in front of you that hits everything in the arc.',
       cd: 0.50, dmg: 13, radius: 48, arc: 1.7, knock: 90 },
 
-    { id: 'quick-attack', name: 'Ataque Rápido', type: 'normal', kind: 'dash',
-      desc: 'Cruzas como un rayo hacia el enemigo y golpeas todo el camino.',
+    { id: 'quick-attack', name: 'Quick Attack', type: 'normal', kind: 'dash',
+      desc: 'Dash toward the nearest enemy, hitting everything along the way.',
       cd: 0.75, dmg: 20, radius: 110, width: 34, knock: 40 },
 
-    { id: 'swords-dance', name: 'Danza Espada', type: 'normal', kind: 'buff',
-      desc: 'No hace daño: acumula ATAQUE mientras esté activo.',
+    { id: 'swords-dance', name: 'Swords Dance', type: 'normal', kind: 'buff',
+      desc: 'Deals no damage. Stacks ATTACK while it\'s active.',
       cd: 0.85, stat: 'atk', amount: 0.13, dur: 7, stacks: 5 },
 
-    { id: 'agility', name: 'Agilidad', type: 'normal', kind: 'buff',
-      desc: 'No hace daño: acumula VELOCIDAD mientras esté activo.',
+    { id: 'agility', name: 'Agility', type: 'normal', kind: 'buff',
+      desc: 'Deals no damage. Stacks SPEED while it\'s active.',
       cd: 0.85, stat: 'spd', amount: 0.10, dur: 7, stacks: 5 },
 
-    { id: 'harden', name: 'Fortaleza', type: 'normal', kind: 'buff',
-      desc: 'No hace daño: acumula DEFENSA mientras esté activo.',
+    { id: 'harden', name: 'Harden', type: 'normal', kind: 'buff',
+      desc: 'Deals no damage. Stacks DEFENSE while it\'s active.',
       cd: 0.85, stat: 'def', amount: 0.07, dur: 7, stacks: 5 },
 
     // ---------------- FIRE ----------------
-    { id: 'ember', name: 'Ascuas', type: 'fire', kind: 'projectile',
-      desc: 'Bola de fuego al enemigo más cercano.',
+    { id: 'ember', name: 'Ember', type: 'fire', kind: 'projectile',
+      desc: 'Fires a fireball at the nearest enemy.',
       cd: 0.52, dmg: 18, speed: 310, count: 1, spread: 0.12, pierce: 0, life: 1.6, size: 7, burn: 1 },
 
-    { id: 'flamethrower', name: 'Lanzallamas', type: 'fire', kind: 'cone',
-      desc: 'Chorro de llamas en abanico corto que quema.',
+    { id: 'flamethrower', name: 'Flamethrower', type: 'fire', kind: 'cone',
+      desc: 'A short cone of flames that burns enemies.',
       cd: 0.70, dmg: 7, count: 7, arc: 0.9, speed: 380, life: 0.42, size: 6, pierce: 1, burn: 1 },
 
-    { id: 'fire-spin', name: 'Giro Fuego', type: 'fire', kind: 'orbit',
-      desc: 'Llamas que giran a tu alrededor. Defensa constante.',
+    { id: 'fire-spin', name: 'Fire Spin', type: 'fire', kind: 'orbit',
+      desc: 'Flames orbit around you, hitting anything they touch.',
       cd: 0.30, dmg: 14, count: 3, radius: 62, speed: 2.4, size: 9, burn: 1 },
 
-    { id: 'heat-wave', name: 'Onda Ígnea', type: 'fire', kind: 'nova',
-      desc: 'Explota en llamas en todas las direcciones.',
+    { id: 'heat-wave', name: 'Heat Wave', type: 'fire', kind: 'nova',
+      desc: 'A burst of flames in every direction.',
       cd: 1.25, dmg: 13, speed: 250, count: 10, pierce: 1, life: 1.1, size: 7, burn: 1 },
 
     // ---------------- WATER ----------------
-    { id: 'water-gun', name: 'Pistola Agua', type: 'water', kind: 'projectile',
-      desc: 'Chorro perforante. Fiable a cualquier distancia.',
+    { id: 'water-gun', name: 'Water Gun', type: 'water', kind: 'projectile',
+      desc: 'A piercing jet of water that passes through enemies.',
       cd: 0.44, dmg: 14, speed: 350, count: 1, spread: 0.10, pierce: 1, life: 1.5, size: 6 },
 
-    { id: 'bubble', name: 'Burbuja', type: 'water', kind: 'nova',
-      desc: 'Burbujas en abanico que ralentizan a quien tocan.',
+    { id: 'bubble', name: 'Bubble', type: 'water', kind: 'nova',
+      desc: 'A fan of bubbles that slows the enemies they touch.',
       cd: 1.00, dmg: 9, speed: 210, count: 8, pierce: 0, life: 1.3, size: 8, slow: 0.45 },
 
-    { id: 'hydro-pump', name: 'Hidrobomba', type: 'water', kind: 'beam',
-      desc: 'Cañonazo de agua lento pero devastador.',
+    { id: 'hydro-pump', name: 'Hydro Pump', type: 'water', kind: 'beam',
+      desc: 'A slow but devastating beam of water.',
       cd: 1.50, dmg: 29, radius: 250, width: 30 },
 
-    { id: 'aqua-ring', name: 'Acua Aro', type: 'water', kind: 'buff',
-      desc: 'No hace daño: acumula REGENERACIÓN de vida.',
+    { id: 'aqua-ring', name: 'Aqua Ring', type: 'water', kind: 'buff',
+      desc: 'Deals no damage. Stacks HP regeneration while it\'s active.',
       cd: 0.90, stat: 'regen', amount: 1.6, dur: 8, stacks: 4 },
 
     // ---------------- GRASS ----------------
-    { id: 'vine-whip', name: 'Látigo Cepa', type: 'grass', kind: 'melee',
-      desc: 'Látigos de largo alcance en arco amplio.',
+    { id: 'vine-whip', name: 'Vine Whip', type: 'grass', kind: 'melee',
+      desc: 'Long whips that sweep a wide arc in front of you.',
       cd: 0.62, dmg: 16, radius: 68, arc: 1.3, knock: 60 },
 
-    { id: 'razor-leaf', name: 'Hoja Afilada', type: 'grass', kind: 'boomerang',
-      desc: 'Dos hojas que van y vuelven cortando a la ida y a la vuelta.',
+    { id: 'razor-leaf', name: 'Razor Leaf', type: 'grass', kind: 'boomerang',
+      desc: 'Two leaves fly out and come back, hitting enemies both ways.',
       cd: 0.90, dmg: 10, speed: 330, count: 2, spread: 0.5, radius: 210, size: 6 },
 
-    { id: 'leaf-storm', name: 'Tormenta Floral', type: 'grass', kind: 'orbit',
-      desc: 'Un ciclón de hojas gira amplio a tu alrededor.',
+    { id: 'leaf-storm', name: 'Petal Blizzard', type: 'grass', kind: 'orbit',
+      desc: 'A wide cyclone of leaves spins around you.',
       cd: 0.26, dmg: 14, count: 4, radius: 74, speed: 2.6, size: 8 },
 
     // (Formerly Giga Drain: it healed with every hit and was broken. Same id so saves don't break.)
-    { id: 'giga-drain', name: 'Hierba Lazo', type: 'grass', kind: 'aura',
-      desc: 'Raíces que atrapan y machacan todo lo que tienes cerca.',
+    { id: 'giga-drain', name: 'Grass Knot', type: 'grass', kind: 'aura',
+      desc: 'Roots snare and crush everything close to you.',
       cd: 0.55, dmg: 9, radius: 76 },
 
     // ---------------- ELECTRIC ----------------
-    { id: 'thunder-shock', name: 'Impactrueno', type: 'electric', kind: 'projectile',
-      desc: 'Descarga rapidísima que atraviesa varios enemigos.',
+    { id: 'thunder-shock', name: 'Thunder Shock', type: 'electric', kind: 'projectile',
+      desc: 'A very fast bolt that pierces several enemies.',
       cd: 0.40, dmg: 13, speed: 480, count: 1, spread: 0.08, pierce: 2, life: 1.1, size: 5 },
 
-    { id: 'discharge', name: 'Chispazo', type: 'electric', kind: 'aura',
-      desc: 'Campo eléctrico permanente alrededor de ti.',
+    { id: 'discharge', name: 'Discharge', type: 'electric', kind: 'aura',
+      desc: 'A constant electric field around you.',
       cd: 0.45, dmg: 8, radius: 70 },
 
-    { id: 'thunderbolt', name: 'Rayo', type: 'electric', kind: 'chain',
-      desc: 'Un rayo que salta de un enemigo a otro.',
+    { id: 'thunderbolt', name: 'Thunderbolt', type: 'electric', kind: 'chain',
+      desc: 'A bolt that chains from one enemy to the next.',
       cd: 0.95, dmg: 21, count: 4, radius: 140 },
 
     // ---------------- PSYCHIC ----------------
     // (11-10-2026: -22/-30 % damage and less homing; they were filling the leaderboard.)
-    { id: 'confusion', name: 'Confusión', type: 'psychic', kind: 'projectile',
-      desc: 'Onda que persigue sola a su objetivo.',
+    { id: 'confusion', name: 'Confusion', type: 'psychic', kind: 'projectile',
+      desc: 'A psychic wave that homes in on its target.',
       cd: 0.58, dmg: 13, speed: 280, count: 1, spread: 0.1, pierce: 0, life: 2.2, size: 8, homing: 2.0 },
 
-    { id: 'psybeam', name: 'Psicorrayo', type: 'psychic', kind: 'beam',
-      desc: 'Rayo psíquico ancho y contundente.',
+    { id: 'psybeam', name: 'Psybeam', type: 'psychic', kind: 'beam',
+      desc: 'A wide, heavy-hitting psychic beam.',
       cd: 1.15, dmg: 17, radius: 215, width: 40 },
 
-    { id: 'psychic', name: 'Psíquico', type: 'psychic', kind: 'nova',
-      desc: 'Estallido mental radial que busca enemigos.',
+    { id: 'psychic', name: 'Psychic', type: 'psychic', kind: 'nova',
+      desc: 'A psychic burst in every direction that seeks out enemies.',
       cd: 1.35, dmg: 10, speed: 230, count: 12, pierce: 1, life: 1.6, size: 7, homing: 1.0 },
 
     // ---------------- SECONDARY TYPES ----------------
-    { id: 'sludge', name: 'Residuos', type: 'poison', kind: 'projectile',
-      desc: 'Lodo tóxico que envenena al impactar.',
+    { id: 'sludge', name: 'Sludge', type: 'poison', kind: 'projectile',
+      desc: 'Toxic sludge that poisons on impact.',
       cd: 0.60, dmg: 17, speed: 290, count: 1, spread: 0.12, pierce: 0, life: 1.5, size: 8, poison: 1 },
 
-    { id: 'mud-shot', name: 'Disparo Lodo', type: 'ground', kind: 'nova',
-      desc: 'Salpica lodo alrededor y ralentiza.',
+    { id: 'mud-shot', name: 'Mud Shot', type: 'ground', kind: 'nova',
+      desc: 'Splashes mud around you and slows enemies.',
       cd: 1.10, dmg: 11, speed: 200, count: 7, pierce: 0, life: 1.0, size: 9, slow: 0.4 },
 
-    { id: 'gust', name: 'Tornado', type: 'flying', kind: 'orbit',
-      desc: 'Remolinos de viento que te escoltan.',
+    { id: 'gust', name: 'Gust', type: 'flying', kind: 'orbit',
+      desc: 'Whirlwinds orbit you and hit whatever they touch.',
       cd: 0.26, dmg: 13, count: 3, radius: 72, speed: 2.8, size: 8, knock: 40 },
 
-    { id: 'wing-attack', name: 'Ataque Ala', type: 'flying', kind: 'melee',
-      desc: 'Barrido de alas amplio que empuja.',
+    { id: 'wing-attack', name: 'Wing Attack', type: 'flying', kind: 'melee',
+      desc: 'A wide wing sweep that knocks enemies back.',
       cd: 0.55, dmg: 14, radius: 58, arc: 1.9, knock: 70 },
 
     // ---------------- NORMAL (extra) ----------------
-    { id: 'body-slam', name: 'Golpe Cuerpo', type: 'normal', kind: 'melee',
-      desc: 'Placaje con todo el peso: lento, corto y brutal.',
+    { id: 'body-slam', name: 'Body Slam', type: 'normal', kind: 'melee',
+      desc: 'A heavy tackle: slow, short range and brutal.',
       cd: 0.95, dmg: 30, radius: 46, arc: 2.2, knock: 140 },
 
-    { id: 'hyper-voice', name: 'Vozarrón', type: 'normal', kind: 'nova',
-      desc: 'Onda sonora que sale en todas direcciones.',
+    { id: 'hyper-voice', name: 'Hyper Voice', type: 'normal', kind: 'nova',
+      desc: 'A sound wave that spreads in every direction.',
       cd: 1.15, dmg: 12, speed: 260, count: 9, pierce: 1, life: 0.9, size: 7 },
 
     // ---------------- POISON (extra) ----------------
-    { id: 'poison-sting', name: 'Picotazo Veneno', type: 'poison', kind: 'projectile',
-      desc: 'Aguijón rápido que envenena.',
+    { id: 'poison-sting', name: 'Poison Sting', type: 'poison', kind: 'projectile',
+      desc: 'A quick stinger that poisons.',
       cd: 0.34, dmg: 8, speed: 420, count: 1, spread: 0.08, pierce: 0, life: 1.0, size: 4, poison: 1 },
 
-    { id: 'toxic', name: 'Tóxico', type: 'poison', kind: 'trail',
-      desc: 'Vas dejando charcos de veneno que intoxican a quien los pisa.',
+    { id: 'toxic', name: 'Toxic', type: 'poison', kind: 'trail',
+      desc: 'Leaves pools of poison behind you as you move. Enemies standing in them are badly poisoned.',
       cd: 0.3, dmg: 6, radius: 26, dur: 3, poison: 1 },
 
     // ---------------- GROUND (extra) ----------------
-    { id: 'bulldoze', name: 'Terratemblor', type: 'ground', kind: 'aura',
-      desc: 'Sacude el suelo: daña y frena a lo cercano.',
+    { id: 'bulldoze', name: 'Bulldoze', type: 'ground', kind: 'aura',
+      desc: 'Shakes the ground around you, damaging and slowing nearby enemies.',
       cd: 0.7, dmg: 11, radius: 80, slow: 0.35 },
 
     // ---------------- BUG ----------------
-    { id: 'bug-bite', name: 'Picadura', type: 'bug', kind: 'melee',
-      desc: 'Mordisco rápido en arco corto.',
+    { id: 'bug-bite', name: 'Bug Bite', type: 'bug', kind: 'melee',
+      desc: 'A quick bite in a short arc.',
       cd: 0.42, dmg: 11, radius: 44, arc: 1.6, knock: 40 },
 
-    { id: 'string-shot', name: 'Disparo Demora', type: 'bug', kind: 'mine',
-      desc: 'Deja telarañas en el suelo que atrapan y frenan mucho al que las pisa.',
+    { id: 'string-shot', name: 'String Shot', type: 'bug', kind: 'mine',
+      desc: 'Lays webs on the ground that trap and heavily slow enemies who step on them.',
       cd: 1.1, dmg: 14, count: 2, radius: 56, dur: 7, slow: 0.6 },
 
-    { id: 'bug-buzz', name: 'Zumbido', type: 'bug', kind: 'aura',
-      desc: 'Vibración constante que machaca lo cercano.',
+    { id: 'bug-buzz', name: 'Bug Buzz', type: 'bug', kind: 'aura',
+      desc: 'A constant vibration that hurts everything near you.',
       cd: 0.45, dmg: 8, radius: 66 },
 
     // ---------------- ROCK ----------------
-    { id: 'rock-throw', name: 'Lanzarrocas', type: 'rock', kind: 'projectile',
-      desc: 'Pedrusco pesado que empuja al enemigo.',
+    { id: 'rock-throw', name: 'Rock Throw', type: 'rock', kind: 'projectile',
+      desc: 'A heavy boulder that knocks the enemy back.',
       cd: 0.7, dmg: 24, speed: 260, count: 1, spread: 0.12, pierce: 0, life: 1.4, size: 9, knock: 90 },
 
-    { id: 'rock-slide', name: 'Avalancha', type: 'rock', kind: 'meteor',
-      desc: 'Caen rocas del cielo sobre los enemigos cercanos.',
+    { id: 'rock-slide', name: 'Rock Slide', type: 'rock', kind: 'meteor',
+      desc: 'Rocks fall from the sky onto nearby enemies.',
       cd: 1.3, dmg: 21, count: 3, radius: 46, knock: 50 },     // (12-10-2026: it was 26; it killed twice the average)
 
     // ---------------- ICE ----------------
-    { id: 'ice-beam', name: 'Rayo Hielo', type: 'ice', kind: 'beam',
-      desc: 'Rayo helado que congela casi del todo.',
+    { id: 'ice-beam', name: 'Ice Beam', type: 'ice', kind: 'beam',
+      desc: 'An icy beam that almost freezes enemies solid.',
       cd: 1.1, dmg: 20, radius: 220, width: 30, slow: 0.7 },
 
-    { id: 'powder-snow', name: 'Nieve Polvo', type: 'ice', kind: 'aura',
-      desc: 'Ventisca a tu alrededor que ralentiza.',
+    { id: 'powder-snow', name: 'Powder Snow', type: 'ice', kind: 'aura',
+      desc: 'A blizzard around you that slows enemies.',
       cd: 0.55, dmg: 8, radius: 76, slow: 0.45 },
 
     // ---------------- FIGHTING ----------------
-    { id: 'karate-chop', name: 'Golpe Kárate', type: 'fighting', kind: 'melee',
-      desc: 'Golpe seco y potente al frente.',
+    { id: 'karate-chop', name: 'Karate Chop', type: 'fighting', kind: 'melee',
+      desc: 'A sharp, powerful blow straight ahead.',
       cd: 0.5, dmg: 18, radius: 50, arc: 1.2, knock: 110 },
 
-    { id: 'aura-sphere', name: 'Esfera Aural', type: 'fighting', kind: 'projectile',
-      desc: 'Esfera de energía que nunca falla.',
+    { id: 'aura-sphere', name: 'Aura Sphere', type: 'fighting', kind: 'projectile',
+      desc: 'An energy sphere that never misses.',
       cd: 0.62, dmg: 17, speed: 300, count: 1, spread: 0.1, pierce: 0, life: 2.0, size: 8, homing: 4 },
 
     // ---------------- GHOST ----------------
-    { id: 'lick', name: 'Lengüetazo', type: 'ghost', kind: 'melee',
-      desc: 'Lametazo espectral que paraliza un poco.',
+    { id: 'lick', name: 'Lick', type: 'ghost', kind: 'melee',
+      desc: 'A ghostly lick that briefly paralyzes enemies.',
       cd: 0.48, dmg: 12, radius: 48, arc: 1.8, slow: 0.4 },
 
-    { id: 'shadow-ball', name: 'Bola Sombra', type: 'ghost', kind: 'projectile',
-      desc: 'Esfera oscura que atraviesa a varios.',
+    { id: 'shadow-ball', name: 'Shadow Ball', type: 'ghost', kind: 'projectile',
+      desc: 'A shadow orb that pierces through several enemies.',
       cd: 0.66, dmg: 19, speed: 280, count: 1, spread: 0.1, pierce: 2, life: 1.6, size: 9 },
 
     // ---------------- DRAGON ----------------
-    { id: 'dragon-rage', name: 'Furia Dragón', type: 'dragon', kind: 'beam',
-      desc: 'Llamarada dracónica en línea recta.',
+    { id: 'dragon-rage', name: 'Dragon Rage', type: 'dragon', kind: 'beam',
+      desc: 'A beam of draconic fire in a straight line.',
       cd: 1.0, dmg: 24, radius: 230, width: 34 },
 
-    { id: 'dragon-dance', name: 'Danza Dragón', type: 'dragon', kind: 'buff',
-      desc: 'No hace daño: acumula ATAQUE más rápido que Danza Espada.',
+    { id: 'dragon-dance', name: 'Dragon Dance', type: 'dragon', kind: 'buff',
+      desc: 'Deals no damage. Stacks ATTACK faster than Swords Dance.',
       cd: 0.7, stat: 'atk', amount: 0.11, dur: 7, stacks: 5 },
 
     // ---------------- FAIRY ----------------
-    { id: 'fairy-wind', name: 'Viento Feérico', type: 'fairy', kind: 'nova',
-      desc: 'Brisa mágica en todas direcciones.',
+    { id: 'fairy-wind', name: 'Fairy Wind', type: 'fairy', kind: 'nova',
+      desc: 'A magical breeze in every direction.',
       cd: 1.0, dmg: 11, speed: 230, count: 10, pierce: 0, life: 1.2, size: 7 },
 
-    { id: 'dazzling-gleam', name: 'Brillo Mágico', type: 'fairy', kind: 'aura',
-      desc: 'Destello a tu alrededor.',
+    { id: 'dazzling-gleam', name: 'Dazzling Gleam', type: 'fairy', kind: 'aura',
+      desc: 'A flash of light all around you.',
       cd: 0.5, dmg: 9, radius: 72 },
 
     // ---------------- STEEL ----------------
-    { id: 'metal-claw', name: 'Garra Metal', type: 'steel', kind: 'melee',
-      desc: 'Zarpazo de acero en arco.',
+    { id: 'metal-claw', name: 'Metal Claw', type: 'steel', kind: 'melee',
+      desc: 'A steel slash in an arc.',
       cd: 0.5, dmg: 15, radius: 50, arc: 1.6, knock: 60 },
 
-    { id: 'flash-cannon', name: 'Foco Resplandor', type: 'steel', kind: 'beam',
-      desc: 'Rayo de luz metálica que perfora.',
+    { id: 'flash-cannon', name: 'Flash Cannon', type: 'steel', kind: 'beam',
+      desc: 'A piercing beam of metallic light.',
       cd: 1.05, dmg: 23, radius: 220, width: 30 },
 
     // ---------------- DARK ----------------
-    { id: 'bite', name: 'Mordisco', type: 'dark', kind: 'melee',
-      desc: 'Dentellada rápida que hace retroceder.',
+    { id: 'bite', name: 'Bite', type: 'dark', kind: 'melee',
+      desc: 'A quick bite that knocks enemies back.',
       cd: 0.45, dmg: 14, radius: 46, arc: 1.5, knock: 70 },
 
-    { id: 'dark-pulse', name: 'Pulso Umbrío', type: 'dark', kind: 'nova',
-      desc: 'Onda de energía oscura en todas direcciones.',
+    { id: 'dark-pulse', name: 'Dark Pulse', type: 'dark', kind: 'nova',
+      desc: 'A wave of dark energy in every direction.',
       cd: 1.15, dmg: 14, speed: 240, count: 10, pierce: 1, life: 1.1, size: 8 },
 
-    { id: 'night-shade', name: 'Tinieblas', type: 'dark', kind: 'aura',
-      desc: 'Una sombra te rodea y consume lo cercano.',
+    { id: 'night-shade', name: 'Night Shade', type: 'dark', kind: 'aura',
+      desc: 'A shadow surrounds you and drains everything near you.',
       cd: 0.5, dmg: 9, radius: 72 },
 
     // ---------------- NEW (2026-10-10): same shapes, other mechanics ----------------
-    { id: 'bonemerang', name: 'Huesomerang', type: 'ground', kind: 'boomerang',
-      desc: 'Un hueso que va y vuelve golpeando fuerte.',
+    { id: 'bonemerang', name: 'Bonemerang', type: 'ground', kind: 'boomerang',
+      desc: 'A bone that flies out and back, hitting hard both ways.',
       cd: 0.95, dmg: 16, speed: 300, count: 1, radius: 230, size: 8, knock: 40 },
 
-    { id: 'psycho-cut', name: 'Psicocorte', type: 'psychic', kind: 'boomerang',
-      desc: 'Cuchillas psíquicas que vuelven a ti.',
+    { id: 'psycho-cut', name: 'Psycho Cut', type: 'psychic', kind: 'boomerang',
+      desc: 'Psychic blades that fly out and return to you.',
       cd: 0.8, dmg: 9, speed: 360, count: 2, spread: 0.6, radius: 200, size: 7 },
 
-    { id: 'spikes', name: 'Púas', type: 'ground', kind: 'mine',
-      desc: 'Siembra púas que estallan al pisarlas.',
+    { id: 'spikes', name: 'Spikes', type: 'ground', kind: 'mine',
+      desc: 'Scatters spikes that burst when enemies step on them.',
       cd: 1.2, dmg: 18, count: 2, radius: 60, dur: 8 },
 
-    { id: 'toxic-spikes', name: 'Púas Tóxicas', type: 'poison', kind: 'mine',
-      desc: 'Púas venenosas que envenenan mucho al estallar.',
+    { id: 'toxic-spikes', name: 'Toxic Spikes', type: 'poison', kind: 'mine',
+      desc: 'Poison spikes that badly poison enemies when they burst.',
       cd: 1.1, dmg: 11, count: 2, radius: 56, dur: 8, poison: 2 },
 
-    { id: 'hail', name: 'Granizo', type: 'ice', kind: 'meteor',
-      desc: 'Bolas de hielo caen sobre los enemigos y los frenan.',
+    { id: 'hail', name: 'Hail', type: 'ice', kind: 'meteor',
+      desc: 'Hailstones fall on enemies and slow them.',
       cd: 1.2, dmg: 18, count: 4, radius: 40, slow: 0.4 },
 
-    { id: 'meteor-mash', name: 'Puño Meteoro', type: 'steel', kind: 'meteor',
-      desc: 'Dos meteoros de acero que aplastan donde caen.',
+    { id: 'meteor-mash', name: 'Meteor Mash', type: 'steel', kind: 'meteor',
+      desc: 'Two steel meteors that crush where they land.',
       cd: 1.4, dmg: 34, count: 2, radius: 54, knock: 80 },
 
-    { id: 'will-o-wisp', name: 'Fuego Fatuo', type: 'fire', kind: 'turret',
-      desc: 'Deja una llama flotante que dispara sola y quema.',
+    { id: 'will-o-wisp', name: 'Will-O-Wisp', type: 'fire', kind: 'turret',
+      desc: 'Leaves a floating flame that fires on its own and burns enemies.',
       cd: 3.5, dmg: 15, rate: 0.55, dur: 6, count: 1, range: 300, speed: 300, size: 7, burn: 1 },
 
-    { id: 'substitute', name: 'Sustituto', type: 'normal', kind: 'turret',
+    { id: 'substitute', name: 'Substitute', type: 'normal', kind: 'turret',
       desc: 'A plush decoy: nearby enemies go for it instead of you. It shoots back and explodes when it breaks.',
       cd: 4.0, dmg: 14, rate: 0.4, dur: 10, count: 1, range: 280, speed: 320, size: 6,
       hp: 8, radius: 70, boom: 3, taunt: 340,
@@ -391,20 +391,20 @@
         { t: '+50% duration and a 50% stronger explosion', m: { dur: 1.50, boom: 1.50 } }
       ] },
 
-    { id: 'aerial-ace', name: 'Golpe Aéreo', type: 'flying', kind: 'dash',
-      desc: 'Te lanzas en picado y cortas todo lo que cruzas.',
+    { id: 'aerial-ace', name: 'Aerial Ace', type: 'flying', kind: 'dash',
+      desc: 'Dive through enemies, slashing everything you pass.',
       cd: 0.75, dmg: 18, radius: 120, width: 40, knock: 60 },
 
-    { id: 'flame-wheel', name: 'Rueda Fuego', type: 'fire', kind: 'trail',
-      desc: 'Corres envuelto en fuego y dejas un rastro de llamas.',
+    { id: 'flame-wheel', name: 'Flame Wheel', type: 'fire', kind: 'trail',
+      desc: 'You run wrapped in fire, leaving a trail of flames.',
       cd: 0.28, dmg: 10, radius: 28, dur: 2.6, burn: 1 },
 
-    { id: 'bubble-beam', name: 'Rayo Burbuja', type: 'water', kind: 'cone',
-      desc: 'Chorro de burbujas en abanico corto que frena.',
+    { id: 'bubble-beam', name: 'Bubble Beam', type: 'water', kind: 'cone',
+      desc: 'A short fan of bubbles that slows enemies.',
       cd: 0.65, dmg: 6, count: 7, arc: 1.0, speed: 340, life: 0.45, size: 6, slow: 0.3 },
 
-    { id: 'hex', name: 'Infortunio', type: 'ghost', kind: 'chain',
-      desc: 'Maldición que salta entre enemigos. Mucho más daño si están quemados, envenenados o frenados.',
+    { id: 'hex', name: 'Hex', type: 'ghost', kind: 'chain',
+      desc: 'A curse that jumps between enemies. Much more damage to burned, poisoned or slowed ones.',
       cd: 0.9, dmg: 17, count: 4, radius: 150, hex: 1.7 }
   ];
 
@@ -492,56 +492,56 @@
    * its condition's upgrade (`needs`, an id from LevelUp.STATS). A golden
    * card appears. Boosters (buff) don't evolve.
    */
-  const NEED_NAME = { hp: 'Vigor', atk: 'Potencia', spd: 'Carrera', cd: 'Reflejos', def: 'Coraza',
-                      rgn: 'Síntesis', mag: 'Imán', xp: 'Aprendizaje' };
+  const NEED_NAME = { hp: 'Vigor', atk: 'Power', spd: 'Sprint', cd: 'Reflexes', def: 'Armor',
+                      rgn: 'Synthesis', mag: 'Magnet', xp: 'Learning' };
   const EVO = {
-    'tackle': ['Derribo', 'hp'],             'quick-attack': ['Velocidad Extrema', 'spd'],
-    'body-slam': ['Gigaimpacto', 'atk'],     'hyper-voice': ['Alboroto', 'cd'],
-    'ember': ['Llamarada', 'atk'],           'flamethrower': ['Sofoco', 'cd'],
-    'fire-spin': ['Fuego Sagrado', 'rgn'],   'heat-wave': ['Erupción', 'hp'],
-    'water-gun': ['Escaldar', 'atk'],        'bubble': ['Surf', 'spd'],
-    'hydro-pump': ['Hidrocañón', 'atk'],     'vine-whip': ['Latigazo', 'atk'],
-    'razor-leaf': ['Lluevehojas', 'cd'],     'leaf-storm': ['Danza Pétalo', 'rgn'],
-    'giga-drain': ['Planta Feroz', 'hp'],    'thunder-shock': ['Trueno', 'atk'],
-    'discharge': ['Campo Eléctrico', 'def'], 'thunderbolt': ['Electrocañón', 'cd'],
-    'confusion': ['Psicocarga', 'cd'],       'psybeam': ['Premonición', 'atk'],
-    'psychic': ['Vasta Fuerza', 'mag'],      'sludge': ['Bomba Lodo', 'atk'],
-    'poison-sting': ['Puya Nociva', 'spd'],  'toxic': ['Gas Venenoso', 'rgn'],
-    'mud-shot': ['Tierra Viva', 'atk'],      'bulldoze': ['Terremoto', 'atk'],
-    'gust': ['Vendaval', 'spd'],             'wing-attack': ['Pájaro Osado', 'atk'],
-    'bug-bite': ['Tijera X', 'atk'],         'string-shot': ['Red Viscosa', 'cd'],
-    'bug-buzz': ['Enjambre', 'rgn'],         'rock-throw': ['Roca Afilada', 'atk'],
-    'rock-slide': ['Trampa Rocas', 'cd'],    'ice-beam': ['Ventisca', 'atk'],
-    'powder-snow': ['Viento Hielo', 'spd'],  'karate-chop': ['A Bocajarro', 'atk'],
-    'aura-sphere': ['Onda Certera', 'cd'],   'lick': ['Puño Sombra', 'atk'],
-    'shadow-ball': ['Golpe Fantasma', 'cd'], 'dragon-rage': ['Cometa Draco', 'atk'],
-    'fairy-wind': ['Fuerza Lunar', 'atk'],   'dazzling-gleam': ['Campo de Niebla', 'rgn'],
-    'metal-claw': ['Cabeza de Hierro', 'atk'], 'flash-cannon': ['Rayo Metálico', 'def'],
-    'bite': ['Triturar', 'atk'],             'dark-pulse': ['Alarido', 'spd'],
-    'night-shade': ['Pesadilla', 'rgn'],
-    'bonemerang': ['Ataque Óseo', 'atk'],    'psycho-cut': ['Psicocolmillo', 'cd'],
-    'spikes': ['Fisura', 'atk'],             'toxic-spikes': ['Lanza Mugre', 'rgn'],
-    'hail': ['Alud', 'cd'],                  'meteor-mash': ['Bomba Imán', 'atk'],
-    'will-o-wisp': ['Infierno', 'cd'],       'substitute': ['Doble Equipo', 'def'],
-    'aerial-ace': ['Acróbata', 'spd'],       'flame-wheel': ['Envite Ígneo', 'spd'],
-    'bubble-beam': ['Acua Cola', 'atk'],     'hex': ['Poltergeist', 'mag']
+    'tackle': ['Take Down', 'hp'],             'quick-attack': ['Extreme Speed', 'spd'],
+    'body-slam': ['Giga Impact', 'atk'],     'hyper-voice': ['Uproar', 'cd'],
+    'ember': ['Fire Blast', 'atk'],           'flamethrower': ['Overheat', 'cd'],
+    'fire-spin': ['Sacred Fire', 'rgn'],   'heat-wave': ['Eruption', 'hp'],
+    'water-gun': ['Scald', 'atk'],        'bubble': ['Surf', 'spd'],
+    'hydro-pump': ['Hydro Cannon', 'atk'],     'vine-whip': ['Power Whip', 'atk'],
+    'razor-leaf': ['Leaf Storm', 'cd'],     'leaf-storm': ['Petal Dance', 'rgn'],
+    'giga-drain': ['Frenzy Plant', 'hp'],    'thunder-shock': ['Thunder', 'atk'],
+    'discharge': ['Electric Terrain', 'def'], 'thunderbolt': ['Zap Cannon', 'cd'],
+    'confusion': ['Psyshock', 'cd'],       'psybeam': ['Future Sight', 'atk'],
+    'psychic': ['Expanding Force', 'mag'],      'sludge': ['Sludge Bomb', 'atk'],
+    'poison-sting': ['Poison Jab', 'spd'],  'toxic': ['Poison Gas', 'rgn'],
+    'mud-shot': ['Earth Power', 'atk'],      'bulldoze': ['Earthquake', 'atk'],
+    'gust': ['Hurricane', 'spd'],             'wing-attack': ['Brave Bird', 'atk'],
+    'bug-bite': ['X-Scissor', 'atk'],         'string-shot': ['Sticky Web', 'cd'],
+    'bug-buzz': ['Swarm', 'rgn'],         'rock-throw': ['Stone Edge', 'atk'],
+    'rock-slide': ['Stealth Rock', 'cd'],    'ice-beam': ['Blizzard', 'atk'],
+    'powder-snow': ['Icy Wind', 'spd'],  'karate-chop': ['Close Combat', 'atk'],
+    'aura-sphere': ['Focus Blast', 'cd'],   'lick': ['Shadow Punch', 'atk'],
+    'shadow-ball': ['Phantom Force', 'cd'], 'dragon-rage': ['Draco Meteor', 'atk'],
+    'fairy-wind': ['Moonblast', 'atk'],   'dazzling-gleam': ['Misty Terrain', 'rgn'],
+    'metal-claw': ['Iron Head', 'atk'], 'flash-cannon': ['Steel Beam', 'def'],
+    'bite': ['Crunch', 'atk'],             'dark-pulse': ['Snarl', 'spd'],
+    'night-shade': ['Nightmare', 'rgn'],
+    'bonemerang': ['Bone Rush', 'atk'],    'psycho-cut': ['Psychic Fangs', 'cd'],
+    'spikes': ['Fissure', 'atk'],             'toxic-spikes': ['Gunk Shot', 'rgn'],
+    'hail': ['Avalanche', 'cd'],                  'meteor-mash': ['Magnet Bomb', 'atk'],
+    'will-o-wisp': ['Inferno', 'cd'],       'substitute': ['Double Team', 'def'],
+    'aerial-ace': ['Acrobatics', 'spd'],       'flame-wheel': ['Flare Blitz', 'spd'],
+    'bubble-beam': ['Aqua Tail', 'atk'],     'hex': ['Poltergeist', 'mag']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {
-    projectile: { t: '×1,8 daño, +2 proyectiles, +2 perforación y más grandes', m: { dmg: 1.8, count: 2, pierce: 2, size: 1.3, spread: 1.1 } },
-    melee:      { t: '×1,9 daño, más alcance y golpea en 360°', m: { dmg: 1.9, radius: 1.3, arc: 9 } },
-    beam:       { t: '×1,8 daño, rayo un 50% más grueso y más largo', m: { dmg: 1.8, width: 1.5, radius: 1.2, cd: 0.85 } },
-    orbit:      { t: '+2 orbes, ×1,7 daño y más radio', m: { count: 2, dmg: 1.7, radius: 1.15 } },
-    nova:       { t: '+6 proyectiles, ×1,6 daño y +1 perforación', m: { count: 6, dmg: 1.6, pierce: 1 } },
-    aura:       { t: '×1,8 daño y un 35% más de radio', m: { dmg: 1.8, radius: 1.35 } },
-    boomerang:  { t: '×1,8 daño, +1 bumerán y más alcance', m: { dmg: 1.8, count: 1, radius: 1.2, size: 1.2 } },
-    chain:      { t: '×1,7 daño y +3 saltos', m: { dmg: 1.7, count: 3, radius: 1.2 } },
-    mine:       { t: '×1,8 daño, +2 minas y explosión más grande', m: { dmg: 1.8, count: 2, radius: 1.25 } },
-    meteor:     { t: '×1,7 daño, +2 meteoros y más radio', m: { dmg: 1.7, count: 2, radius: 1.2 } },
-    turret:     { t: '×1,8 daño, +1 a la vez y dispara más rápido', m: { dmg: 1.8, count: 1, rate: 0.8 } },
-    dash:       { t: '×1,9 daño, más distancia y menos recarga', m: { dmg: 1.9, radius: 1.25, cd: 0.8 } },
-    trail:      { t: '×1,8 daño, charcos más grandes y duraderos', m: { dmg: 1.8, radius: 1.25, dur: 1.3 } },
-    cone:       { t: '×1,7 daño, +4 disparos y +1 perforación', m: { dmg: 1.7, count: 4, pierce: 1 } }
+    projectile: { t: '×1.8 damage, +2 projectiles, +2 pierce and bigger', m: { dmg: 1.8, count: 2, pierce: 2, size: 1.3, spread: 1.1 } },
+    melee:      { t: '×1.9 damage, more range and hits in 360°', m: { dmg: 1.9, radius: 1.3, arc: 9 } },
+    beam:       { t: '×1.8 damage, a 50% wider and longer beam', m: { dmg: 1.8, width: 1.5, radius: 1.2, cd: 0.85 } },
+    orbit:      { t: '+2 orbs, ×1.7 damage and more radius', m: { count: 2, dmg: 1.7, radius: 1.15 } },
+    nova:       { t: '+6 projectiles, ×1.6 damage and +1 pierce', m: { count: 6, dmg: 1.6, pierce: 1 } },
+    aura:       { t: '×1.8 damage and 35% more radius', m: { dmg: 1.8, radius: 1.35 } },
+    boomerang:  { t: '×1.8 damage, +1 boomerang and more range', m: { dmg: 1.8, count: 1, radius: 1.2, size: 1.2 } },
+    chain:      { t: '×1.7 damage and +3 jumps', m: { dmg: 1.7, count: 3, radius: 1.2 } },
+    mine:       { t: '×1.8 damage, +2 mines and a bigger blast', m: { dmg: 1.8, count: 2, radius: 1.25 } },
+    meteor:     { t: '×1.7 damage, +2 meteors and more radius', m: { dmg: 1.7, count: 2, radius: 1.2 } },
+    turret:     { t: '×1.8 damage, +1 at a time and fires faster', m: { dmg: 1.8, count: 1, rate: 0.8 } },
+    dash:       { t: '×1.9 damage, more distance and less cooldown', m: { dmg: 1.9, radius: 1.25, cd: 0.8 } },
+    trail:      { t: '×1.8 damage, bigger and longer-lasting pools', m: { dmg: 1.8, radius: 1.25, dur: 1.3 } },
+    cone:       { t: '×1.7 damage, +4 shots and +1 pierce', m: { dmg: 1.7, count: 4, pierce: 1 } }
   };
 
   // Moves whose evolution differs from the generic one of their kind.

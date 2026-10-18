@@ -194,7 +194,7 @@ G.Chat = (() => {
     emit('dm', other);
     const uid = G.Social.uid;
     try { await G.DB.fb.fs.collection('chats').doc(pidOf(uid, other)).update({ ['seen.' + uid]: last.at }); }
-    catch (e) { console.warn('[Chat] visto:', e.code || e.message); }
+    catch (e) { console.warn('[Chat] seen:', e.code || e.message); }
   }
 
   /** When removing a friend (or deleting the account) their conversation is deleted too. */

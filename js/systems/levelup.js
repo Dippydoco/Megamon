@@ -7,23 +7,23 @@
 G.LevelUp = (() => {
 
   const STATS = [
-    { id: 'hp',   icon: 'heart', title: 'Vigor',        desc: '+20 de vida máxima (y la recupera).',
+    { id: 'hp',   icon: 'heart', title: 'Vigor',        desc: '+20 max HP (and heals it).',
       apply: pl => pl.addMaxHp(20) },
-    { id: 'atk',  icon: 'fist', title: 'Potencia',     desc: '+10% de daño con todos los movimientos.',
+    { id: 'atk',  icon: 'fist', title: 'Power',     desc: '+10% damage with every move.',
       apply: pl => pl.atkMul *= 1.10, max: 40 },
-    { id: 'spd',  icon: 'boot', title: 'Carrera',      desc: '+7% de velocidad de movimiento.',
+    { id: 'spd',  icon: 'boot', title: 'Sprint',      desc: '+7% movement speed.',
       apply: pl => pl.spdMul *= 1.07, max: 8 },
-    { id: 'cd',   icon: 'clock', title: 'Reflejos',     desc: '-8% de recarga en todos los movimientos.',
+    { id: 'cd',   icon: 'clock', title: 'Reflexes',     desc: '-8% cooldown on every move.',
       apply: pl => pl.cdMul *= 0.92, max: 10 },
-    { id: 'def',  icon: 'shield', title: 'Coraza',       desc: '+6% de reducción de daño recibido.',
+    { id: 'def',  icon: 'shield', title: 'Armor',       desc: '+6% damage reduction.',
       apply: pl => pl.dmgReduce = Math.min(0.7, pl.dmgReduce + 0.06), max: 12 },
-    { id: 'rgn',  icon: 'sprout', title: 'Síntesis',     desc: '+0.9 de vida regenerada por segundo.',
+    { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+0.9 HP regenerated per second.',
       apply: pl => pl.regenFlat += 0.9 },
-    { id: 'mag',  icon: 'magnet', title: 'Imán',         desc: '+30% de radio de recogida de experiencia.',
+    { id: 'mag',  icon: 'magnet', title: 'Magnet',         desc: '+30% experience pickup radius.',
       apply: pl => pl.magnet *= 1.30, max: 6 },
-    { id: 'xp',   icon: 'book', title: 'Aprendizaje',  desc: '+12% de experiencia ganada.',
+    { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+12% experience gained.',
       apply: pl => pl.xpMul *= 1.12, max: 8 },
-    { id: 'heal', icon: 'berry', title: 'Baya Zidra',   desc: 'Recupera el 45% de tu vida ahora mismo.',
+    { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.heal(pl.maxHp * 0.45) }
   ];
 
@@ -58,7 +58,7 @@ G.LevelUp = (() => {
       if (!ev.ready) { waiting[ev.needs] = m; continue; }
       out.push({
         w: 40, type: 'evo', key: 'evo:' + m.id,
-        icon: 'move:' + m.id, color: '#ffd23f', tag: 'EVOLUCIÓN', kind: m.kind,
+        icon: 'move:' + m.id, color: '#ffd23f', tag: 'EVOLUTION', kind: m.kind,
         title: m.name + ' → ' + ev.name, desc: ev.text,
         apply: p => {
           G.Moves.evolve(m);
@@ -77,7 +77,7 @@ G.LevelUp = (() => {
       out.push({
         w: 8, type: 'up', key: 'up:' + m.id,
         icon: 'move:' + m.id, color: G.U.TYPE_COLOR[m.type],
-        tag: 'Nv.' + m.lvl + ' > ' + (m.lvl + 1), kind: m.kind,
+        tag: 'Lv.' + m.lvl + ' > ' + (m.lvl + 1), kind: m.kind,
         title: m.name, desc: txt,
         apply: () => G.Moves.levelUp(m)
       });
@@ -95,7 +95,7 @@ G.LevelUp = (() => {
       out.push({
         w: evoFor ? 14 : pl.slots.length < pl.maxMoves ? 4 : 7,
         type: 'stat', key: 'stat:' + s.id,
-        icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? 'Evoluciona ' + evoFor.name : 'Mejora',
+        icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4', tag: evoFor ? 'Evolves ' + evoFor.name : 'Upgrade',
         title: s.title, desc: s.desc,
         // How many you have taken so far this run (shown on the card); the healing berry is not a stack.
         owned: s.id === 'heal' ? null : (pl.statsTaken[s.id] || 0), cap: s.max || 0,

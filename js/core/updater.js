@@ -14,7 +14,7 @@
  *   - Before reloading it waits for the save to upload to the cloud
  *     (a few seconds at most; if not, it stays in this browser and is uploaded on
  *     signing in).
- *   - MANDATORY version (node tools/build.js --forzar writes force:true in
+ *   - MANDATORY version (node tools/build.js --force writes force:true in
  *     version.json): anyone in a run sees a 10 s notice and the run
  *     ends as if abandoned (coins, tickets, records and
  *     leaderboard are saved), uploads to the cloud and reloads. Only players
@@ -38,7 +38,7 @@ G.Updater = (() => {
       const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
       if (!r.ok) return;
       const j = await r.json();
-      if (j && j.v && j.v !== mine) { pending = true; forced = !!j.force; console.log('[Actualizar] versión nueva', j.v, '(esta es', mine + ')', forced ? 'OBLIGATORIA' : ''); }
+      if (j && j.v && j.v !== mine) { pending = true; forced = !!j.force; console.log('[Update] new version', j.v, '(this is', mine + ')', forced ? 'MANDATORY' : ''); }
     } catch (e) { /* no network: check next time */ }
   }
 
@@ -53,7 +53,7 @@ G.Updater = (() => {
     if (!pending) return true;
     if (!counting) {
       counting = true;
-      G.UI.toast('Hay una versión nueva: se actualiza ahora para poder empezar la partida…', 2500);
+      G.UI.toast('A new version is out: updating now so you can start a game…', 2500);
       setTimeout(reload, 1500);
     }
     return false;
@@ -83,7 +83,7 @@ G.Updater = (() => {
     const tick = () => {
       if (!safe()) { counting = false; G.UI.toast('', 1); return; }     // a run has started: wait
       if (n <= 0) { reload(); return; }
-      G.UI.toast('Hay una versión nueva del juego: actualizando en ' + n + ' s…', 1500);
+      G.UI.toast('A new version of the game is out: updating in ' + n + ' s…', 1500);
       n--;
       setTimeout(tick, 1000);
     };
@@ -104,7 +104,7 @@ G.Updater = (() => {
         setTimeout(reload, 4000);                                         // lets the record and leaderboard go through
         return;
       }
-      G.UI.toast('Actualización obligatoria: tu partida se guarda y el juego se recarga en ' + n + ' s…', 1500);
+      G.UI.toast('Required update: your run is saved and the game reloads in ' + n + ' s…', 1500);
       n--;
       setTimeout(tick, 1000);
     };

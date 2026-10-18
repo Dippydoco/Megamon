@@ -5,8 +5,8 @@
  *   comfortable programming and debugging). EDIT dev.html, not index.html.
  * - index.html is generated from dev.html, replacing the block of scripts
  *   with js/app.min.js (with the fingerprint in the URL so it isn't cached).
- * - node tools/build.js --sin-seo  ->  without the SEO parts (until pokesurvivor.com exists).
- * - Afterwards en/index.html has to be regenerated: python tools/make_seo_pages.py
+ * - node tools/build.js --no-seo   ->  without the SEO parts (canonical, social cards, structured data).
+ * - node tools/build.js --force    ->  mandatory update: runs in progress are ended (and saved).
  */
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { execFileSync } = require('child_process');
@@ -60,15 +60,15 @@ const hash = crypto.createHash('sha1').update(min).update(css).digest('hex').sli
 let html = dev.slice(0, i) + `<script>window.PS_BUILD=${JSON.stringify({ v: hash, at: new Date().toISOString() })};</script>\n<script defer src="js/app.min.js?v=${hash}"></script>` + dev.slice(j + END.length);
 html = html.replace('href="css/style.css"', `href="css/style.css?v=${hash}"`);
 html = html.replace(/<meta name="robots" content="noindex">\s*/, '');
-// --sin-seo: no canonical/social/structured data or links to the pages
+// --no-seo: no canonical/social/structured data or links to the pages
 // (for publishing before the pokesurvivor.com domain exists).
-const SIN_SEO = process.argv.includes('--sin-seo');
-html = SIN_SEO ? html.replace(/<!-- seo:begin -->[\s\S]*?<!-- seo:end -->\n?/g, '') : html.replace(/<!-- seo:(begin|end) -->\n?/g, '');
-html = html.replace(/<!-- dev.html: página fuente[^>]*-->/, '<!-- GENERADO desde dev.html por tools/build.js: no editar a mano (se edita dev.html). -->');
+const NO_SEO = process.argv.includes('--no-seo');
+html = NO_SEO ? html.replace(/<!-- seo:begin -->[\s\S]*?<!-- seo:end -->\n?/g, '') : html.replace(/<!-- seo:(begin|end) -->\n?/g, '');
+html = html.replace(/<!-- dev.html: source page[^>]*-->/, '<!-- GENERATED from dev.html by tools/build.js: do not edit by hand (edit dev.html). -->');
 fs.writeFileSync(OUT, html);
 // Published version: players check it every 5 min and, if it changes, the game
 // updates itself (in the menu, or when the run ends). See js/core/updater.js.
-// --forzar: mandatory version, also interrupts runs in progress (saving them).
-const FORZAR = process.argv.includes('--forzar');
-fs.writeFileSync(path.join(ROOT, 'version.json'), JSON.stringify(Object.assign({ v: hash, at: new Date().toISOString() }, FORZAR ? { force: true } : {})) + '\n');
-console.log(`${FORZAR ? '[MANDATORY] ' : ''}${SIN_SEO ? '[no SEO] ' : ''}${EXPOSE ? '[UNPROTECTED, tests only] ' : ''}ok: ${files.length} scripts · ${(joined.length / 1024).toFixed(0)} KB -> ${(min.length / 1024).toFixed(0)} KB (app.min.js?v=${hash})`);
+// --force: mandatory version, also interrupts runs in progress (saving them).
+const FORCE = process.argv.includes('--force');
+fs.writeFileSync(path.join(ROOT, 'version.json'), JSON.stringify(Object.assign({ v: hash, at: new Date().toISOString() }, FORCE ? { force: true } : {})) + '\n');
+console.log(`${FORCE ? '[MANDATORY] ' : ''}${NO_SEO ? '[no SEO] ' : ''}${EXPOSE ? '[UNPROTECTED, tests only] ' : ''}ok: ${files.length} scripts · ${(joined.length / 1024).toFixed(0)} KB -> ${(min.length / 1024).toFixed(0)} KB (app.min.js?v=${hash})`);

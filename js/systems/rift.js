@@ -147,7 +147,7 @@ G.Rift = (() => {
     G.Camera.x = pl.x; G.Camera.y = pl.y;
     G.Game.flash('#c9a6ff', 0.9);
     G.Audio.sfx('rift');
-    G.Spawner.say('Has entrado en la grieta…', 2.4, true);
+    G.Spawner.say('You entered the rift…', 2.4, true);
   }
 
   function spawnLegend() {
@@ -178,7 +178,7 @@ G.Rift = (() => {
     if (arena.shiny) e.makeShiny();
     G.EnemyMgr.add(e);
     arena.bossId = e.id;
-    G.Spawner.say(hard ? (e.shiny ? 'A shiny ' : '') + e.name + ' guards the portal!' : '¡' + e.name + (e.shiny ? ' shiny' : '') + ' te esperaba en la grieta!', 3.2);
+    G.Spawner.say(hard ? (e.shiny ? 'A shiny ' : '') + e.name + ' guards the portal!' : (e.shiny ? 'A shiny ' : '') + e.name + ' was waiting in the rift!', 3.2);
     G.Camera.kick(1.1);
     G.Audio.sfx('boss');
   }
@@ -265,12 +265,12 @@ G.Rift = (() => {
     arena.phase = 'won'; arena.endT = 5;
     G.Progress.event('rift', { type: arena.btype || arena.type });
     G.Pickups.pullAll();
-    G.Spawner.say('¡Has vencido a ' + G.DEX_BY[arena.dex].name + '! Recoge el premio…', 3.4, true);
+    G.Spawner.say('You defeated ' + G.DEX_BY[arena.dex].name + '! Grab your reward…', 3.4, true);
     G.Audio.sfx('legend');
     const pl = G.Game.player;
     if (pl && !arena.zy) {          // the Zygarde Portal gives no Bond (its reward is the extra loot)
       pl.bonds++;
-      G.FX.dmgText(pl.x, pl.y - pl.bodyH - 10, '¡Vínculo!', '#ff8ad8', true);
+      G.FX.dmgText(pl.x, pl.y - pl.bodyH - 10, 'Bond!', '#ff8ad8', true);
       G.FX.ring(pl.x, pl.y, 8, 90, '#ff8ad8', 0.7, 5);
     }
   }
@@ -278,7 +278,7 @@ G.Rift = (() => {
   function lost() {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'lost'; arena.endT = 1.2;
-    G.Spawner.say(arena.zy ? 'Zygarde has ended your run…' : 'La grieta os ha expulsado…', 2.6, true);
+    G.Spawner.say(arena.zy ? 'Zygarde has ended your run…' : 'The rift threw you out…', 2.6, true);
     G.Audio.sfx('back');
   }
 

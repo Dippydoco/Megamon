@@ -30,15 +30,15 @@ G.UI = (() => {
 
   function refreshCoins() {
     const s = G.DB.save;
-    $('coins').textContent = s ? s.coins.toLocaleString('es') : '0';
+    $('coins').textContent = s ? s.coins.toLocaleString('en') : '0';
     const t = (s && s.tickets) || { t1: 0, t10: 0 };
     $('tickets-pill').innerHTML = `${G.Icons.html('ticket', 18)} ${t.t1} &nbsp;${G.Icons.html('ticket10', 18)} ${t.t10}`;
     // Sync dot: green = saved in the cloud, yellow = saving,
     // red = offline (saved locally and uploaded when back).
     const st = G.DB.guest ? 'guest' : G.DB.syncState;
-    const TIP = { ok: 'Guardado en la nube', syncing: 'Guardando…', pending: 'Guardando…',
-                  offline: 'Sin conexión: se subirá al volver', local: 'Guardado sólo en este navegador', guest: 'Invitado: no se guarda' };
-    $('user-pill').innerHTML = G.Icons.html(G.DB.guest ? 'user' : 'crown', 18) + ' <span translate="no">' + (G.DB.guest ? G.T('Invitado') : (G.DB.user || '')) + '</span>' +
+    const TIP = { ok: 'Saved in the cloud', syncing: 'Saving…', pending: 'Saving…',
+                  offline: 'Offline: it will upload when you\'re back', local: 'Saved only in this browser', guest: 'Guest: not saved' };
+    $('user-pill').innerHTML = G.Icons.html(G.DB.guest ? 'user' : 'crown', 18) + ' <span translate="no">' + (G.DB.guest ? 'Guest' : (G.DB.user || '')) + '</span>' +
       `<i class="sync ${st}" title="${TIP[st] || ''}"></i>`;
     $('user-pill').title = TIP[st] || '';
   }
@@ -84,11 +84,11 @@ G.UI = (() => {
   function soundControls(box) {
     const st = G.Audio.settings;
     box.innerHTML = `
-      <div class="snd-row">${G.Icons.html('sound', 18)}<span>Música</span>
+      <div class="snd-row">${G.Icons.html('sound', 18)}<span>Music</span>
         <input type="range" min="0" max="100" value="${Math.round(st.music * 100)}" data-k="music"></div>
-      <div class="snd-row">${G.Icons.html('sound', 18)}<span>Efectos</span>
+      <div class="snd-row">${G.Icons.html('sound', 18)}<span>Effects</span>
         <input type="range" min="0" max="100" value="${Math.round(st.sfx * 100)}" data-k="sfx"></div>
-      <button class="btn small ${st.muted ? 'gold' : ''}" data-mute>${st.muted ? 'Activar sonido' : 'Silenciar todo'}</button>`;
+      <button class="btn small ${st.muted ? 'gold' : ''}" data-mute>${st.muted ? 'Unmute' : 'Mute all'}</button>`;
     box.querySelectorAll('input[type=range]').forEach(r => {
       r.oninput = () => G.Audio.setVolume(r.dataset.k, r.value / 100);
       r.onchange = () => G.Audio.sfx('click');
@@ -114,7 +114,7 @@ G.UI = (() => {
     $('legal-repo').href = REPO;
     const canDelete = G.DB.loggedIn && !G.DB.guest;
     $('legal-delete').disabled = !canDelete;
-    $('legal-del-msg').textContent = canDelete ? '' : 'Inicia sesión para poder borrar tu cuenta.';
+    $('legal-del-msg').textContent = canDelete ? '' : 'Log in to be able to delete your account.';
     $('scr-legal').classList.remove('hidden');
   }
 
@@ -125,18 +125,18 @@ G.UI = (() => {
    * Returns { pass } or null if cancelled.
    */
   function confirmDelete() {
-    if (!G.DB.nameAccount) return Promise.resolve(confirm(G.T('Se borrarán tu cuenta y toda tu partida, para siempre. ¿Seguro?')) ? { pass: '' } : null);
+    if (!G.DB.nameAccount) return Promise.resolve(confirm('Your account and all your progress will be deleted forever. Are you sure?') ? { pass: '' } : null);
     return new Promise(done => {
       const el = document.createElement('section');
       el.className = 'scr dim';
       el.style.zIndex = 70;
       el.innerHTML = `<div class="box center" style="max-width:380px">
-        <h3>Borrar cuenta</h3>
-        <p class="sub">Se borrarán tu cuenta y toda tu partida, para siempre. Para confirmarlo, escribe tu contraseña.</p>
+        <h3>Delete account</h3>
+        <p class="sub">Your account and all your progress will be deleted forever. To confirm, type your password.</p>
         <input class="field" type="password" maxlength="64" autocomplete="current-password" style="width:100%">
         <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
-          <button class="btn ghost" data-a="no">Cancelar</button>
-          <button class="btn danger" data-a="yes">Borrar para siempre</button>
+          <button class="btn ghost" data-a="no">Cancel</button>
+          <button class="btn danger" data-a="yes">Delete forever</button>
         </div></div>`;
       document.body.appendChild(el);
       const inp = el.querySelector('input');
@@ -187,7 +187,7 @@ G.UI = (() => {
       const r = await G.DB.deleteAccount(ok.pass);
       if (!r.ok) { $('legal-del-msg').textContent = r.error; $('legal-delete').disabled = false; return; }
       closeLegal();
-      toast('Cuenta borrada');
+      toast('Account deleted');
       G.Audio.music(null);
       G.Flow.toLogin();
     };

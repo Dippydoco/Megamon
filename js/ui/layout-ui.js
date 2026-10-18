@@ -40,20 +40,20 @@ G.LayoutUI = (() => {
     el.className = 'scr hidden';
     const slots = Array.from({ length: N }, (_, i) => `<div class="lay-slot${i === 0 ? ' on' : ''}"><i>${i + 1}</i></div>`).join('');
     el.innerHTML = `
-      <div class="lay-thing lay-bar" data-k="bar"><div class="lay-slot item"></div>${slots}<span class="lay-tag">Ataques</span></div>
+      <div class="lay-thing lay-bar" data-k="bar"><div class="lay-slot item"></div>${slots}<span class="lay-tag">Attacks</span></div>
       <div class="lay-thing lay-pause" data-k="pause"><b></b><b></b></div>
       <div class="lay-thing lay-stick" data-k="stick"><div class="knob"></div><span class="lay-tag">Joystick</span></div>
       <div class="box lay-panel">
-        <h3>Arrastra los botones a donde quieras</h3>
-        <p class="lay-turn">Gira el móvil: se juega en horizontal.</p>
+        <h3>Drag the buttons wherever you like</h3>
+        <p class="lay-turn">Rotate your phone: the game is played in landscape.</p>
         <div class="chips set-chips" id="lay-mode"><b>Joystick</b>
-          <button class="chip" data-m="float">Flotante</button><button class="chip" data-m="fixed">Fijo</button>
+          <button class="chip" data-m="float">Floating</button><button class="chip" data-m="fixed">Fixed</button>
         </div>
-        <small class="lay-help">Flotante: aparece donde pones el dedo. Fijo: siempre en el mismo sitio.</small>
+        <small class="lay-help">Floating: appears where you put your finger. Fixed: always in the same place.</small>
         <div class="row wrap lay-btns">
-          <button class="btn small ghost" id="lay-cancel">Cancelar</button>
-          <button class="btn small" id="lay-reset">Restablecer</button>
-          <button class="btn small gold" id="lay-save">Guardar</button>
+          <button class="btn small ghost" id="lay-cancel">Cancel</button>
+          <button class="btn small" id="lay-reset">Reset</button>
+          <button class="btn small gold" id="lay-save">Save</button>
         </div>
       </div>`;
     document.body.appendChild(el);
@@ -124,7 +124,7 @@ G.LayoutUI = (() => {
     for (const k in pos) if (moved[k]) pad[k] = [+(pos[k][0] / w).toFixed(4), +(pos[k][1] / h).toFixed(4)];
     G.Settings.set('pad', Object.keys(pad).length ? pad : null);
     G.Settings.set('stickMode', mode);
-    G.UI.toast('Botones colocados');
+    G.UI.toast('Buttons placed');
     close();
   }
 

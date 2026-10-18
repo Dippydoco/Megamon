@@ -76,7 +76,7 @@ G.Progress = (() => {
       m.prog = def.mode === 'max' ? Math.max(m.prog, v) : m.prog + v;
       if (done(m) && !m.told) {
         m.told = true;
-        notify('Misión completada: ' + text(m), 'Recoge el premio en Misiones');
+        notify('Mission complete: ' + text(m), 'Claim your reward in Missions');
       }
     }
   }
@@ -100,7 +100,7 @@ G.Progress = (() => {
     const M = s.missions;
     const m = M.daily[i];
     if (!m || M.rerolled || m.claimed) return false;
-    const r = rng(M.day + 'cambio' + Date.now());
+    const r = rng(M.day + 'reroll' + Date.now());
     const [n] = pickSet(G.MissionDefs.daily, 1, r, M.daily.map(x => x.id));
     if (!n) return false;
     M.daily[i] = n;
@@ -191,7 +191,7 @@ G.Progress = (() => {
       if (a.value(s) < a.goal) continue;
       s.ach[a.id] = Date.now();
       grant(a.reward);
-      notify('¡Logro: ' + a.name + '!', a.title ? 'Nuevo título: ' + a.title : '', a);
+      notify('Achievement: ' + a.name + '!', a.title ? 'New title: ' + a.title : '', a);
     }
   }
 

@@ -13,7 +13,7 @@
  *
  * To test: open dev.html (it loads each script separately, no need to
  * build), save this file and reload the page.
- * For the packaged game (index.html): node tools/build.js --expose --sin-seo
+ * For the packaged game (index.html): node tools/build.js --expose --no-seo
  */
 
 // 1) GLOBAL tweak: multiplies the stat of ALL Pokémon. 1 = no change.
@@ -35,5 +35,5 @@ G.DEX_OVERRIDES = {
     if (g.atk !== 1) p.atk = Math.round(p.atk * g.atk * 100) / 100;
     if (ov[p.dex]) Object.assign(p, ov[p.dex]);   // the per-Pokémon tweak takes priority over the global one
   }
-  for (const k of Object.keys(ov)) if (!G.DEX_BY[k]) console.warn('overrides.js: no existe el Pokémon nº ' + k);
+  for (const k of Object.keys(ov)) if (!G.DEX_BY[k]) console.warn('overrides.js: there is no Pokémon no. ' + k);
 })();

@@ -11,7 +11,9 @@ Status as of 10-10-2026:
       domains (Google sign-in will work from day one).
 - [x] Spanish and English pages, sitemap, robots, 404 and share image,
       generated and tested (Lighthouse: SEO 100, accessibility 100).
-- [x] Final-step script rehearsed: `tools/activate_domain.sh`.
+      (18-10-2026: the game became English-only; the Spanish pages and the scripts that
+      generated the pages, including `tools/activate_domain.sh`, were removed.)
+- [x] Final-step script rehearsed: `tools/activate_domain.sh` (since removed).
 - [x] Step 1 · DNS on Cloudflare (**YOU**)
 - [x] Step 2 · Verify the domain on GitHub (**YOU**, recommended)
 - [x] Step 3 · Final step (**ME**): done on 10-10-2026, with HTTPS
@@ -95,8 +97,8 @@ asks: they should create an account before the switch.
    as in step 2).
 3. **Sitemaps** menu → type `sitemap.xml` → **Submit**.
 4. **URL inspection** menu → `https://pokesurvivor.com/` → **Request
-   indexing**. Repeat with `https://pokesurvivor.com/en/`,
-   `https://pokesurvivor.com/guia/` and `https://pokesurvivor.com/pokedex/`.
+   indexing**. Repeat with `https://pokesurvivor.com/en/guide/` and
+   `https://pokesurvivor.com/en/pokedex/`.
 5. Bing (and with it DuckDuckGo and Ecosia): <https://www.bing.com/webmasters> →
    **Import from Google Search Console**.
 

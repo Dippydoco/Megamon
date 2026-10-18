@@ -33,7 +33,7 @@
  */
 G.Ranking = (() => {
   const TZ = 'Europe/Madrid';
-  const PERIODS = [['d', 'Diario'], ['w', 'Semanal'], ['m', 'Mensual'], ['a', 'Histórico']];
+  const PERIODS = [['d', 'Daily'], ['w', 'Weekly'], ['m', 'Monthly'], ['a', 'All-time']];
   // Periods in which only the top 50 is stored (see above).
   // ('p' = a Pokémon's all-time table: almost every run got into its
   //  Pokémon's and wrote; now also only the top 50.)
@@ -183,7 +183,7 @@ G.Ranking = (() => {
     runMarked = fb.uid;
     const go = n => fb.fs.collection('runs').doc(fb.uid).set({ startedAt: now(), mode })
       .catch(e => {
-        console.warn('[Ranking] inicio:', e.code || e.message);
+        console.warn('[Ranking] start:', e.code || e.message);
         if (n < 2) setTimeout(() => go(n + 1), 15000); else runMarked = '';
       });
     busy.then(() => go(0));
@@ -252,7 +252,7 @@ G.Ranking = (() => {
         if (/^g/.test(b)) known[b + ':*'] = Math.max(known[b + ':*'] || 0, v);
         mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nothing */ }
         if (vk === 't' && period && period !== 'p' && !better.includes(period)) better.push(period);
-      } catch (e) { console.warn('[Ranking] no se pudo guardar en', b, e.code || e.message); }
+      } catch (e) { console.warn('[Ranking] could not save to', b, e.code || e.message); }
     }));
     saveBests(known);
     return better;
@@ -260,9 +260,9 @@ G.Ranking = (() => {
 
   function announce(better) {
     if (!better.length) return;
-    const names = { d: 'de hoy', w: 'de la semana', m: 'del mes', a: 'histórico' };
+    const names = { d: 'today', w: 'of the week', m: 'of the month', a: 'all-time' };
     const best = PERIODS.map(p => p[0]).filter(p => better.includes(p)).pop();
-    G.UI.toast('¡Nueva mejor marca ' + names[best] + ' en el ranking!', 3400);
+    G.UI.toast('New best record ' + names[best] + ' on the leaderboard!', 3400);
   }
 
   function submitSolo(r) { return track(submitSoloNow(r)); }
@@ -437,7 +437,7 @@ G.Ranking = (() => {
       const n = j && j[0] && j[0].result && j[0].result.aggregateFields && j[0].result.aggregateFields.n;
       return n ? +n.integerValue : 0;
     } catch (e) {
-      console.warn('[Ranking] puesto:', e.message);
+      console.warn('[Ranking] rank:', e.message);
       return 0;
     }
   }
@@ -517,7 +517,7 @@ G.Ranking = (() => {
       if (!(e in top)) return;
       delete top[e];
       tx.set(sumRef(b), { top, me: '', ev: e });
-    }).catch(err => console.warn('[Ranking] quitar', b, err.code || err.message));
+    }).catch(err => console.warn('[Ranking] remove', b, err.code || err.message));
     cacheSet('s:' + b, undefined);
   }
 

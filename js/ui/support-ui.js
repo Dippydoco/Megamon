@@ -7,13 +7,13 @@ G.SupportUI = (() => {
   const $ = G.UI.$;
   const F = G.Funding;
   const val = v => typeof v === 'number'
-    ? (Math.round(v * 100) / 100).toLocaleString(G.I18n.lang === 'en' ? 'en' : 'es', { style: 'currency', currency: 'EUR' }) + ' / mes'
+    ? (Math.round(v * 100) / 100).toLocaleString('en', { style: 'currency', currency: 'EUR' }) + ' / month'
     : v;
 
   function init() {
     const b = $('btn-support');
     b.classList.remove('hidden');
-    b.innerHTML = G.Icons.html('heart', 18) + ' <span>Apoyar</span>';
+    b.innerHTML = G.Icons.html('heart', 18) + ' <span>Support</span>';
     b.onclick = open;
     $('sup-close').onclick = close;
   }

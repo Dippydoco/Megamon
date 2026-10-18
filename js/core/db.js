@@ -384,10 +384,10 @@ G.DB = (() => {
   async function registerLocal(name, pass) {
     const accs = read(K_ACC) || {};
     const k = name.toLowerCase();
-    if (accs[k]) return { ok: false, error: 'Ese nombre ya existe.' };
+    if (accs[k]) return { ok: false, error: 'That name is already taken.' };
     const salt = randomSalt();
     accs[k] = { name, salt, hash: await hash(pass, salt), created: Date.now() };
-    if (!write(K_ACC, accs)) return { ok: false, error: 'El navegador no deja guardar datos (¿modo incógnito?).' };
+    if (!write(K_ACC, accs)) return { ok: false, error: 'The browser won\'t let us save data (incognito mode?).' };
     beginLocal(k, name);
     write(K_SAVE + k, save);
     return { ok: true, isNew: true };
@@ -397,7 +397,7 @@ G.DB = (() => {
     const accs = read(K_ACC) || {};
     const acc = accs[name.toLowerCase()];
     if (!acc || acc.hash !== await hash(pass || '', acc.salt)) {
-      return { ok: false, error: 'Usuario o contraseña incorrectos.' };
+      return { ok: false, error: 'Wrong username or password.' };
     }
     beginLocal(name.toLowerCase(), acc.name);
     return { ok: true, isNew: !save.partner };
@@ -453,7 +453,7 @@ G.DB = (() => {
     return new Promise((res, rej) => {
       const el = document.createElement('script');
       el.src = src; el.async = true;
-      el.onload = res; el.onerror = () => rej(new Error('No se pudo cargar ' + src));
+      el.onload = res; el.onerror = () => rej(new Error('Could not load ' + src));
       document.head.appendChild(el);
     });
   }
@@ -492,7 +492,7 @@ G.DB = (() => {
       if (rtdb) rtdb.useEmulator('127.0.0.1', 9000);
     }
     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    auth.languageCode = 'es';
+    auth.languageCode = 'en';
     addEventListener('online', () => { if (pending) pushNow(); });
     // On leaving or closing the tab what's pending is uploaded, but no more than
     // once every 10 min: people switch tabs often and each save was
@@ -529,7 +529,7 @@ G.DB = (() => {
       applyInPlace(merge(plain(fold(save)), migrate(snap.data().save)));
       write(K_CLOUD + uid, save);
       if (G.UI && G.UI.refreshCoins) G.UI.refreshCoins();
-    }).catch(e => console.warn('[DB] no se pudo bajar la partida:', e.code || e.message));
+    }).catch(e => console.warn('[DB] could not download the save:', e.code || e.message));
   }
 
   /** Firebase asks for an email: the name is encoded into an internal, unique and valid one. */
@@ -539,8 +539,8 @@ G.DB = (() => {
   }
 
   function displayNameOf(u) {
-    const n = ((u && u.displayName) || 'Entrenador').trim().split(/\s+/)[0].replace(/[^A-Za-z0-9_ñÑáéíóúÁÉÍÓÚ]/g, '');
-    return (n || 'Entrenador').slice(0, 16);
+    const n = ((u && u.displayName) || 'Trainer').trim().split(/\s+/)[0].replace(/[^A-Za-z0-9_ñÑáéíóúÁÉÍÓÚ]/g, '');
+    return (n || 'Trainer').slice(0, 16);
   }
 
   const docRef = () => fs.collection('saves').doc(uid);
@@ -637,7 +637,7 @@ G.DB = (() => {
       setSync(pending ? 'pending' : 'ok');
       if (G.UI && G.UI.refreshCoins) G.UI.refreshCoins();
     }).catch(e => {
-      console.warn('[DB] no se pudo sincronizar:', e.code || e.message);
+      console.warn('[DB] could not sync:', e.code || e.message);
       pending = true; failed = true;
       setSync(navigator.onLine === false || e.code === 'unavailable' ? 'offline' : 'pending');
       scheduleRetry();
@@ -673,22 +673,22 @@ G.DB = (() => {
   function authError(e) {
     const c = (e && e.code) || '';
     const M = {
-      'auth/email-already-in-use': 'Ese nombre ya existe.',
-      'auth/invalid-credential': 'Usuario o contraseña incorrectos.',
-      'auth/invalid-login-credentials': 'Usuario o contraseña incorrectos.',
-      'auth/wrong-password': 'Usuario o contraseña incorrectos.',
-      'auth/user-not-found': 'Usuario o contraseña incorrectos.',
-      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
-      'auth/too-many-requests': 'Demasiados intentos seguidos. Espera un poco.',
-      'auth/network-request-failed': 'Sin conexión a internet.',
-      'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes.',
-      'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication > Configuración > Dominios autorizados).',
-      'auth/operation-not-allowed': 'Ese método de inicio de sesión no está activado en Firebase.',
+      'auth/email-already-in-use': 'That name is already taken.',
+      'auth/invalid-credential': 'Wrong username or password.',
+      'auth/invalid-login-credentials': 'Wrong username or password.',
+      'auth/wrong-password': 'Wrong username or password.',
+      'auth/user-not-found': 'Wrong username or password.',
+      'auth/weak-password': 'The password must be at least 6 characters long.',
+      'auth/too-many-requests': 'Too many attempts in a row. Please wait a moment.',
+      'auth/network-request-failed': 'No internet connection.',
+      'auth/popup-blocked': 'The browser blocked the Google window. Please allow pop-ups.',
+      'auth/unauthorized-domain': 'This domain is not authorized in Firebase (Authentication > Settings > Authorized domains).',
+      'auth/operation-not-allowed': 'That sign-in method is not enabled in Firebase.',
       // New account sign-up disabled in Firebase (Authentication > Settings).
-      'auth/admin-restricted-operation': 'Ahora mismo no se pueden crear cuentas nuevas. Si ya tienes cuenta, entra normal; si no, puedes jugar como invitado.',
-      'auth/requires-recent-login': 'Por seguridad, vuelve a iniciar sesión y repite la operación.',
-      'permission-denied': 'La base de datos rechazó el acceso (revisa las reglas de Firestore).',
-      'unavailable': 'Sin conexión con la base de datos.'
+      'auth/admin-restricted-operation': 'New accounts cannot be created right now. If you already have an account, sign in as usual; otherwise, you can play as a guest.',
+      'auth/requires-recent-login': 'For security, please log in again and repeat the action.',
+      'permission-denied': 'The database denied access (check the Firestore rules).',
+      'unavailable': 'No connection to the database.'
     };
     if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return '';
     return M[c] || ('Error: ' + (c || (e && e.message) || 'desconocido'));
@@ -705,21 +705,21 @@ G.DB = (() => {
     if (readyP) return readyP;
     readyP = (async () => {
       try { if (await initCloud()) mode = 'cloud'; }
-      catch (e) { console.warn('[DB] sin nube:', e.message); localReason = 'error'; mode = 'local'; }
+      catch (e) { console.warn('[DB] no cloud:', e.message); localReason = 'error'; mode = 'local'; }
       if (mode === 'local') { setSync('local'); return restoreLocal(); }
       const u = await new Promise(res => { const off = auth.onAuthStateChanged(x => { off(); res(x); }); });
       if (!u) return false;
       try { await openCloud(u); return true; }
-      catch (e) { console.warn('[DB] no se pudo abrir la partida:', e.code || e.message); return false; }
+      catch (e) { console.warn('[DB] could not open the save:', e.code || e.message); return false; }
     })();
     return readyP;
   }
 
   async function register(name, pass) {
     name = (name || '').trim();
-    if (!VALID.test(name)) return { ok: false, error: 'El nombre debe tener 3-16 letras, números o _.' };
+    if (!VALID.test(name)) return { ok: false, error: 'The name must be 3-16 letters, numbers or _.' };
     const min = mode === 'cloud' ? 6 : 4;
-    if ((pass || '').length < min) return { ok: false, error: `La contraseña debe tener al menos ${min} caracteres.` };
+    if ((pass || '').length < min) return { ok: false, error: `The password must be at least ${min} characters long.` };
     if (mode === 'local') return registerLocal(name, pass);
     // Monthly account cap (Firebase charges from 50,000 a month).
     try {
@@ -742,7 +742,7 @@ G.DB = (() => {
   }
 
   async function loginWithGoogle() {
-    if (mode !== 'cloud') return { ok: false, error: 'Entrar con Google necesita la versión publicada del juego.' };
+    if (mode !== 'cloud') return { ok: false, error: 'Google sign-in needs the online version of the game.' };
     try {
       const cred = await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
       await openCloud(cred.user, { name: displayNameOf(cred.user) });
@@ -758,8 +758,8 @@ G.DB = (() => {
   }
 
   function playAsGuest() {
-    user = 'Invitado'; key = null; guest = true; uid = null;
-    save = newSave('Invitado');
+    user = 'Guest'; key = null; guest = true; uid = null;
+    save = newSave('Guest');
     if (mode === 'local') remove(K_SES);
     return { ok: true, isNew: true };
   }
@@ -815,7 +815,7 @@ G.DB = (() => {
     return !!(u && u.providerData.some(p => p.providerId === 'google.com'));
   }
   async function linkGoogle() {
-    if (!auth || !auth.currentUser) return { ok: false, error: 'Inicia sesión primero.' };
+    if (!auth || !auth.currentUser) return { ok: false, error: 'Sign in first.' };
     try {
       await auth.currentUser.linkWithPopup(new firebase.auth.GoogleAuthProvider());
       return { ok: true };
@@ -823,7 +823,7 @@ G.DB = (() => {
       const c = (e && e.code) || '';
       if (c === 'auth/provider-already-linked') return { ok: true };
       if (c === 'auth/credential-already-in-use' || c === 'auth/email-already-in-use')
-        return { ok: false, error: 'Ese Gmail ya tiene su propia cuenta del juego. Usa otro Gmail.' };
+        return { ok: false, error: 'That Gmail already has its own game account. Use another Gmail.' };
       return { ok: false, error: authError(e) };
     }
   }
@@ -833,7 +833,7 @@ G.DB = (() => {
    * @param pass  password (name-and-password accounts)
    */
   async function deleteAccount(pass) {
-    if (guest || !key) return { ok: false, error: 'No hay cuenta que borrar.' };
+    if (guest || !key) return { ok: false, error: 'There is no account to delete.' };
     if (mode === 'local') {
       const accs = read(K_ACC) || {};
       delete accs[key];
@@ -849,7 +849,7 @@ G.DB = (() => {
       // couldn't be used again.
       const cu = auth.currentUser;
       if (nameAccount()) {
-        if (!pass) return { ok: false, error: 'Escribe tu contraseña.' };
+        if (!pass) return { ok: false, error: 'Type your password.' };
         await cu.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(cu.email, pass));
       } else {
         await cu.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());

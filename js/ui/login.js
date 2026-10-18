@@ -32,7 +32,7 @@ G.LoginUI = (() => {
       $('rec-link').disabled = false;
       if (!r.ok) { $('rec-err').textContent = r.error; return; }
       $('scr-recover').classList.add('hidden');
-      G.UI.toast('¡Gmail vinculado! Si olvidas la contraseña, entra con Google.', 4500);
+      G.UI.toast('Gmail linked! If you forget your password, sign in with Google.', 4500);
     };
     $('rec-later').onclick = () => $('scr-recover').classList.add('hidden');
     $('rec-never').onclick = () => {
@@ -65,21 +65,21 @@ G.LoginUI = (() => {
 
   /** Explains where the save is stored depending on the database mode. */
   function modeNote() {
-    if (G.DB.mode === 'cloud') return 'Tu partida se guarda en la nube: entra desde cualquier ordenador. Como invitado no se guarda.';
+    if (G.DB.mode === 'cloud') return 'Your game is saved in the cloud: log in from any computer. Guest progress is not saved.';
     const why = G.DB.localReason === 'file'
-      ? 'Abierto desde un archivo: la partida sólo se guarda en este navegador. Para guardar en la nube, juega en la versión publicada.'
+      ? 'Opened from a file: your game is only saved in this browser. To save in the cloud, play the online version.'
       : G.DB.localReason === 'host'
-        ? 'Esta no es la web oficial: la partida sólo se guarda en este navegador. El juego oficial y gratis está en pokesurvivor.com.'
+        ? 'This is not the official website: your game is only saved in this browser. The official, free game is at pokesurvivor.com.'
       : G.DB.localReason === 'config'
-        ? 'Nube sin configurar: la partida sólo se guarda en este navegador.'
-        : 'No se pudo conectar con la nube: la partida sólo se guarda en este navegador.';
+        ? 'Cloud not configured: your game is only saved in this browser.'
+        : 'Couldn\'t connect to the cloud: your game is only saved in this browser.';
     return why;
   }
 
   function setMode(m) {
     mode = m;
     document.querySelectorAll('#scr-login .tab').forEach(t => t.classList.toggle('on', t.dataset.tab === m));
-    $('btn-auth').textContent = m === 'login' ? 'Entrar' : 'Crear cuenta';
+    $('btn-auth').textContent = m === 'login' ? 'Log in' : 'Sign up';
     $('f-pass').autocomplete = m === 'login' ? 'current-password' : 'new-password';
     $('login-err').textContent = '';
   }
@@ -87,7 +87,7 @@ G.LoginUI = (() => {
   function open() {
     G.UI.chrome(false);
     G.UI.show('scr-login');
-    if (!G.DB.storageOk) $('login-err').textContent = 'Este navegador no deja guardar datos: juega como invitado.';
+    if (!G.DB.storageOk) $('login-err').textContent = 'This browser won\'t let us save data: play as a guest.';
     $('btn-google').classList.toggle('hidden', G.DB.mode !== 'cloud');
     $('login-mode').textContent = modeNote();
     setTimeout(() => $('f-user').focus(), 50);

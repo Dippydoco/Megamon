@@ -8,16 +8,16 @@ can do (buy the domain, set up the DNS and register the site with Google).
 | File | What for |
 |---|---|
 | `index.html` | Title and description written for searches ("free online Pokémon game", "Survivor.io style"), canonical address, social cards (Open Graph / Twitter), `VideoGame` structured data (free, 1-4 players, browser/Android/iOS) and real text while loading (with an `<h1>`). |
-| `guia/` | Guide with how to play, features, tips and **frequently asked questions** (with `FAQPage` data, which Google can show as drop-downs in results). |
-| `pokedex/` | The 966 playable Pokémon with their types and sprites: draws searches like "free game with Pikachu". |
+| `en/guide/` | Guide with how to play, features, tips and **frequently asked questions** (with `FAQPage` data, which Google can show as drop-downs in results). |
+| `en/pokedex/` | The 966 playable Pokémon with their types and sprites: draws searches like "free game with Pikachu". |
 | `404.html` | "Doesn't exist" page with links to the game (GitHub Pages uses it automatically). |
 | `robots.txt` | Allows crawling everything except `tools/` and `docs/`, and points to the sitemap. |
 | `sitemap.xml` | The pages to be indexed. |
 | `assets/og-image.jpg` | The image shown when the link is shared (1200×630). |
 | `manifest.webmanifest`, icons | Installable app, icon in the browser and on phones. |
 
-The pages are regenerated with `python tools/make_seo_pages.py` (for example, if
-the Pokémon or the features change).
+The pages in `en/` are static: the script that generated them (and their Spanish versions) was removed on
+18-10-2026, when the game became English-only. Edit them by hand if something on them needs changing.
 
 > **Important:** the canonical addresses already point to `https://pokesurvivor.com/`.
 > Don't publish these changes until the domain works, or Google will try to
@@ -36,7 +36,7 @@ Firebase and the final step) are in [DOMAIN.md](DOMAIN.md).
    (it can take a few minutes).
 4. **Sitemaps** → submit `sitemap.xml`.
 5. **URL inspection** → `https://pokesurvivor.com/` → **Request indexing**.
-   Repeat with `/guia/` and `/pokedex/`.
+   Repeat with `/en/guide/` and `/en/pokedex/`.
 
 Bing (and with it DuckDuckGo and Ecosia): <https://www.bing.com/webmasters> → "Import
 from Google Search Console".
@@ -58,7 +58,7 @@ Google ranks sites that other sites link to and that people search for by name:
 
 - Check in Search Console which **searches** bring visits and add answers to those
   questions to the guide.
-- Each big update: a new entry (for example `novedades/`) and add it to the sitemap.
+- Each big update: a new entry (for example `en/news/`) and add it to the sitemap.
 - The pages load fast (Lighthouse: guide and Pokédex 100/100/100/100).
 
 ## Warning
@@ -76,15 +76,10 @@ nature help, but don't remove that risk.
 
 ```
 node tools/build.js            # dev.html -> index.html + js/app.min.js
-node tools/export_data.js      # game data for the pages
-python tools/make_seo_pages.py # Spanish and English pages, en/index.html, sitemap
 ```
 
-## Languages
+## Language
 
-- The game appears in **English or Spanish** depending on the browser language and can be
-  changed in Settings → Graphics → Language. `/en/` opens the game in English.
-- English texts: `js/data/lang-en.js` (key = the Spanish text). If you add a new
-  text to the game, add its translation there too.
+- The game is **English only** (since 18-10-2026). `/en/` now just redirects to the game.
 - Pages: guide, Pokédex, legendaries, shinies, types, moves, items, achievements and
-  what's new, each in both languages and linked to each other (hreflang).
+  what's new, all under `en/`.

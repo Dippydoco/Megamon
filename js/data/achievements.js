@@ -13,81 +13,85 @@ G.AchDefs = (() => {
   const st = k => s => (s.stats && s.stats[k]) || 0;
   const count = k => s => Object.keys(s[k] || {}).length;
 
-  const CATS = [['coleccion', 'Colección'], ['supervivencia', 'Supervivencia'], ['combate', 'Combate'],
-                ['grietas', 'Grietas'], ['legendarios', 'Legendarios'], ['otros', 'Misiones y más']];
+  const CATS = [['collection', 'Collection'], ['survival', 'Survival'], ['combat', 'Combat'],
+                ['rifts', 'Rifts'], ['legendaries', 'Legendaries'], ['other', 'Missions & more']];
 
   const LIST = [
     // ---------- collection ----------
-    { id: 'own1', cat: 'coleccion', tier: 1, name: 'Primer compañero', desc: 'Ten 1 Pokémon.', value: own, goal: 1, reward: { coins: 100 } },
-    { id: 'own10', cat: 'coleccion', tier: 1, name: 'Pequeño equipo', desc: 'Ten 10 Pokémon.', value: own, goal: 10, reward: { t1: 2 } },
-    { id: 'own50', cat: 'coleccion', tier: 2, name: 'Coleccionista', desc: 'Ten 50 Pokémon.', value: own, goal: 50, reward: { t1: 5 }, title: 'Coleccionista' },
-    { id: 'own100', cat: 'coleccion', tier: 2, name: 'Cien amigos', desc: 'Ten 100 Pokémon.', value: own, goal: 100, reward: { t10: 1 } },
-    { id: 'own250', cat: 'coleccion', tier: 3, name: 'Maestro Pokémon', desc: 'Ten 250 Pokémon.', value: own, goal: 250, reward: { t10: 2 }, title: 'Maestro Pokémon' },
-    { id: 'own500', cat: 'coleccion', tier: 3, name: 'Enciclopedia', desc: 'Ten 500 Pokémon.', value: own, goal: 500, reward: { t10: 3 } },
-    { id: 'ownAll', cat: 'coleccion', tier: 3, name: 'Profesor Pokémon', desc: 'Ten todos los Pokémon del juego.', value: own, goal: 966, reward: { t10: 10 }, title: 'Profesor Pokémon' },
-    { id: 'shiny1', cat: 'coleccion', tier: 1, name: 'Algo brilla', desc: 'Consigue 1 shiny.', value: shinies, goal: 1, reward: { t1: 3 }, title: 'Brillante' },
-    { id: 'shiny5', cat: 'coleccion', tier: 2, name: 'Ojo para el brillo', desc: 'Consigue 5 shinies.', value: shinies, goal: 5, reward: { t10: 1 } },
-    { id: 'shiny20', cat: 'coleccion', tier: 3, name: 'Cazashinies', desc: 'Consigue 20 shinies.', value: shinies, goal: 20, reward: { t10: 2 }, title: 'Cazashinies' },
-    { id: 'pulls100', cat: 'coleccion', tier: 2, name: 'Tragaperras', desc: 'Haz 100 tiradas en el gacha.', value: st('pulls'), goal: 100, reward: { t10: 1 }, title: 'Afortunado' },
+    { id: 'own1', cat: 'collection', tier: 1, name: 'First partner', desc: 'Own 1 Pokémon.', value: own, goal: 1, reward: { coins: 100 } },
+    { id: 'own10', cat: 'collection', tier: 1, name: 'Small team', desc: 'Own 10 Pokémon.', value: own, goal: 10, reward: { t1: 2 } },
+    { id: 'own50', cat: 'collection', tier: 2, name: 'Collector', desc: 'Own 50 Pokémon.', value: own, goal: 50, reward: { t1: 5 }, title: 'Collector' },
+    { id: 'own100', cat: 'collection', tier: 2, name: 'A hundred friends', desc: 'Own 100 Pokémon.', value: own, goal: 100, reward: { t10: 1 } },
+    { id: 'own250', cat: 'collection', tier: 3, name: 'Pokémon Master', desc: 'Own 250 Pokémon.', value: own, goal: 250, reward: { t10: 2 }, title: 'Pokémon Master' },
+    { id: 'own500', cat: 'collection', tier: 3, name: 'Encyclopedia', desc: 'Own 500 Pokémon.', value: own, goal: 500, reward: { t10: 3 } },
+    { id: 'ownAll', cat: 'collection', tier: 3, name: 'Pokémon Professor', desc: 'Own every Pokémon in the game.', value: own, goal: 966, reward: { t10: 10 }, title: 'Pokémon Professor' },
+    { id: 'shiny1', cat: 'collection', tier: 1, name: 'Something shines', desc: 'Get 1 shiny.', value: shinies, goal: 1, reward: { t1: 3 }, title: 'Brilliant' },
+    { id: 'shiny5', cat: 'collection', tier: 2, name: 'An eye for shine', desc: 'Get 5 shinies.', value: shinies, goal: 5, reward: { t10: 1 } },
+    { id: 'shiny20', cat: 'collection', tier: 3, name: 'Shiny Hunter', desc: 'Get 20 shinies.', value: shinies, goal: 20, reward: { t10: 2 }, title: 'Shiny Hunter' },
+    { id: 'pulls100', cat: 'collection', tier: 2, name: 'Slot machine', desc: 'Make 100 gacha pulls.', value: st('pulls'), goal: 100, reward: { t10: 1 }, title: 'Lucky' },
 
     // ---------- supervivencia ----------
-    { id: 'time5', cat: 'supervivencia', tier: 1, name: 'Calentando', desc: 'Aguanta 5 minutos.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 5, reward: { coins: 200 } },
-    { id: 'time10', cat: 'supervivencia', tier: 2, name: 'Duro de pelar', desc: 'Aguanta 10 minutos.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 10, reward: { t1: 4 } },
-    { id: 'time15', cat: 'supervivencia', tier: 2, name: 'Resistente', desc: 'Aguanta 15 minutos.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 15, reward: { t10: 1 } },
-    { id: 'time20', cat: 'supervivencia', tier: 3, name: 'Superviviente', desc: 'Aguanta 20 minutos.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 20, reward: { t10: 2 }, title: 'Superviviente' },
-    { id: 'lvl20', cat: 'supervivencia', tier: 1, name: 'Creciendo', desc: 'Llega al nivel 15 en una run.', value: st('bestLevel'), goal: 15, reward: { t1: 2 } },
-    { id: 'lvl40', cat: 'supervivencia', tier: 3, name: 'Imparable', desc: 'Llega al nivel 30 en una run.', value: st('bestLevel'), goal: 30, reward: { t10: 1 }, title: 'Imparable' },
+    { id: 'time5', cat: 'survival', tier: 1, name: 'Warming up', desc: 'Survive 5 minutes.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 5, reward: { coins: 200 } },
+    { id: 'time10', cat: 'survival', tier: 2, name: 'Hard to beat', desc: 'Survive 10 minutes.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 10, reward: { t1: 4 } },
+    { id: 'time15', cat: 'survival', tier: 2, name: 'Tough', desc: 'Survive 15 minutes.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 15, reward: { t10: 1 } },
+    { id: 'time20', cat: 'survival', tier: 3, name: 'Survivor', desc: 'Survive 20 minutes.', value: s => Math.floor(st('bestTime')(s) / 60), goal: 20, reward: { t10: 2 }, title: 'Survivor' },
+    { id: 'lvl20', cat: 'survival', tier: 1, name: 'Growing up', desc: 'Reach level 15 in a run.', value: st('bestLevel'), goal: 15, reward: { t1: 2 } },
+    { id: 'lvl40', cat: 'survival', tier: 3, name: 'Unstoppable', desc: 'Reach level 30 in a run.', value: st('bestLevel'), goal: 30, reward: { t10: 1 }, title: 'Unstoppable' },
     // Arceus's Judgment (minute 30, see systems/judgment.js).
-    { id: 'judge', cat: 'supervivencia', tier: 2, name: 'La Sentencia', desc: 'Llega a la Sentencia de Arceus (minuto 30).', value: st('judged'), goal: 1, reward: { t10: 1 }, title: 'Juzgado' },
-    { id: 'judge60', cat: 'supervivencia', tier: 3, name: 'Ante el Creador', desc: 'Aguanta 1 minuto ante Arceus.', value: st('judgeTime'), goal: 60, reward: { t10: 2 }, title: 'Elegido de Arceus' },
-    { id: 'judgeBoss', cat: 'supervivencia', tier: 3, name: 'Desafío divino', desc: 'Derrota a 3 legendarios ante Arceus en una partida.', value: st('judgeBosses'), goal: 3, reward: { t10: 2 } },
-    { id: 'runs50', cat: 'supervivencia', tier: 2, name: 'Explorador', desc: 'Juega 50 runs.', value: st('runs'), goal: 50, reward: { t10: 1 }, title: 'Explorador' },
+    { id: 'judge', cat: 'survival', tier: 2, name: 'The Judgment', desc: 'Reach the Judgment of Arceus (minute 30).', value: st('judged'), goal: 1, reward: { t10: 1 }, title: 'Judged' },
+    { id: 'judge60', cat: 'survival', tier: 3, name: 'Before the Creator', desc: 'Survive 1 minute against Arceus.', value: st('judgeTime'), goal: 60, reward: { t10: 2 }, title: 'Chosen of Arceus' },
+    { id: 'judgeBoss', cat: 'survival', tier: 3, name: 'Divine challenge', desc: 'Defeat 3 legendaries against Arceus in a single run.', value: st('judgeBosses'), goal: 3, reward: { t10: 2 } },
+    { id: 'runs50', cat: 'survival', tier: 2, name: 'Explorer', desc: 'Play 50 runs.', value: st('runs'), goal: 50, reward: { t10: 1 }, title: 'Explorer' },
 
     // ---------- combate ----------
-    { id: 'kills1k', cat: 'combate', tier: 1, name: 'Primeros combates', desc: 'Derrota a 1.000 Pokémon.', value: st('totalKills'), goal: 1000, reward: { t1: 2 } },
-    { id: 'kills10k', cat: 'combate', tier: 2, name: 'Veterano', desc: 'Derrota a 10.000 Pokémon.', value: st('totalKills'), goal: 10000, reward: { t10: 1 }, title: 'Veterano' },
-    { id: 'kills100k', cat: 'combate', tier: 3, name: 'Leyenda viva', desc: 'Derrota a 100.000 Pokémon.', value: st('totalKills'), goal: 100000, reward: { t10: 3 }, title: 'Leyenda viva' },
-    { id: 'boss1', cat: 'combate', tier: 1, name: 'Matagigantes', desc: 'Derrota a un jefe.', value: st('bossesTotal'), goal: 1, reward: { t1: 2 } },
-    { id: 'boss25', cat: 'combate', tier: 2, name: 'Cazajefes', desc: 'Derrota a 25 jefes.', value: st('bossesTotal'), goal: 25, reward: { t10: 1 }, title: 'Cazajefes' },
-    { id: 'boss100', cat: 'combate', tier: 3, name: 'Terror de los jefes', desc: 'Derrota a 100 jefes.', value: st('bossesTotal'), goal: 100, reward: { t10: 2 } },
-    { id: 'evo1', cat: 'combate', tier: 1, name: 'Evolución', desc: 'Evoluciona un movimiento.', value: st('evolutions'), goal: 1, reward: { t1: 3 } },
-    { id: 'evo25', cat: 'combate', tier: 2, name: 'Evolucionista', desc: 'Evoluciona 25 movimientos.', value: st('evolutions'), goal: 25, reward: { t10: 1 }, title: 'Evolucionista' },
-    { id: 'evoAll', cat: 'combate', tier: 3, name: 'Maestro de movimientos', desc: 'Evoluciona los 47 movimientos distintos.', value: count('evoMoves'), goal: 47, reward: { t10: 3 }, title: 'Maestro de movimientos' },
-    { id: 'items5', cat: 'combate', tier: 1, name: 'Bolsa llena', desc: 'Encuentra 5 objetos distintos.', value: count('itemsFound'), goal: 5, reward: { t1: 3 } },
-    { id: 'itemsAll', cat: 'combate', tier: 2, name: 'Coleccionista de objetos', desc: 'Encuentra los 11 objetos.', value: count('itemsFound'), goal: 11, reward: { t10: 1 }, title: 'Anticuario' },
+    { id: 'kills1k', cat: 'combat', tier: 1, name: 'First battles', desc: 'Defeat 1,000 Pokémon.', value: st('totalKills'), goal: 1000, reward: { t1: 2 } },
+    { id: 'kills10k', cat: 'combat', tier: 2, name: 'Veteran', desc: 'Defeat 10,000 Pokémon.', value: st('totalKills'), goal: 10000, reward: { t10: 1 }, title: 'Veteran' },
+    { id: 'kills100k', cat: 'combat', tier: 3, name: 'Living Legend', desc: 'Defeat 100,000 Pokémon.', value: st('totalKills'), goal: 100000, reward: { t10: 3 }, title: 'Living Legend' },
+    { id: 'boss1', cat: 'combat', tier: 1, name: 'Giant slayer', desc: 'Defeat a boss.', value: st('bossesTotal'), goal: 1, reward: { t1: 2 } },
+    { id: 'boss25', cat: 'combat', tier: 2, name: 'Boss Hunter', desc: 'Defeat 25 bosses.', value: st('bossesTotal'), goal: 25, reward: { t10: 1 }, title: 'Boss Hunter' },
+    { id: 'boss100', cat: 'combat', tier: 3, name: 'Terror of bosses', desc: 'Defeat 100 bosses.', value: st('bossesTotal'), goal: 100, reward: { t10: 2 } },
+    { id: 'evo1', cat: 'combat', tier: 1, name: 'Evolution', desc: 'Evolve a move.', value: st('evolutions'), goal: 1, reward: { t1: 3 } },
+    { id: 'evo25', cat: 'combat', tier: 2, name: 'Evolutionist', desc: 'Evolve 25 moves.', value: st('evolutions'), goal: 25, reward: { t10: 1 }, title: 'Evolutionist' },
+    { id: 'evoAll', cat: 'combat', tier: 3, name: 'Move Master', desc: 'Evolve all 47 different moves.', value: count('evoMoves'), goal: 47, reward: { t10: 3 }, title: 'Move Master' },
+    { id: 'items5', cat: 'combat', tier: 1, name: 'Full bag', desc: 'Find 5 different items.', value: count('itemsFound'), goal: 5, reward: { t1: 3 } },
+    { id: 'itemsAll', cat: 'combat', tier: 2, name: 'Item collector', desc: 'Find all 11 items.', value: count('itemsFound'), goal: 11, reward: { t10: 1 }, title: 'Antiquarian' },
 
     // ---------- rifts ----------
-    { id: 'rift1', cat: 'grietas', tier: 1, name: 'Al otro lado', desc: 'Gana tu primera pelea en una grieta.', value: st('riftWins'), goal: 1, reward: { t1: 3 }, title: 'Valiente' },
-    { id: 'rift10', cat: 'grietas', tier: 2, name: 'Saltagrietas', desc: 'Gana 10 peleas en grietas.', value: st('riftWins'), goal: 10, reward: { t10: 1 } },
-    { id: 'arenas', cat: 'grietas', tier: 3, name: 'Viajero de grietas', desc: 'Gana en las 18 arenas (una por tipo).', value: count('arenas'), goal: 18, reward: { t10: 2 }, title: 'Viajero de grietas' },
+    { id: 'rift1', cat: 'rifts', tier: 1, name: 'The other side', desc: 'Win your first rift battle.', value: st('riftWins'), goal: 1, reward: { t1: 3 }, title: 'Brave' },
+    { id: 'rift10', cat: 'rifts', tier: 2, name: 'Rift jumper', desc: 'Win 10 rift battles.', value: st('riftWins'), goal: 10, reward: { t10: 1 } },
+    { id: 'arenas', cat: 'rifts', tier: 3, name: 'Rift Traveler', desc: 'Win in all 18 arenas (one per type).', value: count('arenas'), goal: 18, reward: { t10: 2 }, title: 'Rift Traveler' },
 
     // ---------- legendaries (counter; the individual ones are added below) ----------
-    { id: 'leg10', cat: 'legendarios', tier: 2, name: 'Cazalegendarios', desc: 'Vence a 10 legendarios distintos.', value: legends, goal: 10, reward: { t10: 1 }, title: 'Cazalegendarios' },
-    { id: 'leg30', cat: 'legendarios', tier: 3, name: 'Domador de mitos', desc: 'Vence a 30 legendarios distintos.', value: legends, goal: 30, reward: { t10: 2 } },
-    { id: 'legAll', cat: 'legendarios', tier: 3, name: 'Leyenda', desc: 'Vence a todos los legendarios.', value: legends, goal: 87, reward: { t10: 5 }, title: 'Leyenda' },
+    { id: 'leg10', cat: 'legendaries', tier: 2, name: 'Legend Hunter', desc: 'Defeat 10 different legendaries.', value: legends, goal: 10, reward: { t10: 1 }, title: 'Legend Hunter' },
+    { id: 'leg30', cat: 'legendaries', tier: 3, name: 'Myth tamer', desc: 'Defeat 30 different legendaries.', value: legends, goal: 30, reward: { t10: 2 } },
+    { id: 'legAll', cat: 'legendaries', tier: 3, name: 'Legend', desc: 'Defeat every legendary.', value: legends, goal: 87, reward: { t10: 5 }, title: 'Legend' },
 
     // ---------- missions and more ----------
-    { id: 'mis10', cat: 'otros', tier: 1, name: 'Cumplidor', desc: 'Completa 10 misiones.', value: st('missionsDone'), goal: 10, reward: { t1: 3 } },
-    { id: 'mis50', cat: 'otros', tier: 2, name: 'Constante', desc: 'Completa 50 misiones.', value: st('missionsDone'), goal: 50, reward: { t10: 1 }, title: 'Constante' },
-    { id: 'mis200', cat: 'otros', tier: 3, name: 'Incansable', desc: 'Completa 200 misiones.', value: st('missionsDone'), goal: 200, reward: { t10: 3 } },
-    { id: 'group1', cat: 'otros', tier: 1, name: 'En compañía', desc: 'Juega una partida en grupo.', value: st('groupRuns'), goal: 1, reward: { t1: 2 } },
-    { id: 'group10', cat: 'otros', tier: 2, name: 'Compañero fiel', desc: 'Juega 10 partidas en grupo.', value: st('groupRuns'), goal: 10, reward: { t10: 1 }, title: 'Compañero fiel' }
+    { id: 'mis10', cat: 'other', tier: 1, name: 'Reliable', desc: 'Complete 10 missions.', value: st('missionsDone'), goal: 10, reward: { t1: 3 } },
+    { id: 'mis50', cat: 'other', tier: 2, name: 'Steady', desc: 'Complete 50 missions.', value: st('missionsDone'), goal: 50, reward: { t10: 1 }, title: 'Steady' },
+    { id: 'mis200', cat: 'other', tier: 3, name: 'Tireless', desc: 'Complete 200 missions.', value: st('missionsDone'), goal: 200, reward: { t10: 3 } },
+    { id: 'group1', cat: 'other', tier: 1, name: 'In good company', desc: 'Play a group game.', value: st('groupRuns'), goal: 1, reward: { t1: 2 } },
+    { id: 'group10', cat: 'other', tier: 2, name: 'Loyal Partner', desc: 'Play 10 group games.', value: st('groupRuns'), goal: 10, reward: { t10: 1 }, title: 'Loyal Partner' }
   ];
 
   // One achievement per legendary: "Defeat Mewtwo"...
   for (const p of G.DEX.filter(p => p.leg && G.SPRITE_META[p.dex])) {
-    LIST.push({ id: 'leg_' + p.dex, cat: 'legendarios', tier: 2, dex: p.dex, name: 'Vence a ' + p.name,
-                desc: 'Derrota a ' + p.name + ' en una grieta.', value: s => (s.legends && s.legends[p.dex] ? 1 : 0), goal: 1, reward: { t1: 1 } });
+    LIST.push({ id: 'leg_' + p.dex, cat: 'legendaries', tier: 2, dex: p.dex, name: 'Defeat ' + p.name,
+                desc: 'Defeat ' + p.name + ' in a rift.', value: s => (s.legends && s.legends[p.dex] ? 1 : 0), goal: 1, reward: { t1: 1 } });
   }
   const totalLegends = LIST.filter(a => a.dex).length;
-  for (const a of LIST) if (a.id === 'legAll') { a.goal = totalLegends; a.desc = `Vence a los ${totalLegends} legendarios.`; }
+  for (const a of LIST) if (a.id === 'legAll') { a.goal = totalLegends; a.desc = `Defeat all ${totalLegends} legendaries.`; }
   // Goals that depend on the game data.
-  for (const a of LIST) if (a.id === 'ownAll') { a.goal = G.DEX.length; a.desc = `Ten los ${G.DEX.length} Pokémon del juego.`; }
+  for (const a of LIST) if (a.id === 'ownAll') { a.goal = G.DEX.length; a.desc = `Own all ${G.DEX.length} Pokémon in the game.`; }
   const evoTotal = Object.keys(G.Moves.EVO).length;
-  for (const a of LIST) if (a.id === 'evoAll') { a.goal = evoTotal; a.desc = `Evoluciona los ${evoTotal} movimientos distintos.`; }
+  for (const a of LIST) if (a.id === 'evoAll') { a.goal = evoTotal; a.desc = `Evolve all ${evoTotal} different moves.`; }
 
   const BY = {};
   for (const a of LIST) BY[a.id] = a;
 
-  return { CATS, LIST, BY };
+  // Titles used to be saved in Spanish (in saves and public profiles): old ones are shown and migrated with this.
+  const LEGACY_TITLE = {"Coleccionista":"Collector","Maestro Pokémon":"Pokémon Master","Profesor Pokémon":"Pokémon Professor","Brillante":"Brilliant","Cazashinies":"Shiny Hunter","Afortunado":"Lucky","Superviviente":"Survivor","Imparable":"Unstoppable","Juzgado":"Judged","Elegido de Arceus":"Chosen of Arceus","Explorador":"Explorer","Veterano":"Veteran","Leyenda viva":"Living Legend","Cazajefes":"Boss Hunter","Evolucionista":"Evolutionist","Maestro de movimientos":"Move Master","Anticuario":"Antiquarian","Valiente":"Brave","Viajero de grietas":"Rift Traveler","Cazalegendarios":"Legend Hunter","Leyenda":"Legend","Constante":"Steady","Compañero fiel":"Loyal Partner"};
+  const titleOf = t => LEGACY_TITLE[t] || t;
+
+  return { CATS, LIST, BY, titleOf };
 })();

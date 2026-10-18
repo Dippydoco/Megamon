@@ -251,7 +251,7 @@ G.Game = (() => {
     over(d) {
       if (d) Object.assign(pl, { kills: d.ki, bosses: d.bo, coins: d.co, level: Math.max(pl.level, d.lv || 1), t1: d.t1 || pl.t1, t10: d.t10 || pl.t10 });
       if (d && d.t) time = d.t;
-      if (d && d.why === 'host') G.UI.toast('El anfitrión ha terminado la partida', 3200);
+      if (d && d.why === 'host') G.UI.toast('The host has ended the game', 3200);
       endRun(!(d && d.why === 'host'));
     },
     lost(msg) { G.UI.toast(msg, 3600); endRun(false); },
@@ -287,7 +287,7 @@ G.Game = (() => {
     }
   };
   let awayBy = null;
-  const awayText = () => 'Pausa: esperando a ' + awayBy + ' (anfitrión)…';
+  const awayText = () => 'Paused: waiting for ' + awayBy + ' (host)…';
 
   /** You've brought a lost Pokémon home and it joins you (events.js). */
   G.onRescue = (dex, name) => {
@@ -295,7 +295,7 @@ G.Game = (() => {
     const isNew = !G.DB.owns(dex);
     if (isNew) { G.DB.grant(dex, 'rescue'); G.DB.commit(true); }
     else pl.coins += 150;
-    G.Spawner.say(isNew ? '¡' + name + ' se une a tu equipo!' : '¡' + name + ' te da las gracias! (+150 monedas, ya lo tenías)', 4);
+    G.Spawner.say(isNew ? name + ' joins your team!' : name + ' thanks you! (+150 coins, you already had it)', 4);
     G.Audio.sfx('shinyGet');
   };
 
@@ -307,7 +307,7 @@ G.Game = (() => {
     G.DB.save.stats.shinies++;
     G.DB.commit(true);
     caught.push({ dex: e.dex, isNew });
-    G.Spawner.say(isNew ? '¡Has conseguido a ' + e.name + ' shiny!' : '¡Otro ' + e.name + ' shiny! (+300 monedas)', 4);
+    G.Spawner.say(isNew ? 'You got a shiny ' + e.name + '!' : 'Another shiny ' + e.name + '! (+300 coins)', 4);
     if (!isNew) pl.coins += 300;
     G.Audio.sfx('shinyGet');
   };
@@ -327,12 +327,12 @@ G.Game = (() => {
     const save = G.DB.save;
     const mul = pl.coinMul;
     const parts = {
-      tiempo: Math.floor(time / 5),
-      derrotados: Math.floor(pl.kills * 0.25),
-      jefes: pl.bosses * 80,
-      recogidas: pl.coins
+      time: Math.floor(time / 5),
+      defeated: Math.floor(pl.kills * 0.25),
+      bosses: pl.bosses * 80,
+      collected: pl.coins
     };
-    const coins = Math.round((parts.tiempo + parts.derrotados + parts.jefes + parts.recogidas) * mul);
+    const coins = Math.round((parts.time + parts.defeated + parts.bosses + parts.collected) * mul);
     const record = time > save.stats.bestTime;
 
     save.coins += coins;
@@ -377,7 +377,7 @@ G.Game = (() => {
       time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
       moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
-                 (mul > 1 ? ` · ×${mul.toFixed(2)} Fortuna` : '')
+                 (mul > 1 ? ` · ×${mul.toFixed(2)} Fortune` : '')
     }, () => { pl = null; G.Flow.afterRun(); });
   }
 
@@ -438,7 +438,7 @@ G.Game = (() => {
     if (['scr-bond', 'scr-pause', 'scr-item', 'scr-levelup'].some(G.UI.isOpen)) return;
     const opt = pl.bondOptions();
     if (!opt) {
-      if (!quiet) G.Spawner.say('Guardas el vínculo: aprende otro movimiento para usarlo', 3, true);
+      if (!quiet) G.Spawner.say('Bond saved: learn another move to use it', 3, true);
       return;
     }
     // The game pauses; in a group, for everyone until each one chooses (G.Coop.holdStart).
@@ -450,7 +450,7 @@ G.Game = (() => {
       G.Audio.sfx('legend');
       G.FX.ring(pl.x, pl.y, 8, 130, '#ff8ad8', 0.8, 6);
       G.FX.burst(pl.x, pl.y - pl.bodyH * 0.5, '#ffb3e6', 40, 240);
-      G.Spawner.say('¡Vínculo! ' + group.length + ' movimientos a la vez', 2.6, true);
+      G.Spawner.say('Bond! ' + group.length + ' moves at once', 2.6, true);
       if (state === 'choice') state = holdBy.length ? 'held' : 'playing';
       if (G.Coop.active) G.Coop.holdEnd();
       afterLevelUp();                       // items that arrived while the Bond screen was open
@@ -492,7 +492,7 @@ G.Game = (() => {
       openItem = null;
       if (got && got !== pl.item) {
         pl.equip(got);
-        G.Spawner.say('¡Llevas ' + G.Items.BY[got].name + '!', 2.6, true);
+        G.Spawner.say("You're holding " + G.Items.BY[got].name + '!', 2.6, true);
         G.Progress.event('item', { id: got });
         // Choice Band locks you into one move: pick which one now, before the game goes on.
         if (got === 'choiceband' && pl.slots.length > 1) {
@@ -535,7 +535,7 @@ G.Game = (() => {
     }
     // For now the Life Orb isn't put on automatically: if it's the first thing you find, you choose to accept or discard it.
     if (!pl.item && id !== 'lifeorb') { take(id); return; }
-    if (pl.item === id) { G.Spawner.say('Ya llevas ' + G.Items.BY[id].name, 2, true); return; }
+    if (pl.item === id) { G.Spawner.say('You already hold ' + G.Items.BY[id].name, 2, true); return; }
     // The game pauses while you choose; in a group, for everyone (as with
     // fusions). Previously in a group it carried on and you got hit while choosing.
     if (state === 'playing' || state === 'held') {
@@ -574,7 +574,7 @@ G.Game = (() => {
     if (p.kind === 'ticket' || p.kind === 'ticket10') {
       if (p.kind === 'ticket') pl.t1++; else pl.t10++;
       bankTickets();
-      G.FX.dmgText(who.x, who.y - who.bodyH - 8, p.kind === 'ticket' ? '+1 ticket' : '¡Ticket ×10!', p.kind === 'ticket' ? '#ffd23f' : '#d9a6ff', true);
+      G.FX.dmgText(who.x, who.y - who.bodyH - 8, p.kind === 'ticket' ? '+1 ticket' : 'Ticket ×10!', p.kind === 'ticket' ? '#ffd23f' : '#d9a6ff', true);
       G.FX.ring(who.x, who.y, 6, 50, p.kind === 'ticket' ? '#ffd23f' : '#c47bff', 0.4, 3);
       return;
     }
@@ -678,14 +678,14 @@ G.Game = (() => {
     requestAnimationFrame(loop);
     try { frame(ts); errRun = 0; }
     catch (e) {
-      if (loopErrs++ < 5) console.error('[Game] fallo en un fotograma:', e);
+      if (loopErrs++ < 5) console.error('[Game] frame failed:', e);
       G.Input.endFrame();
       if (++errRun === 180 && pl && state !== 'ui' && state !== 'over') {
         try {
           G.UI.hideAll();
           quitRun();
-          G.UI.toast('El juego ha fallado: tu partida se ha guardado hasta aquí', 5000);
-        } catch (e2) { console.error('[Game] no se pudo cerrar la partida:', e2); }
+          G.UI.toast('The game crashed: your run has been saved up to this point', 5000);
+        } catch (e2) { console.error('[Game] could not close the run:', e2); }
       }
     }
   }
@@ -1410,7 +1410,7 @@ G.Game = (() => {
     /** Group: the OTHER players who are choosing (bond or item) and have the run paused. */
     get waitingChoosers() {
       const me = G.Social.me && G.Social.me.name;
-      return holdBy.filter(n => n !== me && n !== 'Tú');
+      return holdBy.filter(n => n !== me && n !== 'You');
     },
     /** Down in a group: who you're watching ({ name, color, index, count }) or null. */
     get spectating() {

@@ -40,7 +40,7 @@ G.SettingsUI = (() => {
   const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = () => !!navigator.standalone || (window.matchMedia && matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches);
   function iosTip() { return IOS && !canFull() && !standalone(); }
-  const IOS_TIP = 'En iPhone, Safari no deja poner las webs a pantalla completa. Pulsa Compartir y luego "Añadir a pantalla de inicio": abriendo el juego desde ese icono se juega a pantalla completa.';
+  const IOS_TIP = 'On iPhone, Safari does not let websites go fullscreen. Tap Share and then "Add to Home Screen": opening the game from that icon plays it fullscreen.';
   function toggleFull() {
     if (!canFull()) { if (iosTip()) G.UI.toast(IOS_TIP, 9000); return; }
     if (isFull()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -53,12 +53,12 @@ G.SettingsUI = (() => {
     setTimeout(() => { if (isOpen()) render(); }, 300);
   }
 
-  // ---------------- piezas ----------------
+  // ---------------- building blocks ----------------
   function section(title, sub) { return `<h3 class="set-h">${esc(title)}</h3>${sub ? `<p class="sub">${sub}</p>` : ''}`; }
   function toggle(key, label, desc) {
     const on = !!G.Settings.get(key);
     return `<div class="set-row"><div class="grow"><b>${esc(label)}</b><small>${esc(desc)}</small></div>
-      <button class="btn small switch ${on ? 'gold' : ''}" data-k="${key}">${on ? 'Sí' : 'No'}</button></div>`;
+      <button class="btn small switch ${on ? 'gold' : ''}" data-k="${key}">${on ? 'Yes' : 'No'}</button></div>`;
   }
   function choice(key, opts) {
     const cur = G.Settings.get(key);
@@ -70,65 +70,62 @@ G.SettingsUI = (() => {
     const box = $('set-body');
     box.scrollTop = 0;
     if (tab === 'sound') {
-      box.innerHTML = section('Sonido') + '<div id="set-sound" class="sound-inline"></div>';
+      box.innerHTML = section('Sound') + '<div id="set-sound" class="sound-inline"></div>';
       G.UI.soundControls($('set-sound'));
     } else if (tab === 'gfx') {
-      const auto = ['baja', 'media', 'alta'][G.Settings.autoLevel];
-      box.innerHTML = section('Idioma', 'El juego se recarga al cambiarlo.')
-        + `<div class="chips set-chips" translate="no">${[['es', 'Español'], ['en', 'English']].map(([v, l]) =>
-             `<button class="chip ${G.I18n.lang === v ? 'on' : ''}" data-lang="${v}">${l}</button>`).join('')}</div>`
-        + section('Calidad', 'Cuántos efectos y partículas se dibujan. <b>Auto</b> la baja sola si el juego va a tirones (ahora: ' + auto + ').')
-        + choice('quality', [['auto', 'Auto'], ['high', 'Alta'], ['mid', 'Media'], ['low', 'Baja']])
-        + section('Pantalla')
-        + toggle('dmgNumbers', 'Números de daño', 'Los números que salen al golpear y al recibir daño.')
+      const auto = ['low', 'medium', 'high'][G.Settings.autoLevel];
+      box.innerHTML = section('Quality', 'How many effects and particles are drawn. <b>Auto</b> lowers it automatically if the game stutters (now: ' + auto + ').')
+        + choice('quality', [['auto', 'Auto'], ['high', 'High'], ['mid', 'Medium'], ['low', 'Low']])
+        + section('Display')
+        + toggle('dmgNumbers', 'Damage numbers', 'The numbers that pop up when you hit or get hit.')
         + `<div class="set-row"><div class="grow"><b>Damage number size</b><small>How big the numbers are when you hit enemies.</small></div></div>`
         + choice('dmgSize', [[0.8, 'Small'], [1, 'Normal'], [1.35, 'Large']])
         + `<div class="set-row"><div class="grow"><b>Which hits show a number</b><small>"Important only" hides the small hits and keeps critical, super effective and boss hits (and the damage you take).</small></div></div>`
         + choice('dmgShow', [['all', 'All hits'], ['big', 'Important only']])
         + `<div class="set-row"><div class="grow"><b>Damage number colours</b><small>Colours show how effective a hit was. "White" keeps every number plain.</small></div></div>`
         + choice('dmgColor', [['type', 'Coloured'], ['white', 'White']])
-        + toggle('calm', 'Menos sacudidas y destellos', 'La cámara tiembla menos y los fogonazos son suaves.')
+        + toggle('calm', 'Less shaking and flashing', 'The camera shakes less and flashes are softer.')
         + toggle('moveTags', 'Move kind tags', 'Shows the attack kind (Projectile, Beam, Aura...) on level-up and Bond cards.')
-        + toggle('fps', 'Mostrar FPS', 'Fotogramas por segundo, en la esquina de abajo.')
-        + (canFull() ? `<div class="set-row"><div class="grow"><b>Pantalla completa</b><small>Sin barras del navegador.</small></div>
-             <button class="btn small" id="set-full">${isFull() ? 'Salir' : 'Activar'}</button></div>`
-           : iosTip() ? `<div class="set-row"><div class="grow"><b>Pantalla completa</b><small>${esc(IOS_TIP)}</small></div></div>` : '');
+        + toggle('fps', 'Show FPS', 'Frames per second, in the bottom corner.')
+        + (canFull() ? `<div class="set-row"><div class="grow"><b>Full screen</b><small>No browser bars.</small></div>
+             <button class="btn small" id="set-full">${isFull() ? 'Exit' : 'Turn on'}</button></div>`
+           : iosTip() ? `<div class="set-row"><div class="grow"><b>Full screen</b><small>${esc(IOS_TIP)}</small></div></div>` : '');
     } else if (tab === 'ctl') {
-      box.innerHTML = section('En móvil o tablet')
-        + `<p class="sub">Pon el dedo en cualquier parte y arrastra para moverte: el joystick aparece donde tocas. Toca un ataque de abajo para cambiarlo y el botón de arriba a la derecha para pausar. Se juega en horizontal.</p>`
-        + `<div class="set-row"><div class="grow"><b>Tamaño del joystick</b><small>Cuánto hay que arrastrar el dedo.</small></div></div>`
-        + choice('stick', [[0.8, 'Pequeño'], [1, 'Normal'], [1.25, 'Grande']])
-        + `<div class="set-row"><div class="grow"><b>Colocar los botones</b><small>Pon los ataques, la pausa y el joystick (fijo, si quieres) donde quieras de la pantalla.</small></div>
-             <button class="btn small" id="set-layout">Colocar</button></div>`
-        + section('En PC')
-        + toggle('mouseStick', 'Mover con el ratón', 'Mantén pulsado el botón izquierdo y arrastra: aparece un joystick donde pulsas. Suelta para parar.')
-        + toggle('mouseLock', 'Joystick del ratón fijo', 'El joystick se queda donde pulsaste y no te sigue al arrastrar lejos. Suelta y vuelve a pulsar para colocarlo en otro sitio.')
+      box.innerHTML = section('On mobile or tablet')
+        + `<p class="sub">Put your finger anywhere and drag to move: the joystick appears where you touch. Tap an attack at the bottom to switch to it and the button at the top right to pause. The game is played in landscape.</p>`
+        + `<div class="set-row"><div class="grow"><b>Joystick size</b><small>How far you have to drag your finger.</small></div></div>`
+        + choice('stick', [[0.8, 'Small'], [1, 'Normal'], [1.25, 'Large']])
+        + `<div class="set-row"><div class="grow"><b>Place the buttons</b><small>Put the attacks, pause and joystick (fixed, if you like) anywhere on the screen.</small></div>
+             <button class="btn small" id="set-layout">Place</button></div>`
+        + section('On PC')
+        + toggle('mouseStick', 'Move with the mouse', 'Hold the left mouse button and drag: a joystick appears where you press. Let go to stop.')
+        + toggle('mouseLock', 'Locked mouse joystick', 'The joystick stays where you pressed and does not follow you when you drag far. Let go and press again to place it somewhere else.')
         + `<div class="keys">
-             <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas</div><span>moverse</span>
-             <div><kbd>1</kbd>–<kbd>4</kbd> o clic en el icono</div><span>elegir ataque</span>
-             <div><kbd>Q</kbd> / <kbd>E</kbd></div><span>ataque anterior / siguiente</span>
-             <div><kbd>Esc</kbd> o <kbd>P</kbd></div><span>pausa</span>
-             <div><kbd>1</kbd>–<kbd>3</kbd></div><span>elegir carta al subir de nivel</span>
+             <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</div><span>move</span>
+             <div><kbd>1</kbd>–<kbd>4</kbd> or click the icon</div><span>choose attack</span>
+             <div><kbd>Q</kbd> / <kbd>E</kbd></div><span>previous / next attack</span>
+             <div><kbd>Esc</kbd> or <kbd>P</kbd></div><span>pause</span>
+             <div><kbd>1</kbd>–<kbd>3</kbd></div><span>choose a card when levelling up</span>
            </div>`;
     } else if (tab === 'acc') {
       renderAccount(box);
     } else if (tab === 'code') {
       renderCode(box);
     } else {
-      box.innerHTML = `<div class="about-logo">Megamon</div><p class="sub center">Versión ${esc(VERSION)} · ${esc(G.UI.buildLabel())}</p>`
-        + `<p class="sub">Juego de fans <b>gratuito y sin ánimo de lucro</b>: sin anuncios ni compras. Pokémon y sus personajes son propiedad de Nintendo, Creatures y GAME FREAK; este proyecto no está afiliado a ellos.</p>`
-        + section('Créditos')
+      box.innerHTML = `<div class="about-logo">Megamon</div><p class="sub center">Version ${esc(VERSION)} · ${esc(G.UI.buildLabel())}</p>`
+        + `<p class="sub">Fan game <b>free and non-profit</b>: no ads or purchases. Pokémon and its characters are owned by Nintendo, Creatures and GAME FREAK; this project is not affiliated with them.</p>`
+        + section('Credits')
         + `<ul class="credits">
-             <li><b>Sprites:</b> PMD SpriteCollab y sus artistas (CC BY-NC 4.0).</li>
-             <li><b>Datos de los Pokémon:</b> PokéAPI.</li>
-             <li><b>Música y sonidos:</b> originales, generados por el propio juego.</li>
-             <li><b>Fuente:</b> Pixelify Sans (OFL).</li>
+             <li><b>Sprites:</b> PMD SpriteCollab and its artists (CC BY-NC 4.0).</li>
+             <li><b>Pokémon data:</b> PokéAPI.</li>
+             <li><b>Music and sounds:</b> original, generated by the game itself.</li>
+             <li><b>Font:</b> Pixelify Sans (OFL).</li>
            </ul>`
         + `<div class="row wrap" style="justify-content:center;gap:8px">
-             ${window.PS_PAGES ? `<a class="btn small" href="en/guide/" target="_blank">Guía y preguntas</a>
-             <a class="btn small" href="${G.I18n.lang === 'en' ? 'en/pokedex/' : 'pokedex/'}" target="_blank">Pokédex</a>` : ''}
-             <button class="btn small" data-legal>Aviso legal y privacidad</button>
-             <a class="btn small" href="${REPO}" target="_blank" rel="noopener">Código (GitHub)</a>
+             ${window.PS_PAGES ? `<a class="btn small" href="en/guide/" target="_blank">Guide and FAQ</a>
+             <a class="btn small" href="en/pokedex/" target="_blank">Pokédex</a>` : ''}
+             <button class="btn small" data-legal>Legal notice and privacy</button>
+             <a class="btn small" href="${REPO}" target="_blank" rel="noopener">Code (GitHub)</a>
            </div>`;
     }
     wire(box);
@@ -137,14 +134,14 @@ G.SettingsUI = (() => {
   /** Redeem a code (js/systems/redeem.js): tickets and/or coins, once per account. */
   function renderCode(box) {
     if (G.DB.guest) {
-      box.innerHTML = section('Código', 'Como <b>invitado</b> no se guarda el progreso, así que no se pueden canjear códigos. Crea una cuenta o entra con la tuya.')
-        + `<button class="btn gold" id="set-login">Crear cuenta o entrar</button>`;
+      box.innerHTML = section('Code', 'As a <b>guest</b> your progress is not saved, so codes cannot be redeemed. Create an account or sign in.')
+        + `<button class="btn gold" id="set-login">Create an account or sign in</button>`;
       return;
     }
-    box.innerHTML = section('Código', 'Escribe un código para canjearlo. Cada código se puede usar una vez por cuenta.')
+    box.innerHTML = section('Code', 'Enter a code to redeem it. Each code can be used once per account.')
       + `<div class="row wrap" style="gap:8px;align-items:center">
-           <input class="field" id="code-in" type="text" maxlength="40" placeholder="Código" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:180px">
-           <button class="btn gold" id="code-go">Canjear</button>
+           <input class="field" id="code-in" type="text" maxlength="40" placeholder="Code" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1;min-width:180px">
+           <button class="btn gold" id="code-go">Redeem</button>
          </div><p class="note" id="code-msg"></p>`;
     const input = $('code-in'), msg = $('code-msg');
     const go = () => {
@@ -157,8 +154,8 @@ G.SettingsUI = (() => {
         msg.textContent = t; G.UI.toast(r.demo ? 'Gacha demo mode ON' : 'Gacha demo mode OFF');
         return;
       }
-      msg.innerHTML = '¡Canjeado! Has recibido: ' + G.Progress.rewardText(r.reward);
-      G.UI.toast('¡Código canjeado!');
+      msg.innerHTML = 'Redeemed! You received: ' + G.Progress.rewardText(r.reward);
+      G.UI.toast('Code redeemed!');
     };
     $('code-go').onclick = go;
     input.onkeydown = e => { if (e.key === 'Enter') go(); };
@@ -166,24 +163,24 @@ G.SettingsUI = (() => {
 
   function renderAccount(box) {
     const st = G.DB.guest ? 'guest' : G.DB.syncState;
-    const SYNC = { ok: 'Guardado en la nube', syncing: 'Guardando…', pending: 'Pendiente de subir (se sube al salir del juego)',
-                   offline: 'Sin conexión: se subirá al volver', local: 'Guardado sólo en este navegador', guest: 'Invitado: no se guarda' };
+    const SYNC = { ok: 'Saved in the cloud', syncing: 'Saving…', pending: 'Waiting to upload (uploads when you leave the game)',
+                   offline: 'Offline: it will upload when you\'re back', local: 'Saved only in this browser', guest: 'Guest: not saved' };
     if (G.DB.guest) {
-      box.innerHTML = section('Cuenta', 'Estás jugando como <b>invitado</b>: tu progreso no se guarda al salir.')
-        + `<button class="btn gold" id="set-login">Crear cuenta o entrar</button>`;
+      box.innerHTML = section('Account', 'You\'re playing as a <b>guest</b>: your progress isn\'t saved when you leave.')
+        + `<button class="btn gold" id="set-login">Create an account or sign in</button>`;
       return;
     }
     const nick = G.Social.me ? G.Social.me.name : (G.DB.user || '');
-    const kind = G.DB.mode === 'local' ? 'Cuenta de este navegador' : G.DB.nameAccount ? 'Nombre y contraseña' : 'Google';
-    box.innerHTML = section('Cuenta')
-      + `<div class="set-row"><div class="grow"><b>Apodo</b><small>Es único y no se puede cambiar.</small></div><span class="gold" translate="no">${esc(nick)}</span></div>`
-      + `<div class="set-row"><div class="grow"><b>Tipo de cuenta</b></div><span>${esc(kind)}</span></div>`
-      + `<div class="set-row"><div class="grow"><b>Partida</b></div><span>${esc(SYNC[st] || st)}</span></div>`
+    const kind = G.DB.mode === 'local' ? 'This browser\'s account' : G.DB.nameAccount ? 'Name and password' : 'Google';
+    box.innerHTML = section('Account')
+      + `<div class="set-row"><div class="grow"><b>Nickname</b><small>It's unique and can't be changed.</small></div><span class="gold" translate="no">${esc(nick)}</span></div>`
+      + `<div class="set-row"><div class="grow"><b>Account type</b></div><span>${esc(kind)}</span></div>`
+      + `<div class="set-row"><div class="grow"><b>Save</b></div><span>${esc(SYNC[st] || st)}</span></div>`
       + toggle('shareHist', 'Share my run history', 'Other players can open your last runs from your profile. Off: your shared copy is deleted and nobody can see them.')
       + toggle('shareAct', 'Show what I\'m doing', 'Friends can see if you are in the menu, opening gacha packs or in a run (and for how long). Off: they only see that you are online.')
       + `<div class="row wrap" style="gap:8px;margin-top:12px">
-           <button class="btn" id="set-logout">Cerrar sesión</button>
-           <button class="btn danger" id="set-delete">Borrar cuenta</button>
+           <button class="btn" id="set-logout">Log out</button>
+           <button class="btn danger" id="set-delete">Delete account</button>
          </div><p class="note" id="set-msg"></p>`;
   }
 
@@ -194,7 +191,6 @@ G.SettingsUI = (() => {
     });
     const full = $('set-full'); if (full) full.onclick = toggleFull;
     const lay = $('set-layout'); if (lay) lay.onclick = () => G.LayoutUI.open();
-    box.querySelectorAll('[data-lang]').forEach(b => { b.onclick = () => { if (b.dataset.lang !== G.I18n.lang) G.I18n.set(b.dataset.lang); }; });
     const lo = $('set-login'); if (lo) lo.onclick = () => { close(); leave(); };
     const out = $('set-logout'); if (out) out.onclick = () => { close(); leave(); };
     const del = $('set-delete');
@@ -205,7 +201,7 @@ G.SettingsUI = (() => {
       const r = await G.DB.deleteAccount(ok.pass);
       if (!r.ok) { $('set-msg').textContent = r.error; del.disabled = false; return; }
       close();
-      G.UI.toast('Cuenta borrada');
+      G.UI.toast('Account deleted');
       G.Audio.music(null);
       G.Flow.toLogin();
     };
@@ -213,7 +209,7 @@ G.SettingsUI = (() => {
 
   /** Sign out (if you're in a run, it's abandoned). */
   function leave() {
-    if (G.DB.guest && !confirm('Eres invitado: se perderá todo el progreso. ¿Salir?')) return;
+    if (G.DB.guest && !confirm('You\'re a guest: all your progress will be lost. Log out?')) return;
     if (G.Game.state !== 'ui') G.Game.quit && G.Game.quit();
     G.Audio.music(null);
     G.DB.logout().then(() => G.Flow.toLogin());

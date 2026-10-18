@@ -93,7 +93,7 @@ G.Spawner = (() => {
     if (G.Events.golden) e.makeGolden();
     G.EnemyMgr.add(e);
     if (shiny) {
-      say('¡Un ' + e.name + ' shiny anda cerca!', 3.4);
+      say('A shiny ' + e.name + ' is nearby!', 3.4);
       G.Audio.sfx('shiny');
     }
     return e;
@@ -104,7 +104,7 @@ G.Spawner = (() => {
     const e = new G.Enemy(b, x, y, scaled(G.Enemies.bossScale(t), G.Coop.scaleHp(players.length) * (players.length > 4 ? 1.55 : players.length > 1 ? 1.4 : 1)), true);
     if (rollShiny(b.dex)) e.makeShiny();
     G.EnemyMgr.add(e);
-    say('¡' + e.name + (e.shiny ? ' shiny' : '') + ' salvaje apareció!', 3.2);
+    say('A wild ' + (e.shiny ? 'shiny ' : '') + e.name + ' appeared!', 3.2);
     G.Camera.kick(1.1);
     G.Audio.sfx('boss');
     return e;
@@ -147,7 +147,7 @@ G.Spawner = (() => {
       const target = anchor();
       const n = Math.min(CAP - G.EnemyMgr.count, Math.round((14 + Math.floor(t / 22)) * G.Coop.scaleRate(players.length) * 0.4));
       for (let i = 0; i < n; i++) spawnOne(target, t, base + G.U.rand(-0.55, 0.55));
-      say('¡Marea de Pokémon!', 2.2);
+      say('Pokémon swarm!', 2.2);
       G.Audio.sfx('surge');
     }
   }

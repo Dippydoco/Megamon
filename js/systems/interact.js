@@ -18,10 +18,10 @@ G.Interact = (() => {
   const CHEST_TIME = 3.5;
   const POWER_TIME = 25;
   const POWERS = [
-    { id: 'dmg', name: 'Furia', desc: 'daño ×2', color: '#ff5f6d', on: p => { p.atkMul *= 2; }, off: p => { p.atkMul /= 2; } },
-    { id: 'spd', name: 'Rayo', desc: '+45% velocidad', color: '#5fd4ff', on: p => { p.spdMul *= 1.45; }, off: p => { p.spdMul /= 1.45; } },
-    { id: 'mag', name: 'Imán', desc: 'atraes todo desde lejos', color: '#ff8ad8', on: p => { p.magnet *= 4; }, off: p => { p.magnet /= 4; } },
-    { id: 'cd', name: 'Prisa', desc: '-40% recarga', color: '#b48cff', on: p => { p.cdMul *= 0.6; }, off: p => { p.cdMul /= 0.6; } },
+    { id: 'dmg', name: 'Fury', desc: 'damage ×2', color: '#ff5f6d', on: p => { p.atkMul *= 2; }, off: p => { p.atkMul /= 2; } },
+    { id: 'spd', name: 'Lightning', desc: '+45% speed', color: '#5fd4ff', on: p => { p.spdMul *= 1.45; }, off: p => { p.spdMul /= 1.45; } },
+    { id: 'mag', name: 'Magnet', desc: 'you pull everything from afar', color: '#ff8ad8', on: p => { p.magnet *= 4; }, off: p => { p.magnet /= 4; } },
+    { id: 'cd', name: 'Haste', desc: '-40% cooldown', color: '#b48cff', on: p => { p.cdMul *= 0.6; }, off: p => { p.cdMul /= 0.6; } },
     { id: 'guard', name: 'Guardian', desc: '-35% damage taken', color: '#c9d6e6', on: p => { p.dmgReduce += 0.35; }, off: p => { p.dmgReduce -= 0.35; } }
   ];
   const KIND_GOLD = 5;               // altar kind 5 = Gold shrine (team-wide coin combo, not a personal power)
@@ -118,7 +118,7 @@ G.Interact = (() => {
       healAcc = 0;
       G.Audio.sfx('xp');
     }
-    if (p.charge <= 0.02) G.Spawner.say('El manantial se ha secado (se recarga solo)', 2.2, true);
+    if (p.charge <= 0.02) G.Spawner.say('The spring has dried up (it refills on its own)', 2.2, true);
   }
 
   function usePower(pl, p) {
@@ -138,7 +138,7 @@ G.Interact = (() => {
     G.FX.ring(p.x, p.y - 20, 8, 90, pw.color, 0.6, 5);
     G.FX.burst(pl.x, pl.y - pl.bodyH * 0.5, pw.color, 24, 200);
     G.Audio.sfx('legend');
-    G.Spawner.say('¡Poder ' + pw.name + '! ' + pw.desc + ' durante ' + POWER_TIME + ' s', 3, true);
+    G.Spawner.say(pw.name + ' power! ' + pw.desc + ' for ' + POWER_TIME + ' s', 3, true);
   }
 
   /**
@@ -176,7 +176,7 @@ G.Interact = (() => {
       }
       pl.breakInvuln();
       if (k === 0) pl.hurt(pl.maxHp * 0.1, null, false, { k: 'trap', n: 'Trapped chest', a: 'Poison trap' });
-      else if (k === 1) { pl.slowT = 3.5; G.FX.dmgText(pl.x, pl.y - pl.bodyH - 6, '¡Pegajoso!', '#8bd94a'); }
+      else if (k === 1) { pl.slowT = 3.5; G.FX.dmgText(pl.x, pl.y - pl.bodyH - 6, 'Sticky!', '#8bd94a'); }
       else pl.hurt(pl.maxHp * 0.2, null, false, { k: 'trap', n: 'Trapped chest', a: 'Explosive trap' });
     }
   }

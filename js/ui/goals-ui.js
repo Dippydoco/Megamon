@@ -13,7 +13,7 @@
   // ======================= SCREEN =======================
 
   G.GoalsUI = (() => {
-    let tab = 'missions', cat = 'coleccion';
+    let tab = 'missions', cat = 'collection';
 
     function init() {
       document.querySelectorAll('#goals-tabs .tab').forEach(t => {
@@ -126,7 +126,7 @@
       const M = G.DB.save.missions;
       const section = (title, list, weekly) => {
         box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>${title}</h3>
-          <span class="sub">Se renuevan en ${untilText(weekly ? 'w' : 'd')}</span></div>`);
+          <span class="sub">Refreshes in ${untilText(weekly ? 'w' : 'd')}</span></div>`);
         list.forEach((m, i) => {
           const d = G.MissionDefs.BY[m.id];
           const done = G.Progress.done(m);
@@ -136,24 +136,24 @@
           el.innerHTML = `
             <div class="m-txt"><b>${esc(G.Progress.text(m))}</b>
               <div class="bar"><i style="width:${pct}%"></i></div>
-              <small>${Math.min(m.prog, m.goal).toLocaleString('es')} / ${m.goal.toLocaleString('es')}</small></div>
+              <small>${Math.min(m.prog, m.goal).toLocaleString('en')} / ${m.goal.toLocaleString('en')}</small></div>
             <div class="m-rw">${G.Progress.rewardText(d.reward)}</div>`;
           const btn = document.createElement('button');
-          if (m.claimed) { btn.className = 'btn small'; btn.disabled = true; btn.textContent = 'Recogido'; }
+          if (m.claimed) { btn.className = 'btn small'; btn.disabled = true; btn.textContent = 'Claimed'; }
           else if (done) {
-            btn.className = 'btn small gold'; btn.textContent = 'Recoger'; btn.dataset.sfx = 'none';
-            btn.onclick = () => { if (G.Progress.claim(m, weekly)) { G.Audio.sfx('buy'); G.UI.toast('¡Premio recogido!'); render(); } };
+            btn.className = 'btn small gold'; btn.textContent = 'Claim'; btn.dataset.sfx = 'none';
+            btn.onclick = () => { if (G.Progress.claim(m, weekly)) { G.Audio.sfx('buy'); G.UI.toast('Reward claimed!'); render(); } };
           } else if (!weekly && !M.rerolled) {
-            btn.className = 'btn small ghost'; btn.textContent = 'Cambiar';
-            btn.title = 'Cambia esta misión por otra (una vez al día)';
+            btn.className = 'btn small ghost'; btn.textContent = 'Swap';
+            btn.title = 'Swap this mission for another (once a day)';
             btn.onclick = () => { if (G.Progress.reroll(i)) render(); };
-          } else { btn.className = 'btn small ghost'; btn.disabled = true; btn.textContent = 'En curso'; }
+          } else { btn.className = 'btn small ghost'; btn.disabled = true; btn.textContent = 'In progress'; }
           el.appendChild(btn);
           box.appendChild(el);
         });
       };
-      section('Diarias', M.daily, false);
-      section('Semanales', M.weekly, true);
+      section('Daily', M.daily, false);
+      section('Weekly', M.weekly, true);
     }
 
     // ---------------- achievements ----------------
@@ -173,7 +173,7 @@
         b.onclick = () => { cat = k; render(); };
         chips.appendChild(b);
       }
-      box.insertAdjacentHTML('beforeend', `<p class="sub">${got} de ${all.length} logros · títulos: ${G.Progress.titles().length}</p>`);
+      box.insertAdjacentHTML('beforeend', `<p class="sub">${got} of ${all.length} achievements · titles: ${G.Progress.titles().length}</p>`);
       box.appendChild(chips);
 
       const list = all.filter(a => a.cat === cat && !a.dex);
@@ -183,17 +183,17 @@
       box.appendChild(grid);
 
       // Legendaries: one by one, with their sprite (in shadow if you haven't defeated it yet).
-      if (cat === 'legendarios') {
+      if (cat === 'legendaries') {
         const legs = all.filter(a => a.dex);
         const beaten = legs.filter(a => s.legends && s.legends[a.dex]).length;
-        box.insertAdjacentHTML('beforeend', `<h3 style="margin:14px 0 6px">Legendarios vencidos ${beaten} / ${legs.length}</h3>`);
+        box.insertAdjacentHTML('beforeend', `<h3 style="margin:14px 0 6px">Legendaries defeated ${beaten} / ${legs.length}</h3>`);
         const lg = document.createElement('div');
         lg.className = 'leg-grid';
         for (const a of legs) {
           const ok = !!(s.legends && s.legends[a.dex]);
           const c = document.createElement('div');
           c.className = 'leg-cell' + (ok ? ' ok' : '');
-          c.title = a.name + (ok ? ' · ¡vencido!' : '');
+          c.title = a.name + (ok ? ' · defeated!' : '');
           c.appendChild(G.UI.spriteCanvas(a.dex, 64, 56, { scale: 1, silhouette: !ok, shadow: ok }));
           c.insertAdjacentHTML('beforeend', `<small>${ok ? esc(G.DEX_BY[a.dex].name) : '???'}</small>`);
           lg.appendChild(c);
@@ -210,8 +210,8 @@
       el.innerHTML = `${G.Icons.html(ok ? 'medal' + a.tier : 'medalOff', 36)}
         <div class="a-txt"><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>
           ${ok ? '' : `<div class="bar"><i style="width:${v / a.goal * 100}%"></i></div>`}
-          <div class="a-rw">${ok ? '¡Conseguido!' : v.toLocaleString('es') + ' / ' + a.goal.toLocaleString('es')} · ${G.Progress.rewardText(a.reward)}
-          ${a.title ? ` · <span class="gold">Título: ${esc(a.title)}</span>` : ''}</div></div>`;
+          <div class="a-rw">${ok ? 'Unlocked!' : v.toLocaleString('en') + ' / ' + a.goal.toLocaleString('en')} · ${G.Progress.rewardText(a.reward)}
+          ${a.title ? ` · <span class="gold">Title: ${esc(a.title)}</span>` : ''}</div></div>`;
       return el;
     }
 
@@ -221,9 +221,9 @@
       const s = G.DB.save;
       s.profile = s.profile || { favs: [], title: '' };
       const P = s.profile;
-      box.insertAdjacentHTML('beforeend', `<p class="sub">${G.DB.online ? 'Así te ven los demás jugadores (desde el ranking y la lista de amigos).'
-        : 'Tu perfil se publica cuando juegas con una cuenta online.'}</p>
-        <h3>Tus 3 Pokémon favoritos</h3>`);
+      box.insertAdjacentHTML('beforeend', `<p class="sub">${G.DB.online ? 'This is how other players see you (from the leaderboard and friends list).'
+        : 'Your profile is published when you play with an online account.'}</p>
+        <h3>Your 3 favourite Pokémon</h3>`);
       const favs = document.createElement('div');
       favs.className = 'fav-slots';
       for (let i = 0; i < 3; i++) {
@@ -233,27 +233,26 @@
         if (f && G.DEX_BY[f.dex]) {
           slot.appendChild(G.UI.spriteCanvas(f.dex, 120, 100, { scale: 2, lively: true, shiny: !!f.shiny }));
           slot.insertAdjacentHTML('beforeend', `<b>${f.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${esc(G.DEX_BY[f.dex].name)}</b>`);
-        } else slot.innerHTML = '<span>Elegir</span>';
+        } else slot.innerHTML = '<span>Choose</span>';
         slot.onclick = () => pickFav(i);
         favs.appendChild(slot);
       }
       box.appendChild(favs);
 
       const titles = G.Progress.titles();
-      // Titles are Spanish keys that the page translates on screen. The dropdown used to save the
-      // translated text, which never matched again. Fix any title saved that way.
+      // Titles used to be saved in Spanish: switch an old saved title to its English name.
       if (P.title && !titles.includes(P.title)) {
-        const orig = titles.find(t => G.I18n.t(t) === P.title);
-        if (orig) { P.title = orig; G.DB.commit(); if (G.Social.me) G.Social.publishProfile(true); }
+        const en = G.AchDefs.titleOf(P.title);
+        if (en !== P.title && titles.includes(en)) { P.title = en; G.DB.commit(); if (G.Social.me) G.Social.publishProfile(true); }
       }
-      box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Título</h3>`);
+      box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Title</h3>`);
       const sel = document.createElement('select');
       sel.className = 'field';
       sel.style.maxWidth = '320px';
-      sel.innerHTML = `<option value="">(sin título)</option>` + titles.map(t => `<option value="${esc(t)}" ${t === P.title ? 'selected' : ''}>${esc(t)}</option>`).join('');
+      sel.innerHTML = `<option value="">(no title)</option>` + titles.map(t => `<option value="${esc(t)}" ${t === P.title ? 'selected' : ''}>${esc(t)}</option>`).join('');
       sel.onchange = () => { P.title = sel.value; save(); };
       box.appendChild(sel);
-      if (!titles.length) box.insertAdjacentHTML('beforeend', '<p class="note">Consigue logros para desbloquear títulos.</p>');
+      if (!titles.length) box.insertAdjacentHTML('beforeend', '<p class="note">Earn achievements to unlock titles.</p>');
 
       // Banner, border and chat name colour.
       const C = G.Cosmetics;
@@ -299,7 +298,7 @@
 
       const prev = document.createElement('button');
       prev.className = 'btn gold'; prev.style.marginTop = '16px';
-      prev.textContent = 'Ver mi perfil público';
+      prev.textContent = 'View my public profile';
       prev.onclick = () => G.ProfileUI.showData(G.Social.profileData(), G.Social.uid);
       box.appendChild(prev);
     }
@@ -307,9 +306,9 @@
     function pickFav(i) {
       const s = G.DB.save;
       const box = $('goals-body');
-      box.innerHTML = `<div class="row between"><h3>Elige el favorito ${i + 1}</h3>
-        <button class="btn small ghost" id="fav-back">Volver</button></div>
-        <input class="field" id="fav-q" placeholder="Buscar por nombre" style="max-width:320px;margin:6px 0 10px">
+      box.innerHTML = `<div class="row between"><h3>Choose favourite ${i + 1}</h3>
+        <button class="btn small ghost" id="fav-back">Back</button></div>
+        <input class="field" id="fav-q" placeholder="Search by name" style="max-width:320px;margin:6px 0 10px">
         <div class="grid" id="fav-grid"></div>`;
       $('fav-back').onclick = () => { tab = 'profile'; render(); };
       // All owned Pokémon (and their shinies), added to the grid 120 at a time as you scroll
@@ -370,10 +369,10 @@
     async function show(uid) {
       if (!uid) return;
       if (uid === G.Social.uid) { showData(G.Social.profileData(), uid); return; }
-      $('prof-body').innerHTML = '<p class="sub">Cargando…</p>';
+      $('prof-body').innerHTML = '<p class="sub">Loading…</p>';
       $('scr-profile').classList.remove('hidden');
       const d = await G.Social.getProfile(uid);
-      if (!d) { $('prof-body').innerHTML = '<p class="sub">Este jugador aún no tiene perfil.</p>'; return; }
+      if (!d) { $('prof-body').innerHTML = '<p class="sub">This player doesn\'t have a profile yet.</p>'; return; }
       showData(d, uid);
     }
 
@@ -381,17 +380,17 @@
       const b = d.best || {};
       const body = $('prof-body');
       body.innerHTML = `
-        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(d.title)}</span>` : ''}</div>
+        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(G.AchDefs.titleOf(d.title))}</span>` : ''}</div>
         <div class="fav-slots view" id="prof-favs"></div>
         <div class="prof-marks">
-          <div><span>Mejor tiempo</span><b>${fmt(b.solo || 0)}</b></div>
-          <div><span>En grupo</span><b>${fmt(b.group || 0)}</b></div>
-          <div><span>Nivel máximo</span><b>${b.level || 0}</b></div>
-          <div><span>Jefes</span><b>${(b.bosses || 0).toLocaleString('es')}</b></div>
-          <div><span>Legendarios</span><b>${b.legends || 0}</b></div>
-          <div><span>Derrotados</span><b>${(b.kills || 0).toLocaleString('es')}</b></div>
+          <div><span>Best time</span><b>${fmt(b.solo || 0)}</b></div>
+          <div><span>In a group</span><b>${fmt(b.group || 0)}</b></div>
+          <div><span>Highest level</span><b>${b.level || 0}</b></div>
+          <div><span>Bosses</span><b>${(b.bosses || 0).toLocaleString('en')}</b></div>
+          <div><span>Legendaries</span><b>${b.legends || 0}</b></div>
+          <div><span>Defeated</span><b>${(b.kills || 0).toLocaleString('en')}</b></div>
         </div>
-        <h3>Medallas <span class="sub">${b.medals || 0}</span></h3>
+        <h3>Medals <span class="sub">${b.medals || 0}</span></h3>
         <div class="prof-medals" id="prof-medals"></div>
         ${uid ? '<div style="margin-top:10px"><button class="btn small" id="prof-hist-btn">Run history</button></div><div id="prof-hist" style="margin-top:8px"></div>' : ''}`;
       if (uid) {
@@ -422,7 +421,7 @@
         slot.insertAdjacentHTML('beforeend', `<b>${f.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${esc(G.DEX_BY[f.dex].name)}</b>`);
         favs.appendChild(slot);
       }
-      if (!favs.children.length) favs.innerHTML = '<p class="sub">Sin favoritos todavía.</p>';
+      if (!favs.children.length) favs.innerHTML = '<p class="sub">No favourites yet.</p>';
       const med = $('prof-medals');
       for (const id of d.medals || []) {
         const a = G.AchDefs.BY[id];
@@ -435,7 +434,7 @@
         m.insertAdjacentHTML('beforeend', `<small>${esc(a.name)}</small>`);
         med.appendChild(m);
       }
-      if (!med.children.length) med.innerHTML = '<p class="sub">Aún sin medallas.</p>';
+      if (!med.children.length) med.innerHTML = '<p class="sub">No medals yet.</p>';
       $('scr-profile').classList.remove('hidden');
     }
 

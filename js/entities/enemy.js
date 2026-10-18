@@ -506,7 +506,7 @@
     enrage() {
       this.ai.fury = true;
       this.spd *= 1.15;
-      if (!this.judge) G.Spawner.say('¡' + this.name + ' se ha enfurecido!', 2.4);
+      if (!this.judge) G.Spawner.say(this.name + ' is enraged!', 2.4);
       G.FX.ring(this.x, this.y, this.r, this.r * 5, '#ff4a4a', 0.6, 5);
       G.Camera.kick(0.5);
       G.Audio.sfx('boss');
@@ -1000,7 +1000,7 @@
         if (e.behavior === 'aegis' && e.life < 16 && !e.warned) { e.warned = true; G.Spawner.say('The Aegislash is about to leave!', 2.4); }
         if ((e.behavior === 'thief' || e.behavior === 'aegis') && (e.life -= dt) <= 0) {
           G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
-          G.Spawner.say(e.behavior === 'aegis' ? 'The Aegislash left with its armoury!' : '¡' + e.name + ' se ha escapado!', 2.4);
+          G.Spawner.say(e.behavior === 'aegis' ? 'The Aegislash left with its armoury!' : e.name + ' got away!', 2.4);
           list.splice(i, 1); byId.delete(e.id);
           if (G.Coop.isHost) G.Coop.enemyGone(e, false);
           continue;

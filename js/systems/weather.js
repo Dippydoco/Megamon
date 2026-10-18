@@ -16,17 +16,17 @@
  */
 G.Weather = (() => {
   const KINDS = {
-    sun:  { name: 'Sol abrasador', icon: 'wsun', color: '#ffcb3d', tint: [255, 190, 90, 0.07],
-            mult: { fire: 1.5, water: 0.5 }, hint: 'el Fuego se potencia y el Agua se debilita' },
-    rain: { name: 'Lluvia', icon: 'wrain', color: '#7fb8ff', tint: [50, 90, 170, 0.09],
-            mult: { water: 1.5, electric: 1.2, fire: 0.5 }, hint: 'el Agua se potencia y el Fuego se debilita' },
-    sand: { name: 'Tormenta de arena', icon: 'wsand', color: '#e0bf73', tint: [200, 160, 90, 0.09],
+    sun:  { name: 'Harsh sunlight', icon: 'wsun', color: '#ffcb3d', tint: [255, 190, 90, 0.07],
+            mult: { fire: 1.5, water: 0.5 }, hint: 'Fire is boosted and Water is weakened' },
+    rain: { name: 'Rain', icon: 'wrain', color: '#7fb8ff', tint: [50, 90, 170, 0.09],
+            mult: { water: 1.5, electric: 1.2, fire: 0.5 }, hint: 'Water is boosted and Fire is weakened' },
+    sand: { name: 'Sandstorm', icon: 'wsand', color: '#e0bf73', tint: [200, 160, 90, 0.09],
             mult: { rock: 1.3, ground: 1.3, steel: 1.3 }, safe: ['rock', 'ground', 'steel'],
-            hint: 'Roca, Tierra y Acero se potencian; el resto sufre' },
-    snow: { name: 'Nevada', icon: 'wsnow', color: '#d8f1ff', tint: [210, 230, 255, 0.08],
-            mult: { ice: 1.5 }, safe: ['ice'], slow: true, hint: 'el Hielo se potencia; el resto sufre y va más lento' },
-    fog:  { name: 'Niebla', icon: 'wfog', color: '#c9cfdc', tint: [190, 195, 210, 0.12],
-            mult: { ghost: 1.3, fairy: 1.3, psychic: 1.3 }, hint: 'Fantasma, Hada y Psíquico se potencian' }
+            hint: 'Rock, Ground and Steel are boosted; the rest suffer' },
+    snow: { name: 'Snowfall', icon: 'wsnow', color: '#d8f1ff', tint: [210, 230, 255, 0.08],
+            mult: { ice: 1.5 }, safe: ['ice'], slow: true, hint: 'Ice is boosted; the rest suffer and slow down' },
+    fog:  { name: 'Fog', icon: 'wfog', color: '#c9cfdc', tint: [190, 195, 210, 0.12],
+            mult: { ghost: 1.3, fairy: 1.3, psychic: 1.3 }, hint: 'Ghost, Fairy and Psychic are boosted' }
   };
   // Chance of each weather by biome (forest, cave, volcano).
   const BIOME_W = [

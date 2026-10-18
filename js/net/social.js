@@ -40,7 +40,7 @@ G.Social = (() => {
       if (!d) return;
       const s = d + 500 - (t0 + Date.now()) / 2;          // (the header is in seconds)
       skew = Math.abs(s) > 60000 ? s : 0;
-      if (skew) console.warn('[Social] el reloj de este aparato va desfasado', Math.round(skew / 60000), 'min: se corrige');
+      if (skew) console.warn('[Social] this device\'s clock is off by', Math.round(skew / 60000), 'min: correcting');
     }).catch(() => {});
   }
   // Presence heartbeat: every 30 min (it was 15; before that 10). 57,000 players with
@@ -102,7 +102,7 @@ G.Social = (() => {
   /** Reserves a unique nickname and creates the public profile. */
   async function claimNick(name) {
     name = (name || '').trim();
-    if (!VALID.test(name)) return { ok: false, error: 'El apodo debe tener 3-16 letras, números o _.' };
+    if (!VALID.test(name)) return { ok: false, error: 'The nickname must be 3-16 letters, numbers or _.' };
     const lower = name.toLowerCase();
     try {
       await fb.fs.runTransaction(async tx => {
@@ -114,8 +114,8 @@ G.Social = (() => {
           { name, lower, at: firebase.firestore.FieldValue.serverTimestamp() });
       });
     } catch (e) {
-      if (e && e.code === 'taken') return { ok: false, error: 'Ese apodo ya lo tiene otro jugador.' };
-      return { ok: false, error: 'No se pudo guardar el apodo (' + ((e && e.code) || 'error') + ').' };
+      if (e && e.code === 'taken') return { ok: false, error: 'That nickname is already taken.' };
+      return { ok: false, error: "Couldn't save the nickname (" + ((e && e.code) || 'error') + ').' };
     }
     me = { uid, name };
     try { localStorage.setItem('ps.nick.' + uid, name); } catch (e) { /* nothing */ }
@@ -217,7 +217,7 @@ G.Social = (() => {
     if (me) await fb.fs.collection('pres').doc(uid).delete().catch(() => {});
     if (why === 'delete') {
       try { localStorage.removeItem('ps.nick.' + uid); } catch (e) { /* nothing */ }
-      await deleteAll().catch(e => console.warn('[Social] borrar:', e));
+      await deleteAll().catch(e => console.warn('[Social] delete:', e));
     }
     friends.clear(); invites.clear(); sentInv.clear(); pres.clear(); presAt = 0;
     me = null; started = false; fb = null; uid = null; playing = false;
@@ -227,16 +227,16 @@ G.Social = (() => {
   /** When deleting the account: friendships, leaderboard records, profile and nickname. */
   async function deleteAll() {
     // Each step separately: if one fails, the others are deleted anyway.
-    const step = async (what, fn) => { try { await fn(); } catch (e) { console.warn('[Social] no se pudo borrar ' + what + ':', e.code || e.message); } };
+    const step = async (what, fn) => { try { await fn(); } catch (e) { console.warn('[Social] could not delete ' + what + ':', e.code || e.message); } };
     const del = async q => { const s = await q.get(); await Promise.all(s.docs.map(d => d.ref.delete().catch(() => {}))); };
     await step('chats', () => del(fb.fs.collection('chats').where('users', 'array-contains', uid)));
     await step('amistades', () => del(fb.fs.collection('friendships').where('users', 'array-contains', uid)));
-    await step('filas del ranking', () => G.Ranking.removeMine());
+    await step('leaderboard rows', () => G.Ranking.removeMine());
     await step('invitaciones', () => del(fb.fs.collection('inv').where('to', '==', uid)));
-    await step('marcas', () => del(fb.fs.collectionGroup('e').where('uids', 'array-contains', uid)));
-    await step('partida en curso', () => fb.fs.collection('runs').doc(uid).delete());
+    await step('records', () => del(fb.fs.collectionGroup('e').where('uids', 'array-contains', uid)));
+    await step('run in progress', () => fb.fs.collection('runs').doc(uid).delete());
     await step('historial', () => fb.fs.collection('histories').doc(uid).delete());
-    await step('apodo', async () => {
+    await step('nickname', async () => {
       const prof = await fb.fs.collection('profiles').doc(uid).get();
       const lower = prof.exists ? prof.data().lower : me && me.name.toLowerCase();
       if (lower) await fb.fs.collection('names').doc(lower).delete().catch(() => {});
@@ -269,7 +269,7 @@ G.Social = (() => {
       // Check whether they're online a moment later: your friend has also just
       // received the friendship and is writing their "online" status at the same time.
       if (added) setTimeout(() => { if (started) refreshPresence(true); }, 2500);
-    }, e => console.warn('[Social] amigos:', e.code || e.message));
+    }, e => console.warn('[Social] friends:', e.code || e.message));
   }
 
   /**
@@ -304,15 +304,15 @@ G.Social = (() => {
   /** Sends a friend request (or accepts the one they had already sent you). */
   async function request(name) {
     name = (name || '').trim();
-    if (!me) return { ok: false, error: 'Primero elige tu apodo.' };
-    if (!VALID.test(name)) return { ok: false, error: 'Escribe el apodo exacto de tu amigo.' };
+    if (!me) return { ok: false, error: 'Choose your nickname first.' };
+    if (!VALID.test(name)) return { ok: false, error: 'Type your friend\'s exact nickname.' };
     const n = await fb.fs.collection('names').doc(name.toLowerCase()).get().catch(() => null);
-    if (!n || !n.exists) return { ok: false, error: 'No hay ningún jugador con ese apodo.' };
+    if (!n || !n.exists) return { ok: false, error: 'There\'s no player with that nickname.' };
     const other = n.data().uid;
-    if (other === uid) return { ok: false, error: 'Ese eres tú.' };
+    if (other === uid) return { ok: false, error: 'That\'s you.' };
     const f = friends.get(other);
-    if (f && f.status === 'ok') return { ok: false, error: 'Ya sois amigos.' };
-    if (f && f.status === 'out') return { ok: false, error: 'Ya le enviaste una solicitud.' };
+    if (f && f.status === 'ok') return { ok: false, error: 'You\'re already friends.' };
+    if (f && f.status === 'out') return { ok: false, error: 'You already sent them a request.' };
     if (f && f.status === 'in') return accept(other);
     const prof = await fb.fs.collection('profiles').doc(other).get().catch(() => null);
     const otherName = prof && prof.exists ? prof.data().name : name;
@@ -323,19 +323,19 @@ G.Social = (() => {
         names: { [uid]: me.name, [other]: otherName },
         at: firebase.firestore.FieldValue.serverTimestamp()
       });
-      return { ok: true, msg: 'Solicitud enviada a ' + otherName };
-    } catch (e) { return { ok: false, error: 'No se pudo enviar (' + (e.code || 'error') + ').' }; }
+      return { ok: true, msg: 'Request sent to ' + otherName };
+    } catch (e) { return { ok: false, error: "Couldn't send it (" + (e.code || 'error') + ').' }; }
   }
 
   async function accept(other) {
     const f = friends.get(other);
-    if (!f || f.status !== 'in') return { ok: false, error: 'No hay solicitud.' };
+    if (!f || f.status !== 'in') return { ok: false, error: 'There\'s no request.' };
     try {
       await fb.fs.collection('friendships').doc(f.pid).update({
         status: 'ok', at: firebase.firestore.FieldValue.serverTimestamp(), ['names.' + uid]: me.name
       });
-      return { ok: true, msg: 'Ahora eres amigo de ' + f.name };
-    } catch (e) { return { ok: false, error: 'No se pudo aceptar (' + (e.code || 'error') + ').' }; }
+      return { ok: true, msg: "You're now friends with " + f.name };
+    } catch (e) { return { ok: false, error: "Couldn't accept it (" + (e.code || 'error') + ').' }; }
   }
 
   async function remove(other) {
@@ -345,7 +345,7 @@ G.Social = (() => {
       if (f.status === 'ok' && G.Chat) await G.Chat.purge(other);     // their conversation goes too (needs the friendship for the rules)
       await fb.fs.collection('friendships').doc(f.pid).delete(); return { ok: true };
     }
-    catch (e) { return { ok: false, error: 'No se pudo borrar (' + (e.code || 'error') + ').' }; }
+    catch (e) { return { ok: false, error: "Couldn't remove it (" + (e.code || 'error') + ').' }; }
   }
 
   // ---------------- rooms ----------------
@@ -382,15 +382,15 @@ G.Social = (() => {
       open = (await fb.rtdb.ref('rooms/' + id + '/open').get()).val();
       host = (await fb.rtdb.ref('rooms/' + id + '/host').get()).val();
     } catch (e) { /* room deleted */ }
-    if (!host) { rtOff(); return { ok: false, error: 'Esa sala ya no existe.' }; }
-    if (open !== true) { rtOff(); return { ok: false, error: 'La partida de esa sala ya ha empezado.' }; }
+    if (!host) { rtOff(); return { ok: false, error: 'That room no longer exists.' }; }
+    if (open !== true) { rtOff(); return { ok: false, error: 'That room\'s game has already started.' }; }
     try { await fb.rtdb.ref('rooms/' + id + '/m/' + uid).set(memberInfo()); }
-    catch (e) { rtOff(); return { ok: false, error: 'No se pudo entrar en la sala.' }; }
+    catch (e) { rtOff(); return { ok: false, error: 'Couldn\'t join the room.' }; }
     const n = (await fb.rtdb.ref('rooms/' + id + '/m').get()).numChildren();
     if (n > MAX_PLAYERS) {
       await fb.rtdb.ref('rooms/' + id + '/m/' + uid).remove();
       rtOff();
-      return { ok: false, error: 'La sala está llena (máximo ' + MAX_PLAYERS + ').' };
+      return { ok: false, error: 'The room is full (max ' + MAX_PLAYERS + ').' };
     }
     enterRoom(id, host);
     return { ok: true };
@@ -433,9 +433,9 @@ G.Social = (() => {
       const host = (await fb.rtdb.ref('rooms/' + id + '/host').get()).val();
       if (!host || !room || room.id !== id) return;
       const ref = fb.rtdb.ref('rooms/' + id + '/m/' + uid);
-      if (!(await ref.get()).exists()) { await ref.set(memberInfo()); console.warn('[Social] plaza recuperada tras un corte'); }
+      if (!(await ref.get()).exists()) { await ref.set(memberInfo()); console.warn('[Social] place recovered after a drop'); }
       watchRoomDisconnect();        // the disconnect notice is used up when it fires: it's armed again
-    } catch (e) { console.warn('[Social] no se pudo recuperar la plaza:', e.code || e.message); }
+    } catch (e) { console.warn('[Social] could not recover the place:', e.code || e.message); }
   }
 
   /** If the browser closes, the room (host) or your place (guest) is deleted automatically. */
@@ -506,15 +506,15 @@ G.Social = (() => {
 
   async function invite(other) {
     const f = friends.get(other);
-    if (!f || f.status !== 'ok') return { ok: false, error: 'Sólo puedes invitar a tus amigos.' };
-    if (room && room.members.length >= MAX_PLAYERS) return { ok: false, error: 'La sala está llena.' };
-    if (room && !room.isHost) return { ok: false, error: 'Sólo el anfitrión de la sala puede invitar.' };
+    if (!f || f.status !== 'ok') return { ok: false, error: 'You can only invite your friends.' };
+    if (room && room.members.length >= MAX_PLAYERS) return { ok: false, error: 'The room is full.' };
+    if (room && !room.isHost) return { ok: false, error: 'Only the room host can invite.' };
     if (!room) await createRoom();
     try {
       await fb.fs.collection('inv').doc(other + '_' + uid).set({ to: other, from: uid, room: room.id, name: me.name, at: fts() });
-    } catch (e) { return { ok: false, error: 'No se pudo invitar (' + (e.code || 'error') + ').' }; }
+    } catch (e) { return { ok: false, error: "Couldn't send the invite (" + (e.code || 'error') + ').' }; }
     sentInv.add(other);
-    return { ok: true, msg: 'Invitación enviada a ' + f.name };
+    return { ok: true, msg: 'Invite sent to ' + f.name };
   }
 
   /** Withdraws the invitations you sent (when leaving the room). */
@@ -537,7 +537,7 @@ G.Social = (() => {
 
   async function acceptInvite(from) {
     const inv = invites.get(from);
-    if (!inv || now() - inv.at > INVITE_TTL) { invites.delete(from); emit('invites'); return { ok: false, error: 'La invitación ha caducado.' }; }
+    if (!inv || now() - inv.at > INVITE_TTL) { invites.delete(from); emit('invites'); return { ok: false, error: 'The invite has expired.' }; }
     invites.delete(from);
     invDoc(from).delete().catch(() => {});
     emit('invites');
@@ -594,7 +594,7 @@ G.Social = (() => {
       try { localStorage.setItem(lsKey, key); } catch (e) { /* nothing */ }
       fb.fs.collection('profiles').doc(uid).set(Object.assign(d, {
         name: me.name, lower: me.name.toLowerCase(), at: firebase.firestore.FieldValue.serverTimestamp()
-      })).catch(e => { pubLast = ''; console.warn('[Social] perfil:', e.code || e.message); });
+      })).catch(e => { pubLast = ''; console.warn('[Social] profile:', e.code || e.message); });
     }, 800);
   }
 

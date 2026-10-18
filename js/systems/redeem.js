@@ -64,15 +64,15 @@ G.Redeem = (() => {
       try { localStorage.setItem(DEMO_KEY, on ? '1' : '0'); } catch (e) { /* nothing */ }
       return { ok: true, demo: on };
     }
-    if (!s || G.DB.guest) return { ok: false, error: 'Entra con tu cuenta para canjear códigos (como invitado no se guardaría).' };
+    if (!s || G.DB.guest) return { ok: false, error: 'Sign in to redeem codes (as a guest it would not be saved).' };
     const norm = normalize(code);
-    if (!norm) return { ok: false, error: 'Escribe un código.' };
+    if (!norm) return { ok: false, error: 'Enter a code.' };
     const h = hashOf(norm);
     const def = (G.CODES || []).find(c => c.h === h);
-    if (!def) return { ok: false, error: 'Ese código no existe.' };
-    if (def.until && Date.now() > new Date(def.until + 'T23:59:59').getTime()) return { ok: false, error: 'Ese código ha caducado.' };
+    if (!def) return { ok: false, error: 'That code does not exist.' };
+    if (def.until && Date.now() > new Date(def.until + 'T23:59:59').getTime()) return { ok: false, error: 'That code has expired.' };
     s.codes = s.codes && typeof s.codes === 'object' ? s.codes : {};
-    if (s.codes[h]) return { ok: false, error: 'Ya has canjeado ese código.' };
+    if (s.codes[h]) return { ok: false, error: 'You have already redeemed that code.' };
     const reward = { t1: def.t1 || 0, t10: def.t10 || 0, coins: def.coins || 0 };
     s.codes[h] = Date.now();
     G.Progress.grant(reward);

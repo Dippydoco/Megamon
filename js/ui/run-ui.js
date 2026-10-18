@@ -67,7 +67,7 @@ G.RunUI = (() => {
       const el = document.createElement('div');
       el.className = 'card';
       const tag = c.type === 'new'
-        ? `<span class="tag-chip" style="background:${c.color}">Nuevo · ${c.tag}</span>`
+        ? `<span class="tag-chip" style="background:${c.color}">New · ${c.tag}</span>`
         : c.type === 'up' || c.type === 'evo'
           ? `<span class="tag-chip" style="background:${c.color}">${c.tag}</span>`
           : `<span class="tag-chip" style="background:${c.color === '#ffd23f' ? '#ffd23f' : '#9fb1c9'}">${c.tag}</span>`;
@@ -102,11 +102,11 @@ G.RunUI = (() => {
   function setWaiting(names) {
     const me = G.Social.me ? G.Social.me.name : '';
     const others = names.filter(n => n !== me);
-    const list = a => a.length > 1 ? a.slice(0, -1).join(', ') + (G.I18n.lang === 'en' ? ' and ' : ' y ') + a[a.length - 1] : a[0];
+    const list = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a[0];
     $('lvl-wait').textContent = !names.length ? ''
-      : !others.length ? 'Elige tu carta'
-      : names.includes(me) ? 'Faltan por elegir: ' + list([...others, G.I18n.lang === 'en' ? 'you' : 'tú'])
-      : 'Esperando a ' + list(others) + '…';
+      : !others.length ? 'Choose your card'
+      : names.includes(me) ? 'Still choosing: ' + list([...others, 'you'])
+      : 'Waiting for ' + list(others) + '…';
   }
 
   function closeLevelUp() {
@@ -173,34 +173,34 @@ G.RunUI = (() => {
     };
     document.querySelectorAll('#over-tabs .tab').forEach(el => { el.onclick = () => setTab(el.dataset.tab); });
     setTab('sum');
-    $('over-title').textContent = r.dead ? 'Has caído…' : 'Run terminada';
+    $('over-title').textContent = r.dead ? 'You fell…' : 'Run over';
     $('over-stats').innerHTML = `
-      <div><span>Tiempo</span><b>${G.U.mmss(r.time)}</b></div>
-      <div><span>Nivel</span><b>${r.level}</b></div>
-      <div><span>Derrotados</span><b>${r.kills}</b></div>
-      <div><span>Jefes</span><b>${r.bosses}</b></div>
-      ${r.judge ? `<div style="grid-column:1/-1"><span>Ante Arceus</span><b class="gold">${G.U.mmss(r.judge.time)} · ${r.judge.bosses} ${r.judge.bosses === 1 ? 'legendario' : 'legendarios'}</b></div>` : ''}
-      <div style="grid-column:1/-1"><span>Pokémonedas ganadas</span>
+      <div><span>Time</span><b>${G.U.mmss(r.time)}</b></div>
+      <div><span>Level</span><b>${r.level}</b></div>
+      <div><span>Defeated</span><b>${r.kills}</b></div>
+      <div><span>Bosses</span><b>${r.bosses}</b></div>
+      ${r.judge ? `<div style="grid-column:1/-1"><span>Against Arceus</span><b class="gold">${G.U.mmss(r.judge.time)} · ${r.judge.bosses} ${r.judge.bosses === 1 ? 'legendary' : 'legendaries'}</b></div>` : ''}
+      <div style="grid-column:1/-1"><span>Poké Coins earned</span>
         <b class="gold"><span class="coin"></span> +${r.coins}</b>
         <div style="font-size:12px;color:var(--muted)">${r.breakdown}</div></div>
-      ${r.t1 || r.t10 ? `<div style="grid-column:1/-1"><span>Tickets del gacha</span><b>
+      ${r.t1 || r.t10 ? `<div style="grid-column:1/-1"><span>Gacha tickets</span><b>
         ${r.t1 ? G.Icons.html('ticket', 22) + ' +' + r.t1 + ' ' : ''}${r.t10 ? G.Icons.html('ticket10', 22) + ' +' + r.t10 + ' ×10' : ''}</b></div>` : ''}
-      ${r.killer ? `<div style="grid-column:1/-1" class="killer" translate="no"><span>Defeated by</span>
+      ${r.killer ? `<div style="grid-column:1/-1" class="killer"><span>Defeated by</span>
         <div class="killer-main"><span class="killer-sprite"></span><div>
           <b>${esc(r.killer.n)}</b>
           <small>${esc(r.killer.a)}${r.killer.ty ? ` · <i class="ktype" style="color:${G.U.TYPE_COLOR[r.killer.ty] || '#ccc'}">${esc(r.killer.ty)}</i>` : ''}${r.killer.e === 'super' ? ' · super effective' : r.killer.e === 'weak' ? ' · not very effective' : ''}</small>
         </div><em>${r.killer.h} damage</em></div>
         ${(r.recent || []).length > 1 ? `<div class="killer-prev">Hits before that: ${r.recent.slice(0, -1).reverse().map(h => `${esc(h.n)} (${esc(h.a)}, ${h.h})`).join(' · ')}</div>` : ''}
       </div>` : ''}
-      <div style="grid-column:1/-1"><span>Movimientos</span><b style="font-size:15px">
-        ${r.moves.map(m => `${G.Icons.html('move:' + m.id, 16)} ${m.name} Nv.${m.lvl}`).join(' · ') || '—'}</b></div>
-      ${r.caught && r.caught.length ? `<div style="grid-column:1/-1" class="caught"><span>${G.Icons.html('shiny', 12)} Shinies conseguidos</span>
+      <div style="grid-column:1/-1"><span>Moves</span><b style="font-size:15px">
+        ${r.moves.map(m => `${G.Icons.html('move:' + m.id, 16)} ${m.name} Lv.${m.lvl}`).join(' · ') || '—'}</b></div>
+      ${r.caught && r.caught.length ? `<div style="grid-column:1/-1" class="caught"><span>${G.Icons.html('shiny', 12)} Shinies caught</span>
         <div class="caught-row" id="over-caught"></div></div>` : ''}
-      ${r.record ? '<div style="grid-column:1/-1;text-align:center" class="gold">¡Nuevo récord de tiempo!</div>' : ''}
+      ${r.record ? '<div style="grid-column:1/-1;text-align:center" class="gold">New time record!</div>' : ''}
       ${askSupport(r) ? `<div class="support-ask" id="over-ask" style="grid-column:1/-1">
-        <button class="x" type="button" aria-label="Cerrar">×</button>
-        <p>¿Te está gustando Megamon? Lo hago yo solo y los servidores cuestan dinero. Si quieres, puedes ayudarme a mantenerlo en línea.</p>
-        <a class="btn small gold" href="${G.Funding.url}" target="_blank" rel="noopener">${G.Icons.html('heart', 14)} Apoyar en Ko-fi</a>
+        <button class="x" type="button" aria-label="Close">×</button>
+        <p>Enjoying Megamon? I make it on my own and the servers cost money. If you like, you can help me keep it online.</p>
+        <a class="btn small gold" href="${G.Funding.url}" target="_blank" rel="noopener">${G.Icons.html('heart', 14)} Support on Ko-fi</a>
       </div>` : ''}`;
     const ks = document.querySelector('#over-stats .killer-sprite');
     if (ks && r.killer && r.killer.d) ks.appendChild(G.UI.spriteCanvas(r.killer.d, 56, 48, { scale: 1 }));
@@ -212,7 +212,7 @@ G.RunUI = (() => {
       for (const c of r.caught) {
         const w = document.createElement('div');
         w.appendChild(G.UI.spriteCanvas(c.dex, 90, 72, { shiny: true, lively: true, scale: 2 }));
-        w.insertAdjacentHTML('beforeend', `<small>${G.DEX_BY[c.dex].name}${c.isNew ? ' · ¡nuevo!' : ''}</small>`);
+        w.insertAdjacentHTML('beforeend', `<small>${G.DEX_BY[c.dex].name}${c.isNew ? ' · new!' : ''}</small>`);
         row.appendChild(w);
       }
     }
@@ -224,7 +224,7 @@ G.RunUI = (() => {
     const box = $('item-cards');
     box.innerHTML = '';
     // No item (cur = null): the new one is offered to accept or discard.
-    const opts = cur ? [[cur, 'Quedarme con'], [next, 'Cambiar a']] : [[next, 'Take'], [null, 'Discard']];
+    const opts = cur ? [[cur, 'Keep'], [next, 'Switch to']] : [[next, 'Take'], [null, 'Discard']];
     opts.forEach(([id, verb], i) => {
       const it = id ? G.Items.BY[id] : null;
       const el = document.createElement('div');
@@ -310,22 +310,22 @@ G.RunUI = (() => {
     const { opt, first } = bond;
     const names = ms => ms.map(m => m.name).join(' + ');
     const step2 = opt.mode === 'pair' && first;
-    $('bond-sub').textContent = opt.mode === 'add' ? 'Elige qué movimiento se une a ' + names(opt.group)
-      : step2 ? '¿Con cuál unes ' + first.name + '?' : 'Elige el primer movimiento que vas a unir';
+    $('bond-sub').textContent = opt.mode === 'add' ? 'Choose which move joins ' + names(opt.group)
+      : step2 ? 'Which move do you bond ' + first.name + ' with?' : 'Choose the first move to bond';
     $('bond-back').classList.toggle('hidden', !step2);
     bond.list = step2 ? opt.loose.filter(m => m !== first) : opt.loose;
     const box = $('bond-cards');
     box.innerHTML = '';
     bond.list.forEach((m, i) => {
       const col = G.U.TYPE_COLOR[m.type];
-      const desc = opt.mode === 'add' ? 'Se lanzará a la vez que ' + names(opt.group) + '.'
-        : step2 ? 'Se lanzará a la vez que ' + first.name + '. Queda un hueco libre.'
+      const desc = opt.mode === 'add' ? 'It will fire at the same time as ' + names(opt.group) + '.'
+        : step2 ? 'It will fire at the same time as ' + first.name + '. A slot is freed.'
         : m.desc || '';
       const el = document.createElement('div');
       el.className = 'card' + (opt.mode === 'add' || step2 ? ' bond' : '');
       el.innerHTML =
         `<div class="ico" style="background:${col}33">${G.Icons.html('move:' + m.id, 32)}</div>
-         <div class="txt"><div class="nm">${m.name} <span class="tag-chip" style="background:${col}">Nv.${m.lvl}</span> ${G.Icons.kindTag(m.kind)}</div><div class="ds">${desc}</div></div>
+         <div class="txt"><div class="nm">${m.name} <span class="tag-chip" style="background:${col}">Lv.${m.lvl}</span> ${G.Icons.kindTag(m.kind)}</div><div class="ds">${desc}</div></div>
          <div class="key">${i + 1}</div>`;
       el.dataset.sfx = 'none';
       el.onclick = () => pickBond(i);
@@ -358,7 +358,7 @@ G.RunUI = (() => {
   function showPause(coop = false) {
     G.UI.soundControls($('pause-sound'));
     $('pause-coop').classList.toggle('hidden', !coop);
-    $('btn-quit').textContent = coop ? 'Salir de la partida' : 'Abandonar run';
+    $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
     G.UI.show('scr-pause');
   }
 

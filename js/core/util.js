@@ -54,10 +54,10 @@ G.U = {
   },
 
   TYPE_NAME: {
-    normal: 'Normal', fire: 'Fuego', water: 'Agua', grass: 'Planta',
-    electric: 'Eléctrico', ice: 'Hielo', fighting: 'Lucha', poison: 'Veneno',
-    ground: 'Tierra', flying: 'Volador', psychic: 'Psíquico', bug: 'Bicho',
-    rock: 'Roca', ghost: 'Fantasma', dragon: 'Dragón', dark: 'Siniestro',
-    steel: 'Acero', fairy: 'Hada'
+    normal: 'Normal', fire: 'Fire', water: 'Water', grass: 'Grass',
+    electric: 'Electric', ice: 'Ice', fighting: 'Fighting', poison: 'Poison',
+    ground: 'Ground', flying: 'Flying', psychic: 'Psychic', bug: 'Bug',
+    rock: 'Rock', ghost: 'Ghost', dragon: 'Dragon', dark: 'Dark',
+    steel: 'Steel', fairy: 'Fairy'
   }
 };

@@ -21,7 +21,7 @@ G.TestUI = (() => {
     const Q = G.PERSONALITY_TEST;
     const q = Q[idx];
     $('test-bar').style.width = (idx / Q.length * 100) + '%';
-    $('test-count').textContent = `Pregunta ${idx + 1} de ${Q.length}`;
+    $('test-count').textContent = `Question ${idx + 1} of ${Q.length}`;
     $('test-q').textContent = q.q;
     const box = $('test-a');
     box.innerHTML = '';
@@ -57,7 +57,7 @@ G.TestUI = (() => {
   function openStarters() {
     picked = null;
     $('starter-ok').disabled = true;
-    $('starter-info').textContent = 'Selecciona un Pokémon';
+    $('starter-info').textContent = 'Pick a Pokémon';
     const grid = $('starter-grid');
     grid.innerHTML = '';
     for (const s of G.STARTERS) {
@@ -87,7 +87,7 @@ G.TestUI = (() => {
     save.personality = result ? { trait: result.trait, scores } : null;
     G.DB.grant(dex, 'starter');
     G.DB.commit();
-    G.UI.toast('¡' + G.DEX_BY[dex].name + ' se une a ti!');
+    G.UI.toast(G.DEX_BY[dex].name + ' joins you!');
     G.Flow.goMenu();
   }
 

@@ -63,10 +63,10 @@ G.GachaUI = (() => {
       `radial-gradient(circle at 80% 30%, rgba(255,210,63,.3), transparent 45%),
        radial-gradient(circle at 15% 80%, rgba(196,123,255,.3), transparent 50%),
        linear-gradient(135deg, ${c1}, ${c2} 55%, ${c3})`;
-    $('banner-title').textContent = surprise ? '??? Mystery Banner' : banner.name + ' Misterioso';
+    $('banner-title').textContent = surprise ? '??? Mystery Banner' : banner.name + ' Mystery';
     $('banner-desc').textContent = surprise ? `Any of the ${all.length} Pokémon from any generation. Who knows what you will get?`
-                                            : `Los ${all.length} Pokémon de la generación ${gen}. ¡Los legendarios esperan!`;
-    $('gacha-owned').innerHTML = `Tienes ${owned} de ${all.length}` +
+                                            : `The ${all.length} Pokémon of generation ${gen}. The legendaries await!`;
+    $('gacha-owned').innerHTML = `You have ${owned} of ${all.length}` +
       (shinies ? ` · ${G.Icons.html('shiny', 12)} ${shinies} shiny` : '');
 
     const feat = $('gacha-feat');
@@ -86,23 +86,23 @@ G.GachaUI = (() => {
 
     const ps = sv();
     const pity = (ps.pity && ps.pity[surprise ? 'x' : gen]) || 0;
-    $('gacha-pity').textContent = `Tiradas sin legendaria en ${surprise ? 'Surprise' : banner.name}: ${pity} / ${G.Gacha.PITY_5}`;
+    $('gacha-pity').textContent = `Pulls without a legendary in ${surprise ? 'Surprise' : banner.name}: ${pity} / ${G.Gacha.PITY_5}`;
 
-    $('gacha-rates').innerHTML = '<h3>Probabilidades</h3>' + G.Gacha.RATES.slice().reverse().map(([r, w]) => `
+    $('gacha-rates').innerHTML = '<h3>Odds</h3>' + G.Gacha.RATES.slice().reverse().map(([r, w]) => `
       <div><span style="color:${G.Gacha.RARITY_COLOR[r]}">${G.UI.stars(r, 10)} ${G.Gacha.RARITY_NAME[r]}</span>
       <span>${w}% · ${surprise ? G.Gacha.BANNERS.reduce((n, b) => n + G.Gacha.pool(r, b.gen).length, 0) : G.Gacha.pool(r, gen).length}</span></div>`).join('') +
       `<div><span>${G.Icons.html('shiny', 12)} Shiny</span><span>1%</span></div>
-       <p class="note">· La tirada ×10 garantiza al menos una Épica.<br>
-       · A las ${G.Gacha.PITY_5} tiradas sin Legendaria en un banner, la siguiente lo es.<br>
-       · Los repetidos dan Pokémonedas. Los shiny no se repiten.<br>
-       · Los tickets se consiguen jugando: algunos Pokémon los sueltan al caer, y
-         los jefes y los legendarios de las grietas, a veces, tickets ×10.</p>`;
+       <p class="note">· The ×10 pull guarantees at least one Epic.<br>
+       · After ${G.Gacha.PITY_5} pulls without a Legendary on a banner, the next one is.<br>
+       · Duplicates give Poké Coins. Shinies don't repeat.<br>
+       · Tickets are earned by playing: some Pokémon drop them when they fall, and
+         bosses and rift legendaries sometimes drop ×10 tickets.</p>`;
 
     const t = s.tickets;
     $('cost-1').innerHTML = `${G.Icons.html('ticket', 18)} 1`;
     $('cost-10').innerHTML = `${G.Icons.html('ticket', 18)} 10`;
     $('cost-10b').innerHTML = `${G.Icons.html('ticket10', 18)} 1`;
-    $('gacha-tickets').innerHTML = `Tienes ${G.Icons.html('ticket', 18)} <b>${t.t1}</b> tickets y ${G.Icons.html('ticket10', 18)} <b>${t.t10}</b> tickets ×10`;
+    $('gacha-tickets').innerHTML = `You have ${G.Icons.html('ticket', 18)} <b>${t.t1}</b> tickets and ${G.Icons.html('ticket10', 18)} <b>${t.t10}</b> ×10 tickets`;
     const dm = demo();
     $('pull-1').disabled = !dm && !G.Gacha.costOf(s, 1);
     $('pull-10').disabled = !dm && !G.Gacha.costOf(s, 10, 't1');
@@ -119,7 +119,7 @@ G.GachaUI = (() => {
     let res;
     if (demo()) { const d = sv(); d.tickets = { t1: 1000, t10: 1000 }; res = G.Gacha.pull(d, n, gen, use, surprise); }
     else res = G.Gacha.pull(G.DB.save, n, gen, use, surprise);
-    if (!res) { G.Audio.sfx('error'); G.UI.toast('No tienes tickets suficientes: consíguelos jugando'); return; }
+    if (!res) { G.Audio.sfx('error'); G.UI.toast('Not enough tickets: earn them by playing'); return; }
     present(res, n);
   }
 
@@ -188,8 +188,8 @@ G.GachaUI = (() => {
       c.innerHTML = `<div class="stars">${G.UI.stars(r.rarity, 24)}</div>`;
       c.appendChild(G.UI.spriteCanvas(r.dex, 132, 120, { lively: r.rarity >= 4 || r.shiny, scale: 2, shiny: r.shiny }));
       const tag = r.isNew
-        ? `<span class="new">${r.shiny ? '¡SHINY NUEVO!' : '¡NUEVO!'}</span>`
-        : `Repetido · <span class="coin"></span> +${r.refund}`;
+        ? `<span class="new">${r.shiny ? 'NEW SHINY!' : 'NEW!'}</span>`
+        : `Duplicate · <span class="coin"></span> +${r.refund}`;
       c.insertAdjacentHTML('beforeend', `<b>${r.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${mon.name}</b>${surprise ? `<small class="sub">Gen ${r.gen}</small>` : ''}<div class="tag">${tag}</div>`);
       out.appendChild(c);
       G.Audio.sfx('reveal', { rarity: r.rarity });

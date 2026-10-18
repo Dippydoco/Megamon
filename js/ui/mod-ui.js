@@ -51,7 +51,7 @@ G.ModUI = (() => {
     }
   }
 
-  /** "s_w2026-42" -> "Solo · Semana" */
+  /** "s_w2026-42" -> "Solo · Week" */
   function boardName(b) {
     const [m, p] = b.split('_');
     const mode = m === 'g' ? 'Group' : 'Solo';
