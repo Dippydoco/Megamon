@@ -119,6 +119,27 @@ G.World = (() => {
 
   const arena_outer = () => (arena ? arena.r + 7 : 0);
 
+  /** Is (tx,ty) a Zygarde Portal tile? (pure function of the seed, so neighbouring chunks agree) */
+  function portalTile(tx, ty) {
+    const h = H(tx, ty, seed + 919);
+    if (h >= 0.0003 || Math.hypot(tx, ty) <= 25) return false;
+    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++)
+      if (terrainRaw(tx + a, ty + b) !== FLOOR) return false;
+    // Spacing: of two candidates closer than 12 tiles, only the one with the lower hash survives.
+    for (let b = -12; b <= 12; b++) for (let a = -12; a <= 12; a++) {
+      if (!a && !b) continue;
+      const h2 = H(tx + a, ty + b, seed + 919);
+      if (h2 < 0.0003 && (h2 < h || (h2 === h && (b < 0 || (b === 0 && a < 0))))) return false;
+    }
+    return true;
+  }
+  /** Keep a clear area around portals: no trees, rocks, chests or grass within 4 tiles. */
+  function nearPortal(tx, ty) {
+    for (let b = -4; b <= 4; b++) for (let a = -4; a <= 4; a++)
+      if ((a || b) && portalTile(tx + a, ty + b)) return true;
+    return false;
+  }
+
   function placeProps(c) {
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       if (c.terr[j * N + i] !== FLOOR) continue;
@@ -154,13 +175,14 @@ G.World = (() => {
         kind = Math.floor(H(tx, ty, seed + 910) * (type === 'altar' ? 6 : 3));
       }
       // Zygarde Portal: very rare, further out than the other specials (about 1 per 15 chunks).
-      if (!type && open && Math.hypot(tx, ty) > 25 && H(tx, ty, seed + 919) < 0.0003) type = 'zportal';
+      if (!type && open && portalTile(tx, ty)) type = 'zportal';
       if (type) { /* ya elegido */ }
       else if (open && h < (grove ? 0.07 : 0.006)) type = 'tree';
       else if (open && h > 0.992) type = 'rock';
       else if (open && h > 0.985 && h <= 0.992 && H(tx, ty, seed + 606) < 0.07) type = 'chest';
       else if (fbm(tx / 5, ty / 5, seed + 707) > 0.66 && H(tx, ty, seed + 808) < 0.75) type = 'grass';
       if (!type) continue;
+      if (type !== 'zportal' && nearPortal(tx, ty)) continue;
 
       const p = makeProp(type, tx, ty, kind);
       c.props.push(p);
@@ -548,12 +570,29 @@ G.World = (() => {
     const w = img.width * P, h = img.height * P;
     if (p.type === 'zportal') {
       const cx = p.x, cy = p.y - 8;
+      const pulse = Math.sin(t * 2.4 + p.wiggle);
       ctx.save();
-      ctx.globalAlpha = 0.18 + Math.sin(t * 2.4 + p.wiggle) * 0.07;
+      // Soft green ground glow (two layers) and a faint light column rising from the portal.
+      ctx.globalAlpha = 0.28 + pulse * 0.1;
       ctx.fillStyle = '#5fe08a';
-      ctx.beginPath(); ctx.ellipse(cx, cy, 34, 20, 0, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx, cy, 48, 28, 0, 0, 6.2832); ctx.fill();
+      ctx.globalAlpha = 0.22 + pulse * 0.08;
+      ctx.fillStyle = '#c8ff7a';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 30, 17, 0, 0, 6.2832); ctx.fill();
+      const g = ctx.createLinearGradient(0, cy, 0, cy - 110);
+      g.addColorStop(0, 'rgba(120,255,160,0.30)'); g.addColorStop(1, 'rgba(120,255,160,0)');
+      ctx.globalAlpha = 0.8 + pulse * 0.2;
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - 26, cy - 110, 52, 110);
       ctx.restore();
-      if (Math.random() < 0.18) G.FX.px(cx + G.U.rand(-22, 22), cy + G.U.rand(-6, 8), Math.random() < 0.5 ? '#9dffb8' : '#d6ff5f', { vy: -34, life: 0.8 });
+      // Rising sparks, motes circling the rim, and a ring pulse every 1.6 s.
+      if (Math.random() < 0.55) G.FX.px(cx + G.U.rand(-28, 28), cy + G.U.rand(-8, 10), Math.random() < 0.5 ? '#9dffb8' : '#d6ff5f', { vy: -G.U.rand(30, 60), life: 1 });
+      if (Math.random() < 0.35) {
+        const a = t * 2 + Math.random() * 6.2832;
+        G.FX.px(cx + Math.cos(a) * 34, cy + Math.sin(a) * 18, '#ffffff', { vy: -20, life: 0.5 });
+      }
+      if (!p.tk || t - p.tk > 1.6) { p.tk = t; G.FX.ring(cx, cy, 8, 46, '#7dffa8', 0.6, 3); }
+      if (Math.random() < 0.03) G.FX.twinkle(cx + G.U.rand(-30, 30), cy + G.U.rand(-14, 10));
     }
     if (p.flat) {
       // Planos (manantial, trampa): pegados al suelo, centrados en su casilla.
