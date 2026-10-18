@@ -12,6 +12,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T14:30Z', title: T('Zygarde is deadly'), chg: [
+    T('If everyone falls (or time runs out) in the Zygarde Portal fight, your run now ends instead of sending you back to the map.'),
+  ] },
   { d: '2026-10-18', at: '2026-10-18T14:27Z', title: T('Zygarde Portal: much rarer and tougher'), chg: [
     T('Zygarde Portals are now about 75 times rarer.'),
     T('Portal Zygarde has far more health (about 3.6x more) and its health also follows your whole team\'s damage output, so it should last around a minute.'),

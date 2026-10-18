@@ -207,7 +207,11 @@ G.Rift = (() => {
       return;
     }
     arena.endT -= dt;
-    if (arena.endT <= 0) finish();
+    if (arena.endT <= 0) {
+      // Zygarde Portal: losing the fight ends the whole run (no escape back to the map).
+      if (arena.zy && arena.phase === 'lost') { arena.endT = 999; G.Game.failRun(); }
+      else finish();
+    }
   }
 
   // ---- Zygarde Portal: at half health Zygarde turns into Mega Zygarde ----
@@ -270,7 +274,7 @@ G.Rift = (() => {
   function lost() {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'lost'; arena.endT = 1.2;
-    G.Spawner.say('La grieta os ha expulsado…', 2.6, true);
+    G.Spawner.say(arena.zy ? 'Zygarde has ended your run…' : 'La grieta os ha expulsado…', 2.6, true);
     G.Audio.sfx('back');
   }
 

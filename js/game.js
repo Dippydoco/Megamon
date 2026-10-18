@@ -1384,6 +1384,12 @@ G.Game = (() => {
     /** Para grabar vídeos: cámara lenta (0,5 = mitad de velocidad). */
     debugSpeed(k) { if (k > 1) tampered = true; speedK = k; },
     togglePause,
+    /** Zygarde Portal lost: the run ends for everyone (the host ends it for the group). */
+    failRun() {
+      if (state === 'over' || !pl) return;
+      if (G.Coop.active) { if (!G.Coop.isHost) return; G.Coop.over(summary()); }
+      endRun(true);
+    },
     /** Abandona la partida en curso (p. ej. al cerrar sesión desde Ajustes). */
     quit() { if (state !== 'ui' && state !== 'over') quitRun(); },
     /** Para grabar vídeos: abre las cartas de subir de nivel. */
