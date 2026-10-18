@@ -12,6 +12,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T16:31Z', title: T('Defeated by Mega Zygarde'), fix: [
+    T('Falling to Mega Zygarde in the Zygarde Portal said "Defeated by Something". It now names Mega Zygarde and shows its picture.'),
+  ] },
   { d: '2026-10-18', at: '2026-10-18T16:10Z', title: T('Choice Band move choice'), fix: [
     T('In co-op, the Choice Band\'s "pick your move" screen could vanish if level-up cards arrived at the same moment, locking you into whatever move was selected. It now comes back after the cards. This happened most with Repertoire, since you start with 2 moves while level-ups are still very fast.'),
   ] },
