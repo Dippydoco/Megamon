@@ -703,8 +703,10 @@ G.HUD = (() => {
     ctx.font = F(800, 11);
     ctx.fillStyle = c.nameCol;
     ctx.fillText(c.name, tx, y + 14);
+    let nw = ctx.measureText(c.name).width;
+    // Shiny: the little red star after the name, as in the menu (teammates' too: their shiny comes with the game start).
+    if (o.shiny) { G.Icons.draw(ctx, 'shiny', Math.round(tx + nw + 3), y + 4, 12); nw += 15; }
     if (c.tag) {
-      const nw = ctx.measureText(c.name).width;
       ctx.font = F(700, 10);
       ctx.fillStyle = '#ffcb3d';
       ctx.fillText(c.tag, tx + nw + 7, y + 14);

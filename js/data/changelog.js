@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T21:32Z', title: 'Shiny star on your health card', new: [
+    'Playing a shiny Pokémon now shows its little red star next to the name on your health card, and on your teammates\' cards in co-op.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T21:21Z', title: 'New moves in the Codex', new: [
     'Moves added in the last 30 days now carry a gold NEW tag in the Codex, and a New filter shows just those.'
   ] },
