@@ -465,6 +465,22 @@ G.HUD = (() => {
           ctx.restore();
         }
 
+        // Burst move: seconds left while it charges, and a pulsing gold border once it's ready.
+        if (m.kind === 'burst') {
+          const left = m.t;
+          if (left > 0.05) {
+            ctx.font = F(800, Math.round(12 * K)); ctx.textAlign = 'right';
+            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = '#e8eefc';
+            ctx.strokeText(Math.ceil(left) + 's', x + S - 4, y + 13 * K); ctx.fillText(Math.ceil(left) + 's', x + S - 4, y + 13 * K);
+          } else if (!on) {
+            const pulse = 0.55 + Math.sin(performance.now() / 160) * 0.35;
+            ctx.save();
+            roundRect(ctx, x - 2, y - 2, S + 4, S + 4, 13);
+            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,210,63,' + pulse.toFixed(2) + ')'; ctx.stroke();
+            ctx.restore();
+          }
+        }
+
         // type emblem + family badge
         // Icons only scale in whole steps (16 px each): on the bigger slots use 3x so the disc fills the box and the kind tag is easier to see.
         const IS = S >= 64 ? 48 : 32;

@@ -446,7 +446,47 @@
     { id: 'pursuit', name: 'Pursuit', type: 'dark', kind: 'projectile',
       desc: 'A homing shot that does double damage to enemies below 30% HP.',
       cd: 0.60, dmg: 16, speed: 360, count: 1, spread: 0.10, pierce: 0, life: 1.8, size: 7, homing: 3,
-      fx: { exec: 2 } }
+      fx: { exec: 2 } },
+
+    // ---------------- burst moves (18-10-2026) ----------------
+    // Long cooldown. They charge in the background while you use your other moves and fire the
+    // moment you switch to them; then you switch back. They can't go in a bond (it would fire them
+    // on its own and there'd be no reason to switch) and you can carry 2 at most. See burst() in combat.js.
+    { id: 'hyper-beam', name: 'Hyper Beam', type: 'normal', kind: 'burst',
+      desc: 'Burst · 18 s. A huge beam across the screen that pierces everything. You slow down for a moment after.',
+      cd: 18, dmg: 200, radius: 560, width: 56,
+      ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
+            { t: 'A wider and longer beam', m: { width: 1.30, radius: 1.15 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'explosion', name: 'Explosion', type: 'normal', kind: 'burst',
+      desc: 'Burst · 22 s. A massive blast all around you. Costs 15% of your max HP (it never knocks you out).',
+      cd: 22, dmg: 260, radius: 140, knock: 260, selfHp: 0.15,
+      ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% blast radius', m: { radius: 1.25 } },
+            { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+40% damage and it only costs 7.5% HP', m: { dmg: 1.40, selfHp: 0.075 } }] },
+
+    { id: 'protect', name: 'Protect', type: 'normal', kind: 'burst',
+      desc: 'Burst · 20 s. A shield: you take no damage at all for 3 seconds.',
+      cd: 20, dur: 3, radius: 60, knock: 160,
+      ups: [{ t: '+0.5 s shield', m: { dur: 3.5 / 3 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
+            { t: '+0.5 s shield', m: { dur: 4 / 3.5 } }, { t: '-15% cooldown', m: { cd: 0.85 } }] },
+
+    { id: 'recover', name: 'Recover', type: 'normal', kind: 'burst',
+      desc: 'Burst · 25 s. Heals 30% of your max HP at once.',
+      cd: 25, amount: 0.30,
+      ups: [{ t: 'Heals 35%', m: { amount: 0.35 / 0.30 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
+            { t: 'Heals 40%', m: { amount: 0.40 / 0.35 } }, { t: '-15% cooldown', m: { cd: 0.85 } }] },
+
+    { id: 'thunder-wave', name: 'Thunder Wave', type: 'electric', kind: 'burst',
+      desc: 'Burst · 20 s. A shock wave that stuns every enemy around you (bosses are slowed instead).',
+      cd: 20, dmg: 20, radius: 380, dur: 1.2,
+      ups: [{ t: 'Stuns 0.3 s longer', m: { dur: 1.25 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
+            { t: '+25% radius', m: { radius: 1.25 } }, { t: 'Stuns 0.3 s longer', m: { dur: 1.2 } }] },
+
+    { id: 'draco-meteor', name: 'Draco Meteor', type: 'dragon', kind: 'burst',
+      desc: 'Burst · 20 s. A rain of 10 meteors on the enemies around you.',
+      cd: 20, dmg: 70, count: 10, radius: 52, knock: 60,
+      ups: [{ t: '+3 meteors', m: { count: 3 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+            { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+3 meteors and +30% radius', m: { count: 3, radius: 1.30 } }] }
   ];
 
   // Melee (12-10-2026): +20 % damage and +25 % reach and arc
@@ -555,7 +595,7 @@
     'rock-slide': ['Stealth Rock', 'cd'],    'ice-beam': ['Blizzard', 'atk'],
     'powder-snow': ['Icy Wind', 'spd'],  'karate-chop': ['Close Combat', 'crit'],
     'aura-sphere': ['Focus Blast', 'cd'],   'lick': ['Shadow Punch', 'hp'],
-    'shadow-ball': ['Phantom Force', 'cd'], 'dragon-rage': ['Draco Meteor', 'atk'],
+    'shadow-ball': ['Phantom Force', 'cd'], 'dragon-rage': ['Dragon Energy', 'atk'],
     'fairy-wind': ['Moonblast', 'atk'],   'dazzling-gleam': ['Misty Terrain', 'area'],
     'metal-claw': ['Iron Head', 'def'], 'flash-cannon': ['Steel Beam', 'def'],
     'bite': ['Crunch', 'crit'],             'dark-pulse': ['Snarl', 'spd'],

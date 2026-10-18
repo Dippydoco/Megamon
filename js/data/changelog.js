@@ -9,6 +9,18 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T21:02Z', title: 'Burst moves', new: [
+    'A new kind of move: burst moves. They have a long cooldown, keep charging while you use your other moves, and fire the moment you switch to them. Then switch back to your main moves. Their slot shows the seconds left and glows gold (with a chime) when they are ready.',
+    'Hyper Beam (Normal, 18 s): a huge beam across the screen that pierces everything; you slow down for a moment after.',
+    'Explosion (Normal, 22 s): a massive blast all around you that costs 15% of your max HP (it never knocks you out).',
+    'Protect (Normal, 20 s): you take no damage at all for 3 seconds.',
+    'Recover (Normal, 25 s): heals 30% of your max HP at once.',
+    'Thunder Wave (Electric, 20 s): stuns every enemy around you; bosses are slowed instead.',
+    'Draco Meteor (Dragon, 20 s): a rain of 10 meteors on the enemies around you.',
+    'Burst moves can\'t be bonded, you can carry 2 at most, and they are offered once you have 2 moves to swap between. Reach makes their blasts bigger, and Reflexes and Quick Claw shorten their cooldowns.'
+  ], chg: [
+    'Dragon Rage now evolves into Dragon Energy (Draco Meteor is now its own burst move). It works exactly as before.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T20:41Z', title: '8 new moves', new: [
     'Absorb (Grass): homing seeds that heal you for part of the damage. Evolves into Giga Drain with Synthesis.',
     'Acid Spray (Poison): enemies it hits take 25% more damage from everyone for 3 seconds, which is great in co-op. Evolves into Corrosive Gas with Reflexes.',

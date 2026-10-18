@@ -21,7 +21,15 @@ G.Combat = (() => {
   function tick(dt, pl, now) {
     if (pl.dead) return;
     // Bonds: every move in the active slot, each with its own cooldown.
-    for (const m of pl.activeGroup()) tickMove(dt, pl, m, now);
+    const group = pl.activeGroup();
+    for (const m of group) tickMove(dt, pl, m, now);
+    // Burst moves charge in the background too (the rest only charge while active).
+    // When one is ready it chimes and its slot glows, so you know it's time to switch to it.
+    for (const m of pl.moves) {
+      if (m.kind !== 'burst' || group.includes(m) || m.t <= 0) continue;
+      m.t -= dt;
+      if (m.t <= 0) { m.t = 0; m.readyAt = performance.now(); if (pl === G.Game.player) G.Audio.sfx('ready'); }
+    }
   }
 
   function tickMove(dt, pl, m, now) {
@@ -55,6 +63,8 @@ G.Combat = (() => {
     const s = Object.create(m);
     if (AREA_R.includes(m.kind) && m.radius) s.radius = m.radius * A;
     if (m.kind === 'beam' || m.kind === 'dash') s.width = (m.width || 34) * A;
+    // Bursts: Hyper Beam grows in width; the rest (blast, wave, meteors, shield push) in radius.
+    if (m.kind === 'burst') { if (m.width) s.width = m.width * A; else if (m.radius) s.radius = m.radius * A; }
     return s;
   }
 
@@ -75,6 +85,7 @@ G.Combat = (() => {
       case 'dash':       dash(pl, m); break;
       case 'trail':      trailPatch(pl, m); break;
       case 'cone':       cone(pl, m); break;
+      case 'burst':      burst(pl, m); break;
     }
   }
 
@@ -448,6 +459,75 @@ G.Combat = (() => {
       }, payload(m)));
     }
     G.FX.spark(pl.x + Math.cos(pl.aim) * pl.r, pl.y - G.LIFT + Math.sin(pl.aim) * pl.r, col, Math.cos(pl.aim), Math.sin(pl.aim), 5);
+  }
+
+  // ---------------- burst moves (18-10-2026) ----------------
+  // They fire once, the moment you switch to them with their cooldown ready (tickMove does that:
+  // they don't wait for a target). The cooldown then runs whether they're active or not (tick).
+
+  function burst(pl, m) {
+    const col = G.U.TYPE_COLOR[m.type];
+    switch (m.id) {
+      case 'hyper-beam':
+        beam(pl, m);
+        G.FX.ring(pl.x, pl.y, pl.r, pl.r * 5, col, 0.35, 4);
+        if (!ghost) { G.Camera.kick(0.35); pl.slowT = Math.max(pl.slowT, 1); }       // it has to recharge
+        break;
+      case 'explosion': {
+        G.FX.ring(pl.x, pl.y, 8, m.radius, '#ffb347', 0.45, 6);
+        G.FX.ring(pl.x, pl.y, 4, m.radius * 0.7, '#fff2a0', 0.3, 4);
+        G.FX.burst(pl.x, pl.y - pl.bodyH * 0.5, '#ff8a3d', 34, 260);
+        G.FX.burst(pl.x, pl.y - pl.bodyH * 0.5, '#5a5048', 18, 180);
+        if (G.Camera.sees(pl.x, pl.y, 60)) G.Audio.sfx('break');
+        if (ghost) break;
+        G.Camera.kick(0.5);
+        for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius)) hit(pl, e, m.dmg * pl.atk, col, e.x - pl.x, e.y - pl.y, m.knock || 0, m);
+        for (const p of G.World.propsInCircle(pl.x, pl.y, m.radius)) G.World.damageProp(p, m.dmg * pl.atk, col);
+        // The price: part of your health, but never the last of it.
+        const cost = Math.min(pl.maxHp * (m.selfHp || 0), Math.max(0, pl.hp - 1));
+        if (cost >= 1) { pl.hp -= cost; G.FX.dmgText(pl.x, pl.y - pl.bodyH - 6, '-' + Math.round(cost), '#ff8a96'); }
+        break;
+      }
+      case 'protect':
+        // (Shown on teammates' screens too; only the owner is actually protected.)
+        pl.protectUntil = performance.now() + m.dur * 1000;
+        G.FX.ring(pl.x, pl.y, pl.r, pl.r * 3, '#9fd8ff', 0.4, 4);
+        if (ghost) break;
+        pl.invuln = Math.max(pl.invuln || 0, m.dur);
+        pl.protectT = m.dur;
+        for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius)) {
+          if (e.boss) continue;
+          const [nx, ny] = G.U.norm(e.x - pl.x, e.y - pl.y);
+          e.kx += nx * m.knock; e.ky += ny * m.knock;
+        }
+        break;
+      case 'recover':
+        G.FX.ring(pl.x, pl.y, 4, pl.r * 3.2, '#5fe08a', 0.45, 4);
+        for (let i = 0; i < 6; i++) G.FX.sp('heart', 'grass', pl.x + G.U.rand(-pl.r, pl.r), pl.y - G.U.rand(0, pl.bodyH), { vy: -60, life: 0.7 });
+        if (ghost) break;
+        pl.heal(pl.maxHp * m.amount);
+        G.Audio.sfx('heal');
+        break;
+      case 'thunder-wave':
+        G.FX.ring(pl.x, pl.y, 10, m.radius, col, 0.5, 5);
+        G.FX.ring(pl.x, pl.y, 6, m.radius * 0.6, '#fff36a', 0.35, 3);
+        for (let i = 0; i < 14; i++) {
+          const a = i / 14 * 6.2832, r = m.radius * G.U.rand(0.3, 0.95);
+          G.FX.sp('bolt', 'electric', pl.x + Math.cos(a) * r, pl.y + Math.sin(a) * r * 0.8 - G.LIFT, { life: 0.3, angle: a });
+        }
+        if (ghost) break;
+        G.Camera.kick(0.2);
+        for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius)) {
+          hit(pl, e, m.dmg * pl.atk, col, e.x - pl.x, e.y - pl.y, 0, m);
+          if (e.boss || e.legend || e.judge) e.applySlow(0.5, 2);
+          else e.freeze(m.dur, true);
+        }
+        break;
+      case 'draco-meteor':
+        meteors(pl, m);
+        G.FX.ring(pl.x, pl.y, pl.r, pl.r * 4, col, 0.35, 3);
+        break;
+    }
   }
 
   /** Damage from a field (mine, meteor, puddle) to everything in its circle. */

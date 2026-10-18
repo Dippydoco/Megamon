@@ -385,6 +385,8 @@ G.Audio = (() => {
     back:    () => tone('square', 880, 520, 0.07, 0.05),
     confirm: () => arp('triangle', [784, 988, 1319], 0.05, 0.12, 0.09),
     select:  () => tone('square', 990, 1180, 0.04, 0.045),
+    // A burst move finished charging.
+    ready:   () => { tone('triangle', 880, 880, 0.06, 0.05); setTimeout(() => tone('triangle', 1320, 1320, 0.09, 0.05), 70); },
     error:   () => arp('square', [330, 262], 0.08, 0.09, 0.05),
     shot(o) {
       const f = SHOT_PITCH[o.type] || 600;

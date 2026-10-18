@@ -408,7 +408,9 @@ G.VFX = (() => {
     'frost-breath':  { proj: 'snowflake', trail: 'frost' },
     'drain-punch':   { melee: 'impact' },
     'dragon-breath': { proj: 'fire', trail: 'ember' },
-    'pursuit':       { proj: 'crescent', trail: 'wisp' }
+    'pursuit':       { proj: 'crescent', trail: 'wisp' },
+    'hyper-beam':    { beam: 'ball', pal: 'aura', life: 0.6 },      // (life: the beam stays on screen longer)
+    'draco-meteor':  { proj: 'rock', trail: 'ember' }
   };
 
   const TYPE_SHAPE = {

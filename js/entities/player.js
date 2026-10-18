@@ -151,7 +151,8 @@ G.Player = class Player {
     this.active = i;
     G.Projectiles.clearOrbs(this);
     G.Audio.sfx('select');
-    for (const m of this.slots[i]) m.t = Math.min(m.t, m.cd * 0.35);
+    // (Not burst moves: they keep their own long cooldown, or switching back and forth would reset it.)
+    for (const m of this.slots[i]) if (m.kind !== 'burst') m.t = Math.min(m.t, m.cd * 0.35);
     const m = this.slots[i][0];
     G.FX.ring(this.x, this.y - G.LIFT * 0.5, 6, this.r * 3.4, G.U.TYPE_COLOR[m.type], 0.3, 3);
   }
@@ -173,7 +174,8 @@ G.Player = class Player {
 
   /** What can be done now with a bond: add to a group or join two loose moves. */
   bondOptions() {
-    const loose = this.slots.filter(s => s.length === 1).map(s => s[0]);
+    // Burst moves can't be bonded: in a bond they'd fire on their own and switching would lose its point.
+    const loose = this.slots.filter(s => s.length === 1 && s[0].kind !== 'burst').map(s => s[0]);
     const grow = this.slots.find(s => s.length > 1 && s.length < Player.BOND_MAX);
     if (grow) return loose.length ? { mode: 'add', group: grow, loose } : null;
     return loose.length >= 2 ? { mode: 'pair', group: null, loose } : null;
@@ -351,6 +353,7 @@ G.Player = class Player {
     if (this.dead) return;
     if (this.invuln > 0) this.invuln -= dt;
     if (this.reviveSafe > 0) this.reviveSafe -= dt;
+    if (this.protectT > 0) this.protectT -= dt;
     if (this.reviveBoostT > 0) this.reviveBoostT -= dt;
     if (this.flash > 0) this.flash -= dt;
     if (this.attackFace > 0) this.attackFace -= dt;
@@ -434,7 +437,7 @@ G.Player = class Player {
   }
 
   /** Hazards that ignore the short hit-protection call this; the protection after a revive survives it. */
-  breakInvuln() { if (!(this.reviveSafe > 0)) this.invuln = 0; }
+  breakInvuln() { if (!(this.reviveSafe > 0) && !(this.protectT > 0)) this.invuln = 0; }
 
   /** Gets back up (revived by a teammate in co-op). */
   revive(frac = 0.5) {
@@ -511,11 +514,26 @@ G.Player = class Player {
       ctx.restore();
     }
 
-    const alpha = this.invuln > 0 && !this.dead ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
+    const shielded = !this.dead && (this.protectUntil || 0) > performance.now();
+    const alpha = this.invuln > 0 && !this.dead && !shielded ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
     this.anim.draw(ctx, this.x, this.y, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
 
+    // Protect: a shimmering bubble around you (it flickers in its last second).
+    if (shielded) {
+      const left = (this.protectUntil - performance.now()) / 1000;
+      if (left > 1 || Math.floor(left * 12) % 2) {
+        ctx.save();
+        const t = performance.now() / 1000, cy = this.y - this.bodyH * 0.45;
+        ctx.globalAlpha = 0.18; ctx.fillStyle = '#9fd8ff';
+        ctx.beginPath(); ctx.ellipse(this.x, cy, this.r * 1.7, this.bodyH * 0.75, 0, 0, 6.2832); ctx.fill();
+        ctx.globalAlpha = 0.75 + Math.sin(t * 8) * 0.15; ctx.strokeStyle = '#d8f1ff'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(this.x, cy, this.r * 1.7, this.bodyH * 0.75, 0, 0, 6.2832); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
     // Buff arcs around the feet.
-    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a' };
+    const COL = { atk: '#ff6b4d', spd: '#7fe0ff', def: '#b0b8c8', regen: '#5fe08a', fell: '#c7e04a' };
     let i = 0;
     for (const k in this.buffs) {
       const b = this.buffs[k];
