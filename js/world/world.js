@@ -71,6 +71,16 @@ G.World = (() => {
            (arena.th.clear > 0 && Math.hypot(lx, ly + 5) < arena.th.clear);
   }
 
+  /** Six 2x2 monoliths in a ring around the centre (Zygarde arena theme `ring`). */
+  function ringBlock(tx, ty) {
+    const lx = tx - arena.tx, ly = ty - arena.ty;
+    for (let k = 0; k < 6; k++) {
+      const a = Math.PI / 6 + k * Math.PI / 3, bx = Math.round(Math.cos(a) * 7.5), by = Math.round(Math.sin(a) * 7.5);
+      if (lx - bx >= 0 && lx - bx <= 1 && ly - by >= 0 && ly - by <= 1) return true;
+    }
+    return false;
+  }
+
   function terrainRaw(tx, ty) {
     const ad = arenaDist(tx, ty);
     if (ad < arena_outer()) {
@@ -78,6 +88,7 @@ G.World = (() => {
       if (arenaSafe(tx, ty)) return FLOOR;
       const th = arena.th;
       // Columnas de 2×2 (cobertura) y charcos según el tipo de la arena.
+      if (th.ring && ringBlock(tx, ty)) return WALL;
       if (th.pillars && ad < arena.r - 2 && H(tx >> 1, ty >> 1, seed + 31 + arena.tx) < th.pillars) return WALL;
       if (th.pools && ad < arena.r - 1.5 && fbm(tx / 3.2, ty / 3.2, seed + 37 + arena.tx) < th.pools) return LIQUID;
       return FLOOR;

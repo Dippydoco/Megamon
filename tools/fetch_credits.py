@@ -43,11 +43,16 @@ def main():
 
     dexes = sorted(int(d) for d in os.listdir(ASSETS) if d.isdigit())
 
+    # Sprites con número propio que en SpriteCollab están en otra carpeta
+    # (9718 = Mega Zygarde, ver tools/fetch_zygarde_mega.py): número -> (carpeta, carpeta del shiny).
+    SPECIAL = {9718: ('0718/0005', '0718/0005/0001')}
+
     def one(dex):
         # Créditos del sprite normal y del shiny (que puede ser de otro artista).
-        txt = fetch(f'{RAW}/sprite/{dex:04d}/credits.txt')
+        norm, shiny = SPECIAL.get(dex, (f'{dex:04d}', f'{dex:04d}/0000/0001'))
+        txt = fetch(f'{RAW}/sprite/{norm}/credits.txt')
         if os.path.isdir(os.path.join(ASSETS, str(dex), 's')):
-            txt += '\n' + fetch(f'{RAW}/sprite/{dex:04d}/0000/0001/credits.txt')
+            txt += '\n' + fetch(f'{RAW}/sprite/{shiny}/credits.txt')
         authors = []
         for line in txt.splitlines():
             parts = line.split('\t')

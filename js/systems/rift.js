@@ -15,6 +15,7 @@
  *
  * Cooperativo: lo decide el anfitrión. Mensajes (ver coop.js):
  *   'rift' x y ttl · 'riftx' · 'arena' cfg · 'aw' (ganada) · 'al' (perdida)
+ *   'zm' (Portal de Zygarde: empieza la transformación en Mega Zygarde)
  *   y del invitado al anfitrión 're' (he entrado en la grieta).
  */
 G.Rift = (() => {
@@ -24,6 +25,8 @@ G.Rift = (() => {
   // Desde 2 min antes de la Sentencia de Arceus (minuto 30) ya no se abren.
   const CHECK = 30, CHANCE = 0.2, TTL = 45;
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
+  const MEGA_DEX = 9718;    // Mega Zygarde sprite (assets/pokemon/9718, tools/fetch_zygarde_mega.py)
+  const MEGA_SWAP = 1.6, MEGA_TIME = 3.2;   // seconds: sprite/arena change · untouchable
   const ZY_TIME = 180;      // Zygarde Portal fight: more time, much tougher boss
   const arenaTime = () => (arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let rift = null;          // { x, y, ttl, t }
@@ -106,9 +109,9 @@ G.Rift = (() => {
       tx: 5000 + Math.floor(Math.random() * 3000), ty: 5000 + Math.floor(Math.random() * 3000), r: ARENA_R,
       dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < 1 / 512,
       // La arena es la de uno de sus tipos, al azar.
-      type: zy ? G.U.pick(mon.types) : (forceType || G.U.pick(mon.types))
+      type: zy ? 'zygarde' : (forceType || G.U.pick(mon.types))
     };
-    if (zy) cfg.hard = 1;
+    if (zy) { cfg.hard = 1; cfg.zy = 1; cfg.btype = G.U.pick(mon.types); }     // btype: counts as a rift of that type for goals
     if (G.Coop.isHost) G.Coop.broadcast(['arena', cfg]);
     begin(cfg);
     spawnLegend();
@@ -118,6 +121,7 @@ G.Rift = (() => {
   function begin(cfg) {
     const pl = G.Game.player;
     const ts = TS();
+    if (cfg.zy) G.Sprites.preload([MEGA_DEX], 8000, !!cfg.shiny);       // Mega Zygarde's sheets, ready before the change
     arena = Object.assign({}, cfg, {
       x: cfg.tx * ts + ts / 2, y: cfg.ty * ts + ts / 2,
       back: cfg.bx != null ? { x: cfg.bx, y: cfg.by } : rift ? { x: rift.x, y: rift.y } : { x: pl.x, y: pl.y }, biome: G.World.biome, t: 0, phase: 'fight', endT: 0, bossId: 0
@@ -183,9 +187,14 @@ G.Rift = (() => {
   function arenaTick(dt, pl) {
     arena.t += dt;
     if (arena.phase === 'fight') {
+      if (arena.zy && arena.mega) megaAdvance(dt);          // every machine runs its own copy of the transformation
       if (!authority()) return;
       keepInside();
       const boss = G.EnemyMgr.get(arena.bossId);
+      if (arena.zy && boss && !boss.dead && !arena.mega && boss.hp <= boss.maxHp * 0.5) {
+        if (G.Coop.isHost) G.Coop.broadcast(['zm']);
+        startMega();
+      }
       if (!boss || boss.dead) { G.Coop.isHost && G.Coop.broadcast(['aw']); won(); return; }
       const allDown = G.Game.everyone().every(p => p.dead);
       downT = allDown ? downT + dt : 0;
@@ -196,10 +205,52 @@ G.Rift = (() => {
     if (arena.endT <= 0) finish();
   }
 
+  // ---- Zygarde Portal: at half health Zygarde turns into Mega Zygarde ----
+
+  /** The boss entity: the real one on the host/solo, the copy on guests. */
+  function zyBoss() {
+    return authority() ? G.EnemyMgr.get(arena.bossId) : G.EnemyMgr.all().find(e => e.boss && !e.dead);
+  }
+
+  /** Starts the transformation (host/solo, and guests when the host says 'zm'). */
+  function startMega() {
+    if (!arena || !arena.zy || arena.mega) return;
+    arena.mega = 1; arena.megaT = 0;
+    G.Spawner.say('Zygarde is changing form!', 3, true);
+    G.Camera.kick(1.2);
+    G.Game.flash('#eafff0', 0.6);
+    G.Audio.sfx('boss');                                   // TODO: its own sound (see TODO.md)
+    const boss = zyBoss();
+    if (boss && authority()) { boss.megaT = MEGA_TIME; boss.freezeT = MEGA_TIME; }
+  }
+
+  function megaAdvance(dt) {
+    arena.megaT += dt;
+    const boss = zyBoss();
+    if (boss && authority()) boss.megaT = Math.max(0, MEGA_TIME - arena.megaT);
+    if (arena.megaT < MEGA_SWAP || arena.megaDone) return;
+    arena.megaDone = 1;
+    if (boss) {
+      boss.dex = MEGA_DEX; boss.name = 'Mega Zygarde'; boss.scale = 1;
+      boss.def = Object.assign({}, boss.def, { dex: MEGA_DEX, name: 'Mega Zygarde' });
+      boss.anim = new G.Sprites.Animator(MEGA_DEX, 1, !!boss.shiny);
+      boss.r = G.Sprites.bodyRadius(MEGA_DEX, 1);
+      boss.bodyH = G.Sprites.bodyHeight(MEGA_DEX, 1);
+      if (authority()) { boss.hp = Math.round(boss.maxHp * 0.65); boss.dmg *= 1.25; boss.spd *= 1.1; }
+    }
+    // The arena changes with it: purple cells and toxic pools.
+    G.World.setArena({ tx: arena.tx, ty: arena.ty, r: arena.r, type: 'zygarde2' });
+    G.World.setBiome(G.Tiles.arenaBiome('zygarde2'), true);
+    arena.type = 'zygarde2';
+    G.Game.flash('#d9b8ff', 0.8);
+    G.Camera.kick(1.4);
+    G.Spawner.say('MEGA ZYGARDE', 3, true);
+  }
+
   function won() {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'won'; arena.endT = 5;
-    G.Progress.event('rift', { type: arena.type });
+    G.Progress.event('rift', { type: arena.btype || arena.type });
     G.Pickups.pullAll();
     G.Spawner.say('¡Has vencido a ' + G.DEX_BY[arena.dex].name + '! Recoge el premio…', 3.4, true);
     G.Audio.sfx('legend');
@@ -247,7 +298,56 @@ G.Rift = (() => {
   // ---------------- dibujo ----------------
 
   /** La grieta, para ordenarla por Y con el resto de la escena. */
+  /** Zygarde arena: glowing rings, light under each monolith, the portal you came through, and the transformation effects. */
+  function zyDraw(ctx) {
+    const ts = TS(), t = arena.t, mega = !!arena.megaDone;
+    ctx.save();
+    ctx.strokeStyle = mega ? '#c27bff' : '#4dff9a';
+    ctx.lineWidth = 5; ctx.globalAlpha = 0.20 + 0.10 * Math.sin(t * 2);
+    ctx.beginPath(); ctx.arc(arena.x, arena.y, 7.5 * ts, 0, 6.2832); ctx.stroke();
+    ctx.lineWidth = 3; ctx.globalAlpha = 0.16 + 0.08 * Math.sin(t * 2 + 1.5);
+    ctx.beginPath(); ctx.arc(arena.x, arena.y, 3.4 * ts, 0, 6.2832); ctx.stroke();
+    for (let k = 0; k < 6; k++) {
+      const a = Math.PI / 6 + k * Math.PI / 3;
+      const mx = arena.x + (Math.round(Math.cos(a) * 7.5) + 0.5) * ts, my = arena.y + (Math.round(Math.sin(a) * 7.5) + 0.5) * ts;
+      const g = ctx.createRadialGradient(mx, my, 4, mx, my, 70);
+      g.addColorStop(0, mega ? 'rgba(194,123,255,0.55)' : 'rgba(77,255,154,0.55)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 0.6 + 0.3 * Math.sin(t * 2.2 + k); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(mx, my, 70, 0, 6.2832); ctx.fill();
+    }
+    // The portal you came through, at the south edge.
+    const img = G.Tiles.propSprite(0, 'zportal', 0), P = G.Sprites.PX, w = img.width * P, h = img.height * P, py = arena.y + 5.7 * ts;
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(img, Math.round(arena.x - w / 2), Math.round(py - h / 2), w, h);
+    ctx.restore();
+
+    // Transformation: rings, glow and light rays around the boss.
+    const boss = arena.mega && arena.megaT < MEGA_TIME ? zyBoss() : null;
+    if (!boss) return;
+    const mt = arena.megaT, x = boss.x, y = boss.y - boss.bodyH * 0.5;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 3; i++) {
+      const p = (mt * 0.9 + i / 3) % 1;
+      ctx.globalAlpha = (1 - p) * 0.7; ctx.strokeStyle = mt < MEGA_SWAP ? '#7dffb0' : '#d9a6ff'; ctx.lineWidth = 6 * (1 - p) + 1;
+      ctx.beginPath(); ctx.arc(x, y, 30 + p * 230, 0, 6.2832); ctx.stroke();
+    }
+    const peak = Math.max(0, 1 - Math.abs(mt - MEGA_SWAP) / MEGA_SWAP);
+    const g = ctx.createRadialGradient(x, y, 10, x, y, 150);
+    g.addColorStop(0, mt < MEGA_SWAP ? 'rgba(160,255,200,0.9)' : 'rgba(215,170,255,0.9)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = peak * 0.8; ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, 150, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = peak * 0.5; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+    for (let k = 0; k < 10; k++) {
+      const a = k * 0.6283 + mt * 1.2, r0 = 60, r1 = 140 + 80 * peak;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawable() {
+    // Zygarde arena: drawn under everything, except during the transformation (effects go on top).
+    if (arena && arena.zy) return { y: arena.mega && arena.megaT < MEGA_TIME ? arena.y + 9999 : arena.y - 9999, draw: zyDraw };
     if (!rift) return null;
     return {
       y: rift.y,
@@ -275,6 +375,7 @@ G.Rift = (() => {
       case 'rift': show(ev[1], ev[2], ev[3]); break;
       case 'riftx': rift = null; break;
       case 'arena': begin(ev[1]); break;
+      case 'zm': startMega(); break;
       case 'aw': won(); break;
       case 'al': lost(); break;
     }
@@ -295,6 +396,8 @@ G.Rift = (() => {
     get inArena() { return !!arena; },
     get timeLeft() { return arena ? Math.max(0, arenaTime() - arena.t) : 0; },
     debugOpen() { open(); },
+    /** Tests: the Zygarde Portal fight right now, as if you had stepped on a portal where you stand. */
+    debugZygarde() { const p = G.Game.player; start(null, { x: p.x, y: p.y }); },
     /** Para pruebas: arena de un tipo ya. */
     debugArena(type) { start(type); },
     /** Para vídeos: la próxima grieta en la que entres será de este tipo. */

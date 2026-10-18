@@ -113,6 +113,7 @@
 
     /** @param eff  'super' | 'weak' | null (tabla de tipos, sólo para enseñarlo) */
     hurt(amount, color = '#fff', dirX = 0, dirY = 0, knock = 0, eff = null) {
+      if (this.megaT > 0) return;          // Zygarde is untouchable while it turns into Mega Zygarde (rift.js)
       if (this.dead) return;
       // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
       if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }

@@ -107,7 +107,16 @@ G.Tiles = (() => {
     // árboles muertos, con un claro donde aterriza (clear). No es de ninguna grieta.
     judgment: { name: 'Ruinas del Juicio', floor: '#4a4240', wall: '#2e2829', liquid: 'lava', liq: '#e8a82a', foam: '#fff1b8', prop: 'dead',
                 leaf: '#3e3633', trunk: '#2a2321', flowers: ['#8a7f76', '#e8a82a', '#5a514c'], grass: '#5e544c', rock: '#6a625c',
-                pools: 0, pillars: 0.03, props: { tree: 0.012, rock: 0.02 }, weather: null, clear: 4.5 }
+                pools: 0, pillars: 0.03, props: { tree: 0.012, rock: 0.02 }, weather: null, clear: 4.5 },
+    // Zygarde Portal arena (systems/rift.js, startZygarde). Phase 1: green "cells"; phase 2 (Mega
+    // Zygarde): purple, with toxic pools. `cells` = hexagon floor with glowing cells, `glow` = its
+    // colour, `ring` = six 2x2 monoliths around the centre (world.js, ringBlock).
+    zygarde:  { name: 'Zygarde Core', floor: '#1b2a22', wall: '#0e1a15', liquid: 'poison', liq: '#2bd97c', foam: '#b8ffd6', prop: 'crystal',
+                leaf: '#3dff9a', trunk: '#1a3a2a', flowers: ['#3dff9a', '#d6ff5f', '#ffffff'], grass: '#2a5a40', rock: '#2a3f35',
+                pools: 0, pillars: 0, props: {}, weather: null, cells: true, glow: '#3dff9a', ring: true },
+    zygarde2: { name: 'Zygarde Core (Mega)', floor: '#231a33', wall: '#120c1c', liquid: 'poison', liq: '#a24dff', foam: '#e0b8ff', prop: 'crystal',
+                leaf: '#c27bff', trunk: '#2a1a3a', flowers: ['#c27bff', '#ff8ad8', '#ffffff'], grass: '#4a2a6a', rock: '#3a2f4a',
+                pools: 0.42, pillars: 0, props: {}, weather: null, cells: true, glow: '#c27bff', ring: true }
   };
   const ARENA_TYPES = Object.keys(ARENA_THEMES);
 
@@ -127,6 +136,7 @@ G.Tiles = (() => {
       wallTop: [w, shade(w, 0.07), shade(w, -0.07)], wallLight: shade(w, 0.32), wallEdge: shade(w, -0.7),
       wallFace: [shade(w, -0.3), shade(w, -0.38)], wallFaceDark: shade(w, -0.55),
       liq: L, liqDeep: shade(L, -0.22), foam: th.foam || shade(L, 0.55), shore: shade(f, -0.32),
+      cells: !!th.cells, glow: th.glow,
       prop: th.prop, leaf: [shade(th.leaf, -0.35), shade(th.leaf, -0.15), th.leaf, shade(th.leaf, 0.3)],
       trunk: [shade(th.trunk, -0.2), th.trunk],
       rock: [shade(th.rock, -0.2), th.rock, shade(th.rock, 0.22)],
@@ -213,6 +223,7 @@ G.Tiles = (() => {
     for (const k of ['speck', 'light', 'wallLight', 'wallEdge', 'wallFaceDark', 'liq', 'liqDeep', 'foam', 'shore'])
       C[k] = pack(B[k]);
     C.liqLight = mixPack(B.liq, B.foam, 0.28);
+    if (B.cells) { C.cellLine = mixPack(B.floor[0], B.glow, 0.34); C.cellGlow = pack(B.glow); C.cellDim = mixPack(B.floor[0], B.glow, 0.16); }
 
     const tx0 = cx * n, ty0 = cy * n;
     const dirtAt = dirtMask(tx0 * T, ty0 * T, n * T, dirtField, seed);
@@ -233,6 +244,22 @@ G.Tiles = (() => {
     return P.canvas();
   }
 
+  /** Hexagonal "cell" floor (Zygarde arena): thin glowing lines and a few lit-up cells. */
+  function cellPix(C, gx, gy, col) {
+    const s = 7, k3 = Math.sqrt(3);
+    const q = (k3 / 3 * gx - gy / 3) / s, r = (2 / 3 * gy) / s;
+    let rx = Math.round(q), rz = Math.round(r), ry = Math.round(-q - r);
+    const ex = Math.abs(rx - q), ey = Math.abs(ry - (-q - r)), ez = Math.abs(rz - r);
+    if (ex > ey && ex > ez) rx = -ry - rz; else if (ey > ez) ry = -rx - rz; else rz = -rx - ry;
+    const cx = s * k3 * (rx + rz / 2), cy = s * 1.5 * rz;
+    const dx = Math.abs(gx - cx), dy = Math.abs(gy - cy);
+    const a = s * k3 / 2;
+    const m = Math.max(dx, 0.5 * dx + 0.866 * dy);
+    if (m > a - 0.9) return C.cellLine;
+    if (H(rx, rz, 77) < 0.12) return m < 1.2 ? C.cellGlow : (m < a * 0.7 ? C.cellDim : col);
+    return col;
+  }
+
   function paintFloor(P, C, ox, oy, tx, ty, dirtAt, at) {
     let dirtCount = 0;
     for (let y = 0; y < T; y++) {
@@ -251,6 +278,7 @@ G.Tiles = (() => {
         // Borde de la tierra: labio oscuro arriba, hierba que la invade abajo.
         if (dirt && !dirtAt(lx, ly - 1)) col = C.speck;
         else if (!dirt && dirtAt(lx, ly - 1) && r < 0.5) col = C.light;
+        if (C.cellLine && !dirt) col = cellPix(C, gx, gy, col);
         P.set(ox + x, oy + y, col);
       }
     }
