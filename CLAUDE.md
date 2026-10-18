@@ -24,6 +24,11 @@ Every gameplay change or bug fix also goes in `js/data/changelog.js`
 (in English, under `new` / `chg` / `fix` for today's date), with its publish time in
 `at` (UTC, `date -u +%Y-%m-%dT%H:%MZ`). Server, database or cost changes do NOT go there.
 
+## Balance Lab
+`?dev&lab` in the address opens a test bench for balancing moves (see `docs/BALANCE_LAB.md`). It never saves
+anything; keep it that way (`G.DB.labSave`, the run is tampered and never ended). It is a developer tool, so it
+does not go in the changelog.
+
 ## Language
 The game, its code comments and its documents are in English only (18-10-2026: the Spanish version, the
 translation layer and the Spanish web pages were removed). Write new text directly in English; there is no

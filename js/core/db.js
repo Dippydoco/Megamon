@@ -757,6 +757,17 @@ G.DB = (() => {
     commit();
   }
 
+  /**
+   * Balance Lab (?dev&lab): a throwaway save in memory. Like a guest it never writes anything
+   * (commit() does nothing), and unlike playAsGuest it leaves the stored session alone, so
+   * your real account is still signed in when you leave the lab.
+   */
+  function labSave() {
+    user = 'Lab'; key = null; guest = true; uid = null;
+    save = newSave('Lab');
+    return save;
+  }
+
   function playAsGuest() {
     user = 'Guest'; key = null; guest = true; uid = null;
     save = newSave('Guest');
@@ -891,7 +902,7 @@ G.DB = (() => {
   }
 
   return {
-    ready, register, login, loginWithGoogle, playAsGuest, logout, commit, deleteAccount, flush: pushNow,
+    ready, register, login, loginWithGoogle, playAsGuest, labSave, logout, commit, deleteAccount, flush: pushNow,
     owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, cleanHistory, HISTORY_MAX,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },

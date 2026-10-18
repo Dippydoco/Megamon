@@ -1101,3 +1101,55 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .cx-new { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 11px; line-height: 16px; vertical-align: 2px;
   background: var(--gold); color: #3a2300; text-shadow: none; letter-spacing: .5px; text-transform: uppercase; }
 .cx-dhead h3 .cx-new { font-size: 12px; vertical-align: 4px; }
+
+/* ============ Balance Lab (js/ui/lab-ui.js, only with ?dev&lab) ============ */
+#lab {
+  position: fixed; inset: 8px 8px 8px auto; width: min(1120px, calc(100vw - 16px)); z-index: 60;
+  display: flex; flex-direction: column; color: var(--ink);
+  background: rgba(14, 26, 60, .93); border: 2px solid var(--edge-in); border-radius: 12px;
+  box-shadow: 0 0 0 2px var(--edge-out), 0 12px 40px rgba(0,0,0,.6); text-shadow: 1px 1px 0 var(--shadow);
+  user-select: text;
+}
+#lab.mini { width: auto; bottom: auto; }
+#lab.mini .lab-body { display: none; }
+#lab .lab-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.12); }
+#lab .lab-head b { font-size: 18px; color: var(--gold); }
+#lab .lab-head .sub { flex: 1; font-size: 12px; }
+#lab .lab-body { display: grid; grid-template-columns: 360px 1fr; gap: 12px; padding: 10px 12px; min-height: 0; flex: 1; }
+#lab section { min-height: 0; display: flex; flex-direction: column; }
+#lab .lab-setup { overflow-y: auto; padding-right: 4px; }
+#lab h4 { margin: 10px 0 4px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+#lab h4 .sub { text-transform: none; letter-spacing: 0; font-size: 11px; }
+#lab .field { padding: 5px 8px; font-size: 14px; }
+#lab .lab-quick { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 4px; }
+#lab .lab-quick select { width: auto; padding: 3px 6px; font-size: 12px; }
+#lab .lab-moves { max-height: 210px; overflow-y: auto; background: rgba(0,0,0,.2); border-radius: 8px; padding: 6px; }
+#lab .lab-mtype { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; margin-bottom: 4px; }
+#lab .lab-mtype .type { font-size: 10px; padding: 1px 5px; }
+#lab .lab-ck { display: inline-flex; align-items: center; gap: 3px; margin: 0; font-size: 13px; color: var(--ink); cursor: pointer; }
+#lab .lab-row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+#lab .lab-nums label { display: flex; flex-direction: column; margin: 4px 0 0; font-size: 11px; width: calc(25% - 8px); }
+#lab .lab-nums .field { width: 100%; }
+#lab .lab-watch { margin-top: 8px; }
+#lab .lab-go { margin-top: 10px; }
+#lab .lab-bar { height: 6px; background: rgba(0,0,0,.35); border-radius: 6px; overflow: hidden; margin-top: 8px; }
+#lab .lab-bar i { display: block; height: 100%; width: 0; background: var(--gold); }
+#lab #lab-status { margin: 6px 0 0; font-size: 12px; min-height: 2.4em; }
+#lab.busy #lab-run { filter: grayscale(.8) brightness(.7); pointer-events: none; }
+#lab .lab-rtools { margin-bottom: 6px; }
+#lab .lab-tablewrap { overflow: auto; flex: 1; min-height: 0; background: rgba(0,0,0,.18); border-radius: 8px; }
+#lab .lab-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#lab .lab-table th { position: sticky; top: 0; background: #1a3170; text-align: left; padding: 5px 6px; cursor: pointer; white-space: nowrap; font-size: 12px; }
+#lab .lab-table th.on { color: var(--gold); }
+#lab .lab-table td { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,.07); white-space: nowrap; }
+#lab .lab-table tr:hover td { background: rgba(255,255,255,.05); }
+#lab .lab-table .type { font-size: 10px; padding: 1px 5px; margin: 0; }
+#lab .lab-dps { position: relative; min-width: 80px; }
+#lab .lab-dps i { position: absolute; left: 0; top: 3px; bottom: 3px; background: rgba(255,210,63,.28); border-radius: 3px; }
+#lab .lab-dps span { position: relative; font-weight: 700; }
+#lab .lab-evo { font-size: 10px; color: var(--gold); }
+#lab .lab-note { font-size: 11px; margin: 6px 0 0; }
+@media (max-width: 900px), (max-height: 520px) {
+  #lab .lab-body { grid-template-columns: 1fr; overflow-y: auto; }
+  #lab .lab-tablewrap { min-height: 260px; }
+}

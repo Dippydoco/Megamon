@@ -1391,6 +1391,15 @@ G.Game = (() => {
     init, startRun, everyone, levelXp, flash, offerBond,
     /** For testing: skips the run's clock. */
     debugTime(t) { tampered = true; time = t; },
+    /**
+     * Balance Lab: advances the run `n` steps of `dt` seconds right now, without drawing
+     * (the lab drives the game this way, much faster than real time). The run counts as
+     * tampered, so it never reaches the leaderboard.
+     */
+    labStep(n, dt = 1 / 60) {
+      tampered = true;
+      for (let i = 0; i < n && pl && state === 'playing'; i++) update(dt);
+    },
     /** For recording videos: slow motion (0.5 = half speed). */
     debugSpeed(k) { if (k > 1) tampered = true; speedK = k; },
     togglePause,
@@ -1437,6 +1446,8 @@ G.Flow = {
     // The database (cloud or local) recovers the previous session.
     G.DB.ready().then(restored => {
       document.getElementById('boot').classList.add('hidden');
+      // Balance Lab (address with ?dev&lab): straight into the test bench, no login or menu.
+      if (G.LabUI && G.LabUI.wanted()) { G.LabUI.start(); return; }
       // In another task: creating the sound to check it costs ~60 ms and mustn't block loading.
       setTimeout(() => this.tapToStart(() => { if (restored) this.afterLogin(); else this.toLogin(); }), 0);
     });
