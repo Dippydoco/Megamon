@@ -74,7 +74,7 @@ G.Interact = (() => {
     goldTick(dt);
     if (!pl) return;
     for (const p of G.World.specialsNear(pl.x, pl.y, 720)) {
-      const d2 = G.U.dist2(pl.x, pl.y, p.x, p.type === 'spring' || p.type === 'trap' ? p.y - 8 : p.y);
+      const d2 = G.U.dist2(pl.x, pl.y, p.x, p.type === 'spring' || p.type === 'trap' || p.type === 'zportal' ? p.y - 8 : p.y);
       switch (p.type) {
         case 'spring': spring(dt, pl, p, d2); break;
         case 'altar':
@@ -88,6 +88,12 @@ G.Interact = (() => {
             p.open += dt;
             if (p.open >= CHEST_TIME) { p.open = 0; G.World.breakProp(p); }
           } else if (p.open > 0) p.open = Math.max(0, p.open - dt * 1.5);
+          break;
+        case 'zportal':
+          if (!p.used && !pl.dead && d2 < 24 * 24 && G.Rift.canZygarde()) {
+            if (authority()) G.Rift.startZygarde(p.tx, p.ty, p.x, p.y);
+            else if (!p.asked || G.Game.st.time - p.asked > 2) { p.asked = G.Game.st.time; G.Coop.toHost(['rz', p.tx, p.ty, Math.round(p.x), Math.round(p.y)]); }
+          }
           break;
         case 'trap':
           if (!pl.dead && d2 < 13 * 13) G.World.breakProp(p);

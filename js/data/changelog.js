@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Zygarde Portal'), new: [
+    T('A very rare green portal can now appear on the ground far from the start. Step on it (once per portal) to be taken to a Zygarde fight. This Zygarde is much tougher than a normal rift legend: 2.2x HP, faster, hits harder and shoots more often, and you have 3 minutes.'),
+    T('Winning gives the usual rift reward (tickets, coins and a Bond) plus an extra x10 ticket, 4 more tickets, 25 more coins and 2 items. If you lose, you come back with no reward and the portal is used up.')
+  ] },
   { d: '2026-10-18', title: T('Catch the treasure thief'), new: [
     T('The treasure thief that runs across the main menu now shows in front of the menu and can be clicked or tapped to catch it. You get a ticket for a catch, then 25 coins for any catches within the next 10 minutes.')
   ] },

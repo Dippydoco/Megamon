@@ -310,6 +310,7 @@ G.Coop = (() => {
         case 'hs': holdOn(from); break;
         case 'he': holdOff(from); break;
         case 're': G.Rift.enterRequest(); break;
+        case 'rz': G.Rift.startZygarde(ev[1], ev[2], ev[3], ev[4]); break;
         case 'bye': mateGone(from); break;
       }
     }

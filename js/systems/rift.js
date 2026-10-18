@@ -24,6 +24,8 @@ G.Rift = (() => {
   // Desde 2 min antes de la Sentencia de Arceus (minuto 30) ya no se abren.
   const CHECK = 30, CHANCE = 0.2, TTL = 45;
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
+  const ZY_TIME = 180;      // Zygarde Portal fight: more time, much tougher boss
+  const arenaTime = () => (arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let rift = null;          // { x, y, ttl, t }
   const EXIT_SAFE = 3;      // segundos de inmunidad al salir de la grieta
   let arena = null;         // { tx, ty, r, dex, shiny, x, y, back, biome, t, phase, endT, bossId }
@@ -87,7 +89,7 @@ G.Rift = (() => {
   /** Quien manda: elige legendario y lugar, y avisa a todos. */
   let nextType = null;          // pruebas/vídeos: tipo de la próxima arena
 
-  function start(forceType) {
+  function start(forceType, zy) {
     if (arena) return;
     forceType = forceType || nextType; nextType = null;
     let pool = G.DEX.filter(p => p.leg && G.SPRITE_META[p.dex]);
@@ -97,15 +99,16 @@ G.Rift = (() => {
     const ws = pool.map(p => (beaten[p.dex] ? 1 : 4));
     let r = Math.random() * ws.reduce((a, b) => a + b, 0), mi = 0;
     while (mi < pool.length - 1 && (r -= ws[mi]) > 0) mi++;
-    const mon = pool[mi];
-    const here = rift || G.Game.player;      // la salida: donde estaba la grieta (igual para todos)
+    const mon = zy ? G.DEX_BY[718] : pool[mi];
+    const here = zy || rift || G.Game.player;      // la salida: donde estaba la grieta (igual para todos)
     const cfg = {
       bx: Math.round(here.x), by: Math.round(here.y),
       tx: 5000 + Math.floor(Math.random() * 3000), ty: 5000 + Math.floor(Math.random() * 3000), r: ARENA_R,
       dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < 1 / 512,
       // La arena es la de uno de sus tipos, al azar.
-      type: forceType || G.U.pick(mon.types)
+      type: zy ? G.U.pick(mon.types) : (forceType || G.U.pick(mon.types))
     };
+    if (zy) cfg.hard = 1;
     if (G.Coop.isHost) G.Coop.broadcast(['arena', cfg]);
     begin(cfg);
     spawnLegend();
@@ -128,7 +131,7 @@ G.Rift = (() => {
     G.World.setBiome(G.Tiles.arenaBiome(cfg.type), true);
     // Cada arena trae su clima (el volcán, sol; el glaciar, nieve...).
     const th = G.Tiles.ARENA_THEMES[cfg.type];
-    if (th && th.weather) G.Weather.force(th.weather, ARENA_TIME + 15);
+    if (th && th.weather) G.Weather.force(th.weather, ZY_TIME + 15);
     // (La salida es el sitio donde estaba la grieta, el mismo para todos.)
     // Todos al sur de la arena, en fila; el legendario aparece al norte.
     const ps = G.Game.everyone();
@@ -144,23 +147,25 @@ G.Rift = (() => {
     const t = G.Game.st.time;
     const n = G.Game.everyone().length;
     const ts = TS();
+    const hard = !!arena.hard;       // Zygarde Portal: tougher than a normal rift legend
     const def = {
       dex: mon.dex, name: mon.name,
-      hp: Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1)),
-      spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105)),
-      dmg: Math.round(36 + t / 20), xp: Math.round(500 + t * 1.2),
+      hp: Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 2.2 : 1)),
+      spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105) * (hard ? 1.15 : 1)),
+      dmg: Math.round((36 + t / 20) * (hard ? 1.35 : 1)), xp: Math.round((500 + t * 1.2) * (hard ? 2 : 1)),
       behavior: mon.types.some(x => ['psychic', 'electric', 'ghost', 'fairy', 'fire', 'water', 'ice', 'dragon'].includes(x)) ? 'ranged' : 'charger',
-      shotDmg: Math.round(18 + t / 40), shotCd: 0.9, range: 300
+      shotDmg: Math.round((18 + t / 40) * (hard ? 1.35 : 1)), shotCd: hard ? 0.65 : 0.9, range: hard ? 340 : 300
     };
     const e = new G.Enemy(def, arena.x, arena.y - ts * 3.5, { hp: 1, spd: 1, dmg: 1 }, true);
     e.legend = true;
+    e.hard = hard;
     // Choca con las paredes y columnas como tú: si volara por encima de las
     // rocas, tus disparos no podrían alcanzarle (bug de Celebi).
     e.flying = false;
     if (arena.shiny) e.makeShiny();
     G.EnemyMgr.add(e);
     arena.bossId = e.id;
-    G.Spawner.say('¡' + e.name + (e.shiny ? ' shiny' : '') + ' te esperaba en la grieta!', 3.2);
+    G.Spawner.say(hard ? (e.shiny ? 'A shiny ' : '') + e.name + ' guards the portal!' : '¡' + e.name + (e.shiny ? ' shiny' : '') + ' te esperaba en la grieta!', 3.2);
     G.Camera.kick(1.1);
     G.Audio.sfx('boss');
   }
@@ -184,7 +189,7 @@ G.Rift = (() => {
       if (!boss || boss.dead) { G.Coop.isHost && G.Coop.broadcast(['aw']); won(); return; }
       const allDown = G.Game.everyone().every(p => p.dead);
       downT = allDown ? downT + dt : 0;
-      if (downT > 1.4 || arena.t > ARENA_TIME) { G.Coop.isHost && G.Coop.broadcast(['al']); lost(); }
+      if (downT > 1.4 || arena.t > arenaTime()) { G.Coop.isHost && G.Coop.broadcast(['al']); lost(); }
       return;
     }
     arena.endT -= dt;
@@ -277,9 +282,18 @@ G.Rift = (() => {
 
   return {
     reset, update, drawable, onEvent, enterRequest() { if (!arena) start(); },
+    /** Can a Zygarde Portal be used right now? (not in a fight, not near Arceus' Judgment) */
+    canZygarde() { return !arena && G.Game.st.time < G.Judgment.AT - 120; },
+    /** Host/solo: a player stepped on the portal at tile (tx,ty), world (x,y). */
+    startZygarde(tx, ty, x, y) {
+      if (arena || !authority() || G.World.altarUsed(tx, ty) || !this.canZygarde()) return;
+      G.World.markUsed(tx, ty);
+      if (G.Coop.isHost) G.Coop.broadcast(['gu', tx, ty]);
+      start(null, { x, y });
+    },
     get rift() { return rift; }, get arena() { return arena; },
     get inArena() { return !!arena; },
-    get timeLeft() { return arena ? Math.max(0, ARENA_TIME - arena.t) : 0; },
+    get timeLeft() { return arena ? Math.max(0, arenaTime() - arena.t) : 0; },
     debugOpen() { open(); },
     /** Para pruebas: arena de un tipo ya. */
     debugArena(type) { start(type); },

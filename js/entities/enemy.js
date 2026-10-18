@@ -219,6 +219,13 @@
         // la mitad de las veces; antes daba 2 siempre).
         for (let i = 0; i < 3; i++) G.Pickups.drop('ticket', this.x + G.U.rand(-30, 30), this.y + G.U.rand(-20, 20), 1);
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-50, 50), this.y + G.U.rand(-35, 35), 8);
+        if (this.hard) {
+          // Zygarde Portal bonus: a x10 ticket, 4 more tickets, 25 more coins and 2 items.
+          G.Pickups.drop('ticket10', this.x, this.y - 14, 1);
+          for (let i = 0; i < 4; i++) G.Pickups.drop('ticket', this.x + G.U.rand(-34, 34), this.y + G.U.rand(-22, 22), 1);
+          for (let i = 0; i < 25; i++) G.Pickups.drop('coin', this.x + G.U.rand(-60, 60), this.y + G.U.rand(-40, 40), 8);
+          for (let i = 0; i < 2; i++) G.Pickups.drop('item', this.x + (i ? 24 : -24), this.y - 18, G.Items.roll());
+        }
       }
       G.Audio.sfx(this.boss ? 'bossDown' : 'faint');
       if (this.shiny) {

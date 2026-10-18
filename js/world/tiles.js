@@ -572,6 +572,21 @@ G.Tiles = (() => {
       return P.canvas();
     },
 
+    /** Zygarde Portal: the friend-made PNG (64x64), shrunk to 32x32 so it is drawn at 64 units. */
+    zportal() {
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = 32;
+      const img = new Image();
+      img.onload = () => {
+        const c = cv.getContext('2d');
+        c.imageSmoothingEnabled = true;
+        c.clearRect(0, 0, 32, 32);
+        c.drawImage(img, 0, 0, 32, 32);
+      };
+      img.src = 'assets/zygarde-portal.png';
+      return cv;
+    },
+
     /** Trampa de Mundo Misterioso. variante: 0 veneno · 1 pegajosa · 2 explosiva. */
     trap(B, variant) {
       const P = Pix(14, 14);

@@ -153,6 +153,8 @@ G.World = (() => {
         type = hs < 0.0004 ? 'altar' : hs < 0.0008 ? 'spring' : hs < 0.0011 ? 'bigchest' : 'trap';
         kind = Math.floor(H(tx, ty, seed + 910) * (type === 'altar' ? 6 : 3));
       }
+      // Zygarde Portal: very rare, further out than the other specials (about 1 per 15 chunks).
+      if (!type && open && Math.hypot(tx, ty) > 25 && H(tx, ty, seed + 919) < 0.0003) type = 'zportal';
       if (type) { /* ya elegido */ }
       else if (open && h < (grove ? 0.07 : 0.006)) type = 'tree';
       else if (open && h > 0.992) type = 'rock';
@@ -174,9 +176,10 @@ G.World = (() => {
     altar:    { solid: true,  hp: Infinity, r: 9 },
     spring:   { solid: false, hp: Infinity, r: 22, flat: true },
     bigchest: { solid: true,  hp: Infinity, r: 14 },
-    trap:     { solid: false, hp: Infinity, r: 9, flat: true }
+    trap:     { solid: false, hp: Infinity, r: 9, flat: true },
+    zportal:  { solid: false, hp: Infinity, r: 22, flat: true }
   };
-  const SPECIAL = new Set(['altar', 'spring', 'bigchest', 'trap']);
+  const SPECIAL = new Set(['altar', 'spring', 'bigchest', 'trap', 'zportal']);
 
   // Team-wide altars (Gold): once one player takes it, it is used up for everybody (see interact.js).
   const usedAlt = new Set();
@@ -540,8 +543,18 @@ G.World = (() => {
                   : p.type === 'altar' ? p.kind * 2 + (p.used ? 1 : 0)
                   : p.type === 'spring' ? (p.charge < 0.15 ? 1 : 0)
                   : p.type === 'trap' ? p.kind : 0;
+    if (p.type === 'zportal' && p.used) return;       // a portal works only once
     const img = G.Tiles.propSprite(biome, p.type, variant);
     const w = img.width * P, h = img.height * P;
+    if (p.type === 'zportal') {
+      const cx = p.x, cy = p.y - 8;
+      ctx.save();
+      ctx.globalAlpha = 0.18 + Math.sin(t * 2.4 + p.wiggle) * 0.07;
+      ctx.fillStyle = '#5fe08a';
+      ctx.beginPath(); ctx.ellipse(cx, cy, 34, 20, 0, 0, 6.2832); ctx.fill();
+      ctx.restore();
+      if (Math.random() < 0.18) G.FX.px(cx + G.U.rand(-22, 22), cy + G.U.rand(-6, 8), Math.random() < 0.5 ? '#9dffb8' : '#d6ff5f', { vy: -34, life: 0.8 });
+    }
     if (p.flat) {
       // Planos (manantial, trampa): pegados al suelo, centrados en su casilla.
       ctx.drawImage(img, Math.round(p.x - w / 2), Math.round(p.y - 8 - h / 2), w, h);
