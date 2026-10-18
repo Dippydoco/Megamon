@@ -1007,6 +1007,15 @@ G.Game = (() => {
       // Tocar el fondo (no un botón ni un panel) hace reaccionar a los Pokémon.
       if (!tapHooked) {
         tapHooked = true;
+        // The treasure thief runs in front of the main menu: tapping it catches it even if a menu button is under it.
+        let swallow = 0;
+        document.addEventListener('pointerdown', e => {
+          if (!ready || state !== 'ui' || sw || !menuOnly()) return;
+          if (hitThief(e.clientX, e.clientY)) { swallow = performance.now(); e.preventDefault(); e.stopPropagation(); }
+        }, true);
+        document.addEventListener('click', e => {
+          if (swallow && performance.now() - swallow < 700) { swallow = 0; e.preventDefault(); e.stopPropagation(); }
+        }, true);
         document.addEventListener('pointerdown', e => {
           if (!ready || state !== 'ui' || sw) return;
           const el = e.target;
@@ -1084,6 +1093,73 @@ G.Game = (() => {
       else spawnHorde();
     }
 
+    // ---------------- the treasure thief in front of the main menu ----------------
+
+    /** True while the main menu is the only screen open (the thief is shown, and can be caught, only then). */
+    function menuOnly() {
+      return G.UI.isOpen('scr-menu') && [...document.querySelectorAll('.scr:not(.hidden)')].every(e => e.id === 'scr-menu');
+    }
+
+    /** The thief under a screen point, if any (generous hit area: it is fast). */
+    function hitThief(px, py) {
+      const wx = G.Camera.left() + px / G.Camera.scale, wy = G.Camera.top() + py / G.Camera.scale;
+      for (const wd of wanderers) {
+        if (!wd.thief || wd.life < 0.3) continue;
+        const h = G.Sprites.bodyHeight(wd.dex, wd.scale);
+        if (Math.hypot(wx - wd.x, wy - (wd.y - h * 0.5)) < Math.max(wd.r, h * 0.5) + 16) { catchThief(wd); return true; }
+      }
+      return false;
+    }
+
+    const THIEF_CD = 10 * 60 * 1000;      // a ticket from the thief at most once every 10 minutes (otherwise a few coins)
+    function catchThief(wd) {
+      const h = G.Sprites.bodyHeight(wd.dex, wd.scale);
+      G.FX.ring(wd.x, wd.y - h * 0.5, 6, 46, '#ffd23f', 0.45, 4);
+      G.FX.burst(wd.x, wd.y - h * 0.5, '#ffd23f', 30, 230);
+      G.Audio.sfx('buy');
+      tags.push({ x: wd.x, y: wd.y - h - 14, text: 'Caught!', t: 0, col: '#ffd23f' });
+      wd.life = Math.min(wd.life, 0.25);
+      if (!G.DB.save) return;
+      const key = 'megamon.thiefT';
+      let last = 0;
+      try { last = +localStorage.getItem(key) || 0; } catch (e) { /* nada */ }
+      if (Date.now() - last >= THIEF_CD) {
+        try { localStorage.setItem(key, String(Date.now())); } catch (e) { /* nada */ }
+        G.Progress.grant({ t1: 1 });
+        G.UI.toast('You caught the treasure thief! +1 ticket', 2600);
+      } else {
+        G.Progress.grant({ coins: 25 });
+        G.UI.toast('You caught the treasure thief! +25 coins', 2200);
+      }
+      G.DB.commit();
+    }
+
+    // Drawn on a layer in front of the menu, so it stays visible (and clickable) over the buttons.
+    let layer = null;
+    function drawThiefLayer(w, h, dpr) {
+      if (!layer) {
+        const cv = document.createElement('canvas');
+        cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:21';
+        document.body.appendChild(cv);
+        layer = { cv, c: cv.getContext('2d') };
+      }
+      const show = state === 'ui' && !sw && menuOnly() && (tags.length || wanderers.some(x => x.thief));
+      if (!show) { if (layer.on) { layer.c.setTransform(1, 0, 0, 1, 0, 0); layer.c.clearRect(0, 0, layer.cv.width, layer.cv.height); layer.on = false; } return; }
+      const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+      if (layer.cv.width !== pw || layer.cv.height !== ph) { layer.cv.width = pw; layer.cv.height = ph; }
+      const c = layer.c;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c.clearRect(0, 0, w, h);
+      c.imageSmoothingEnabled = false;
+      c.save();
+      c.scale(G.Camera.scale, G.Camera.scale);
+      G.Camera.apply(c);
+      for (const wd of wanderers) if (wd.thief) wd.draw(c);
+      drawTags(c);
+      c.restore();
+      layer.on = true;
+    }
+
     // ---------------- tocar un Pokémon ----------------
 
     function tap(px, py) {
@@ -1099,14 +1175,7 @@ G.Game = (() => {
       const col = (mon && G.U.TYPE_COLOR[mon.types[0]]) || '#ffffff';
       G.FX.ring(best.x, best.y - h * 0.5, 6, 46, col, 0.45, 4);
       G.FX.burst(best.x, best.y - h * 0.5, col, 14, 150);
-      if (best.thief) {
-        // Pillado: lluvia de monedas (sólo de adorno).
-        G.FX.burst(best.x, best.y - h * 0.5, '#ffd23f', 30, 230);
-        G.Audio.sfx('buy');
-        tags.push({ x: best.x, y: best.y - h - 14, text: 'Caught!', t: 0, col: '#ffd23f' });
-        best.life = Math.min(best.life, 0.25);
-        return;
-      }
+      if (best.thief) { catchThief(best); return; }
       best.anim.play(G.U.pick(['Attack', 'Shoot', 'Charge']));
       best.anim.dir = G.Sprites.dirFromAngle(Math.PI / 2);
       best.vx = best.vy = 0; best.t = G.U.rand(1.6, 2.8);
@@ -1251,6 +1320,7 @@ G.Game = (() => {
       drawTod(ctx, w, h);
       G.Weather.draw(ctx, w, h, dt);
       G.World.drawVignette(ctx, w, h);
+      drawThiefLayer(w, h, dpr);
       if (banner) {
         banner.t += dt;
         const k = banner.t < 0.4 ? banner.t / 0.4 : banner.t > 3.6 ? Math.max(0, (4 - banner.t) / 0.4) : 1;

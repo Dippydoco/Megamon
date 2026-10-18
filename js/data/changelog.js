@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Catch the treasure thief'), new: [
+    T('The treasure thief that runs across the main menu now shows in front of the menu and can be clicked or tapped to catch it. You get a ticket for a catch, then 25 coins for any catches within the next 10 minutes.')
+  ] },
   { d: '2026-10-18', title: T('Substitute in co-op'), fix: [
     T('In co-op, a teammate\'s Substitute now draws enemies and breaks for everyone, not just when the host is the one using it. Its hit bar now goes down for everyone as it is hit, and when it breaks, its owner gets the explosion and everyone sees it disappear.')
   ] },
