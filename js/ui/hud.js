@@ -671,7 +671,16 @@ G.HUD = (() => {
     pt.draw(ctx, ix + CARD_IC / 2, iy + CARD_IC - 3);
     ctx.restore();
     // Gold star if this Pokémon has reached Arceus (yours from your save, teammates' from their shared state).
-    if (c.key === 'me' ? (G.DB.save.arceus && G.DB.save.arceus[o.dex]) : (o.net && o.net.ar)) G.Icons.draw(ctx, 'star', ix + CARD_IC - 9, iy - 5, 13);
+    const arc = c.key === 'me' ? (G.DB.save.arceus && G.DB.save.arceus[o.dex] ? Math.max(1, (G.DB.save.stats || {}).judged || 0) : 0) : (o.net && o.net.ar) || 0;
+    if (arc) {
+      G.Icons.draw(ctx, 'star', ix + CARD_IC - 9, iy - 5, 13);
+      if (arc > 1) {                                   // how many times they have reached Arceus, bottom-right of the portrait
+        ctx.font = F(800, 10); ctx.textAlign = 'right';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText('×' + arc, ix + CARD_IC + 1, iy + CARD_IC + 1);
+        ctx.fillStyle = '#ffe27a'; ctx.fillText('×' + arc, ix + CARD_IC + 1, iy + CARD_IC + 1);
+        ctx.textAlign = 'left';
+      }
+    }
     // Nombre (y nivel), vida y barra
     const tx = x + CARD_IC + 10;
     ctx.textAlign = 'left';

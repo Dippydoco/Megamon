@@ -176,8 +176,9 @@ G.MenuUI = (() => {
 
   /** Gold star: this Pokémon has reached Arceus in a run. */
   const reachedArceus = dex => !!(G.DB.save.arceus && G.DB.save.arceus[dex]);
-  const ARC_TITLE = 'Reached Arceus';
-  const arcStar = size => `<span title="${ARC_TITLE}">${G.Icons.html('star', size)}</span>`;
+  const arcTimes = () => Math.max(1, (G.DB.save.stats || {}).judged || 0);   // total times you have reached Arceus (any Pokémon)
+  const arcTitle = () => 'Reached Arceus' + (arcTimes() > 1 ? ' · ' + arcTimes() + ' times in total' : '');
+  const arcStar = size => `<span title="${arcTitle()}">${G.Icons.html('star', size)}${arcTimes() > 1 ? `<small style="color:#ffe27a;font-weight:800;margin-left:2px">×${arcTimes()}</small>` : ''}</span>`;
 
   // Search box: matches the names of Pokémon you own (unknown ones stay "???") or any Dex number, across every generation.
   let dexQuery = '';
@@ -216,7 +217,7 @@ G.MenuUI = (() => {
       cell.className = 'cell' + (own ? '' : ' locked') + (p.dex === dexSel ? ' on' : '');
       cell.insertAdjacentHTML('beforeend', `<span class="no">${String(p.dex).padStart(3, '0')}</span>`);
       if (NEW_DEX.has(p.dex)) cell.insertAdjacentHTML('beforeend', '<span class="tag-new">NEW</span>');
-      if (own && reachedArceus(p.dex)) cell.insertAdjacentHTML('beforeend', `<span class="badge-arc${p.dex === s.partner || sh ? ' shift' : ''}" title="${ARC_TITLE}">${G.Icons.html('star', 14)}</span>`);
+      if (own && reachedArceus(p.dex)) cell.insertAdjacentHTML('beforeend', `<span class="badge-arc${p.dex === s.partner || sh ? ' shift' : ''}" title="${arcTitle()}">${G.Icons.html('star', 14)}</span>`);
       if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Compañero">${G.Icons.html('crown', 14)}</span>`);
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Tienes su shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;

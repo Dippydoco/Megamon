@@ -10,6 +10,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Arceus counter'), new: [
+    T('The gold star now shows how many times you have reached Arceus in total (with any Pokémon), next to the star in the menu and on your portrait in a run. Teammates see your count too.')
+  ] },
   { d: '2026-10-18', title: T('Gold star shown to teammates'), chg: [
     T('In co-op, the gold star for a Pokémon that has reached Arceus now also shows on your teammates\' portraits, not just your own.')
   ] },
