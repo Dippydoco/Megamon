@@ -69,7 +69,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/style.css?v=1ee9375631">
+<link rel="stylesheet" href="css/style.css?v=174c538b95">
 </head>
 <body>
 
@@ -172,6 +172,7 @@
       <div class="menu-list">
         <button class="menu-item play" data-go="play">Play<small>Enter the dungeon</small></button>
         <button class="menu-item" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
+        <button class="menu-item" data-go="codex">Codex<small>Every move in the game</small></button>
         <button class="menu-item" data-go="upgrades">Upgrades<small>Make every run stronger</small></button>
         <button class="menu-item" data-go="gacha">Gacha<small>9 regions · Pokémon and shinies</small></button>
         <button class="menu-item" data-go="goals">Missions<small id="menu-goals-sub">Missions, achievements and profile</small></button>
@@ -476,6 +477,25 @@
   </div>
 </section>
 
+<!-- ====== Codex: every move, with filters (js/ui/codex-ui.js) ====== -->
+<section id="scr-codex" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Codex <span id="cx-count" class="sub" style="font-size:15px"></span></h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="tabs hidden" id="cx-tabs"></div>
+    <div class="row cx-tools">
+      <input id="cx-q" class="field grow" type="search" autocomplete="off" spellcheck="false" placeholder="Search moves or evolutions">
+      <select id="cx-kind" class="field" aria-label="Style"></select>
+      <select id="cx-sort" class="field" aria-label="Sort"></select>
+    </div>
+    <div class="filters cx-types" id="cx-types"></div>
+    <div class="filters" id="cx-only"></div>
+    <div class="split cx-split">
+      <div class="cx-list" id="cx-list"></div>
+      <div class="panel cx-detail" id="cx-detail"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ====== Upgrades ====== -->
 <section id="scr-upgrades" class="scr dim hidden">
   <div class="box wide">
@@ -587,7 +607,7 @@
 </section>
 
 <!-- generated data -->
-<script>window.PS_BUILD={"v":"1ee9375631","at":"2026-10-18T21:06:18.778Z"};</script>
-<script defer src="js/app.min.js?v=1ee9375631"></script>
+<script>window.PS_BUILD={"v":"174c538b95","at":"2026-10-18T21:14:23.138Z"};</script>
+<script defer src="js/app.min.js?v=174c538b95"></script>
 </body>
 </html>
