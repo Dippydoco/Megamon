@@ -10,6 +10,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('See other players\' run history'), new: [
+    T('Open a player\'s profile and tap "Run history" to see their last runs: Pokémon, time, level, kills, moves, held item, teammates and what defeated them.'),
+    T('You can turn this off in Settings > Share my run history.')
+  ] },
   { d: '2026-10-18', title: T('Arceus counter'), new: [
     T('The gold star now shows how many times you have reached Arceus in total (with any Pokémon), next to the star in the menu and on your portrait in a run. Teammates see your count too.')
   ] },

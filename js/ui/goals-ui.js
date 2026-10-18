@@ -41,7 +41,7 @@
 
     // ---------------- history (last 100 runs) ----------------
 
-    let histShown = 20, histOpen = null;
+    const histState = { shown: 20, open: null };
     const fmtDate = ms => new Date(ms).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const num = n => (n || 0).toLocaleString('en-GB');
 
@@ -50,11 +50,16 @@
       box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Run history</h3>
         <span class="sub" translate="no">Last ${G.DB.HISTORY_MAX} runs · ${list.length} saved</span></div>`);
       if (!list.length) { box.insertAdjacentHTML('beforeend', '<p class="sub">No runs yet. Finish a run and it will show up here.</p>'); return; }
+      runList(box, list, histState, render);
+    }
+
+    /** A list of runs (yours, or another player's from their profile). st = { shown, open } keeps the scroll-more and open state. */
+    function runList(box, list, st, rerender) {
       const best = Math.max(...list.map(e => e.t));
-      list.slice(0, histShown).forEach(e => {
+      list.slice(0, st.shown).forEach(e => {
         const mon = G.DEX_BY[e.d];
         const el = document.createElement('div');
-        el.className = 'hist-run' + (histOpen === e.id ? ' open' : '');
+        el.className = 'hist-run' + (st.open === e.id ? ' open' : '');
         const mates = e.mt || [];
         el.innerHTML = `
           <div class="hist-head">
@@ -93,13 +98,13 @@
           m.insertAdjacentHTML('beforeend', `<b translate="no">${esc(n)}</b><small translate="no">${G.DEX_BY[d] ? esc(G.DEX_BY[d].name) : ''}</small>`);
           mr.appendChild(m);
         });
-        el.querySelector('.hist-head').onclick = () => { histOpen = histOpen === e.id ? null : e.id; render(); };
+        el.querySelector('.hist-head').onclick = () => { st.open = st.open === e.id ? null : e.id; rerender(); };
         box.appendChild(el);
       });
-      if (list.length > histShown) {
+      if (list.length > st.shown) {
         const more = document.createElement('button');
-        more.className = 'btn small ghost'; more.textContent = 'Show more (' + (list.length - histShown) + ' left)';
-        more.onclick = () => { histShown += 20; render(); };
+        more.className = 'btn small ghost'; more.textContent = 'Show more (' + (list.length - st.shown) + ' left)';
+        more.onclick = () => { st.shown += 20; rerender(); };
         box.appendChild(more);
       }
     }
@@ -295,7 +300,7 @@
       const prev = document.createElement('button');
       prev.className = 'btn gold'; prev.style.marginTop = '16px';
       prev.textContent = 'Ver mi perfil público';
-      prev.onclick = () => G.ProfileUI.showData(G.Social.profileData());
+      prev.onclick = () => G.ProfileUI.showData(G.Social.profileData(), G.Social.uid);
       box.appendChild(prev);
     }
 
@@ -349,7 +354,7 @@
       G.Audio.sfx('confirm');
     }
 
-    return { init, open, render };
+    return { init, open, render, runList };
   })();
 
   // ======================= PERFIL PÚBLICO =======================
@@ -364,15 +369,15 @@
     /** Abre el perfil de otro jugador por su uid. */
     async function show(uid) {
       if (!uid) return;
-      if (uid === G.Social.uid) { showData(G.Social.profileData()); return; }
+      if (uid === G.Social.uid) { showData(G.Social.profileData(), uid); return; }
       $('prof-body').innerHTML = '<p class="sub">Cargando…</p>';
       $('scr-profile').classList.remove('hidden');
       const d = await G.Social.getProfile(uid);
       if (!d) { $('prof-body').innerHTML = '<p class="sub">Este jugador aún no tiene perfil.</p>'; return; }
-      showData(d);
+      showData(d, uid);
     }
 
-    function showData(d) {
+    function showData(d, uid) {
       const b = d.best || {};
       const body = $('prof-body');
       body.innerHTML = `
@@ -387,7 +392,26 @@
           <div><span>Derrotados</span><b>${(b.kills || 0).toLocaleString('es')}</b></div>
         </div>
         <h3>Medallas <span class="sub">${b.medals || 0}</span></h3>
-        <div class="prof-medals" id="prof-medals"></div>`;
+        <div class="prof-medals" id="prof-medals"></div>
+        ${uid ? '<div style="margin-top:10px"><button class="btn small" id="prof-hist-btn">Run history</button></div><div id="prof-hist" style="margin-top:8px"></div>' : ''}`;
+      if (uid) {
+        // Another player's shared run history (or yours): opens under the medals.
+        let list = null, open = false;
+        const st = { shown: 20, open: null }, wrap = $('prof-hist'), btn = $('prof-hist-btn');
+        const draw = () => {
+          wrap.innerHTML = '';
+          if (!open) return;
+          if (list === null) { wrap.innerHTML = '<p class="sub">Loading…</p>'; return; }
+          if (!list.length) { wrap.innerHTML = '<p class="sub">No runs to show. They may have turned sharing off, or not updated the game yet.</p>'; return; }
+          G.GoalsUI.runList(wrap, list, st, draw);
+        };
+        btn.onclick = async () => {
+          open = !open;
+          btn.textContent = open ? 'Hide run history' : 'Run history';
+          draw();
+          if (open && list === null) { list = await G.Social.getHistory(uid); draw(); }
+        };
+      }
       G.Cosmetics.apply($('scr-profile').querySelector('.profile-box'), $('prof-head'), d);
       const favs = $('prof-favs');
       for (const f of (d.favs || []).slice(0, 3)) {

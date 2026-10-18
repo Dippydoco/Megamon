@@ -95,6 +95,7 @@ G.Social = (() => {
       if (!r.ok) return 'need-nick';
     } else return 'need-nick';
     online();
+    setTimeout(() => publishHistory(), 4000);             // shared copy of your run history (see publishHistory)
     return 'ok';
   }
 
@@ -234,6 +235,7 @@ G.Social = (() => {
     await step('invitaciones', () => del(fb.fs.collection('inv').where('to', '==', uid)));
     await step('marcas', () => del(fb.fs.collectionGroup('e').where('uids', 'array-contains', uid)));
     await step('partida en curso', () => fb.fs.collection('runs').doc(uid).delete());
+    await step('historial', () => fb.fs.collection('histories').doc(uid).delete());
     await step('apodo', async () => {
       const prof = await fb.fs.collection('profiles').doc(uid).get();
       const lower = prof.exists ? prof.data().lower : me && me.name.toLowerCase();
@@ -596,6 +598,42 @@ G.Social = (() => {
     }, 800);
   }
 
+  // ---------------- run history (shared copy) ----------------
+  /*
+   * histories/{uid} = { at, runs: [...] } is a copy of your last runs (the same entries as save.history)
+   * so other players can open them from your profile. One write per finished run. Settings "Share my
+   * run history" off: the copy is deleted. Only your own computer writes it (see firestore.rules).
+   */
+  let histPub = '';
+  function publishHistory() {
+    if (!me || !fb || !uid) return;
+    const on = G.Settings.get('shareHist') !== false;
+    const list = (G.DB.save && G.DB.save.history) || [];
+    const key = on && list.length ? list[0].id + ':' + list.length : on ? 'empty' : 'off';
+    const lsKey = 'ps.hist.' + uid;
+    if (!histPub) { try { histPub = localStorage.getItem(lsKey) || ''; } catch (e) { /* nada */ } }
+    if (key === histPub) return;
+    const ref = fb.fs.collection('histories').doc(uid);
+    const done = () => { histPub = key; try { localStorage.setItem(lsKey, key); } catch (e) { /* nada */ } };
+    const fail = e => console.warn('[Social] history:', e.code || e.message);
+    if (!on || !list.length) ref.delete().then(done).catch(fail);
+    else ref.set({ at: firebase.firestore.FieldValue.serverTimestamp(), runs: list.slice(0, G.DB.HISTORY_MAX) }).then(done).catch(fail);
+  }
+  G.Settings.on(k => { if (k === 'shareHist') publishHistory(); });
+
+  /** Another player's shared run history: an array of runs (empty if they share nothing). Yours comes straight from your save. */
+  const histCache = new Map();
+  async function getHistory(other) {
+    if (other === uid) return (G.DB.save && G.DB.save.history) || [];
+    if (!fb) return [];
+    const c = histCache.get(other);
+    if (c && Date.now() - c.at < 3 * 60 * 1000) return c.v;
+    const d = await fb.fs.collection('histories').doc(other).get().catch(() => null);
+    const v = d && d.exists ? G.DB.cleanHistory((d.data() || {}).runs) : [];
+    histCache.set(other, { at: Date.now(), v });
+    return v;
+  }
+
   /** El perfil público de otro jugador. */
   const profCache = new Map();
   async function getProfile(other) {
@@ -614,7 +652,7 @@ G.Social = (() => {
   G.DB.onLeave(why => stop(why));
 
   return {
-    start, stop, claimNick, request, accept, remove, publishProfile, getProfile, profileData,
+    start, stop, claimNick, request, accept, remove, publishProfile, getProfile, profileData, publishHistory, getHistory,
     createRoom, joinRoom, leaveRoom, setOpen, refreshMember, setPlaying, setActivity, touch, refreshPresence,
     invite, acceptInvite, declineInvite,
     on(fn) { listeners.add(fn); }, off(fn) { listeners.delete(fn); },

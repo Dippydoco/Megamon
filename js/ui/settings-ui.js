@@ -179,6 +179,7 @@ G.SettingsUI = (() => {
       + `<div class="set-row"><div class="grow"><b>Apodo</b><small>Es único y no se puede cambiar.</small></div><span class="gold" translate="no">${esc(nick)}</span></div>`
       + `<div class="set-row"><div class="grow"><b>Tipo de cuenta</b></div><span>${esc(kind)}</span></div>`
       + `<div class="set-row"><div class="grow"><b>Partida</b></div><span>${esc(SYNC[st] || st)}</span></div>`
+      + toggle('shareHist', 'Share my run history', 'Other players can open your last runs from your profile. Off: your shared copy is deleted and nobody can see them.')
       + toggle('shareAct', 'Show what I\'m doing', 'Friends can see if you are in the menu, opening gacha packs or in a run (and for how long). Off: they only see that you are online.')
       + `<div class="row wrap" style="gap:8px;margin-top:12px">
            <button class="btn" id="set-logout">Cerrar sesión</button>

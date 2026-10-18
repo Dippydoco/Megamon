@@ -8,6 +8,7 @@
  *   dmgShow     'all' | 'big'                     todos los golpes, o sólo los importantes (críticos, muy eficaces, jefes)
  *   dmgColor    'type' | 'white'                  números de daño de colores (por eficacia) o blancos
  *   shareAct    true/false                        que tus amigos vean qué haces (menú, gacha, partida...)
+ *   shareHist   true/false                        que los demás vean tu historial de partidas (copia en histories/{uid})
  *   moveTags    true/false                        etiqueta del tipo de ataque (Projectile, Beam...) en las cartas
  *   calm        true/false                        menos sacudidas y destellos
  *   fps         true/false                        contador de FPS
@@ -23,7 +24,7 @@
  */
 G.Settings = (() => {
   const KEY = 'ps.settings';
-  const DEF = { quality: 'auto', dmgNumbers: true, dmgSize: 1, dmgShow: 'all', dmgColor: 'type', shareAct: true, moveTags: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: true, pad: null };
+  const DEF = { quality: 'auto', dmgNumbers: true, dmgSize: 1, dmgShow: 'all', dmgColor: 'type', shareAct: true, shareHist: true, moveTags: true, calm: false, fps: false, stick: 1, stickMode: 'float', mouseStick: true, mouseLock: true, pad: null };
   let s = Object.assign({}, DEF);
   try { Object.assign(s, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* nada */ }
   // One-time: the fixed mouse joystick became the default for everyone (also those who had saved the old default).

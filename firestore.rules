@@ -142,6 +142,18 @@ service cloud.firestore {
       allow delete: if signedIn() && me() in resource.data.users;
     }
 
+    // ---------- historial de partidas ----------
+    // Copia de las últimas partidas de cada jugador para que los demás la vean desde su perfil.
+    // Sólo su dueño la escribe; cualquiera con sesión la lee.
+    match /histories/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && me() == uid
+        && request.resource.data.keys().hasOnly(['at', 'runs'])
+        && request.resource.data.at == request.time
+        && request.resource.data.runs is list && request.resource.data.runs.size() <= 100;
+      allow delete: if signedIn() && me() == uid;
+    }
+
     // ---------- ranking ----------
 
     // Al empezar cada partida (en grupo, el anfitrión) el servidor apunta la hora.
