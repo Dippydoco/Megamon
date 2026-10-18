@@ -12,8 +12,6 @@
 G.CODES = [
   // CHINESEPARLIAMENT  ->  433 tickets normales (los amarillos)
   { h: '6b96515e2b085a96c6f147e0bc6993c056cd2e30443e5de7aaef476399136b24', t1: 433 },
-  // TEMPORARY (remove when the owner asks): DIPPYBOOST -> 41,510 coins + 250 normal tickets
-  { h: '2bebc046f95be25259ab6e7069a61e1774ba8b004609e92cbdefcb681aea9c80', t1: 250, coins: 41510 },
   // Demo-mode code (multi-use, never spent): turns the gacha's dummy pulls on/off on this device.
   { h: '0f08f16718b5fd451156c1deb691ea1a88a38ecc2926ab0e9fb3f2a178ae8d93', demo: true },
 ];
