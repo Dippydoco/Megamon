@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T21:20Z', title: 'New moves in the Codex', new: [
+    'Moves added in the last 30 days now carry a gold NEW tag in the Codex, and a New filter shows just those.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T21:15Z', title: 'The Codex', new: [
     'A new Codex in the main menu lists every move in the game, including burst moves, without needing a Pokémon that learns them. Filter by type, style, moves that evolve, burst moves or what your partner can learn; search by name or evolution; and sort by type, name, cooldown, power, style or evolution upgrade. Pick a move to see its levels, what it evolves into and which upgrade it needs.'
   ] },

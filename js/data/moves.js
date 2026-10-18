@@ -499,6 +499,13 @@
     if (m.arc) m.arc = Math.min(3, +(m.arc * 1.25).toFixed(2));
   }
 
+  // When each move was added (only from 18-10-2026 on): the Codex marks recent ones as "New".
+  const ADDED = {
+    '2026-10-18': ['absorb', 'acid-spray', 'pin-missile', 'ice-shard', 'frost-breath', 'drain-punch', 'dragon-breath', 'pursuit',
+                   'hyper-beam', 'explosion', 'protect', 'recover', 'thunder-wave', 'draco-meteor']
+  };
+  for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
+
   // Move pool by type. Everyone has the `normal` pool.
   const POOL = {};
   for (const m of RAW) (POOL[m.type] = POOL[m.type] || []).push(m.id);

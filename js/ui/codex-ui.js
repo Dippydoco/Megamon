@@ -14,6 +14,10 @@ G.CodexUI = (() => {
                  'rock', 'ice', 'fighting', 'ghost', 'dragon', 'fairy', 'steel', 'dark'];
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const fmt = n => (Math.round(n * 100) / 100).toString();
+  // "New" tag: moves added in the last 30 days (their `added` date in data/moves.js).
+  const NEW_DAYS = 30;
+  const isNew = m => !!m.added && Date.now() - Date.parse(m.added + 'T00:00:00Z') < NEW_DAYS * 864e5;
+  const NEW_TAG = '<span class="cx-new">New</span>';
 
   // What the player picked last (kept while the page is open).
   const st = { section: 'moves', type: 'all', kind: 'all', sort: 'type', q: '', only: '', sel: null };
@@ -93,6 +97,7 @@ G.CodexUI = (() => {
       if (st.kind !== 'all' && m.kind !== st.kind) return false;
       if (st.only === 'evo' && !G.Moves.EVO[m.id]) return false;
       if (st.only === 'burst' && m.kind !== 'burst') return false;
+      if (st.only === 'new' && !isNew(m)) return false;
       if (learn && !learn.has(m.id)) return false;
       if (q) {
         const e = G.Moves.EVO[m.id];
@@ -113,8 +118,9 @@ G.CodexUI = (() => {
     $('cx-kind').innerHTML = '<option value="all">All styles</option>' + kinds.map(k => `<option value="${k}"${st.kind === k ? ' selected' : ''}>${G.Icons.KIND_NAME[k] || k}</option>`).join('');
     $('cx-sort').innerHTML = Object.entries(SORTS).map(([k, s]) => `<option value="${k}"${st.sort === k ? ' selected' : ''}>Sort: ${s.label}</option>`).join('');
     const p = partner();
-    const ONLY = [['', 'All moves'], ['evo', 'Evolve'], ['burst', 'Burst moves']].concat(p ? [['partner', 'Learnable by ' + p.name]] : []);
-    if (st.only === 'partner' && !p) st.only = '';
+    const anyNew = G.Moves.ALL.some(isNew);
+    const ONLY = [['', 'All moves']].concat(anyNew ? [['new', 'New']] : [], [['evo', 'Evolve'], ['burst', 'Burst moves']], p ? [['partner', 'Learnable by ' + p.name]] : []);
+    if ((st.only === 'partner' && !p) || (st.only === 'new' && !anyNew)) st.only = '';
     $('cx-only').innerHTML = ONLY.map(([k, l]) => `<button class="chip${st.only === k ? ' on' : ''}" data-only="${k}">${esc(l)}</button>`).join('');
   }
 
@@ -127,7 +133,7 @@ G.CodexUI = (() => {
       const evo = e ? `<span class="cx-evo">→ ${esc(e[0])} ${G.Icons.html(needOf(e[1]).icon, 12)}</span>` : m.kind === 'burst' ? '<span class="cx-evo cx-burst">Burst</span>' : '<span class="cx-evo cx-none">Doesn\'t evolve</span>';
       return `<button class="cx-row${st.sel === m.id ? ' on' : ''}" data-id="${m.id}" style="--tc:${G.U.TYPE_COLOR[m.type]}">
         <span class="cx-ico">${G.Icons.html('move:' + m.id, 32)}</span>
-        <span class="cx-main"><b>${esc(m.name)}</b><span class="cx-tags">${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></span></span>
+        <span class="cx-main"><b>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</b><span class="cx-tags">${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></span></span>
         <span class="cx-num"><small>Cooldown</small>${m.kind === 'orbit' ? 'Always on' : fmt(m.cd) + ' s'}</span>
         <span class="cx-num"><small>Power</small>${m.dmg ? fmt(m.dmg) : '—'}</span>
         ${evo}
@@ -146,7 +152,7 @@ G.CodexUI = (() => {
     const learns = p && G.Moves.poolFor(p).includes(m.id);
     box.style.setProperty('--tc', col);
     box.innerHTML = `
-      <div class="cx-dhead">${G.Icons.html('move:' + m.id, 48)}<div><h3>${esc(m.name)}</h3>${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div></div>
+      <div class="cx-dhead">${G.Icons.html('move:' + m.id, 48)}<div><h3>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</h3>${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div></div>
       <p class="cx-desc">${esc(m.desc)}</p>
       ${fx.length ? `<div class="cx-fx">${fx.map(f => `<span>${esc(f)}</span>`).join('')}</div>` : ''}
       <div class="cx-stats">${statsOf(m).map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')}</div>

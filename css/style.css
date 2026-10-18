@@ -1098,3 +1098,6 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   #scr-codex .cx-row { grid-template-columns: 30px 1fr 46px 40px; padding: 3px 6px; }
   #scr-codex .cx-row .cx-evo { display: none; }
 }
+.cx-new { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 11px; line-height: 16px; vertical-align: 2px;
+  background: var(--gold); color: #3a2300; text-shadow: none; letter-spacing: .5px; text-transform: uppercase; }
+.cx-dhead h3 .cx-new { font-size: 12px; vertical-align: 4px; }
