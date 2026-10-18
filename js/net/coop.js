@@ -384,6 +384,7 @@ G.Coop = (() => {
         G.Projectiles.spawn({ x: ev[1], y: ev[2], vx: ev[3], vy: ev[4], dmg: ev[5], r: ev[6], life: ev[7],
                               friendly: false, color: '#ff7a9e', vis: G.VFX.forType(ev[8]), mtype: ev[8], sd: ev[9] });
         break;
+      case 'sh': G.Combat.netHurt(ev[1], ev[2]); break;            // a Substitute took a hit (hits left)
       case 'sb': G.Combat.netBreak(ev[1]); break;                  // a Substitute broke (the host decides)
       case 'c': { const m = mates.get(ev[1]); if (m) G.Combat.ghostCast(m.pl, ev[2], ev[3], ev[4], ev[5]); break; }
       case 'item': api.item(ev[1]); break;

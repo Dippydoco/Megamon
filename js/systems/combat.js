@@ -339,6 +339,7 @@ G.Combat = (() => {
         f.hitCd = 0.25; f.hurtT = 0.2; f.hp--;
         G.FX.burst(f.x, f.y - 14, '#e8dcb8', 4, 70);
         if (G.Camera.sees(f.x, f.y, 40)) G.Audio.sfx('hit');
+        if (f.hp > 0 && G.Coop.isHost && f.owner && f.owner.uid) G.Coop.broadcast(['sh', f.owner.uid, f.hp]);   // so everyone's hit bar goes down
         if (f.hp <= 0) { breakDecoy(f); fields.splice(i, 1); break; }
       }
     }
@@ -352,6 +353,17 @@ G.Combat = (() => {
     if (G.Camera.sees(f.x, f.y, 40)) { G.Audio.sfx('break'); G.Camera.kick(0.25); }
     blast(f, r, f.m.boom || 3);
     if (G.Coop.isHost && f.owner && f.owner.uid) G.Coop.broadcast(['sb', f.owner.uid]);     // tell the owner (to explode for real) and everyone else (to drop the copy)
+  }
+
+  /** The host says this player's Substitute has `hp` hits left: everyone's copy (the owner's too) follows. */
+  function netHurt(uid, hp) {
+    let best = null;
+    for (const f of fields) {
+      if (f.kind === 'turret' && f.hp && !f.gone && f.owner && f.owner.uid === uid && (!best || f.t > best.t)) best = f;
+    }
+    if (!best || hp >= best.hp) return;
+    best.hp = Math.max(1, hp); best.hurtT = 0.2;
+    G.FX.burst(best.x, best.y - 14, '#e8dcb8', 4, 70);
   }
 
   /** The host says this player's Substitute broke: the owner's own copy explodes, everyone else's just disappears. */
@@ -821,6 +833,6 @@ G.Combat = (() => {
     }
   }
 
-  return { decoyFor, decoyTarget, netBreak, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  return { decoyFor, decoyTarget, netBreak, netHurt, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();
