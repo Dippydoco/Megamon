@@ -27,7 +27,10 @@ G.Rift = (() => {
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
   const MEGA_DEX = 9718;    // Mega Zygarde sprite (assets/pokemon/9718, tools/fetch_zygarde_mega.py)
   const MEGA_SWAP = 1.6, MEGA_TIME = 3.2;   // seconds: sprite/arena change · untouchable
-  const ZY_DPS_SECONDS = 60;   // Zygarde Portal: health = this many seconds of your team's measured damage (see spawnLegend)
+  // Zygarde Portal: health = this many seconds of your team's measured single-target damage (see spawnLegend).
+  // The measurement is a peak (best seconds), and Mega Zygarde heals back to 65% at half health, so the real fight
+  // lasts well over this; 45 s leaves room inside ZY_TIME.
+  const ZY_DPS_SECONDS = 45;
   const ZY_TIME = 180;      // Zygarde Portal fight: more time, much tougher boss
   const arenaTime = () => (arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let rift = null;          // { x, y, ttl, t }
@@ -153,10 +156,11 @@ G.Rift = (() => {
     const n = G.Game.everyone().length;
     const ts = TS();
     const hard = !!arena.hard;       // Zygarde Portal: tougher than a normal rift legend
-    let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 8 : 1));
-    // Zygarde Portal: health also follows how hard your team really hits (the same measurement Arceus uses,
-    // judgment.js singleDps: best damage per second on one enemy), so strong teams cannot melt it.
-    if (hard) hp = Math.max(hp, Math.round(Math.max(G.Judgment.singleDps(), G.Judgment.totalDps()) * ZY_DPS_SECONDS));
+    let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 2.5 : 1));
+    // Zygarde Portal: health also follows how hard your team really hits ONE target (the same measurement Arceus
+    // uses, judgment.js singleDps), so strong teams cannot melt it. Not totalDps: that is damage spread over the
+    // whole horde (area attacks), many times what anyone can do to a single boss (18-10-2026: 2 players, 75% left).
+    if (hard) hp = Math.max(hp, Math.round(G.Judgment.singleDps() * ZY_DPS_SECONDS));
     const def = {
       dex: mon.dex, name: mon.name,
       hp,

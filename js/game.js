@@ -734,7 +734,9 @@ G.Game = (() => {
       if (deathT > 1.3) { deathT = 0; endRun(true); }
       return;
     }
-    time += dt;
+    // The run clock stops inside a rift or portal arena (normal rifts and the Zygarde Portal): the fight there has
+    // its own countdown, and the minutes spent in it no longer bring biomes, difficulty or Arceus closer.
+    if (!G.Rift.inArena) time += dt;
 
     const b = Math.floor(time / 240);
     if (b !== biome && !G.Rift.inArena && !G.Judgment.active) {
