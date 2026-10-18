@@ -237,7 +237,7 @@ G.Player = class Player {
     if (this.invuln > 0 || this.dead) return;
     // Bright Powder: 10 % de esquivar cualquier golpe.
     if (this.hasItem('brightpowder') && Math.random() < 0.1) {
-      this.invuln = 0.3;
+      this.invuln = Math.max(this.invuln, 0.3);
       G.FX.dmgText(this.x, this.y - this.bodyH - 4, 'Dodged!', '#f4f4ff', true);
       return;
     }
@@ -338,6 +338,7 @@ G.Player = class Player {
     this.anim.update(dt);
     if (this.dead) return;
     if (this.invuln > 0) this.invuln -= dt;
+    if (this.reviveSafe > 0) this.reviveSafe -= dt;
     if (this.reviveBoostT > 0) this.reviveBoostT -= dt;
     if (this.flash > 0) this.flash -= dt;
     if (this.attackFace > 0) this.attackFace -= dt;
@@ -372,7 +373,7 @@ G.Player = class Player {
       if (le.dmg && !this.hasItem('heavyboots')) {
         this.lavaTick -= dt;
         if (this.lavaTick <= 0) {
-          this.lavaTick = le.every; this.invuln = 0;
+          this.lavaTick = le.every; this.breakInvuln();
           this.hurt(Math.max(le.flat, this.maxHp * le.dmg * 0.5), null, false, { k: 'liquid' });
           G.FX.burst(this.x, this.y - 4, le.color, 5, 70);
         }
@@ -419,11 +420,15 @@ G.Player = class Player {
     this.anim.loop(this.walking ? 'Walk' : 'Idle', this.walking ? s / 110 : 1);
   }
 
+  /** Hazards that ignore the short hit-protection call this; the protection after a revive survives it. */
+  breakInvuln() { if (!(this.reviveSafe > 0)) this.invuln = 0; }
+
   /** Vuelve a levantarse (lo revive un compañero en cooperativo). */
   revive(frac = 0.5) {
     this.dead = false;
     this.hp = Math.max(1, this.maxHp * frac);
     this.invuln = Player.REVIVE_SAFE;               // unos segundos sin daño para no caer otra vez enseguida
+    this.reviveSafe = Player.REVIVE_SAFE;           // while this runs, ground zones, beams, traps and liquid cannot cancel it
     this.reviveBoostT = Player.REVIVE_BOOST_T;      // y un poco más de velocidad para salir de en medio
     this.reviveT = 0;
     this.anim._start('Idle', false);
@@ -445,8 +450,11 @@ G.Player = class Player {
     if (!n) return;
     if (this.flash > 0) this.flash -= dt;
     if (this.attackFace > 0) this.attackFace -= dt;
+    // Glide between updates: run ahead by about one update gap, and ease more gently when they arrive slowly.
+    const gap = n.gap || 0.07, lead = Math.min(gap * 1.2, (n.age = (n.age || 0) + dt));
+    const tx = n.x + (n.vx || 0) * lead, ty = n.y + (n.vy || 0) * lead, k = G.U.clamp(2 / gap, 5, 14);
     if (G.U.dist2(this.x, this.y, n.x, n.y) > 300 * 300) { this.x = n.x; this.y = n.y; }
-    else { this.x = G.U.damp(this.x, n.x, 14, dt); this.y = G.U.damp(this.y, n.y, 14, dt); }
+    else { this.x = G.U.damp(this.x, tx, k, dt); this.y = G.U.damp(this.y, ty, k, dt); }
     if (n.hp < this.hp - 0.5 && !n.dead) this.flash = 0.14;
     this.hp = n.hp; this.maxHp = n.maxHp;
     this.magnet = n.mag || this.magnet;

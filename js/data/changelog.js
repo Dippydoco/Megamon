@@ -10,6 +10,12 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', title: T('Smoother co-op movement'), fix: [
+    T('Enemies and teammates now glide between network updates instead of hopping, especially on slower connections.')
+  ] },
+  { d: '2026-10-18', title: T('Revive protection'), fix: [
+    T('The 3 seconds of protection after being revived now also holds against enemy ground attacks, beams, traps and lava or other damaging liquid, not just normal hits.')
+  ] },
   { d: '2026-10-17', title: T('Clearer arrows to teammates'), chg: [
     T('The arrows pointing to off-screen teammates are bigger and now sit on a round badge showing the Pokémon they are playing, with a larger name and distance label. They flash red when a teammate is downed.')
   ] },

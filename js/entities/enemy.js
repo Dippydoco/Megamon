@@ -245,13 +245,16 @@
       }
       const n = this.net;
       if (!n) return;
-      // Se adelanta hasta 0,3 s (por si llegan pocas posiciones por segundo).
-      const lead = Math.min(0.3, n.age);
+      // Dead-reckoning: it runs ahead by about one update gap, and the slower the updates
+      // arrive (relay), the more gently it eases toward the target, so it glides instead of hopping.
+      const gap = n.gap || 0.07;
+      const lead = Math.min(gap * 1.3, n.age);
       n.age += dt;
       const tx = n.x + n.vx * lead, ty = n.y + n.vy * lead;
+      const k = G.U.clamp(1.6 / gap, 4, 12);
       const ox = this.x, oy = this.y;
       if (G.U.dist2(this.x, this.y, tx, ty) > 160 * 160) { this.x = tx; this.y = ty; }
-      else { this.x = G.U.damp(this.x, tx, 12, dt); this.y = G.U.damp(this.y, ty, 12, dt); }
+      else { this.x = G.U.damp(this.x, tx, k, dt); this.y = G.U.damp(this.y, ty, k, dt); }
       const vx = (this.x - ox) / (dt || 1), vy = (this.y - oy) / (dt || 1);
       const moving = Math.abs(vx) + Math.abs(vy) > 8;
       this.anim.dir = n.dir;

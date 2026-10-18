@@ -24,9 +24,9 @@
 G.Coop = (() => {
   const ANIMS = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint'];
   const COLORS = ['#ffcb3d', '#5fc8ff', '#7ee07a', '#ff8ad8', '#ff9a3d'];
-  // Mensajes por segundo: 15 por la conexión directa y 3 por el relé de la
-  // Realtime Database (apagado: 1 $ el GB).
-  const RATE_FAST = 1 / 15, RATE_SLOW = 1 / 3;
+  // Messages per second: 15 over a direct connection and 6 over the Realtime Database relay
+  // (was 3; the free Spark plan has no per-GB cost, but keep an eye on the usage).
+  const RATE_FAST = 1 / 15, RATE_SLOW = 1 / 6;
   const rateFor = u => (G.Net.slow(u) ? RATE_SLOW : RATE_FAST);
   const NEAR = 950;                     // radio de enemigos que se mandan a cada uno
 
@@ -251,10 +251,25 @@ G.Coop = (() => {
 
   // --- en el anfitrión ---
 
+  /** Remembers how fast and how often a teammate's state arrives, so their puppet can glide between updates. */
+  function track(old, n) {
+    const now = performance.now();
+    n.last = now; n.vx = 0; n.vy = 0; n.gap = 1 / 15;
+    if (old && old.last) {
+      const dts = (now - old.last) / 1000;
+      n.gap = G.U.clamp(old.gap * 0.7 + dts * 0.3, 0.04, 0.6);
+      if (dts > 0.02 && dts < 1) {
+        const vx = G.U.clamp((n.x - old.x) / dts, -500, 500), vy = G.U.clamp((n.y - old.y) / dts, -500, 500);
+        n.vx = old.vx * 0.4 + vx * 0.6; n.vy = old.vy * 0.4 + vy * 0.6;
+      }
+    }
+    return n;
+  }
+
   function onClientFrame(from, msg) {
     const m = mates.get(from);
     if (!m || !m.connected) return;
-    if (msg.p) { m.state = msg.p; m.pl.net = readState(msg.p); m.xpMul = m.pl.net.xpMul || 1; reconcile(from, m.pl.net); }
+    if (msg.p) { m.state = msg.p; m.pl.net = track(m.pl.net, readState(msg.p)); m.xpMul = m.pl.net.xpMul || 1; reconcile(from, m.pl.net); }
     for (const ev of msg.ev || []) {
       switch (ev[0]) {
         case 'h': {
@@ -337,7 +352,7 @@ G.Coop = (() => {
                    t1: (msg.tk || [])[0], t10: (msg.tk || [])[1] });
     for (const u in msg.p || {}) {
       const m = mates.get(u);
-      if (m) m.pl.net = readState(msg.p[u]);
+      if (m) m.pl.net = track(m.pl.net, readState(msg.p[u]));
     }
     const now = performance.now();
     for (const a of msg.e || []) {
@@ -346,8 +361,9 @@ G.Coop = (() => {
       const n = e.net;
       const dts = (now - (n.last || now)) / 1000;
       if (dts > 0.02 && dts < 1) {
-        n.vx = G.U.clamp((a[1] - n.x) / dts, -600, 600);
-        n.vy = G.U.clamp((a[2] - n.y) / dts, -600, 600);
+        n.vx = (n.vx || 0) * 0.4 + G.U.clamp((a[1] - n.x) / dts, -600, 600) * 0.6;
+        n.vy = (n.vy || 0) * 0.4 + G.U.clamp((a[2] - n.y) / dts, -600, 600) * 0.6;
+        n.gap = G.U.clamp((n.gap || dts) * 0.7 + dts * 0.3, 0.04, 0.6);
       } else { n.vx = 0; n.vy = 0; }
       n.x = a[1]; n.y = a[2]; n.age = 0; n.last = now;
       e.hp = Math.min(e.maxHp, a[3]);
