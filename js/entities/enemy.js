@@ -243,6 +243,7 @@
         this.sparkT -= dt;
         if (this.sparkT <= 0) { this.sparkT = 0.22; G.FX.twinkle(this.x + G.U.rand(-this.r, this.r) * 1.2, this.y - G.U.rand(4, this.bodyH * 1.1)); }
       }
+      if (this.life > 0) this.life -= dt;
       const n = this.net;
       if (!n) return;
       // Dead-reckoning: it runs ahead by about one update gap, and the slower the updates
@@ -825,6 +826,7 @@
       e.remote = true;
       if (o.shiny) e.makeShiny();
       e.maxHp = o.hp; e.hp = o.hp;
+      if (o.life > 0) e.life = o.life;                 // Aegislash / thief: time left before it leaves
       e.net = { x: o.x, y: o.y, vx: 0, vy: 0, age: 0, dir: 0, anim: 0, st: 0 };
       list.push(e);
       byId.set(e.id, e);

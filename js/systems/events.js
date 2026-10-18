@@ -351,7 +351,7 @@ G.Events = (() => {
     }
     for (const e of G.EnemyMgr.all()) {
       if (e.behavior === 'thief' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#ffd23f', e.name, F, { key: 't' + e.id, dex: e.dex, shiny: e.shiny });
-      if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + ' · ' + Math.max(0, Math.ceil(e.life)) + ' s', F, { key: 'a' + e.id, dex: e.dex });
+      if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + (Number.isFinite(e.life) ? ' · ' + Math.max(0, Math.ceil(e.life)) + ' s' : ''), F, { key: 'a' + e.id, dex: e.dex });
     }
     if (cur && cur.id !== 'lost') {
       const left = Math.max(0, Math.ceil(cur.dur - cur.t));
