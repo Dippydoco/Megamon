@@ -35,7 +35,7 @@ G.MenuUI = (() => {
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
       b.onclick = () => {
         const go = b.dataset.go;
-        if (go === 'play') { if (G.Social.room) G.LobbyUI.open(); else G.Flow.play(); }
+        if (go === 'play') { if (G.Social.room) G.LobbyUI.open(); else G.Updater.gate().then(ok => { if (ok) G.Flow.play(); }); }
         else if (go === 'dex') openDex();
         else if (go === 'upgrades') openUpgrades();
         else if (go === 'gacha') G.GachaUI.open();

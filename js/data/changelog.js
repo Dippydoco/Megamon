@@ -12,6 +12,9 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T14:18Z', title: T('No new games on an old version'), chg: [
+    T('When a new version of the game is out, pressing Play (or Start in a co-op room) now updates the game first instead of starting a run on the old version.')
+  ] },
   { d: '2026-10-18', at: '2026-10-18T14:17Z', title: T('Times in What\'s new'), new: [
     T('Every entry in What\'s new now shows the time it was published, next to the date, in your own time zone.')
   ] },

@@ -334,9 +334,11 @@
         : connecting ? 'Conectando con tus amigos…' : 'La partida empieza para todos a la vez.';
     }
 
-    function start() {
+    async function start() {
       const room = G.Social.room;
       if (!room || !room.isHost || room.members.length < 2) return;
+      if (!(await G.Updater.gate())) return;                 // new version out: reload instead of starting
+      if (G.Social.room !== room || room.members.length < 2) return;
       const cfg = {
         k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,
         // Tu propio compañero se toma de tu partida guardada (lo más reciente), no de lo que

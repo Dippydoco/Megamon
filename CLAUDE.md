@@ -14,6 +14,8 @@ Al publicar, todos los jugadores deben pasar a la versión nueva sin perder nada
 - **Fuera de partida** (menú, sala de cooperativo incluida): aviso de 5 s y la página se recarga.
   Si está en el gacha, la tienda de mejoras, los ajustes o escribiendo en un campo, espera a que termine.
 - **En partida**: no se toca. Al acabar, la run se guarda como siempre y, al volver al menú, se recarga.
+- **Empezar partida** (Jugar, Empezar partida de la sala): antes se mira `version.json` (`Updater.gate()`); si hay
+  versión nueva, se recarga en vez de empezar.
 - Antes de recargar se sube a la nube lo pendiente.
 No quitar `updater.js` ni la escritura de `version.json` en `tools/build.js`.
 

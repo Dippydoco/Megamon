@@ -19,6 +19,9 @@
  *     se termina como al abandonarla (se guardan monedas, tickets, récords y
  *     ranking), sube a la nube y se recarga. Sólo la entienden los jugadores
  *     que ya tengan este updater.js (desde el 15-10-2026).
+ * Y no se puede EMPEZAR una partida con una versión nueva ya publicada: al pulsar Jugar (o
+ *   Empezar partida en la sala) se mira version.json y, si hay versión nueva, se recarga en vez de
+ *   empezar (gate(), desde el 18-10-2026).
  * Sólo funciona en la web publicada (con app.min.js); en dev.html o con
  * doble clic (file://) no hace nada.
  */
@@ -37,6 +40,23 @@ G.Updater = (() => {
       const j = await r.json();
       if (j && j.v && j.v !== mine) { pending = true; forced = !!j.force; console.log('[Actualizar] versión nueva', j.v, '(esta es', mine + ')', forced ? 'OBLIGATORIA' : ''); }
     } catch (e) { /* sin red: se mira la próxima vez */ }
+  }
+
+  /**
+   * Antes de EMPEZAR una partida (Jugar, Empezar partida de la sala): mira version.json al momento
+   * (si hace más de 10 s que no se miraba) y, si hay una versión nueva, no deja empezar: se recarga.
+   * Devuelve true si se puede empezar. Sin red o en dev.html: true.
+   */
+  async function gate() {
+    if (!mine || !location.protocol.startsWith('http')) return true;
+    if (!pending && Date.now() - lastCheck > 10000) await Promise.race([check(), new Promise(r => setTimeout(r, 3000))]);
+    if (!pending) return true;
+    if (!counting) {
+      counting = true;
+      G.UI.toast('Hay una versión nueva: se actualiza ahora para poder empezar la partida…', 2500);
+      setTimeout(reload, 1500);
+    }
+    return false;
   }
 
   /** ¿Se puede recargar ahora sin cortar nada? */
@@ -106,5 +126,5 @@ G.Updater = (() => {
     setTimeout(check, 30000);
   }
 
-  return { init, check, get pending() { return pending; }, get version() { return mine; } };
+  return { init, check, gate, get pending() { return pending; }, get version() { return mine; } };
 })();

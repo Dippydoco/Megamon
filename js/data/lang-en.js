@@ -531,6 +531,7 @@ G.I18n.add({
   'El juego ha fallado: tu partida se ha guardado hasta aquí': 'The game crashed: your run has been saved up to this point',
   'Pausa: esperando a {x} (anfitrión)…': 'Paused: waiting for {x} (host)…',
   'Novedades': "What's new",
+  'Hay una versión nueva: se actualiza ahora para poder empezar la partida…': 'A new version is out: updating now so you can start a game…',
   'Hay una versión nueva del juego: actualizando en {x} s…': 'A new version of the game is out: updating in {x} s…',
   'Actualización obligatoria: tu partida se guarda y el juego se recarga en {x} s…': 'Required update: your run is saved and the game reloads in {x} s…',
   'No se pudo conectar (reintentando…)': 'Could not connect (retrying…)',
