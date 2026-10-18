@@ -9,7 +9,7 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
-  { d: '2026-10-18', at: '2026-10-18T22:32Z', title: 'Life Orb reworked', chg: [
+  { d: '2026-10-18', at: '2026-10-18T22:33Z', title: 'Life Orb reworked', chg: [
     'Life Orb no longer costs health on every attack. It still gives +50% damage, but now you have 30% less max HP while you hold it (Vigor upgrades taken with it give 30% less too). Swapping it for another item gives that max HP back.'
   ] },
   { d: '2026-10-18', at: '2026-10-18T22:29Z', title: 'Fewer support enemies at once', chg: [
