@@ -90,7 +90,7 @@ G.Interact = (() => {
           } else if (p.open > 0) p.open = Math.max(0, p.open - dt * 1.5);
           break;
         case 'zportal':
-          if (!p.used && !pl.dead && d2 < 24 * 24 && G.Rift.canZygarde()) {
+          if (!p.used && !pl.dead && d2 < 40 * 40 && G.Rift.canZygarde()) {
             if (authority()) G.Rift.startZygarde(p.tx, p.ty, p.x, p.y);
             else if (!p.asked || G.Game.st.time - p.asked > 2) { p.asked = G.Game.st.time; G.Coop.toHost(['rz', p.tx, p.ty, Math.round(p.x), Math.round(p.y)]); }
           }

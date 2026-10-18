@@ -134,7 +134,7 @@ G.World = (() => {
   function portalTile(tx, ty) {
     const h = H(tx, ty, seed + 919);
     if (h >= 0.000004 || Math.hypot(tx, ty) <= 25) return false;
-    for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++)
+    for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++)
       if (terrainRaw(tx + a, ty + b) !== FLOOR) return false;
     // Spacing: of two candidates closer than 12 tiles, only the one with the lower hash survives.
     for (let b = -12; b <= 12; b++) for (let a = -12; a <= 12; a++) {
@@ -146,7 +146,7 @@ G.World = (() => {
   }
   /** Keep a clear area around portals: no trees, rocks, chests or grass within 4 tiles. */
   function nearPortal(tx, ty) {
-    for (let b = -4; b <= 4; b++) for (let a = -4; a <= 4; a++)
+    for (let b = -5; b <= 5; b++) for (let a = -5; a <= 5; a++)
       if ((a || b) && portalTile(tx + a, ty + b)) return true;
     return false;
   }
@@ -580,30 +580,30 @@ G.World = (() => {
     const img = G.Tiles.propSprite(biome, p.type, variant);
     const w = img.width * P, h = img.height * P;
     if (p.type === 'zportal') {
-      const cx = p.x, cy = p.y - 8;
+      const S = 2, cx = p.x, cy = p.y - 8;          // the portal is drawn twice as big as before (S)
       const pulse = Math.sin(t * 2.4 + p.wiggle);
       ctx.save();
       // Soft green ground glow (two layers) and a faint light column rising from the portal.
       ctx.globalAlpha = 0.28 + pulse * 0.1;
       ctx.fillStyle = '#5fe08a';
-      ctx.beginPath(); ctx.ellipse(cx, cy, 48, 28, 0, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx, cy, 48 * S, 28 * S, 0, 0, 6.2832); ctx.fill();
       ctx.globalAlpha = 0.22 + pulse * 0.08;
       ctx.fillStyle = '#c8ff7a';
-      ctx.beginPath(); ctx.ellipse(cx, cy, 30, 17, 0, 0, 6.2832); ctx.fill();
-      const g = ctx.createLinearGradient(0, cy, 0, cy - 110);
+      ctx.beginPath(); ctx.ellipse(cx, cy, 30 * S, 17 * S, 0, 0, 6.2832); ctx.fill();
+      const g = ctx.createLinearGradient(0, cy, 0, cy - 110 * S);
       g.addColorStop(0, 'rgba(120,255,160,0.30)'); g.addColorStop(1, 'rgba(120,255,160,0)');
       ctx.globalAlpha = 0.8 + pulse * 0.2;
       ctx.fillStyle = g;
-      ctx.fillRect(cx - 26, cy - 110, 52, 110);
+      ctx.fillRect(cx - 26 * S, cy - 110 * S, 52 * S, 110 * S);
       ctx.restore();
       // Rising sparks, motes circling the rim, and a ring pulse every 1.6 s.
-      if (Math.random() < 0.55) G.FX.px(cx + G.U.rand(-28, 28), cy + G.U.rand(-8, 10), Math.random() < 0.5 ? '#9dffb8' : '#d6ff5f', { vy: -G.U.rand(30, 60), life: 1 });
+      if (Math.random() < 0.55) G.FX.px(cx + G.U.rand(-28, 28) * S, cy + G.U.rand(-8, 10) * S, Math.random() < 0.5 ? '#9dffb8' : '#d6ff5f', { vy: -G.U.rand(30, 60), life: 1 });
       if (Math.random() < 0.35) {
         const a = t * 2 + Math.random() * 6.2832;
-        G.FX.px(cx + Math.cos(a) * 34, cy + Math.sin(a) * 18, '#ffffff', { vy: -20, life: 0.5 });
+        G.FX.px(cx + Math.cos(a) * 34 * S, cy + Math.sin(a) * 18 * S, '#ffffff', { vy: -20, life: 0.5 });
       }
-      if (!p.tk || t - p.tk > 1.6) { p.tk = t; G.FX.ring(cx, cy, 8, 46, '#7dffa8', 0.6, 3); }
-      if (Math.random() < 0.03) G.FX.twinkle(cx + G.U.rand(-30, 30), cy + G.U.rand(-14, 10));
+      if (!p.tk || t - p.tk > 1.6) { p.tk = t; G.FX.ring(cx, cy, 8, 46 * S, '#7dffa8', 0.6, 3); }
+      if (Math.random() < 0.03) G.FX.twinkle(cx + G.U.rand(-30, 30) * S, cy + G.U.rand(-14, 10) * S);
     }
     if (p.flat) {
       // Planos (manantial, trampa): pegados al suelo, centrados en su casilla.

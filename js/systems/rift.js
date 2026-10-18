@@ -325,7 +325,7 @@ G.Rift = (() => {
       ctx.beginPath(); ctx.arc(mx, my, 70, 0, 6.2832); ctx.fill();
     }
     // The portal you came through, at the south edge.
-    const img = G.Tiles.propSprite(0, 'zportal', 0), P = G.Sprites.PX, w = img.width * P, h = img.height * P, py = arena.y + 5.7 * ts;
+    const img = G.Tiles.propSprite(0, 'zportal', 0), P = G.Sprites.PX, w = img.width * P / 2, h = img.height * P / 2, py = arena.y + 5.7 * ts;   // (arena exit keeps the old 64-unit size)
     ctx.globalAlpha = 0.9;
     ctx.drawImage(img, Math.round(arena.x - w / 2), Math.round(py - h / 2), w, h);
     ctx.restore();

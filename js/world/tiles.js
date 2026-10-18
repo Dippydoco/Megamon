@@ -600,16 +600,16 @@ G.Tiles = (() => {
       return P.canvas();
     },
 
-    /** Zygarde Portal: the friend-made PNG (64x64), shrunk to 32x32 so it is drawn at 64 units. */
+    /** Zygarde Portal: the friend-made PNG (64x64), kept at its full 64x64 so it is drawn at 128 units. */
     zportal() {
       const cv = document.createElement('canvas');
-      cv.width = cv.height = 32;
+      cv.width = cv.height = 64;
       const img = new Image();
       img.onload = () => {
         const c = cv.getContext('2d');
         c.imageSmoothingEnabled = true;
-        c.clearRect(0, 0, 32, 32);
-        c.drawImage(img, 0, 0, 32, 32);
+        c.clearRect(0, 0, 64, 64);
+        c.drawImage(img, 0, 0, 64, 64);
       };
       img.src = 'assets/zygarde-portal.png';
       return cv;
