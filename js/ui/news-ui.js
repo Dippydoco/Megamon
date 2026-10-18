@@ -19,9 +19,16 @@ G.NewsUI = (() => {
   }
   function refresh() { $('btn-news').classList.toggle('new', seen() !== latest()); }
 
-  function fmt(d) {
-    const [y, m, day] = d.split('-').map(Number);
-    return new Date(y, m - 1, day).toLocaleDateString(G.I18n.lang === 'en' ? 'en-GB' : 'es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  /** "18 October 2026 · 15:14": from the entry's `at` (UTC, shown in the reader's own time zone); old entries without it show just the date. */
+  function fmt(v) {
+    const lang = G.I18n.lang === 'en' ? 'en-GB' : 'es-ES';
+    const dt = v.at ? new Date(v.at) : null;
+    if (dt && !isNaN(dt)) {
+      return dt.toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' +
+             dt.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+    }
+    const [y, m, day] = v.d.split('-').map(Number);
+    return new Date(y, m - 1, day).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function open() {
@@ -29,7 +36,7 @@ G.NewsUI = (() => {
     // Cada texto ya va en su idioma: translate="no" para que no lo toque i18n.
     const PARTS = [['new', ['Nuevo', 'New']], ['chg', ['Cambios', 'Changes']], ['fix', ['Arreglos', 'Fixes']]];
     $('news-body').innerHTML = G.CHANGELOG.map(v =>
-      `<div class="news-day" translate="no"><h3>${esc(v.title ? v.title[en] : '')}<small>${fmt(v.d)}</small></h3>` +
+      `<div class="news-day" translate="no"><h3>${esc(v.title ? v.title[en] : '')}<small>${fmt(v)}</small></h3>` +
       PARTS.filter(([k]) => v[k] && v[k].length).map(([k, lbl]) =>
         `<div class="news-part"><span class="news-tag ${k}">${lbl[en]}</span><ul>${v[k].map(t => `<li>${esc(t[en])}</li>`).join('')}</ul></div>`).join('') +
       '</div>').join('');

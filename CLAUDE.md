@@ -19,7 +19,8 @@ No quitar `updater.js` ni la escritura de `version.json` en `tools/build.js`.
 
 ## Novedades (changelog)
 Cada cambio de juego o arreglo de fallos va también en `js/data/changelog.js`
-(español e inglés, en `new` / `chg` / `fix` de la fecha de hoy). Los cambios de
+(español e inglés, en `new` / `chg` / `fix` de la fecha de hoy), con su hora de publicación en
+`at` (UTC, `date -u +%Y-%m-%dT%H:%MZ`). Los cambios de
 servidores, base de datos o costes NO van ahí.
 
 ## Servidores
