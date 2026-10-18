@@ -9,7 +9,7 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
-  { d: '2026-10-18', at: '2026-10-18T21:20Z', title: 'New moves in the Codex', new: [
+  { d: '2026-10-18', at: '2026-10-18T21:21Z', title: 'New moves in the Codex', new: [
     'Moves added in the last 30 days now carry a gold NEW tag in the Codex, and a New filter shows just those.'
   ] },
   { d: '2026-10-18', at: '2026-10-18T21:15Z', title: 'The Codex', new: [
