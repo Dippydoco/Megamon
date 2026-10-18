@@ -133,14 +133,14 @@ G.World = (() => {
   /** Is (tx,ty) a Zygarde Portal tile? (pure function of the seed, so neighbouring chunks agree) */
   function portalTile(tx, ty) {
     const h = H(tx, ty, seed + 919);
-    if (h >= 0.0003 || Math.hypot(tx, ty) <= 25) return false;
+    if (h >= 0.000004 || Math.hypot(tx, ty) <= 25) return false;
     for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++)
       if (terrainRaw(tx + a, ty + b) !== FLOOR) return false;
     // Spacing: of two candidates closer than 12 tiles, only the one with the lower hash survives.
     for (let b = -12; b <= 12; b++) for (let a = -12; a <= 12; a++) {
       if (!a && !b) continue;
       const h2 = H(tx + a, ty + b, seed + 919);
-      if (h2 < 0.0003 && (h2 < h || (h2 === h && (b < 0 || (b === 0 && a < 0))))) return false;
+      if (h2 < 0.000004 && (h2 < h || (h2 === h && (b < 0 || (b === 0 && a < 0))))) return false;
     }
     return true;
   }

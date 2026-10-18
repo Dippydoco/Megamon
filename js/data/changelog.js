@@ -12,6 +12,10 @@
 G.CHANGELOG = (() => {
 const T = s => [s, s];
 return [
+  { d: '2026-10-18', at: '2026-10-18T14:27Z', title: T('Zygarde Portal: much rarer and tougher'), chg: [
+    T('Zygarde Portals are now about 75 times rarer.'),
+    T('Portal Zygarde has far more health (about 3.6x more) and its health also follows your whole team\'s damage output, so it should last around a minute.'),
+  ] },
   { d: '2026-10-18', at: '2026-10-18T14:24Z', title: T('Group freeze after Zygarde'), fix: [
     T('Fixed a co-op softlock where one player picking a Bond froze everyone else: item drops (like Zygarde\'s) could replace the Bond screen and leave that player marked as still choosing. Items now wait until the Bond is picked, and a stuck choice is released automatically.'),
   ] },

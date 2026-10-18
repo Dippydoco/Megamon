@@ -50,14 +50,14 @@ G.Judgment = (() => {
   // Daño a un solo enemigo por segundo (el que más recibe en cada segundo; con
   // ataques en área, sumar todo daría una vida enorme). Se guardan los últimos
   // 30 s y vale la media de los 6 mejores.
-  let hits = new Map(), hitT = 0, samples = [];
+  let hits = new Map(), hitT = 0, samples = [], totSamples = [];
   let embers = [];
   let cineAnim = null;
 
   function reset() {
     phase = null; ct = 0; cfg = null; ported = landed = canSkip = false; cues = {};
     A = null; center = null; arenaT = bossT = 0; bossN = 0; base = 0; downs = 0;
-    hits = new Map(); hitT = 0; samples = []; embers = []; cam = null;
+    hits = new Map(); hitT = 0; samples = []; totSamples = []; embers = []; cam = null;
   }
 
   /** Daño hecho a un enemigo (lo llama Enemy.hurt en quien manda). */
@@ -66,11 +66,18 @@ G.Judgment = (() => {
   function sampleDps(dt) {
     hitT += dt;
     if (hitT < 1) return;
-    let best = 0;
-    for (const v of hits.values()) if (v > best) best = v;
+    let best = 0, tot = 0;
+    for (const v of hits.values()) { tot += v; if (v > best) best = v; }
     samples.push(best / hitT);
     if (samples.length > 30) samples.shift();
+    totSamples.push(tot / hitT);
+    if (totSamples.length > 30) totSamples.shift();
     hits.clear(); hitT = 0;
+  }
+  /** Whole-team damage per second (all enemies together): best seconds of the last 30. */
+  function totalDps() {
+    const top = totSamples.slice().sort((a, b) => b - a).slice(0, 6);
+    return top.length ? top.reduce((a, b) => a + b, 0) / top.length : 0;
   }
   function singleDps() {
     const top = samples.slice().sort((a, b) => b - a).slice(0, 6);
@@ -691,7 +698,7 @@ G.Judgment = (() => {
   }
 
   return {
-    AT, reset, noteDmg, singleDps, update, cineTick, skip, bossDown, drawable, drawAir, drawOverlay, onEvent, netState, netApply,
+    AT, reset, noteDmg, singleDps, totalDps, update, cineTick, skip, bossDown, drawable, drawAir, drawOverlay, onEvent, netState, netApply,
     get active() { return !!phase; },
     get cinematic() { return phase === 'cine'; },
     /** Lo que suena: nada en la animación hasta que aterriza. */

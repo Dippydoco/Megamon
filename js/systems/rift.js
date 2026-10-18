@@ -153,10 +153,10 @@ G.Rift = (() => {
     const n = G.Game.everyone().length;
     const ts = TS();
     const hard = !!arena.hard;       // Zygarde Portal: tougher than a normal rift legend
-    let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 2.2 : 1));
+    let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 8 : 1));
     // Zygarde Portal: health also follows how hard your team really hits (the same measurement Arceus uses,
     // judgment.js singleDps: best damage per second on one enemy), so strong teams cannot melt it.
-    if (hard) hp = Math.max(hp, Math.round(G.Judgment.singleDps() * ZY_DPS_SECONDS));
+    if (hard) hp = Math.max(hp, Math.round(Math.max(G.Judgment.singleDps(), G.Judgment.totalDps()) * ZY_DPS_SECONDS));
     const def = {
       dex: mon.dex, name: mon.name,
       hp,
