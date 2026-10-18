@@ -17,8 +17,9 @@ return [
     T('A very rare green portal can now appear on the ground far from the start. Step on it (once per portal) to be taken to a Zygarde fight. This Zygarde is much tougher than a normal rift legend: 2.2x HP, faster, hits harder and shoots more often, and you have 3 minutes.'),
     T('The fight has its own arena: a floor of glowing green cells, a ring of six monoliths and the portal you came through at the entrance.'),
     T('At half health Zygarde turns into Mega Zygarde (it cannot be hurt for about 3 seconds while it changes). Mega Zygarde is bigger, hits 25% harder and moves faster, and the arena turns purple and fills with toxic pools.'),
-    T('Winning gives the usual rift reward (tickets, coins and a Bond) plus an extra x10 ticket, 4 more tickets, 25 more coins and 2 items. If you lose, you come back with no reward and the portal is used up.')
+    T('Winning gives tickets and coins like a normal rift (but no Bond), plus an extra x10 ticket, 4 more tickets, 25 more coins and 2 items. If you lose, you come back with no reward and the portal is used up.')
   ], chg: [
+    T('Zygarde\'s health now also follows how hard your team really hits (about 60 seconds of your team\'s damage, on top of the player-count scaling), so strong builds can no longer melt it in a few seconds.'),
     T('Portals always have clear ground around them (no trees, rocks or grass within 4 tiles), are never closer than about 12 tiles to each other, and glow and sparkle more so they are easier to spot.')
   ] },
 

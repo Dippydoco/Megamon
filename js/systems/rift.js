@@ -27,6 +27,7 @@ G.Rift = (() => {
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
   const MEGA_DEX = 9718;    // Mega Zygarde sprite (assets/pokemon/9718, tools/fetch_zygarde_mega.py)
   const MEGA_SWAP = 1.6, MEGA_TIME = 3.2;   // seconds: sprite/arena change · untouchable
+  const ZY_DPS_SECONDS = 60;   // Zygarde Portal: health = this many seconds of your team's measured damage (see spawnLegend)
   const ZY_TIME = 180;      // Zygarde Portal fight: more time, much tougher boss
   const arenaTime = () => (arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let rift = null;          // { x, y, ttl, t }
@@ -152,9 +153,13 @@ G.Rift = (() => {
     const n = G.Game.everyone().length;
     const ts = TS();
     const hard = !!arena.hard;       // Zygarde Portal: tougher than a normal rift legend
+    let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 2.2 : 1));
+    // Zygarde Portal: health also follows how hard your team really hits (the same measurement Arceus uses,
+    // judgment.js singleDps: best damage per second on one enemy), so strong teams cannot melt it.
+    if (hard) hp = Math.max(hp, Math.round(G.Judgment.singleDps() * ZY_DPS_SECONDS));
     const def = {
       dex: mon.dex, name: mon.name,
-      hp: Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (hard ? 2.2 : 1)),
+      hp,
       spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105) * (hard ? 1.15 : 1)),
       dmg: Math.round((36 + t / 20) * (hard ? 1.35 : 1)), xp: Math.round((500 + t * 1.2) * (hard ? 2 : 1)),
       behavior: mon.types.some(x => ['psychic', 'electric', 'ghost', 'fairy', 'fire', 'water', 'ice', 'dragon'].includes(x)) ? 'ranged' : 'charger',
@@ -255,7 +260,7 @@ G.Rift = (() => {
     G.Spawner.say('¡Has vencido a ' + G.DEX_BY[arena.dex].name + '! Recoge el premio…', 3.4, true);
     G.Audio.sfx('legend');
     const pl = G.Game.player;
-    if (pl) {
+    if (pl && !arena.zy) {          // the Zygarde Portal gives no Bond (its reward is the extra loot)
       pl.bonds++;
       G.FX.dmgText(pl.x, pl.y - pl.bodyH - 10, '¡Vínculo!', '#ff8ad8', true);
       G.FX.ring(pl.x, pl.y, 8, 90, '#ff8ad8', 0.7, 5);
