@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-18', at: '2026-10-18T21:13Z', title: 'The Codex', new: [
+    'A new Codex in the main menu lists every move in the game, including burst moves, without needing a Pokémon that learns them. Filter by type, style, moves that evolve, burst moves or what your partner can learn; search by name or evolution; and sort by type, name, cooldown, power, style or evolution upgrade. Pick a move to see its levels, what it evolves into and which upgrade it needs.'
+  ] },
   { d: '2026-10-18', at: '2026-10-18T21:05Z', title: 'Burst moves', new: [
     'A new kind of move: burst moves. They have a long cooldown, keep charging while you use your other moves, and fire the moment you switch to them. Then switch back to your main moves. Their slot shows the seconds left and glows gold (with a chime) when they are ready.',
     'Hyper Beam (Normal, 18 s): a huge beam across the screen that pierces everything; you slow down for a moment after.',

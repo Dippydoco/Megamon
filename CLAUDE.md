@@ -12,7 +12,7 @@ Fixed rules from the project owner. They ALWAYS apply.
 When publishing, every player must move to the new version without losing anything
 (`js/core/updater.js` checks `version.json` every 5 min):
 - **Outside a run** (menu, including the co-op room): 5 s notice, then the page reloads.
-  If they are in the gacha, the upgrade shop, the settings or typing in a field, it waits until they finish.
+  If they are in the gacha, the upgrade shop, the settings, the Codex or typing in a field, it waits until they finish.
 - **In a run**: left alone. When it ends, the run is saved as usual and the page reloads on returning to the menu.
 - **Starting a run** (Play, Start in the room): `version.json` is checked first (`Updater.gate()`); if there is a
   new version, the page reloads instead of starting.

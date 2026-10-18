@@ -65,6 +65,10 @@ G.Icons = (() => {
     magnet: { pal: { r: '#ff5f6d', s: '#c23a4b', w: '#e8e8f0' }, rows: [
       '............', '..kkkkkkkk..', '.krrrrrrrrk.', 'krrsskkssrrk', 'krrk....krrk', 'krrk....krrk',
       'krrk....krrk', 'kwwk....kwwk', 'kwwk....kwwk', 'kkkk....kkkk', '............', '............'] },
+    // Codex (main menu): a purple tome with a gold clasp and a bookmark.
+    codex: { pal: { p: '#a77bff', d: '#6a45c2', y: '#ffd23f', w: '#f4efe2' }, rows: [
+      '..kkkkkkkk..', '.kppppppppk.', '.kpdppppdpk.', '.kpppyypppk.', '.kppyddyppk.', '.kpppyypppk.',
+      '.kpdppppdpk.', '.kppppppppk.', '.kwwwwwwwwk.', '.kkkkkkkkkk.', '.....kyk....', '......k.....'] },
     // Reach (level-up): a ring with arrows pointing outwards.
     reach: { pal: { g: '#7fe0ff', d: '#3a8fc2', w: '#e6faff' }, rows: [
       '.....kk.....', '....kwwk....', '...kkggkk...', '..kk.kk.kk..', '.kgk....kgk.', 'kwgk.kk.kgwk',
