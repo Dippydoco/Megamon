@@ -97,8 +97,11 @@ G.Player = class Player {
   // Damage boosts (Power cards, items, buffs...) raise Attack and Sp. Atk alike.
   get dmgMul() {
     const b = this.buffs;
-    return this.atkMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+    return this.atkMul * this.growthMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
   }
+  /** Lower rarities grow stronger with each level (G.RARITY_GROWTH, in overrides.js). */
+  get growth() { return (G.RARITY_GROWTH && G.RARITY_GROWTH[this.mon.rarity]) || 0; }
+  get growthMul() { return 1 + this.growth * (Math.min(this.level, G.RARITY_GROWTH_CAP || 30) - 1); }
   /** Attack: multiplies physical moves. */
   get atk() { return this.baseAtk * this.dmgMul; }
   /** Sp. Atk: multiplies special moves. */
@@ -325,6 +328,7 @@ G.Player = class Player {
       this.xp -= this.xpNext;
       this.level++;
       this.xpNext = Player.xpFor(this.level);
+      if (this.growth && this.level <= (G.RARITY_GROWTH_CAP || 30)) this.addMaxHp(this.mon.hp * this.growth);   // low-rarity growth: max HP too
       leveled++;
     }
     return leveled;

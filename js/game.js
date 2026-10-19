@@ -222,6 +222,8 @@ G.Game = (() => {
     syncTeam(t) {
       if (Math.abs(t.time - time) > 0.4) time = t.time;
       if (t.level > pl.level) G.Audio.sfx('xp');
+      const cap = G.RARITY_GROWTH_CAP || 30, gain = Math.min(t.level, cap) - Math.min(pl.level, cap);
+      if (gain > 0 && pl.growth) pl.addMaxHp(pl.mon.hp * pl.growth * gain);   // low-rarity growth (up to the cap level)
       pl.level = t.level; pl.xp = t.xp; pl.xpNext = t.xpNext;
       pl.kills = t.kills; pl.bosses = t.bosses; pl.coins = t.coins;
       if (t.t1 > pl.t1 || t.t10 > pl.t10) G.Audio.sfx('shiny');

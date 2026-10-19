@@ -28,6 +28,13 @@ G.DEX_OVERRIDES = {
   557: { hp: 120, spd: 108, atk: 1.35 },       // Dwebble (19-10-2026): sturdier, quicker and hits harder, with its signature move Beat
 };
 
+// 3) Lower rarities are stronger, so common and unevolved Pokémon stay viable (19-10-2026):
+//    a bonus to HP, Attack and Sp. Atk by gacha rarity (on top of the global tweak, before the per-Pokémon one)...
+G.RARITY_BONUS = { 1: 0.15, 2: 0.10, 3: 0.05, 4: 0, 5: 0 };
+//    ...and more damage and max HP with every level in a run (on top of the cards), so they catch up later on.
+G.RARITY_GROWTH = { 1: 0.015, 2: 0.010, 3: 0.005, 4: 0, 5: 0 };
+G.RARITY_GROWTH_CAP = 30;   // it stops at this level (1★: +43.5% at most), so they don't outgrow everything in long runs
+
 // ---- Apply (nothing needs changing from here down) ----
 (() => {
   const g = G.DEX_GLOBAL, ov = G.DEX_OVERRIDES;
@@ -36,6 +43,12 @@ G.DEX_OVERRIDES = {
     if (g.spd !== 1) p.spd = Math.round(p.spd * g.spd);
     if (g.atk !== 1) p.atk = Math.round(p.atk * g.atk * 100) / 100;
     if (g.spa !== 1) p.spa = Math.round(p.spa * g.spa * 100) / 100;
+    const rb = G.RARITY_BONUS[p.rarity] || 0;
+    if (rb) {
+      p.hp = Math.round(p.hp * (1 + rb));
+      p.atk = Math.round(p.atk * (1 + rb) * 100) / 100;
+      p.spa = Math.round(p.spa * (1 + rb) * 100) / 100;
+    }
     if (ov[p.dex]) Object.assign(p, ov[p.dex]);   // the per-Pokémon tweak takes priority over the global one
     // Physical or special attacker: 5% or more ahead in one of them (about 18 base-stat points); otherwise mixed (equally good with both).
     p.lean = p.atk >= p.spa * 1.05 ? 'physical' : p.spa >= p.atk * 1.05 ? 'special' : 'mixed';
