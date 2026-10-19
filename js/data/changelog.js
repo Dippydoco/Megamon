@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T14:26Z', title: 'Gholdengo stuck on screen', fix: [
+    'In group runs, a treasure Gholdengo or Meowth (or an Aegislash) that got away could stay frozen on a teammate\'s screen for the rest of the run. It now leaves on every screen when its time runs out.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T14:07Z', title: 'Bonded moves in your run history', new: [
     'Damage by move in your run history now marks bonded moves with 🔗. If you had more than one bond, a number shows which moves were bonded together. This shows on runs played from now on.'
   ] },

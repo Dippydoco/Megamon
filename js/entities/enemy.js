@@ -1024,7 +1024,20 @@
       if (!G.Coop.active || G.Coop.isHost) separate(dt);
       for (let i = list.length - 1; i >= 0; i--) {
         const e = list[i];
-        if (e.remote) continue;
+        if (e.remote) {
+          // Co-op guest: a treasure goblin (Meowth / Gholdengo) or Aegislash that the host's "it left" message
+          // never removed would stay on screen forever. Once its time is up (plus a grace for lag), or if the
+          // copy has outlived the longest it could last, it leaves here too.
+          if ((e.behavior === 'thief' || e.behavior === 'aegis') && !e.dead) {
+            e.remoteT = (e.remoteT || 0) + dt;
+            if (e.life <= 0) e.overT = (e.overT || 0) + dt;
+            if (e.overT > 3 || e.remoteT > (e.behavior === 'aegis' ? 80 : 20)) {
+              G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
+              list.splice(i, 1); byId.delete(e.id);
+            }
+          }
+          continue;
+        }
         if (e.dead) {
           pl.kills++;
           if (e.boss && !e.judge) pl.bosses++;
