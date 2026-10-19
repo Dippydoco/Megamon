@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T14:49Z', title: 'Clearer burst move cooldowns', chg: [
+    'While a burst move recharges, its icon dims and the seconds left show in large numbers on top of it. Double-digit cooldowns no longer hide behind the icon, and bonded burst moves show their own countdown too.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T14:41Z', title: 'Spiritomb, the move tutor', new: [
     'A Spiritomb now appears up to twice a run and opens a portal of otherworldly moves. Defeat it within 60 s to choose 1 of 3 moves from outside your Pokémon\'s usual pool (other types), or skip.',
     'The offer favours moves that suit your Pokémon\'s Attack or Sp. Atk. If your move slots are full, you choose which move the new one replaces (it keeps that move\'s bond).',

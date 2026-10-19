@@ -417,6 +417,14 @@ G.HUD = (() => {
     const cdOf = m => m.kind === 'orbit' ? 0 : G.U.clamp(m.t / (m.cd * pl.cdMul), 0, 1);
     let moveLbl = null;         // horizontal extent of the active move's name, so the item's name can dodge it
 
+    // A burst move's seconds left, centred on (cx, cy) with a thick outline so it reads over any icon.
+    const burstSecs = (t, cx, cy, size) => {
+      const txt = String(Math.ceil(t));
+      ctx.font = F(900, size); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(3, size / 4); ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(txt, cx, cy);
+      ctx.fillStyle = '#fff'; ctx.fillText(txt, cx, cy);
+      ctx.textBaseline = 'alphabetic';
+    };
     for (let i = 0; i < n; i++) {
       const g = pl.slots[i] || [];
       const m = g[0];
@@ -450,6 +458,7 @@ G.HUD = (() => {
           const f = cdOf(gm);
           if (f > 0) { ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(cx, cy, C, C * f); }
           if (gm.evolved) { ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1; ctx.strokeRect(cx + 0.5, cy + 0.5, C - 1, C - 1); }
+          if (gm.kind === 'burst' && gm.t > 0.05) burstSecs(gm.t, cx + C / 2, cy + C / 2, Math.round(12 * K));
           // Flash when cast.
           const fl = 1 - (performance.now() - (gm.castAt || 0)) / 180;
           if (fl > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (fl * 0.55).toFixed(2) + ')'; ctx.fillRect(cx, cy, C, C); }
@@ -465,20 +474,13 @@ G.HUD = (() => {
           ctx.restore();
         }
 
-        // Burst move: seconds left while it charges, and a pulsing gold border once it's ready.
-        if (m.kind === 'burst') {
-          const left = m.t;
-          if (left > 0.05) {
-            ctx.font = F(800, Math.round(12 * K)); ctx.textAlign = 'right';
-            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = '#e8eefc';
-            ctx.strokeText(Math.ceil(left) + 's', x + S - 4, y + 13 * K); ctx.fillText(Math.ceil(left) + 's', x + S - 4, y + 13 * K);
-          } else if (!on) {
-            const pulse = 0.55 + Math.sin(performance.now() / 160) * 0.35;
-            ctx.save();
-            roundRect(ctx, x - 2, y - 2, S + 4, S + 4, 13);
-            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,210,63,' + pulse.toFixed(2) + ')'; ctx.stroke();
-            ctx.restore();
-          }
+        // Burst move, ready: a pulsing gold border (the seconds left while it charges go on top of the icon, below).
+        if (m.kind === 'burst' && m.t <= 0.05 && !on) {
+          const pulse = 0.55 + Math.sin(performance.now() / 160) * 0.35;
+          ctx.save();
+          roundRect(ctx, x - 2, y - 2, S + 4, S + 4, 13);
+          ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,210,63,' + pulse.toFixed(2) + ')'; ctx.stroke();
+          ctx.restore();
         }
 
         // type emblem + family badge
@@ -493,6 +495,15 @@ G.HUD = (() => {
         for (let d = 0; d < dots; d++) {
           ctx.fillStyle = d < m.lvl ? col : 'rgba(255,255,255,.18)';
           ctx.fillRect(x + (S - tw) / 2 + d * (dw + dgap), y + S - 9 * K, dw, 3);
+        }
+
+        // Burst move charging: the icon dimmed and the seconds left, big and centred ON TOP of it.
+        if (m.kind === 'burst' && m.t > 0.05) {
+          ctx.save();
+          roundRect(ctx, x, y, S, S, 12); ctx.clip();
+          ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(x, y, S, S);
+          ctx.restore();
+          burstSecs(m.t, x + S / 2, y + S / 2, Math.round(20 * K));
         }
       }
 
