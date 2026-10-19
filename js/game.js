@@ -777,6 +777,7 @@ G.Game = (() => {
 
     handleKeys();
     choiceFailsafe(Math.min(1 / 30, real));
+    choiceTimeout(real);
 
     if (state === 'playing') update(dt);
     else if (pl && state !== 'ui') { G.FX.update(dt * 0.25); pl.anim.update(dt * 0.25); }
@@ -803,6 +804,24 @@ G.Game = (() => {
     pauseHeld = want;
     if (!want && !G.Coop.active) return;       // the group is already gone (run over): nothing to release
     if (want) G.Coop.holdStart(); else G.Coop.holdEnd();
+  }
+
+  /*
+   * Group run, host only: a choice screen left open for 2 minutes is decided for you (first level card; skip /
+   * keep for item and move offers; the first move for a bond), as guests in that case are removed (coop.js).
+   */
+  let choiceOpenT = 0;
+  function choiceTimeout(real) {
+    const open = ['scr-levelup', 'scr-item', 'scr-bond'].find(G.UI.isOpen);
+    if (!G.Coop.active || !G.Coop.isHost || !open || (state !== 'levelup' && state !== 'choice')) { choiceOpenT = 0; return; }
+    choiceOpenT += Math.min(real, 1);
+    if (choiceOpenT < 120) return;
+    choiceOpenT = 0;
+    console.warn('[Game] choice left open for 2 minutes in a group: deciding it');
+    G.Spawner.say('You took over 2 minutes to choose, so it was picked for you', 3, true);
+    if (open === 'scr-levelup') { const c = document.querySelector('#cards .card'); if (c) c.click(); }
+    else if (open === 'scr-item') { const cs = document.querySelectorAll('#item-cards .card'); if (cs.length) cs[cs.length - 1].click(); }
+    else G.RunUI.pickBond(0);
   }
 
   let lostChoiceT = 0;

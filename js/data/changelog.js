@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T21:58Z', title: 'Group runs: no more endless waits or sudden "room closed"', fix: [
+    'If a player keeps everyone waiting for more than 2 minutes (level cards, an item or move choice, a bond, or the pause menu), they are removed from the game and the others carry on. If it is the host, their choice is made for them instead.',
+    'Fixed players being thrown out mid-run with "The room has been closed" when the host\'s connection blinked. The room now comes back on its own, and a run in progress keeps going.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T19:58Z', title: 'Physical Water moves', new: [
     'Aqua Jet: shoot through foes in a jet of water, knocking them aside. Evolves into Wave Crash (with Sprint).',
     'Liquidation: a crashing blow of water in front of you; foes it hits take more damage for a moment. Evolves into Crabhammer (with Focus).',

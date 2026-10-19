@@ -89,7 +89,7 @@ G.Coop = (() => {
 
   function end() {
     active = false; host = false; local = null;
-    mates.clear(); outEv = []; waiting = new Set(); holds = new Set();
+    mates.clear(); outEv = []; waiting = new Set(); holds = new Set(); choosingSince.clear();
   }
 
   /** You leave the run (the others carry on). */
@@ -204,9 +204,35 @@ G.Coop = (() => {
   }
 
   /** Every frame (also on the level-up screen). */
+  /*
+   * Failsafe (19-10-2026): a guest who keeps everyone paused (level cards, an item or move choice, a bond, the
+   * pause menu) for more than CHOICE_MAX is removed from the run so the others can carry on. The host can't be
+   * removed (the run is theirs): their own choice is made for them instead (game.js, choiceTimeout).
+   */
+  const CHOICE_MAX = 120000;
+  const choosingSince = new Map();      // host: uid -> when they started holding everyone up
+  function afkCheck() {
+    const now = performance.now();
+    const busy = new Set([...waiting, ...holds]);
+    for (const u of [...choosingSince.keys()]) if (!busy.has(u)) choosingSince.delete(u);
+    for (const u of busy) {
+      if (u === me) continue;
+      const m = mates.get(u);
+      if (!m || !m.connected) continue;
+      if (!choosingSince.has(u)) { choosingSince.set(u, now); continue; }
+      if (now - choosingSince.get(u) < CHOICE_MAX) continue;
+      choosingSince.delete(u);
+      m.q.push(['kk']);
+      G.Net.send(u, hostFrame(m));               // tell them before letting them go
+      mateGone(u);
+      G.Spawner.say(m.name + ' took over 2 minutes to choose and was removed from the game', 3.4);
+    }
+  }
+
   function tick(dt) {
     if (!active) return;
     if (host) {
+      afkCheck();
       for (const m of mates.values()) {
         if (!m.connected) continue;
         m.flushT -= dt;
@@ -343,7 +369,7 @@ G.Coop = (() => {
   function onHostFrame(msg) {
     lastHostAt = performance.now();
     if (stalled) { stalled = false; updateAway(); }
-    for (const ev of msg.ev || []) applyHostEvent(ev);
+    for (const ev of msg.ev || []) { applyHostEvent(ev); if (!active) return; }   // ('kk' ends the run here)
     G.Interact.goldNet(msg.gd || null);
     if (msg.ja) G.Judgment.netApply(msg.ja);
     // Who's choosing and the level cards, even if some notice was lost.
@@ -407,6 +433,11 @@ G.Coop = (() => {
       case 'lu': if (!ev[2] || ev[2] > seenSeq) { seenSeq = ev[2] || seenSeq; api.levelStart(ev[1]); } break;
       case 'lw': api.waiting(ev[1]); break;
       case 'lr': api.resume(); break;
+      case 'kk': {      // the host removed you: you took too long to choose
+        const cb = api.lost; end();
+        if (cb) cb('You took over 2 minutes to choose, so you were removed from the game.');
+        return;
+      }
       case 'hp': lastHo = (ev[1] || []).join('|'); api.hold && api.hold(ev[1]); break;
       case 'ha': hostAway = !!ev[1]; updateAway(); break;
       case 'sh': api.shiny(ev[1]); break;

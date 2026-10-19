@@ -415,8 +415,9 @@ G.Social = (() => {
     return { ok: true };
   }
 
-  function enterRoom(id, host) {
-    room = { id, host, isHost: host === uid, members: [], open: true };
+  function enterRoom(id, host, prev = null) {
+    // (prev: re-entering after a drop keeps the members, so the game's connections aren't dropped meanwhile.)
+    room = { id, host, isHost: host === uid, members: prev ? prev.members : [], open: prev ? prev.open : true };
     watchRoomDisconnect();
     const mref = fb.rtdb.ref('rooms/' + id + '/m');
     mref.on('value', s => {
@@ -438,7 +439,7 @@ G.Social = (() => {
     let wasOn = false;
     cref.on('value', s => {
       const on = s.val() === true;
-      if (on && wasOn && room && room.id === id && !room.isHost) rejoinSpot(id);
+      if (on && wasOn && room && room.id === id) { if (room.isHost) restoreRoom(id); else rejoinSpot(id); }
       wasOn = on;
     });
     roomRefs = [mref, href, oref, cref];
@@ -457,6 +458,25 @@ G.Social = (() => {
     } catch (e) { console.warn('[Social] could not recover the place:', e.code || e.message); }
   }
 
+  /**
+   * Host, after a database drop: the server deleted the whole room (onDisconnect), which made everyone's game
+   * say "The room has been closed" and throw them out mid-run although the game itself was still connected.
+   * The room is written back with everyone who was in it.
+   */
+  async function restoreRoom(id) {
+    try {
+      if (!room || room.id !== id || !room.isHost) return;
+      const ref = fb.rtdb.ref('rooms/' + id);
+      if ((await ref.child('host').get()).val() === uid) { watchRoomDisconnect(); return; }
+      const m = {};
+      for (const mm of room.members) { const o = Object.assign({}, mm); delete o.uid; m[mm.uid] = o; }
+      if (!m[uid]) m[uid] = memberInfo();
+      await ref.set({ host: uid, open: room.open !== false && !(G.Coop && G.Coop.active), at: ts(), m });
+      watchRoomDisconnect();
+      console.warn('[Social] room restored after a drop');
+    } catch (e) { console.warn('[Social] could not restore the room:', e.code || e.message); }
+  }
+
   /** If the browser closes, the room (host) or your place (guest) is deleted automatically. */
   function watchRoomDisconnect() {
     if (!room) return;
@@ -469,7 +489,38 @@ G.Social = (() => {
     roomRefs = [];
   }
 
+  /**
+   * The room seems gone (its host field emptied, or reading it failed). Not trusted straight away: a short drop
+   * of the host's database connection deletes the room for a moment (see restoreRoom). It's checked again after
+   * a grace period, and while a group run is going the run carries on (it doesn't need the room) and the room
+   * is only closed once the run is over.
+   */
+  let closing = null;
   function closedRoom() {
+    if (!room || closing === room) return;
+    const r = room;
+    closing = r;
+    const check = async () => {
+      if (room !== r) { closing = null; return; }
+      if (r.isHost) await restoreRoom(r.id);
+      let host = null;
+      try { host = (await fb.rtdb.ref('rooms/' + r.id + '/host').get()).val(); } catch (e) { /* gone or no access */ }
+      if (room !== r) { closing = null; return; }
+      if (host) {
+        // It's back: listen again (a failed read stops the listeners for good).
+        closing = null;
+        detachRoom();
+        enterRoom(r.id, host, r);
+        return;
+      }
+      if (G.Coop && G.Coop.active) { setTimeout(check, 5000); return; }
+      closing = null;
+      reallyClose();
+    };
+    setTimeout(check, r.isHost ? 1500 : G.Coop && G.Coop.active ? 10000 : 4000);
+  }
+
+  function reallyClose() {
     if (!room) return;
     detachRoom();
     room = null;
