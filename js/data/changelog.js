@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T16:19Z', title: 'Run restarting after a double click on Play', fix: [
+    'Clicking Play twice quickly could start your run and then restart it a moment later. A second click is now ignored (the same for Start in a group room).'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T15:15Z', title: '"Caught!" stuck on screen', fix: [
     'Catching the treasure thief on the menu and then starting a run could leave the "Caught!" text on screen for the whole run. It now always fades out after a couple of seconds.'
   ] },

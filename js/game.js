@@ -1600,7 +1600,7 @@ G.Flow = {
       G.LobbyUI.open();
     } else this.goMenu();
   },
-  play() { G.Game.startRun(); },
+  play() { if (G.Game.state === 'ui') G.Game.startRun(); },     // (a second Play click mustn't restart the run)
   /** Starts the group run (the host sends it to everyone). */
   startCoop(cfg) {
     if (G.Game.state !== 'ui' || !G.Social.room) return;

@@ -334,10 +334,14 @@
         : connecting ? 'Connecting to your friends…' : 'The game starts for everyone at once.';
     }
 
+    let starting = false;      // Start clicked twice while the version check runs: start once
     async function start() {
       const room = G.Social.room;
-      if (!room || !room.isHost || room.members.length < 2) return;
-      if (!(await G.Updater.gate())) return;                 // new version out: reload instead of starting
+      if (!room || !room.isHost || room.members.length < 2 || starting || G.Game.state !== 'ui') return;
+      starting = true;
+      let ok = false;
+      try { ok = await G.Updater.gate(); } finally { starting = false; }
+      if (!ok) return;                                       // new version out: reload instead of starting
       if (G.Social.room !== room || room.members.length < 2) return;
       const cfg = {
         k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,
