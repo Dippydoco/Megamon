@@ -934,7 +934,8 @@ G.Game = (() => {
       const d2 = p.dead ? Infinity : G.U.dist2(p.x, p.y, pl.x, pl.y);
       if (d2 < best) { best = d2; helper = p; }
     }
-    pl.reviveT = helper ? (pl.reviveT || 0) + dt : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
+    // In Arceus's Judgment the progress doesn't decay, so teammates can revive you a bit at a time while dodging.
+    pl.reviveT = helper ? (pl.reviveT || 0) + dt : G.Judgment.active ? (pl.reviveT || 0) : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
     if (pl.reviveT >= G.Player.REVIVE_TIME) {
       if (helper && helper.uid) pl.revivedBy.push(helper.uid);       // credited to them in the end-of-run stats
       pl.revive(0.5);
