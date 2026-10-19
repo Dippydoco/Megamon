@@ -108,7 +108,7 @@ G.LabUI = (() => {
     if (!mon || pl.dex === dex) return;
     G.Sprites.preload([dex]);
     pl.mon = mon; pl.dex = dex;
-    pl.baseAtk = mon.atk; pl.baseSpd = mon.spd;
+    pl.baseAtk = mon.atk; pl.baseSpa = mon.spa != null ? mon.spa : mon.atk; pl.baseSpd = mon.spd;
     pl.anim = new G.Sprites.Animator(dex, 1, false);
     pl.r = G.Sprites.bodyRadius(dex); pl.bodyH = G.Sprites.bodyHeight(dex);
   }

@@ -47,10 +47,12 @@ G.LevelUp = (() => {
         !(G.Moves.BY_ID[id].kind === 'burst' && (bursts >= 2 || pl.moves.length < 2)));
       for (const id of G.U.pickN(pool, 6)) {
         const d = G.Moves.BY_ID[id];
+        // Moves that suit the Pokémon's better attacking stat turn up more often (mixed ones: all the same).
+        const lean = pl.mon.lean, fit = !d.cat || !lean || lean === 'mixed' ? 1 : d.cat === lean ? 1.4 : 0.6;
         out.push({
-          w: d.kind === 'burst' ? 5 : 10, type: 'new', key: 'new:' + id,
+          w: (d.kind === 'burst' ? 5 : 10) * fit, type: 'new', key: 'new:' + id,
           icon: 'move:' + id, color: G.U.TYPE_COLOR[d.type],
-          tag: G.U.TYPE_NAME[d.type], kind: d.kind,
+          tag: G.U.TYPE_NAME[d.type] + (d.cat ? ' · ' + (d.cat === 'physical' ? 'Physical' : 'Special') : ''), kind: d.kind,
           title: d.name, desc: d.desc,
           apply: p => p.addMove(id)
         });

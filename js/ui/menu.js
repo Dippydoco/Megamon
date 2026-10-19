@@ -249,7 +249,9 @@ G.MenuUI = (() => {
     else if (isPartner && dex !== showDetail.last) viewShiny = !!s.partnerShiny;
     showDetail.last = dex;
 
-    const max = { hp: 183, atk: 1.55, spd: 137 };
+    const max = { hp: 183, atk: 1.55, spa: 1.55, spd: 137 };
+    const LEAN = { physical: 'Physical attacker: better with physical moves', special: 'Special attacker: better with special moves',
+                   mixed: 'Mixed attacker: as good with physical as with special moves' };
     const bar = (label, v, m, txt) =>
       `<div class="stat"><span>${label}</span><div class="bar"><i style="width:${Math.min(100, v / m * 100)}%"></i></div><span>${txt}</span></div>`;
     const usingThis = isPartner && (!hasSh || !!s.partnerShiny === viewShiny);
@@ -269,7 +271,9 @@ G.MenuUI = (() => {
       ${own ? `
         ${bar('HP', p.hp, max.hp, p.hp)}
         ${bar('Attack', p.atk, max.atk, '×' + p.atk.toFixed(2))}
+        ${bar('Sp. Atk', p.spa, max.spa, '×' + p.spa.toFixed(2))}
         ${bar('Speed', p.spd, max.spd, p.spd)}
+        <p style="font-size:13px;margin:6px 0 0;color:var(--muted)">${LEAN[p.lean] || ''}</p>
         <p style="font-size:14px;margin:10px 0 4px">Starts with <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
         <p class="move-icons">
           ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>

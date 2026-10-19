@@ -9,6 +9,7 @@
  * Everything is read from the game data (G.Moves, G.LevelUp.STATS), so new moves show up on their own.
  */
 G.CodexUI = (() => {
+  const CAT = { physical: 'Physical', special: 'Special' };   // uses Attack / Sp. Atk
   const $ = G.UI.$;
   const ORDER = ['normal', 'fire', 'water', 'grass', 'electric', 'psychic', 'poison', 'ground', 'flying', 'bug',
                  'rock', 'ice', 'fighting', 'ghost', 'dragon', 'fairy', 'steel', 'dark'];
@@ -101,7 +102,7 @@ G.CodexUI = (() => {
       if (learn && !learn.has(m.id)) return false;
       if (q) {
         const e = G.Moves.EVO[m.id];
-        const hay = (m.name + ' ' + (e ? e[0] : '') + ' ' + G.U.TYPE_NAME[m.type] + ' ' + (G.Icons.KIND_NAME[m.kind] || '')).toLowerCase();
+        const hay = (m.name + ' ' + (e ? e[0] : '') + ' ' + G.U.TYPE_NAME[m.type] + ' ' + (G.Icons.KIND_NAME[m.kind] || '') + ' ' + (CAT[m.cat] || '')).toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -133,7 +134,7 @@ G.CodexUI = (() => {
       const evo = e ? `<span class="cx-evo">→ ${esc(e[0])} ${G.Icons.html(needOf(e[1]).icon, 12)}</span>` : m.kind === 'burst' ? '<span class="cx-evo cx-burst">Burst</span>' : '<span class="cx-evo cx-none">Doesn\'t evolve</span>';
       return `<button class="cx-row${st.sel === m.id ? ' on' : ''}" data-id="${m.id}" style="--tc:${G.U.TYPE_COLOR[m.type]}">
         <span class="cx-ico">${G.Icons.html('move:' + m.id, 32)}</span>
-        <span class="cx-main"><b>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</b><span class="cx-tags">${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></span></span>
+        <span class="cx-main"><b>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</b><span class="cx-tags">${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}${CAT[m.cat] ? ' · ' + CAT[m.cat] : ''}</span></span></span>
         <span class="cx-num"><small>Cooldown</small>${m.kind === 'orbit' ? 'Always on' : fmt(m.cd) + ' s'}</span>
         <span class="cx-num"><small>Power</small>${m.dmg ? fmt(m.dmg) : '—'}</span>
         ${evo}
@@ -152,7 +153,7 @@ G.CodexUI = (() => {
     const learns = p && G.Moves.poolFor(p).includes(m.id);
     box.style.setProperty('--tc', col);
     box.innerHTML = `
-      <div class="cx-dhead">${G.Icons.html('move:' + m.id, 48)}<div><h3>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</h3>${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div></div>
+      <div class="cx-dhead">${G.Icons.html('move:' + m.id, 48)}<div><h3>${esc(m.name)}${isNew(m) ? NEW_TAG : ''}</h3>${G.UI.typeChips([m.type])}<span class="cx-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}${CAT[m.cat] ? ' · ' + CAT[m.cat] : ''}</span></div></div>
       <p class="cx-desc">${esc(m.desc)}</p>
       ${fx.length ? `<div class="cx-fx">${fx.map(f => `<span>${esc(f)}</span>`).join('')}</div>` : ''}
       <div class="cx-stats">${statsOf(m).map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`).join('')}</div>

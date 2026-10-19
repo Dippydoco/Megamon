@@ -728,7 +728,7 @@
   };
   for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
 
-  // Physical or special (for the future attack / special attack split; nothing uses it for damage yet).
+  // Physical or special: physical moves use the Pokémon's Attack, special ones its Sp. Atk (19-10-2026).
   // Older moves follow the same list as the original PokéSurvivor; newer ones set `cat` themselves.
   // Boosters and non-damaging bursts have none.
   const PHYSICAL = new Set(['tackle', 'quick-attack', 'vine-whip', 'razor-leaf', 'wing-attack', 'body-slam', 'poison-sting',
@@ -803,11 +803,23 @@
     ghost: 'shadow-ball', dragon: 'dragon-rage', fairy: 'fairy-wind', steel: 'metal-claw',
     dark: 'bite', normal: 'tackle'
   };
+  // The same type's start in the other category, for Pokémon whose better attacking stat doesn't suit START
+  // (a special ghost like Gastly starts with Shadow Ball, a physical one like Marowak's line with Shadow Claw...).
+  const START_ALT = {
+    fire: 'flame-wheel', grass: 'absorb', electric: 'thunder-punch', psychic: 'zen-headbutt', poison: 'poison-sting',
+    ground: 'bonemerang', flying: 'wing-attack', bug: 'signal-beam', rock: 'power-gem', ice: 'ice-shard',
+    fighting: 'aura-sphere', ghost: 'shadow-claw', dragon: 'dragon-claw', fairy: 'play-rough', steel: 'flash-cannon',
+    dark: 'dark-pulse', normal: 'hyper-voice'
+  };
   function startFor(mon) {
     const sig = RAW.find(m => m.sig === mon.dex);
     if (sig) return sig.id;
     if (mon.start && BY_ID[mon.start]) return mon.start;
-    for (const t of mon.types) if (START[t]) return START[t];
+    for (const t of mon.types) if (START[t]) {
+      const alt = START_ALT[t];
+      if (alt && mon.lean && mon.lean !== 'mixed' && BY_ID[START[t]].cat !== mon.lean && BY_ID[alt] && BY_ID[alt].cat === mon.lean) return alt;
+      return START[t];
+    }
     return 'tackle';
   }
 

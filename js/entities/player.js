@@ -31,6 +31,7 @@ G.Player = class Player {
     this.hp = this.maxHp;
     this.baseSpd = mon.spd;
     this.baseAtk = mon.atk;
+    this.baseSpa = mon.spa != null ? mon.spa : mon.atk;   // Sp. Atk (special moves)
 
     this.moves = [];           // all the moves learned
     this.slots = [];           // slots: each one, a list of moves cast together
@@ -93,9 +94,19 @@ G.Player = class Player {
   cy() { return this.y; }
 
   // ---------------- stats efectivos ----------------
-  get atk() {
+  // Damage boosts (Power cards, items, buffs...) raise Attack and Sp. Atk alike.
+  get dmgMul() {
     const b = this.buffs;
-    return this.baseAtk * this.atkMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+    return this.atkMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+  }
+  /** Attack: multiplies physical moves. */
+  get atk() { return this.baseAtk * this.dmgMul; }
+  /** Sp. Atk: multiplies special moves. */
+  get spa() { return this.baseSpa * this.dmgMul; }
+  /** The multiplier a move uses: Attack for physical, Sp. Atk for special, the better one if it has no category. */
+  pow(m) {
+    const c = m && m.cat;
+    return c === 'physical' ? this.atk : c === 'special' ? this.spa : Math.max(this.atk, this.spa);
   }
   get spd() {
     const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
