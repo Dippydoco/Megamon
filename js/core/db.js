@@ -24,6 +24,12 @@
  *
  * Guest mode plays with an in-memory save that isn't stored.
  */
+/** How many times this Pokémon (dex) has reached Arceus in the given save (stars from before per-Pokémon counts = 1). */
+G.arcCount = (save, dex) => {
+  if (!save || !save.arceus || !save.arceus[dex]) return 0;
+  return Math.max(1, Math.min(999, (save.arceusN || {})[dex] || 0));
+};
+
 G.DB = (() => {
   const K_ACC = 'ps.accounts', K_SES = 'ps.session', K_SAVE = 'ps.save.';
   const K_CLOUD = 'ps.cloud.', K_MIGRATED = 'ps.migrated.';
@@ -87,6 +93,7 @@ G.DB = (() => {
       legends: {},            // dex -> date: legendaries defeated in rifts
       history: [],            // latest runs (most recent first, max. HISTORY_MAX): see cleanHistory()
       arceus: {},             // dex -> date: Pokémon that have reached Arceus (gold star)
+      arceusN: {},            // dex -> how many times that Pokémon has reached Arceus (since 19-10-2026)
       arenas: {},             // type -> date: rift arenas won
       itemsFound: {},         // id -> date: held items found
       evoMoves: {},           // id -> date: moves ever evolved
@@ -310,6 +317,8 @@ G.DB = (() => {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }
+    r.arceusN = r.arceusN || {};
+    for (const k in older.arceusN || {}) r.arceusN[k] = Math.max(r.arceusN[k] || 0, older.arceusN[k] || 0);
     // History: union of both copies' runs (by date), with the cap.
     r.history = cleanHistory([...(r.history || []), ...(older.history || [])]);
     // Missions from the same day/week: the highest progress and whatever was already collected.

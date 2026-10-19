@@ -697,7 +697,7 @@ G.HUD = (() => {
     pt.draw(ctx, ix + CARD_IC / 2, iy + CARD_IC - 3);
     ctx.restore();
     // Gold star if this Pokémon has reached Arceus (yours from your save, teammates' from their shared state).
-    const arc = c.key === 'me' ? (G.DB.save.arceus && G.DB.save.arceus[o.dex] ? Math.max(1, (G.DB.save.stats || {}).judged || 0) : 0) : (o.net && o.net.ar) || 0;
+    const arc = c.key === 'me' ? G.arcCount(G.DB.save, o.dex) : (o.net && o.net.ar) || 0;
     if (arc) {
       G.Icons.draw(ctx, 'star', ix + CARD_IC - 9, iy - 5, 13);
       if (arc > 1) {                                   // how many times they have reached Arceus, bottom-right of the portrait

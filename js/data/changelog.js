@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T22:01Z', title: 'Arceus stars count per Pokémon', chg: [
+    'The ×number next to a Pokémon\'s gold Arceus star now shows how many times that Pokémon has reached Arceus, instead of your total across all Pokémon (in the Pokédex, on the menu and on team portraits in runs). Stars earned before this update count as 1.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T21:58Z', title: 'Group runs: no more endless waits or sudden "room closed"', fix: [
     'If a player keeps everyone waiting for more than 2 minutes (level cards, an item or move choice, a bond, or the pause menu), they are removed from the game and the others carry on. If it is the host, their choice is made for them instead.',
     'Fixed players being thrown out mid-run with "The room has been closed" when the host\'s connection blinked. The room now comes back on its own, and a run in progress keeps going.'
