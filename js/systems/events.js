@@ -23,9 +23,11 @@ G.Events = (() => {
   const THIEF_FIRST = [120, 240], THIEF_NEXT = [240, 360], THIEF_LIFE = 15;
   // Aegislash and its Armoury of items: kill it (it leaves after AEGIS_LIFE s) and everyone picks 1 of 3 items, or skips.
   const AEGIS_FIRST = [330, 450], AEGIS_NEXT = [420, 600], AEGIS_LIFE = 75, AEGIS_MAX = 3, AEGIS_DEX = 681;
+  // Spiritomb, the move tutor: defeat it (it leaves after TUTOR_LIFE s) and everyone picks 1 of 3 moves from outside their pool.
+  const TUTOR_FIRST = [200, 320], TUTOR_NEXT = [360, 480], TUTOR_LIFE = 60, TUTOR_MAX = 2, TUTOR_DEX = 442;
   const authority = () => !G.Coop.active || G.Coop.isHost;
 
-  let nextT = 0, cur = null, last = null, thiefT = 0, thieves = 0, aegisT = 0, aegises = 0;
+  let nextT = 0, cur = null, last = null, thiefT = 0, thieves = 0, aegisT = 0, aegises = 0, tutorT = 0, tutors = 0;
   let lost = null;      // { dex, name, x, y, hp, maxHp, state, follow, tx, ty, t, anim, r, hitCd, netT, grant }
 
   function reset() {
@@ -33,6 +35,7 @@ G.Events = (() => {
     cur = null; last = null; lost = null;
     thiefT = G.U.rand(THIEF_FIRST[0], THIEF_FIRST[1]); thieves = 0;
     aegisT = G.U.rand(AEGIS_FIRST[0], AEGIS_FIRST[1]); aegises = 0;
+    tutorT = G.U.rand(TUTOR_FIRST[0], TUTOR_FIRST[1]); tutors = 0;
   }
 
   // ---------------- ciclo ----------------
@@ -58,6 +61,14 @@ G.Events = (() => {
       if (aegisT <= 0) {
         if (G.EnemyMgr.bossAlive()) aegisT = 8;
         else { if (spawnAegis(players, time)) aegises++; aegisT = G.U.rand(AEGIS_NEXT[0], AEGIS_NEXT[1]); }
+      }
+    }
+
+    if (tutors < TUTOR_MAX) {
+      tutorT -= dt;
+      if (tutorT <= 0) {
+        if (G.EnemyMgr.bossAlive() || G.EnemyMgr.all().some(e => e.behavior === 'aegis' && !e.dead)) tutorT = 8;
+        else { if (spawnTutor(players, time)) tutors++; tutorT = G.U.rand(TUTOR_NEXT[0], TUTOR_NEXT[1]); }
       }
     }
 
@@ -161,6 +172,37 @@ G.Events = (() => {
       return true;
     }
     return false;
+  }
+
+  // ---------------- Spiritomb, the move tutor ----------------
+
+  function spawnTutor(players, time) {
+    const mon = G.DEX_BY[TUTOR_DEX];
+    if (!mon || !G.SPRITE_META[TUTOR_DEX]) return false;
+    const alive = players.filter(p => !p.dead);
+    const pl = G.U.pick(alive.length ? alive : players);
+    G.Sprites.preload([TUTOR_DEX]);
+    const def = { dex: TUTOR_DEX, name: mon.name, behavior: 'tutor', hp: Math.round((260 + time * 2.6) * G.Coop.scaleHp(players.length)),
+                  spd: 58, dmg: Math.round(14 + time / 30), xp: Math.round(80 + time / 4) };
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * 6.2832, d = G.U.rand(250, 320);
+      const x = pl.x + Math.cos(a) * d, y = pl.y + Math.sin(a) * d * 0.8;
+      if (!G.World.isFree(x, y, 18)) continue;
+      const e = new G.Enemy(def, x, y, { hp: 1, spd: 1, dmg: 1 });
+      e.life = TUTOR_LIFE;
+      G.EnemyMgr.add(e);
+      G.FX.ring(x, y, 4, 60, '#9b6bd6', 0.6, 4);
+      G.Spawner.say('Spiritomb opens a portal of otherworldly moves! Defeat it to learn one!', 5, false, TUTOR_DEX);
+      G.Audio.sfx('legend');
+      return true;
+    }
+    return false;
+  }
+
+  /** Spiritomb fell (host or solo): everyone chooses a move (each from their own Pokémon's offer). */
+  function tutor() {
+    G.Game.tutor();
+    if (G.Coop.isHost) G.Coop.broadcast(['ev', 'tut']);
   }
 
   /** The Aegislash fell (host or solo): everyone chooses an item. */
@@ -280,6 +322,7 @@ G.Events = (() => {
       case 's': cur = { id: ev[2], t: 0, dur: ev[2] === 'lost' ? Infinity : DUR, type: ev[3] || null }; break;
       case 'e': cur = null; break;
       case 'arm': G.Game.armoury(); break;
+      case 'tut': G.Game.tutor(); break;
       case 'lp': {
         const [, , dex, x, y, hp, follow, tx, ty, dir, moving] = ev;
         if (!lost || lost.dex !== dex) makeLost({ dex, x, y, tx, ty, hp, state: follow ? 'follow' : 'wait' });
@@ -352,6 +395,7 @@ G.Events = (() => {
     }
     for (const e of G.EnemyMgr.all()) {
       if (e.behavior === 'thief' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#ffd23f', e.name, F, { key: 't' + e.id, dex: e.dex, shiny: e.shiny });
+      if (e.behavior === 'tutor' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9b6bd6', e.name + (Number.isFinite(e.life) ? ' · ' + Math.max(0, Math.ceil(e.life)) + ' s' : ''), F, { key: 'u' + e.id, dex: e.dex });
       if (e.behavior === 'aegis' && !e.dead) edgeArrow(ctx, w, h, cam, e.x, e.y - 10, '#9fb4ff', e.name + (Number.isFinite(e.life) ? ' · ' + Math.max(0, Math.ceil(e.life)) + ' s' : ''), F, { key: 'a' + e.id, dex: e.dex });
     }
     if (cur && cur.id !== 'lost') {
@@ -432,7 +476,7 @@ G.Events = (() => {
   }
 
   return {
-    reset, update, bag, onNet, drawables, drawHud, armoury,
+    reset, update, bag, onNet, drawables, drawHud, armoury, tutor,
     get golden() { return !!cur && cur.id === 'gold'; },
     get current() { return cur ? cur.id : null; },
     /** For testing. */

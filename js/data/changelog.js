@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T14:41Z', title: 'Spiritomb, the move tutor', new: [
+    'A Spiritomb now appears up to twice a run and opens a portal of otherworldly moves. Defeat it within 60 s to choose 1 of 3 moves from outside your Pokémon\'s usual pool (other types), or skip.',
+    'The offer favours moves that suit your Pokémon\'s Attack or Sp. Atk. If your move slots are full, you choose which move the new one replaces (it keeps that move\'s bond).',
+    'In group runs, everyone gets to choose, each from their own offer.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T14:26Z', title: 'Gholdengo stuck on screen', fix: [
     'In group runs, a treasure Gholdengo or Meowth (or an Aegislash) that got away could stay frozen on a teammate\'s screen for the rest of the run. It now leaves on every screen when its time runs out.'
   ] },

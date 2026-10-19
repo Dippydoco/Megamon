@@ -261,6 +261,7 @@ G.Game = (() => {
     item(id) { offerItem(id); },
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
     armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
+    tutor() { if (pl) offerItem({ tutor: tutorMoves(pl) }); },             // Spiritomb: each player gets their own 3 moves
     mateLeft() {},
     /** Group: who is choosing a fusion. While anyone is, everything is paused. */
     hold(names) {
@@ -482,16 +483,53 @@ G.Game = (() => {
       const o = openItem;
       if (o.mine) { state = 'choice'; if (G.Coop.active) G.Coop.holdStart(); }
       if (o.band) G.RunUI.showMoveChoice(pl, o.pick);              // Choice Band: which move to lock into
+      else if (o.tutor) G.RunUI.showTutor(pl, o.tutor, o.take);   // Spiritomb's moves
+      else if (o.tutorForget) G.RunUI.showTutorForget(pl, o.tutorForget, o.forget);
       else if (o.list) G.RunUI.showArmoury(o.cur, o.list, o.take); else G.RunUI.showItemChoice(o.cur, o.next, o.take);
       return;
     }
     if (laterItems.length) offerItem(laterItems.shift());
   }
 
+  /**
+   * Spiritomb's offer: 3 moves from OUTSIDE this Pokémon's pool (other types), each of a different type,
+   * favouring ones that suit its Attack / Sp. Atk. No signature moves, nothing it has or has banned.
+   */
+  function tutorMoves(p) {
+    const own = new Set(G.Moves.poolFor(p.mon));
+    const lean = p.mon.lean;
+    let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has(m.id)));
+    const out = [], types = new Set();
+    while (out.length < 3 && cand.length) {
+      const w = cand.map(m => (m.kind === 'buff' || m.kind === 'burst' ? 0.4 : 1) * (!m.cat || !lean || lean === 'mixed' ? 1 : m.cat === lean ? 1.6 : 0.5)
+                              * (types.has(m.type) ? 0.05 : 1));
+      let r = Math.random() * w.reduce((s, x) => s + x, 0), i = 0;
+      while (i < cand.length - 1 && (r -= w[i]) > 0) i++;
+      out.push(cand[i].id); types.add(cand[i].type);
+      cand = cand.filter((_, j) => j !== i);
+    }
+    return out;
+  }
+
+  /** Learns a tutored move; with every slot full it takes the place of `forget` (a move instance, bond included). */
+  function learnTutored(id, forget) {
+    const name = G.Moves.BY_ID[id].name;
+    if (forget) {
+      const m = G.Moves.instance(id, 1);
+      pl.moves[pl.moves.indexOf(forget)] = m;
+      const g = pl.slots.find(s => s.includes(forget));
+      if (g) g[g.indexOf(forget)] = m;
+      if (G.Projectiles.clearOrbs) G.Projectiles.clearOrbs(pl);
+    } else if (!pl.addMove(id)) return;
+    G.Spawner.say(pl.mon.name + ' learned ' + name + '!', 2.6, true);
+    G.Audio.sfx('confirm');
+  }
+
   /** You picked up an item: if you aren't holding one you put it on; if you are, you choose. */
   function offerItem(id) {
+    const tut = id && id.tutor ? id.tutor.filter(x => G.Moves.BY_ID[x]) : null;    // Spiritomb: moves, not items
     const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
-    if (!pl || (list ? !list.length : !G.Items.BY[id])) return;
+    if (!pl || (tut ? !tut.length : list ? !list.length : !G.Items.BY[id])) return;
     if (state === 'levelup' || G.UI.isOpen('scr-levelup') || G.UI.isOpen('scr-bond')) { laterItems.push(id); return; }
     // Another item choice (or the Choice Band move pick) is already open: this one waits its turn.
     // (Zygarde drops 3 items that are all pulled in at once: the third used to replace the second's screen,
@@ -532,6 +570,30 @@ G.Game = (() => {
       if (G.Coop.active) G.Coop.holdEnd();
       afterLevelUp();
     };
+    if (tut) {
+      if ((state === 'playing' || state === 'held') && !pl.dead) {
+        mine = true;
+        state = 'choice';
+        if (G.Coop.active) G.Coop.holdStart();
+      }
+      // Pick a move; with every slot full, then which move it replaces (backing out of that = skip).
+      const pickMove = got => {
+        openItem = null;
+        if (got && !pl.hasMove(got)) {
+          if (pl.slots.length < pl.maxMoves) learnTutored(got);
+          else {
+            const forget = m => { openItem = null; if (m) learnTutored(got, m); finish(); };
+            openItem = { tutorForget: got, forget, get mine() { return mine; } };
+            G.RunUI.showTutorForget(pl, got, forget);
+            return;
+          }
+        }
+        finish();
+      };
+      openItem = { tutor: tut, take: pickMove, get mine() { return mine; } };
+      G.RunUI.showTutor(pl, tut, pickMove);
+      return;
+    }
     if (list) {
       // A downed player chooses without freezing the game for everyone else.
       if ((state === 'playing' || state === 'held') && !pl.dead) {
@@ -1424,6 +1486,7 @@ G.Game = (() => {
   return {
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
     armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
+    tutor() { if (pl) offerItem({ tutor: tutorMoves(pl) }); },             // Spiritomb: each player gets their own 3 moves
     init, startRun, everyone, levelXp, flash, offerBond,
     /** For testing: skips the run's clock. */
     debugTime(t) { tampered = true; time = t; },

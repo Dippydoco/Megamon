@@ -273,6 +273,60 @@ G.RunUI = (() => {
     G.UI.show('scr-item');
   }
 
+  /** Spiritomb, the move tutor: one of 3 moves from outside your pool, or skip. */
+  function showTutor(pl, ids, cb) {
+    const box = $('item-cards');
+    box.innerHTML = '';
+    ids.forEach((id, i) => {
+      const m = G.Moves.BY_ID[id], col = G.U.TYPE_COLOR[m.type];
+      const cat = m.cat ? ' · ' + (m.cat === 'physical' ? 'Physical' : 'Special') : '';
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `<div class="ico" style="background:${col}33">${G.Icons.html('move:' + id, 36)}</div>
+        <div class="txt"><div class="nm">${m.name} <span class="tag-chip" style="background:${col}">${G.U.TYPE_NAME[m.type]}${cat}</span> ${G.Icons.kindTag(m.kind)}</div><div class="ds">${m.desc || ''}</div></div>
+        <div class="key">${i + 1}</div>`;
+      el.onclick = () => { G.UI.hide('scr-item'); cb(id); };
+      box.appendChild(el);
+    });
+    const skip = document.createElement('div');
+    skip.className = 'card';
+    skip.innerHTML = `<div class="ico">${G.Icons.html('ban', 36)}</div>
+      <div class="txt"><div class="nm">Skip</div><div class="ds">Learn nothing and keep your moves.</div></div>
+      <div class="key">${ids.length + 1}</div>`;
+    skip.onclick = () => { G.UI.hide('scr-item'); cb(null); };
+    box.appendChild(skip);
+    $('item-title').textContent = 'Spiritomb\'s otherworldly moves';
+    $('item-sub').innerHTML = (pl.slots.length >= pl.maxMoves ? 'Your moves are full: you\'ll pick one to forget · ' : '')
+      + 'keys <kbd>1</kbd>-<kbd>' + (ids.length + 1) + '</kbd>';
+    G.UI.show('scr-item');
+  }
+
+  /** Every slot is full: which move does the tutored one replace? (Keep them all = skip.) */
+  function showTutorForget(pl, id, cb) {
+    const box = $('item-cards');
+    box.innerHTML = '';
+    const list = pl.moves.slice();
+    list.forEach((m, i) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `<div class="ico">${G.Icons.html('move:' + m.id, 36)}</div>
+        <div class="txt"><div class="nm">Forget ${m.name} <small>Lv.${m.lvl}</small></div><div class="ds">${m.def.desc || ''}</div></div>
+        <div class="key">${i + 1}</div>`;
+      el.onclick = () => { G.UI.hide('scr-item'); cb(m); };
+      box.appendChild(el);
+    });
+    const keep = document.createElement('div');
+    keep.className = 'card';
+    keep.innerHTML = `<div class="ico">${G.Icons.html('ban', 36)}</div>
+      <div class="txt"><div class="nm">Keep my moves</div><div class="ds">Don't learn ${G.Moves.BY_ID[id].name}.</div></div>
+      <div class="key">${list.length + 1}</div>`;
+    keep.onclick = () => { G.UI.hide('scr-item'); cb(null); };
+    box.appendChild(keep);
+    $('item-title').textContent = 'Learn ' + G.Moves.BY_ID[id].name + '?';
+    $('item-sub').innerHTML = 'Choose a move to forget · keys <kbd>1</kbd>-<kbd>' + (list.length + 1) + '</kbd>';
+    G.UI.show('scr-item');
+  }
+
   /** Choice Band just equipped: which move do you want to be locked into? */
   function showMoveChoice(pl, cb) {
     const box = $('item-cards');
@@ -370,5 +424,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, skip, showItemChoice, showArmoury, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, skip, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

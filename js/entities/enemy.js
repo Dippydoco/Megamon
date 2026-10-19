@@ -106,7 +106,7 @@
 
     /** Golden hour (events.js): double experience and sometimes coins. */
     makeGolden() {
-      if (this.golden || this.boss || this.behavior === 'thief' || this.behavior === 'aegis') return;
+      if (this.golden || this.boss || this.behavior === 'thief' || this.behavior === 'aegis' || this.behavior === 'tutor') return;
       this.golden = true;
       this.xp *= 2;
     }
@@ -222,6 +222,12 @@
         G.FX.ring(this.x, this.y, this.r, this.r * 5, '#ffd23f', 0.6, 4);
       }
       // Aegislash: coins and the Armoury (everyone picks one of 3 items, or skips).
+      // Spiritomb, the move tutor: coins and a move from outside your pool (everyone picks one of 3, or skips).
+      if (this.behavior === 'tutor') {
+        for (let i = 0; i < 6; i++) G.Pickups.drop('coin', this.x + G.U.rand(-36, 36), this.y + G.U.rand(-26, 26), 5);
+        G.FX.ring(this.x, this.y, this.r, this.r * 5, '#9b6bd6', 0.6, 4);
+        G.Events.tutor();
+      }
       if (this.behavior === 'aegis') {
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-40, 40), this.y + G.U.rand(-28, 28), 5);
         G.FX.ring(this.x, this.y, this.r, this.r * 5, '#9fb4ff', 0.6, 4);
@@ -1028,10 +1034,10 @@
           // Co-op guest: a treasure goblin (Meowth / Gholdengo) or Aegislash that the host's "it left" message
           // never removed would stay on screen forever. Once its time is up (plus a grace for lag), or if the
           // copy has outlived the longest it could last, it leaves here too.
-          if ((e.behavior === 'thief' || e.behavior === 'aegis') && !e.dead) {
+          if ((e.behavior === 'thief' || e.behavior === 'aegis' || e.behavior === 'tutor') && !e.dead) {
             e.remoteT = (e.remoteT || 0) + dt;
             if (e.life <= 0) e.overT = (e.overT || 0) + dt;
-            if (e.overT > 3 || e.remoteT > (e.behavior === 'aegis' ? 80 : 20)) {
+            if (e.overT > 3 || e.remoteT > (e.behavior === 'aegis' ? 80 : e.behavior === 'tutor' ? 65 : 20)) {
               G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
               list.splice(i, 1); byId.delete(e.id);
             }
@@ -1051,9 +1057,10 @@
         const near = nearestPlayer(players, e.x, e.y) || pl;
         // The treasure goblin escapes if you don't catch it in time.
         if (e.behavior === 'aegis' && e.life < 16 && !e.warned) { e.warned = true; G.Spawner.say('The Aegislash is about to leave!', 2.4); }
-        if ((e.behavior === 'thief' || e.behavior === 'aegis') && (e.life -= dt) <= 0) {
-          G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : '#ffd23f', 16, 140);
-          G.Spawner.say(e.behavior === 'aegis' ? 'The Aegislash left with its armoury!' : e.name + ' got away!', 2.4);
+        if (e.behavior === 'tutor' && e.life < 12 && !e.warned) { e.warned = true; G.Spawner.say('Spiritomb\'s portal is closing!', 2.4); }
+        if ((e.behavior === 'thief' || e.behavior === 'aegis' || e.behavior === 'tutor') && (e.life -= dt) <= 0) {
+          G.FX.burst(e.x, e.y - 10, e.behavior === 'aegis' ? '#9fb4ff' : e.behavior === 'tutor' ? '#9b6bd6' : '#ffd23f', 16, 140);
+          G.Spawner.say(e.behavior === 'aegis' ? 'The Aegislash left with its armoury!' : e.behavior === 'tutor' ? 'Spiritomb sank back into its portal.' : e.name + ' got away!', 2.4);
           list.splice(i, 1); byId.delete(e.id);
           if (G.Coop.isHost) G.Coop.enemyGone(e, false);
           continue;
