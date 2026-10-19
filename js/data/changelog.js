@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T12:24Z', title: 'Easier to find changes in What\'s new', new: [
+    'What\'s new now has a search box and filters. Filter by type (New, Changes, Fixes) and by topic (Moves, Pokémon, Co-op, Balance, Account, Interface), click a topic tag on any entry to jump to similar ones, and see changes grouped by day. Entries you haven\'t seen yet are marked NEW.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T11:20Z', title: 'Melee against bosses and rift legendaries', chg: [
     'Melee moves now do 25% more damage to bosses and legendaries.',
     'In a rift arena, the legendary\'s shots, beams and blasts do 25% less damage to you while a melee move is active.'

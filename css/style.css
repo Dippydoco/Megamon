@@ -865,6 +865,17 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .news-part { margin: 6px 0 8px; }
 .news-tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; color: #0b1020; text-shadow: none; }
 .news-tag.new { background: #5fe08a; } .news-tag.chg { background: #4fb4ff; } .news-tag.fix { background: #ffb347; }
+/* What's new: search, filters, date headings, topic tags */
+.news-filters { margin: 8px 0 4px; display: flex; flex-direction: column; gap: 6px; }
+.news-filters .field { padding: 6px 10px; font-size: 14px; }
+.news-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.news-chips .chip small { opacity: .65; margin-left: 2px; }
+.news-date { margin: 16px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.news-day.unseen { border-left: 3px solid #ff5f6d; padding-left: 10px; }
+.news-new { font-style: normal; font-size: 11px; font-weight: 800; background: #ff5f6d; color: #fff; padding: 1px 6px; border-radius: 4px; vertical-align: middle; margin-left: 4px; }
+.news-topics { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 4px; }
+.news-topic { font: inherit; font-size: 11px; padding: 1px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: transparent; color: var(--muted); cursor: pointer; }
+.news-topic:hover { color: var(--ink); border-color: rgba(255,255,255,.5); }
 .news-day ul { margin: 0; padding-left: 20px; }
 .news-day li { margin: 4px 0; line-height: 1.35; font-size: 15px; }
 @media (max-width: 760px) { .news-btn span { display: none; } }
