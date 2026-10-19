@@ -430,6 +430,8 @@ G.VFX = (() => {
     'seed-bomb':      { proj: 'seed', trail: 'dirt' },
     'spark':          { proj: 'bolt' },
     'thunder-punch':  { melee: 'impact' },
+    'aqua-jet':       { proj: 'streak', trail: 'drip' },
+    'liquidation':    { melee: 'impact' },
     'zing-zap':       { aura: 'bolt' },
     'zen-headbutt':   { melee: 'impact' },
     'psyshield-bash': { proj: 'ring' },

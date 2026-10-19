@@ -43,7 +43,7 @@ G.RunLog = (() => {
     'play-rough', 'spirit-break', 'disarming-voice', 'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig',
     'sand-tomb', 'infestation', 'rollout', 'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch',
     'fiery-wrath',
-    'beat'
+    'beat', 'aqua-jet', 'liquidation'
   ];
   const IDX = new Map(CODES.map((id, i) => [id, i]));
   const code = id => (IDX.has(id) ? IDX.get(id).toString(36) : id);

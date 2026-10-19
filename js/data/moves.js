@@ -529,6 +529,15 @@
       desc: 'Hard seeds rain down and burst on nearby foes.',
       cd: 1.3, dmg: 22, radius: 46, count: 3, knock: 40 },
 
+    // ---------------- 19-10-2026: Water finally gets physical moves ----------------
+    { id: 'aqua-jet', name: 'Aqua Jet', type: 'water', kind: 'dash', cat: 'physical',
+      desc: 'Shoot through foes in a jet of water, knocking them aside.',
+      cd: 0.7, dmg: 17, radius: 125, width: 38, knock: 70 },
+
+    { id: 'liquidation', name: 'Liquidation', type: 'water', kind: 'melee', cat: 'physical',
+      desc: 'A crashing blow of water in front of you; foes it hits take more damage for a moment.',
+      cd: 0.6, dmg: 16, radius: 54, arc: 1.7, knock: 90, fx: { vuln: 2 } },
+
     { id: 'spark', name: 'Spark', type: 'electric', kind: 'dash', cat: 'physical',
       desc: 'Charge through foes crackling with electricity; it can stun them.',
       cd: 0.75, dmg: 18, radius: 115, width: 36, knock: 50, fx: { stun: [0.15, 0.6] } },
@@ -724,7 +733,7 @@
                    'ice-punch', 'icicle-spear', 'vacuum-wave', 'shadow-claw', 'spirit-shackle', 'ominous-wind', 'dragon-claw',
                    'dragon-darts', 'breaking-swipe', 'play-rough', 'spirit-break', 'disarming-voice',
                    'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig', 'sand-tomb', 'infestation', 'rollout',
-                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath', 'beat']
+                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath', 'beat', 'aqua-jet', 'liquidation']
   };
   for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
 
@@ -806,7 +815,7 @@
   // The same type's start in the other category, for Pokémon whose better attacking stat doesn't suit START
   // (a special ghost like Gastly starts with Shadow Ball, a physical one like Marowak's line with Shadow Claw...).
   const START_ALT = {
-    fire: 'flame-wheel', grass: 'absorb', electric: 'thunder-punch', psychic: 'zen-headbutt', poison: 'poison-sting',
+    fire: 'flame-wheel', water: 'aqua-jet', grass: 'absorb', electric: 'thunder-punch', psychic: 'zen-headbutt', poison: 'poison-sting',
     ground: 'bonemerang', flying: 'wing-attack', bug: 'signal-beam', rock: 'power-gem', ice: 'ice-shard',
     fighting: 'aura-sphere', ghost: 'shadow-claw', dragon: 'dragon-claw', fairy: 'play-rough', steel: 'flash-cannon',
     dark: 'dark-pulse', normal: 'hyper-voice'
@@ -892,7 +901,8 @@
     'power-gem': ['Meteor Beam', 'cd'],         'seismic-toss': ['Superpower', 'atk'],
     'gyro-ball': ['Heavy Slam', 'def'],         'mirror-shot': ['Doom Desire', 'xp'],
     'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd'],
-    'beat': ['Rock Wrecker', 'atk']
+    'beat': ['Rock Wrecker', 'atk'],
+    'aqua-jet': ['Wave Crash', 'spd'],          'liquidation': ['Crabhammer', 'crit']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {

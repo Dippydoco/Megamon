@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T19:58Z', title: 'Physical Water moves', new: [
+    'Aqua Jet: shoot through foes in a jet of water, knocking them aside. Evolves into Wave Crash (with Sprint).',
+    'Liquidation: a crashing blow of water in front of you; foes it hits take more damage for a moment. Evolves into Crabhammer (with Focus).',
+    'Physical Water Pokémon (Krabby, Poliwrath, Slowpoke and others) now start with Aqua Jet instead of Tackle.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T18:40Z', title: 'More profile customisation', new: [
     'New profile banners: Starfall (animated: drifting, twinkling stars and shooting stars), Aurora, Thunderstorm and Deep sea (also animated), Sakura, Dunes, Meadow, and Haunted (unlocked by defeating a legendary).',
     'New profile borders: Bronze, Obsidian, Frost, Leaf, and the animated Flame, Neon and Starlight (unlocked by catching a shiny).',
