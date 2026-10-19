@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-19T23:17Z', title: 'Group leaderboards by team size', chg: [
+    'The Group leaderboard now has a separate table for each team size: 2, 3, 4 and 5 players. Existing group records have been sorted into the table for their team\'s size.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T22:08Z', title: 'Past Arceus stars counted per Pokémon', fix: [
     'Stars earned before the per-Pokémon count now show the right number: each Pokémon\'s count is rebuilt from your run history (your last 100 runs).'
   ] },

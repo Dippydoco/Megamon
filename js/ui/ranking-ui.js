@@ -6,8 +6,9 @@
 G.RankingUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let mode = 's', period = 'w', scope = 'all', dex = null, metric = 't';      // metric: 't' time survived · 'k' most kills
+  let mode = 's', period = 'w', scope = 'all', dex = null, metric = 't', size = 2;      // size: group size (2-5)      // metric: 't' time survived · 'k' most kills
   const eff = () => mode + (metric === 'k' ? 'k' : '');
+  const gs = () => (mode === 'g' ? size : null);
   let token = 0;
 
   function init() {
@@ -58,6 +59,10 @@ G.RankingUI = (() => {
       metric = k;
       if (k === 'k' && dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); }
     }, 'chip');
+    // Group: a separate leaderboard for each team size.
+    const sz = $('rk-size');
+    sz.classList.toggle('hidden', mode !== 'g');
+    mk(sz, G.Ranking.SIZES.map(n => [n, n + ' players']), size, k => { size = k; }, 'chip');
     $('rk-sub').textContent = metric === 'k' ? '· most kills' : '· survival time';
     $('rk-poke').classList.toggle('hidden', metric === 'k');
     mk($('rk-period'), G.Ranking.PERIODS, period, k => {
@@ -78,8 +83,8 @@ G.RankingUI = (() => {
     let rows = [], me = null;
     try {
       [rows, me] = await Promise.all([
-        G.Ranking.top(eff(), period, dex, scope === 'friends'),
-        G.Social.me ? G.Ranking.myRank(eff(), period, dex) : Promise.resolve(null)
+        G.Ranking.top(eff(), period, dex, scope === 'friends', gs()),
+        G.Social.me ? G.Ranking.myRank(eff(), period, dex, gs()) : Promise.resolve(null)
       ]);
     } catch (e) {
       if (my !== token) return;
@@ -92,13 +97,13 @@ G.RankingUI = (() => {
       list.innerHTML = '<p class="sub">No records here yet. Be the first!</p>';
     }
     const uid = G.Social.uid;
-    const b = G.Ranking.board(eff(), period, dex), done = G.Ranking.reported();
+    const b = G.Ranking.board(eff(), period, dex, gs()), done = G.Ranking.reported();
     rows.forEach((r, i) => list.appendChild(rowEl(r, i + 1, r.uids.includes(uid), b, done)));
     const val = metric === 'k' ? fmtK : fmt;
 
     const pn = { d: 'today', w: 'this week', m: 'this month', y: 'this year', a: 'of all time' }[period];
     const mon = dex ? G.DEX_BY[dex].name : '';
-    const where = (mode === 's' ? 'solo' : 'group') + (dex ? ' with ' + mon : '');
+    const where = (mode === 's' ? 'solo' : 'in groups of ' + size) + (dex ? ' with ' + mon : '');
     $('rk-me').innerHTML = !G.Social.me ? 'Choose a nickname (in Friends) to appear on the leaderboard.'
       : me && me.out ? `You're not in the top 50 ${where} ${pn} yet. Your exact rank is in All-time.`
       : me ? `Your best ${where} rank ${pn}: <b class="gold">#${me.pos}</b> · ${val(me.t)}`
@@ -121,7 +126,7 @@ G.RankingUI = (() => {
     // Report a suspicious record (not your own). The admin reviews it (mod-ui.js).
     if (!mine && G.Social.me) {
       const rep = document.createElement('button');
-      const sent = done.has(b + '__' + r.id);
+      const rb = r.src || b, sent = done.has(rb + '__' + r.id);
       rep.className = 'rk-rep' + (sent ? ' sent' : '');
       rep.title = sent ? 'You already reported it' : 'Report suspicious record';
       rep.innerHTML = G.Icons.html('flag', 16);
@@ -129,7 +134,7 @@ G.RankingUI = (() => {
         if (rep.classList.contains('sent')) { G.UI.toast('You already reported this record'); return; }
         if (!confirm('Report ' + r.names.join(', ') + '\'s record as cheating?')) return;
         rep.classList.add('sent'); rep.title = 'You already reported it';
-        await G.Ranking.report(b, r);
+        await G.Ranking.report(rb, r);
         G.UI.toast('Thanks: we will review it');
       };
       el.appendChild(rep);

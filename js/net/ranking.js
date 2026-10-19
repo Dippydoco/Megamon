@@ -17,6 +17,10 @@
  *                    minute 30, the all-time table started from scratch; the old tables
  *                    s_all and s_all_pN stay on the server unused)
  *   id = your uid (solo) or the team's uids sorted and joined with "_".
+ *   Group tables are split by team size (20-10-2026): g_w2026-43j_n3 is groups of 3,
+ *   g_all2_p25_n4 groups of 4 with Pikachu, gk_..._n2 most kills in pairs. The older
+ *   unsplit group tables (no _n) are still read and their rows shown under their
+ *   team's size, so existing records kept their place; nothing new is written to them.
  *
  * Savings:
  *   - What's read is cached for 30 min in the browser (switching tabs and back: 0).
@@ -84,9 +88,11 @@ G.Ranking = (() => {
   }
 
   /** The per-Pokémon filter only exists in the all-time table. */
-  function board(mode, period, dex) {
-    return mode + '_' + boardIds()[period] + (dex && period === 'a' && mode.length === 1 ? '_p' + dex : '');
+  function board(mode, period, dex, size) {
+    return mode + '_' + boardIds()[period] + (dex && period === 'a' && mode.length === 1 ? '_p' + dex : '')
+      + (mode[0] === 'g' && size ? '_n' + size : '');
   }
+  const SIZES = [2, 3, 4, 5];
 
   const col = b => fbx().fs.collection('lb').doc(b).collection('e');
   const sumRef = b => fbx().fs.collection('lbs').doc(b);
@@ -288,10 +294,10 @@ G.Ranking = (() => {
     const id = ms.map(m => m.uid).join('_');
     const entry = { t: r.t, uids: ms.map(m => m.uid), names: ms.map(m => m.name), dex: ms.map(m => m.dex),
                     shiny: ms.map(m => !!m.shiny), lv: r.lv, kills: r.kills };
-    const ids = boardIds();
-    const boards = PERIODS.map(([p]) => ['g_' + ids[p], p]);
-    for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d, 'p']);
-    if (r.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p], p]);       // most-kills tables
+    const ids = boardIds(), n = '_n' + ms.length;          // a table per team size
+    const boards = PERIODS.map(([p]) => ['g_' + ids[p] + n, p]);
+    for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d + n, 'p']);
+    if (r.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p] + n, p]);       // most-kills tables
     const better = await store(boards, id, entry);
     announce(better);
     return better;
@@ -319,10 +325,25 @@ G.Ranking = (() => {
    * A table's best records.
    * @param friendsOnly  only you and your friends
    */
-  async function top(mode, period, dex, friendsOnly) {
-    const rows = await topRows(mode, period, dex, friendsOnly);
-    if (period === 'a') await fillDates(board(mode, period, mode.length > 1 ? null : dex), rows);
+  async function top(mode, period, dex, friendsOnly, size) {
+    const rows = await topRows(mode, period, dex, friendsOnly, size);
+    if (period === 'a') await fillDates(board(mode, period, mode.length > 1 ? null : dex, size), rows);
     return rows;
+  }
+
+  /**
+   * A table's top rows. For a group size, its own table plus that size's rows from the
+   * older unsplit group table (best per team; each row remembers its table in `src`).
+   */
+  async function summaryRows(mode, period, dex, size) {
+    const b = board(mode, period, dex, size), vk = vkOf(b);
+    const own = sorted(await summary(b), vk).map(r => Object.assign(r, { src: b }));
+    if (mode[0] !== 'g' || !size) return own;
+    const old = board(mode, period, dex);
+    const legacy = sorted(await summary(old), vk).filter(r => r.uids.length === size).map(r => Object.assign(r, { src: old }));
+    const all = new Map();
+    for (const r of [...legacy, ...own]) if (!all.has(r.id) || (all.get(r.id)[vk] || 0) < (r[vk] || 0)) all.set(r.id, r);
+    return [...all.values()].sort((a, c) => (c[vk] || 0) - (a[vk] || 0));
   }
 
   /**
@@ -336,13 +357,13 @@ G.Ranking = (() => {
     const need = [];
     for (const r of rows) {
       if (r.at) continue;
-      const k = b + ':' + r.id + ':' + r[vk];
+      const k = (r.src || b) + ':' + r.id + ':' + r[vk];
       if (c[k]) r.at = c[k]; else need.push([r, k]);
     }
     if (!need.length) return;
     await Promise.all(need.map(async ([r, k]) => {
       try {
-        const d = await col(b).doc(r.id).get();
+        const d = await col(r.src || b).doc(r.id).get();
         const at = d.exists ? atMs(d.data().at) : 0;
         if (at) { r.at = at; c[k] = at; }
       } catch (e) { /* no date */ }
@@ -353,12 +374,12 @@ G.Ranking = (() => {
     } catch (e) { /* nothing */ }
   }
 
-  async function topRows(mode, period, dex, friendsOnly) {
+  async function topRows(mode, period, dex, friendsOnly, size) {
     const fb = fbx();
     if (!fb) return [];
     if (mode.length > 1) dex = null;                      // no per-Pokémon filter on kills tables
-    const b = board(mode, period, dex), vk = vkOf(b);
-    const rows = sorted(await summary(b), vk);
+    const b = board(mode, period, dex, size), vk = vkOf(b);
+    const rows = await summaryRows(mode, period, dex, size);
     if (!friendsOnly) return rows.slice(0, TOP);
     const circle = [fb.uid, ...G.Social.friends.filter(f => f.status === 'ok').map(f => f.uid)].slice(0, 30);
     const inTop = rows.filter(r => r.uids.some(u => circle.includes(u)));
@@ -373,24 +394,27 @@ G.Ranking = (() => {
         const docs = await Promise.all(missing.map(u => col(b).doc(u).get().catch(() => null)));
         extra = docs.filter(d => d && d.exists).map(d => rowOf(d.id, d.data()));
       } else {
-        const s = await col(b).where('uids', 'array-contains-any', circle).get();
-        extra = s.docs.map(d => rowOf(d.id, d.data()));
+        extra = [];
+        for (const t of size ? [board(mode, period, dex), b] : [b]) {
+          const s = await col(t).where('uids', 'array-contains-any', circle).get();
+          extra.push(...s.docs.map(d => Object.assign(rowOf(d.id, d.data()), { src: t })).filter(r => !size || r.uids.length === size));
+        }
       }
       cacheSet(ck, extra);
     }
     const all = new Map();
-    for (const r of [...inTop, ...extra]) all.set(r.id, r);
+    for (const r of [...inTop, ...extra]) if (!all.has(r.id) || (all.get(r.id)[vk] || 0) < (r[vk] || 0)) all.set(r.id, r);
     return [...all.values()].sort((a, c) => (c[vk] || 0) - (a[vk] || 0)).slice(0, TOP);
   }
 
   /** Your rank in the table (even if you're not in the top). → { pos, t, row } | null */
-  async function myRank(mode, period, dex) {
+  async function myRank(mode, period, dex, size) {
     const fb = fbx();
     if (!fb) return null;
     if (mode.length > 1) dex = null;
-    const b = board(mode, period, dex), vk = vkOf(b);
+    const b = board(mode, period, dex, size), vk = vkOf(b);
     // Are you in the top 50? Then the rank comes from the summary, at no cost.
-    const rows = sorted(await summary(b), vk);
+    const rows = await summaryRows(mode, period, dex, size);
     const i = rows.findIndex(r => r.uids.includes(fb.uid));
     if (i >= 0) return { pos: i + 1, t: rows[i][vk], row: rows[i] };
     if (TOP_ONLY.has(period) || dex) return { out: true };
@@ -405,13 +429,21 @@ G.Ranking = (() => {
       const d = await col(b).doc(fb.uid).get();
       if (d.exists) mine = rowOf(d.id, d.data());
     } else {
-      const s = await col(b).where('uids', 'array-contains', fb.uid).get();
-      for (const d of s.docs) { const r = rowOf(d.id, d.data()); if (!mine || r[vk] > mine[vk]) mine = r; }
+      for (const t of size ? [board(mode, period, dex), b] : [b]) {
+        const s = await col(t).where('uids', 'array-contains', fb.uid).get();
+        for (const d of s.docs) {
+          const r = rowOf(d.id, d.data());
+          if (size && r.uids.length !== size) continue;
+          if (!mine || r[vk] > mine[vk]) mine = r;
+        }
+      }
     }
     kb[mk] = mine ? mine[vk] : 0;
     saveBests(kb);
     let res = null;
-    if (mine) res = { pos: (await countAbove(b, mine[vk], vk)) + 1, t: mine[vk], row: mine };
+    // (By size: the records ahead in its own table, plus that size's rows ahead in the older table's top 50.)
+    if (mine) res = { pos: (await countAbove(b, mine[vk], vk)) + 1
+      + (size ? rows.filter(r => r.src !== b && (r[vk] || 0) > mine[vk]).length : 0), t: mine[vk], row: mine };
     cacheSet(ck, res);
     return res;
   }
@@ -448,7 +480,10 @@ G.Ranking = (() => {
     if (!fb) return;
     const ids = boardIds();
     const boards = new Set();
-    for (const m of ['s', 'g', 'sk', 'gk']) for (const [p] of PERIODS) boards.add(m + '_' + ids[p]);
+    for (const m of ['s', 'g', 'sk', 'gk']) for (const [p] of PERIODS) {
+      boards.add(m + '_' + ids[p]);
+      if (m[0] === 'g') for (const n of SIZES) boards.add(m + '_' + ids[p] + '_n' + n);
+    }
     for (const k of Object.keys(bests())) boards.add(k.split(':')[0]);
     await Promise.all([...boards].map(b => fb.fs.runTransaction(async tx => {
       const s = await tx.get(sumRef(b));
@@ -526,6 +561,7 @@ G.Ranking = (() => {
     const ids = boardIds();
     const boards = new Set(PERIODS.flatMap(([p]) => [mode + '_' + ids[p], mode + 'k_' + ids[p]]));
     for (const d of dexes) boards.add(mode + '_' + ALL + '_p' + d);
+    if (mode === 'g') for (const b of [...boards]) for (const n of SIZES) boards.add(b + '_n' + n);
     if (also) boards.add(also);
     await Promise.all([...boards].map(b => removeEntry(b, e)));
   }
@@ -558,7 +594,7 @@ G.Ranking = (() => {
       mem.delete('s:' + d.id); try { localStorage.removeItem('ps.rk.c.s:' + d.id); } catch (e) { /* nothing */ }
     }
     // All-time records that aren't in the top 50 (used for the exact rank).
-    for (const b of ['s_' + ALL, 'g_' + ALL]) {
+    for (const b of ['s_' + ALL, 'g_' + ALL, ...SIZES.map(n => 'g_' + ALL + '_n' + n)]) {
       const q = await col(b).where('t', '>', maxT).get();
       await Promise.all(q.docs.map(e => e.ref.delete().catch(() => {})));
       rows += q.size;
@@ -577,6 +613,6 @@ G.Ranking = (() => {
       t1: (v.tickets || {}).t1 || 0, t10: (v.tickets || {}).t10 || 0, owned: Object.keys(v.owned || {}).length }; });
   }
 
-  return { PERIODS, periodIds, board, runStarted, submitSolo, submitGroup, top, myRank, removeMine,
+  return { PERIODS, SIZES, periodIds, board, runStarted, submitSolo, submitGroup, top, myRank, removeMine,
            report, reported, isAdmin, reports, entryInfo, removeEntry, purgeAbove, removeEverywhere, setMarked, dismiss, markedAccounts };
 })();
