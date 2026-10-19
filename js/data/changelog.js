@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T13:54Z', title: 'Defense in the Pokédex', new: [
+    'Each Pokémon\'s page now shows its Defense (the average of its base Defense and Sp. Def). It doesn\'t change the damage you take yet.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T13:27Z', title: 'Common Pokémon are stronger', chg: [
     'Lower-rarity Pokémon get more HP, Attack and Sp. Atk: +15% at 1★, +10% at 2★ and +5% at 3★. 4★ and 5★ are unchanged.',
     'They also grow with every level in a run: +1.5% damage and max HP per level at 1★, +1% at 2★ and +0.5% at 3★, up to level 30, so they catch up with the rare ones later in a run.'

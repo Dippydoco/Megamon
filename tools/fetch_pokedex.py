@@ -102,6 +102,7 @@ def one(dex):
         'spd': spd,
         'atk': atk,
         'spa': spa,
+        'def': round((base['defense'] + base['special-defense']) / 2),   # Defense (shown in the Pokédex)
         'bst': bst,
         'height': p['height'],
         'rarity': rarity(bst, dex, s.get('is_legendary'), s.get('is_mythical')),
@@ -130,7 +131,8 @@ def main():
         ' * PokeAPI and lives here: the game makes no requests to the internet.',
         ' *',
         ' * hp/spd/atk/spa are game stats derived from the base stats',
-        ' * (atk = Attack, for physical moves; spa = Sp. Atk, for special moves).',
+        ' * (atk = Attack, for physical moves; spa = Sp. Atk, for special moves;',
+        ' * def = Defense, the average of the base Defense and Sp. Def).',
         ' * rarity 1-5 for the gacha · gen = generation (banner) · starter = test',
         ' * leg = legendary or mythical (they only appear in rifts)',
         ' */',
@@ -139,7 +141,7 @@ def main():
     for r in rows:
         o = {
             'dex': r['dex'], 'name': r['name'], 'types': r['types'],
-            'hp': r['hp'], 'spd': r['spd'], 'atk': r['atk'], 'spa': r['spa'],
+            'hp': r['hp'], 'spd': r['spd'], 'atk': r['atk'], 'spa': r['spa'], 'def': r['def'],
             'rarity': r['rarity'], 'bst': r['bst'],
             'starter': r['starter'], 'gen': r['gen'],
         }
