@@ -32,6 +32,7 @@ G.Player = class Player {
     this.baseSpd = mon.spd;
     this.baseAtk = mon.atk;
     this.baseSpa = mon.spa != null ? mon.spa : mon.atk;   // Sp. Atk (special moves)
+    this.baseDef = mon.def != null ? mon.def : 70;          // Defense (70 = neutral)
 
     this.moves = [];           // all the moves learned
     this.slots = [];           // slots: each one, a list of moves cast together
@@ -118,6 +119,12 @@ G.Player = class Player {
     return s * slow * w;
   }
   get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (this.guardT > 0 ? this.guardAmt || 0 : 0)); }
+  /** Defense: damage taken ×1 at 70; -0.25% per point above (at most -35%), +0.1% per point below (at most +10%).
+   *  Separate from `reduction` (cards, items, buffs), so it doesn't use up its 80% cap. */
+  get defMul() {
+    const d = this.baseDef;
+    return d >= 70 ? Math.max(0.65, 1 - (d - 70) * 0.0025) : Math.min(1.1, 1 + (70 - d) * 0.001);
+  }
   get regen() { return this.regenFlat + this.buffs.regen.n * this.buffs.regen.amount; }
 
   // ---------------- moves ----------------
@@ -277,7 +284,7 @@ G.Player = class Player {
     let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.7 : 1;
     // In a rift arena the legendary's shots, beams and blasts do 25 % less to a melee build (it has to cross its fire to hit it).
     if (close < 1 && G.Rift.inArena && src && (src.k === 'shot' || src.k === 'beam' || src.k === 'zone')) close *= 0.75;
-    const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close);
+    const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close * this.defMul);
     // The stats only count health actually lost (the finishing blow from the
     // Arceus arena legendaries, which double without limit, doesn't add trillions of excess damage).
     this.dmgTaken += Math.min(d, Math.max(0, this.hp));

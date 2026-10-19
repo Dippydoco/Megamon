@@ -7,6 +7,7 @@
  *   hp     base max health          (normal: ~70-130)
  *   spd    base movement speed      (normal: ~80-130)
  *   atk    Attack: damage multiplier for physical moves  (normal: ~0.8-1.5)
+ *   def    Defense: 70 is neutral, higher takes less damage (130: -15%), lower a little more (30: +4%)
  *   spa    Sp. Atk: damage multiplier for special moves  (normal: ~0.8-1.5)
  *   rarity gacha rarity 1-5        (also affects which enemies appear)
  *   bst    "total strength": decides which enemies appear in each phase
@@ -29,7 +30,7 @@ G.DEX_OVERRIDES = {
 };
 
 // 3) Lower rarities are stronger, so common and unevolved Pokémon stay viable (19-10-2026):
-//    a bonus to HP, Attack and Sp. Atk by gacha rarity (on top of the global tweak, before the per-Pokémon one)...
+//    a bonus to HP, Attack, Sp. Atk and Defense by gacha rarity (on top of the global tweak, before the per-Pokémon one)...
 G.RARITY_BONUS = { 1: 0.15, 2: 0.10, 3: 0.05, 4: 0, 5: 0 };
 //    ...and more damage and max HP with every level in a run (on top of the cards), so they catch up later on.
 G.RARITY_GROWTH = { 1: 0.015, 2: 0.010, 3: 0.005, 4: 0, 5: 0 };
@@ -48,6 +49,7 @@ G.RARITY_GROWTH_CAP = 30;   // it stops at this level (1★: +43.5% at most), so
       p.hp = Math.round(p.hp * (1 + rb));
       p.atk = Math.round(p.atk * (1 + rb) * 100) / 100;
       p.spa = Math.round(p.spa * (1 + rb) * 100) / 100;
+      if (p.def != null) p.def = Math.round(p.def * (1 + rb));
     }
     if (ov[p.dex]) Object.assign(p, ov[p.dex]);   // the per-Pokémon tweak takes priority over the global one
     // Physical or special attacker: 5% or more ahead in one of them (about 18 base-stat points); otherwise mixed (equally good with both).

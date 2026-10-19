@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T14:03Z', title: 'Defense now counts', chg: [
+    'Defense now changes the damage you take. 70 is neutral; each point above it takes 0.25% off (up to 35% less), and each point below adds 0.1% (up to 10% more). It stacks with Armor, items and other damage reduction.',
+    'Lower-rarity Pokémon get the same rarity bonus to Defense as to their other stats.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T13:54Z', title: 'Defense in the Pokédex', new: [
     'Each Pokémon\'s page now shows its Defense (the average of its base Defense and Sp. Def). It doesn\'t change the damage you take yet.'
   ] },
