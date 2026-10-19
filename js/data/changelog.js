@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T11:12Z', title: 'Melee is easier and sturdier', chg: [
+    'Melee moves now start swinging from further away and hit foes a little beyond their drawn arc, so you no longer have to stand right on top of enemies.',
+    'With a melee move active you now take 30% less damage (was 25%).'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:59Z', title: 'Emoji in nicknames', new: [
     'Nicknames can now include emoji (3 to 16 characters, an emoji counts as one). Change yours in Settings → Account.'
   ] },

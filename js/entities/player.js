@@ -258,9 +258,9 @@ G.Player = class Player {
       eff = G.Types.label(k);
       amount *= k * G.Weather.mult(type);
     }
-    // With a melee attack active you take 25 % less: you have to
+    // With a melee attack active you take 30 % less: you have to
     // be right on top of enemies to hit (they were lagging far behind).
-    const close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
+    const close = this.activeGroup().some(m => m.kind === 'melee') ? 0.7 : 1;
     const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close);
     // The stats only count health actually lost (the finishing blow from the
     // Arceus arena legendaries, which double without limit, doesn't add trillions of excess damage).

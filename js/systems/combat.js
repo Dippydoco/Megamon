@@ -119,7 +119,7 @@ G.Combat = (() => {
   const TARGETED = ['melee', 'beam', 'projectile', 'boomerang', 'chain', 'meteor', 'dash', 'cone', 'charge', 'ricochet', 'cage', 'burrow', 'throw'];
   function needsTarget(m) { return TARGETED.includes(m.kind); }
   function reach(m) {
-    if (m.kind === 'melee') return m.radius + 30;
+    if (m.kind === 'melee') return m.radius + 40;      // melee starts swinging a little earlier (it used to wait until foes were on top of you)
     if (m.kind === 'beam') return m.radius + 20;
     if (m.kind === 'boomerang') return m.radius + 40;
     if (m.kind === 'chain') return 280;
@@ -189,7 +189,7 @@ G.Combat = (() => {
     G.FX.slash(pl.x, pl.y - G.LIFT * 0.5, pl.aim, m.radius, m.arc, col, G.VFX.forMove(m));
     if (ghost) return;
 
-    for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius)) {
+    for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius + 30)) {      // (+30: the foe's body counts, not just its centre)
       if (!inArc(pl.x, pl.y, e.x, e.y, pl.aim, half)) continue;
       hit(pl, e, m.dmg * pl.atk, col, e.x - pl.x, e.y - pl.y, m.knock || 0, m);
     }
