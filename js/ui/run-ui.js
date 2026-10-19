@@ -305,7 +305,9 @@ G.RunUI = (() => {
   function showTutorForget(pl, id, cb) {
     const box = $('item-cards');
     box.innerHTML = '';
-    const list = pl.moves.slice();
+    // Burst moves can't be bonded, so a tutored burst move can only replace a move that isn't in a bond.
+    const burst = G.Moves.BY_ID[id].kind === 'burst';
+    const list = pl.moves.filter(m => !burst || !pl.slots.some(g => g.length > 1 && g.includes(m)));
     list.forEach((m, i) => {
       const el = document.createElement('div');
       el.className = 'card';

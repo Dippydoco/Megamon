@@ -498,7 +498,9 @@ G.Game = (() => {
   function tutorMoves(p) {
     const own = new Set(G.Moves.poolFor(p.mon));
     const lean = p.mon.lean;
-    let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has(m.id)));
+    const bursts = p.moves.filter(m => m.kind === 'burst').length, noBurst = bursts >= 2 || p.moves.length < 2;
+    let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has(m.id))
+                                  && !(noBurst && m.kind === 'burst'));
     const out = [], types = new Set();
     while (out.length < 3 && cand.length) {
       const w = cand.map(m => (m.kind === 'buff' || m.kind === 'burst' ? 0.4 : 1) * (!m.cat || !lean || lean === 'mixed' ? 1 : m.cat === lean ? 1.6 : 0.5)
