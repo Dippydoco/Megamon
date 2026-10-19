@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T09:57Z', title: 'Bonded moves stopping with Dig', fix: [
+    'Dig no longer freezes the other moves in its bond while you are underground. They keep attacking the whole time, so bonded groups attack steadily again.'
+  ] },
   { d: '2026-10-19', at: '2026-10-18T23:31Z', title: '40 new moves and 10 new ways to attack', new: [
     'Every type now has more moves to choose from, with a mix of physical and special ones. They all show a NEW tag in the Codex.',
     'Grass: Seed Bomb, Solar Beam. Electric: Spark, Thunder Punch, Zing Zap, Electro Ball, Thunder Cage. Psychic: Zen Headbutt, Psyshield Bash, Reflect. Poison: Cross Poison. Ground: Dig, Sand Tomb, Scorching Sands. Flying: Drill Peck, Air Slash, Air Cutter. Bug: Infestation, Signal Beam. Rock: Rollout, Power Gem, Ancient Power, Sandstorm. Ice: Ice Punch, Icicle Spear. Fighting: Seismic Toss, Vacuum Wave. Ghost: Shadow Claw, Spirit Shackle, Ominous Wind. Dragon: Dragon Claw, Dragon Darts, Breaking Swipe. Fairy: Play Rough, Spirit Break, Disarming Voice. Steel: Gyro Ball, Mirror Shot. Dark: Sucker Punch, Fiery Wrath.',

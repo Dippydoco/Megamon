@@ -22,8 +22,7 @@ G.Combat = (() => {
     if (pl.dead) return;
     // Bonds: every move in the active slot, each with its own cooldown.
     const group = pl.activeGroup();
-    // Dig: underground you can't attack (the cooldowns wait too).
-    if (pl.burrowT > 0) return;
+    // Dig only hides you: the moves bonded with it keep attacking (it used to freeze the whole group).
     for (const m of group) { tickMove(dt, pl, m, now); G.RunLog.active(pl, m.id, dt); }
     // Burst moves charge in the background too (the rest only charge while active).
     // When one is ready it chimes and its slot glows, so you know it's time to switch to it.
