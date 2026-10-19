@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T22:08Z', title: 'Past Arceus stars counted per Pokémon', fix: [
+    'Stars earned before the per-Pokémon count now show the right number: each Pokémon\'s count is rebuilt from your run history (your last 100 runs).'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T22:07Z', title: 'Reviving during Arceus\'s Judgment', chg: [
     'In the fight against Arceus (minute 30), a downed teammate\'s revive progress no longer drains away when you step off them, so you can revive them a little at a time while you dodge.'
   ] },

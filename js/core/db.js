@@ -164,6 +164,16 @@ G.DB = (() => {
     }
     s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
     s.history = cleanHistory(s.history);
+    // Arceus stars per Pokémon (19-10-2026): count the runs in the history that reached Arceus with each one,
+    // so stars earned before per-Pokémon counts aren't stuck at 1. Never lowers a count (older runs may be off the list).
+    s.arceusN = s.arceusN && typeof s.arceusN === 'object' ? s.arceusN : {};
+    const arcRuns = {};
+    for (const e of s.history) if (e.ar && e.d) arcRuns[e.d] = (arcRuns[e.d] || 0) + 1;
+    for (const d in arcRuns) {
+      s.arceus = s.arceus || {};
+      if (!s.arceus[d]) s.arceus[d] = Date.now();
+      s.arceusN[d] = Math.max(s.arceusN[d] || 0, arcRuns[d]);
+    }
     sanitize(s);
     s.v = VERSION;
     return s;
