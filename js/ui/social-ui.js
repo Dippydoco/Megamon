@@ -110,7 +110,11 @@
 
     function render() {
       const room = G.Social.room;
-      $('fr-me').innerHTML = 'Your nickname: <b class="gold" translate="no">' + esc(G.Social.me ? G.Social.me.name : '') + '</b> · give it to your friends so they can add you.';
+      const myName = G.Social.me ? G.Social.me.name : '';
+      $('fr-me').innerHTML = 'Your nickname: <b class="gold" translate="no">' + esc(myName) + '</b>'
+        + (myName ? ' <button class="btn small" id="fr-copy" type="button">Copy</button>' : '')
+        + ' · give it to your friends so they can add you (emoji included: copy and paste it).';
+      if ($('fr-copy')) $('fr-copy').onclick = () => G.UI.copyText(myName, 'Nickname copied');
       $('fr-room').classList.toggle('hidden', !room);
       const list = G.Social.friends.sort((a, b) => {
         const rank = f => f.status === 'in' ? 0 : f.status === 'ok' ? (f.online ? (f.play || isRun(f) ? 2 : 1) : 3) : 4;

@@ -179,7 +179,7 @@ G.SettingsUI = (() => {
     const canRename = G.DB.mode === 'cloud' && !!G.Social.me;
     const kind = G.DB.mode === 'local' ? 'This browser\'s account' : G.DB.nameAccount ? 'Name and password' : 'Google';
     box.innerHTML = section('Account')
-      + `<div class="set-row"><div class="grow"><b>Nickname</b><small>It's unique. ${canRename ? 'Friends see the new one too.' : 'It can only be changed on a cloud account.'}</small></div><span class="gold" translate="no">${esc(nick)}</span>${canRename ? '<button class="btn small" id="set-nick">Change</button>' : ''}</div>
+      + `<div class="set-row"><div class="grow"><b>Nickname</b><small>It's unique. ${canRename ? 'Friends see the new one too.' : 'It can only be changed on a cloud account.'}</small></div><span class="gold" translate="no">${esc(nick)}</span>${nick ? '<button class="btn small" id="set-nick-copy" type="button">Copy</button>' : ''}${canRename ? '<button class="btn small" id="set-nick">Change</button>' : ''}</div>
          <form id="set-nick-form" class="row wrap hidden" style="gap:8px;margin:4px 0 8px"><input class="field" id="set-nick-in" maxlength="32" autocomplete="off" placeholder="New nickname (3-16 letters, numbers, _ or emoji)" translate="no"><button class="btn gold small" type="submit">Save</button><button class="btn ghost small" type="button" id="set-nick-x">Cancel</button></form>
          <p class="note" id="set-nick-err"></p>`
       + `<div class="set-row"><div class="grow"><b>Account type</b></div><span>${esc(kind)}</span></div>`
@@ -198,6 +198,7 @@ G.SettingsUI = (() => {
       b.onclick = () => { const v = b.dataset.v; G.Settings.set(b.dataset.k, isNaN(+v) ? v : +v); render(); };
     });
     const full = $('set-full'); if (full) full.onclick = toggleFull;
+    if ($('set-nick-copy')) $('set-nick-copy').onclick = () => G.UI.copyText(nick, 'Nickname copied');
     const nb = $('set-nick');
     if (nb) {
       const form = $('set-nick-form'), inp = $('set-nick-in'), err = $('set-nick-err');

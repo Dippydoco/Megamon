@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T17:29Z', title: 'Copy nicknames', new: [
+    'New Copy buttons next to your nickname (in Friends and Settings → Account) and on other players\' profiles, so nicknames with emoji are easy to share and paste into Add friend.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T16:19Z', title: 'Run restarting after a double click on Play', fix: [
     'Clicking Play twice quickly could start your run and then restart it a moment later. A second click is now ignored (the same for Start in a group room).'
   ] },

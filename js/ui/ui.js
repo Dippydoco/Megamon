@@ -44,6 +44,18 @@ G.UI = (() => {
   }
 
   let toastEl = null, toastT = 0;
+  /** Copies text (a nickname with emoji, say) to the clipboard, with a fallback for older browsers. */
+  async function copyText(text, msg = 'Copied') {
+    try { await navigator.clipboard.writeText(text); toast(msg, 1400); return; } catch (e) { /* fallback below */ }
+    const t = document.createElement('textarea');
+    t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(t); t.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { /* nothing */ }
+    t.remove();
+    toast(ok ? msg : 'Couldn\'t copy: ' + text, ok ? 1400 : 3500);
+  }
+
   function toast(msg, ms = 2200) {
     if (!toastEl) { toastEl = document.createElement('div'); toastEl.className = 'toast'; document.body.appendChild(toastEl); }
     toastEl.textContent = msg;
@@ -318,6 +330,6 @@ G.UI = (() => {
     return cv;
   }
 
-  return { buildLabel, $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
+  return { buildLabel, copyText, $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
            sprite, spriteCanvas, ask, tick, initChrome, soundControls };
 })();

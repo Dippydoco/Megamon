@@ -403,7 +403,7 @@
       const b = d.best || {};
       const body = $('prof-body');
       body.innerHTML = `
-        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(G.AchDefs.titleOf(d.title))}</span>` : ''}</div>
+        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.name ? '<button class="btn small" id="prof-copy" type="button">Copy name</button>' : ''}${d.title ? `<span class="prof-title">${esc(G.AchDefs.titleOf(d.title))}</span>` : ''}</div>
         <div class="fav-slots view" id="prof-favs"></div>
         <div class="prof-marks">
           <div><span>Best time</span><b>${fmt(b.solo || 0)}</b></div>
@@ -416,6 +416,7 @@
         <h3>Medals <span class="sub">${b.medals || 0}</span></h3>
         <div class="prof-medals" id="prof-medals"></div>
         ${uid ? '<div style="margin-top:10px"><button class="btn small" id="prof-hist-btn">Run history</button></div><div id="prof-hist" style="margin-top:8px"></div>' : ''}`;
+      if ($('prof-copy')) $('prof-copy').onclick = () => G.UI.copyText(d.name, 'Name copied: paste it in Friends to add them');
       if (uid) {
         // Another player's shared run history (or yours): opens under the medals.
         let list = null, open = false;
