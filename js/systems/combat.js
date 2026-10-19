@@ -1133,6 +1133,7 @@ G.Combat = (() => {
     const k = typeK(m.type, e);
     const crit = isCrit(pl, m.fx);
     dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
+    if (m.kind === 'melee' && (e.boss || e.legend || e.judge)) dmg *= 1.25;      // melee has to stand in the boss's fire: +25% against bosses and legendaries
     const lethal = e.hp <= dmg;
     e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(m.type, e.types)));
     if (!ghost) { pl.onDealt(dmg); G.RunLog.dmg(pl, m.id, dmg); }

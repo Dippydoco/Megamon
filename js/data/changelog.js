@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T11:20Z', title: 'Melee against bosses and rift legendaries', chg: [
+    'Melee moves now do 25% more damage to bosses and legendaries.',
+    'In a rift arena, the legendary\'s shots, beams and blasts do 25% less damage to you while a melee move is active.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T11:12Z', title: 'Melee is easier and sturdier', chg: [
     'Melee moves now start swinging from further away and hit foes a little beyond their drawn arc, so you no longer have to stand right on top of enemies.',
     'With a melee move active you now take 30% less damage (was 25%).'

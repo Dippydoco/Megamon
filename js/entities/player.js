@@ -260,7 +260,9 @@ G.Player = class Player {
     }
     // With a melee attack active you take 30 % less: you have to
     // be right on top of enemies to hit (they were lagging far behind).
-    const close = this.activeGroup().some(m => m.kind === 'melee') ? 0.7 : 1;
+    let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.7 : 1;
+    // In a rift arena the legendary's shots, beams and blasts do 25 % less to a melee build (it has to cross its fire to hit it).
+    if (close < 1 && G.Rift.inArena && src && (src.k === 'shot' || src.k === 'beam' || src.k === 'zone')) close *= 0.75;
     const d = pure ? Math.max(1, amount) : Math.max(1, amount * (1 - this.reduction) * close);
     // The stats only count health actually lost (the finishing blow from the
     // Arceus arena legendaries, which double without limit, doesn't add trillions of excess damage).
