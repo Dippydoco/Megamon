@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:33Z', title: 'No team chat during runs on mobile', chg: [
+    'On phones and tablets, team chat is hidden during co-op runs so it can\'t get in the way of the controls. You can still chat in the waiting room.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:25Z', title: 'Dwebble gets its own move: Beat', new: [
     'Beat (Bug): Dwebble\'s signature move, and it starts every run with it. Its pincer shoots out in a long-range punch, hits everything on the way out and on the way back, and knocks foes away. Only Dwebble can learn it. At max level it evolves into Rock Wrecker with Power.'
   ], chg: [

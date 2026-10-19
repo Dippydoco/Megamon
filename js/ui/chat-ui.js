@@ -116,7 +116,8 @@
     const SHOW_MS = 10000;                 // during the run, each line shows for 10 s
     let runKey = '';
 
-    const inRun = () => G.Coop.active && G.Game.state !== 'ui';
+    // Mobile (touch): no team chat during the run (the waiting-room chat stays).
+    const inRun = () => G.Coop.active && G.Game.state !== 'ui' && !(G.Touch && G.Touch.active);
     const lines = () => G.Chat.roomLog().map(l => ({ mine: l.u === G.Social.uid, name: l.name, t: l.t, at: l.at, c: l.c }));
 
     function init() {
