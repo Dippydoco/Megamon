@@ -339,7 +339,7 @@ G.HUD = (() => {
     const choosers = G.Coop.active ? G.Game.waitingChoosers : [];
     if (choosers.length) {
       const names = choosers.length > 2 ? choosers.slice(0, 2).join(', ') + ' +' + (choosers.length - 2) : choosers.join(' & ');
-      const txt = names + (choosers.length > 1 ? ' are choosing…' : ' is choosing…');
+      const txt = names + (choosers.length > 1 ? ' are in a menu…' : ' is in a menu…');
       const sub = 'Game paused';
       const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
       ctx.save();

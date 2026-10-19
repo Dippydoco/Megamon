@@ -34,7 +34,7 @@ G.Game = (() => {
     G.Touch.init(cv);
     // On mobile: when switching apps or rotating to portrait, the run pauses.
     document.addEventListener('visibilitychange', () => { if (document.hidden) autoPause(); });
-    G.RunUI.wirePause(() => { state = 'playing'; G.UI.hideAll(); }, quitRun);
+    G.RunUI.wirePause(() => { if (!G.Coop.active) state = 'playing'; G.UI.hideAll(); }, quitRun);
     Backdrop.init();
     last = performance.now();
     requestAnimationFrame(loop);
@@ -71,11 +71,11 @@ G.Game = (() => {
   let holdBy = [];                   // group: who is choosing a fusion (everything paused)
 
   function togglePause() {
-    // In a group pausing doesn't stop the game (the others keep playing).
+    // In a group the menu pauses the game for everyone while it's open (pauseSync holds / releases the group).
     if (G.Coop.active) {
+      if (G.UI.isOpen('scr-pause')) { G.UI.hide('scr-pause'); return; }
       if (state !== 'playing') return;
-      if (G.UI.isOpen('scr-pause')) G.UI.hide('scr-pause');
-      else { G.RunUI.showPause(true); G.Audio.sfx('pause'); }
+      G.RunUI.showPause(true); G.Audio.sfx('pause');
       return;
     }
     if (state === 'playing') { state = 'paused'; G.RunUI.showPause(); G.Audio.sfx('pause'); }
@@ -729,8 +729,19 @@ G.Game = (() => {
    * staying frozen for good (in co-op it froze the whole group). It used to sit inside update(), which
    * never runs while choosing, so it could not fire.
    */
+  /** Group: while your pause menu is open the whole group is held (like choosing a bond); released when it closes. */
+  let pauseHeld = false;
+  function pauseSync() {
+    const want = G.Coop.active && state !== 'over' && G.UI.isOpen('scr-pause');
+    if (want === pauseHeld) return;
+    pauseHeld = want;
+    if (!want && !G.Coop.active) return;       // the group is already gone (run over): nothing to release
+    if (want) G.Coop.holdStart(); else G.Coop.holdEnd();
+  }
+
   let lostChoiceT = 0;
   function choiceFailsafe(real) {
+    pauseSync();
     if (state !== 'choice' || ['scr-bond', 'scr-item', 'scr-mod', 'scr-levelup'].some(G.UI.isOpen)) { lostChoiceT = 0; return; }
     lostChoiceT += real;
     if (lostChoiceT < 0.5) return;

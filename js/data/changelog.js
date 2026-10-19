@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:48Z', title: 'Pause menu pauses the whole group', chg: [
+    'In group runs, opening the menu now pauses the game for everyone (on PC and mobile) until you close it. A banner shows who is in a menu. Solo runs already paused.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:42Z', title: 'Clearer fullscreen help on iPhone', fix: [
     'On iPhone, the fullscreen help now explains how to add the game to your home screen, and tells you to open it in Safari first if you opened the link from another app (Discord, Instagram...), where that option does not exist.'
   ] },
