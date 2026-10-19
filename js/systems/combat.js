@@ -41,11 +41,19 @@ G.Combat = (() => {
     m.t -= dt;
     if (m.t > 0) return;
     // Attacks that need a target wait until they have one (don't waste the animation on thin air).
-    if (needsTarget(m) && !(pl.target && G.U.dist(pl.x, pl.y, pl.target.x, pl.target.y) <= reach(sized(pl, m)))) {
-      m.t = 0.05;
-      return;
+    // In a bond the shared target (a far boss, a chest) can be out of a short move's reach while foes crowd
+    // you: then that move picks the nearest foe inside its own reach instead of sitting idle.
+    let alt = null;
+    if (needsTarget(m)) {
+      const R = reach(sized(pl, m));
+      if (!(pl.target && G.U.dist(pl.x, pl.y, pl.target.x, pl.target.y) <= R)) {
+        alt = G.Projectiles.nearest(G.EnemyMgr.all(), pl.x, pl.y, R);
+        if (!alt) { m.t = 0.05; return; }
+      }
     }
     m.t = Math.max(0.05, m.cd * pl.cdMul);
+    const aim0 = pl.aim;
+    if (alt) pl.aim = Math.atan2(alt.y - pl.y, alt.x - pl.x);
     pl.cast(m);
     G.RunLog.cast(pl, m.id);
     if (G.Coop.active) G.Coop.cast(pl, m);
@@ -54,6 +62,7 @@ G.Combat = (() => {
     m.castAt = performance.now();
 
     run(pl, m);
+    if (alt) pl.aim = aim0;
   }
 
   // Reach (level-up): kinds whose `radius` is an AREA (not a range) and grows with it.

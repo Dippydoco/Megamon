@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:02Z', title: 'Bonded moves going quiet', fix: [
+    'In a bond, short-range moves (Dragon Claw, Breaking Swipe, Wing Attack and the like) could stop attacking for several seconds while a far-away boss or chest was the bond\'s target, even with foes right next to you. Each move now attacks whatever is within its own reach.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T09:57Z', title: 'Bonded moves stopping with Dig', fix: [
     'Dig no longer freezes the other moves in its bond while you are underground. They keep attacking the whole time, so bonded groups attack steadily again.'
   ] },
