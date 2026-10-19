@@ -24,6 +24,7 @@ G.DEX_OVERRIDES = {
   // 6:   { hp: 130, atk: 1.5 },               // tougher and stronger Charizard
   // 25:  { spd: 130 },                        // faster Pikachu
   // 150: { atk: 1.8, hp: 140, rarity: 5 },    // Mewtwo
+  557: { hp: 120, spd: 108, atk: 1.35 },       // Dwebble (19-10-2026): sturdier, quicker and hits harder, with its signature move Beat
 };
 
 // ---- Apply (nothing needs changing from here down) ----

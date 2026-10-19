@@ -213,6 +213,13 @@ G.VFX = (() => {
       }
       P.fill((x, y) => Math.hypot(x - 7, y - 7) < 1.8 ? 'w' : null);
     } },
+    // Beat: an open pincer on the end of an arm, facing right.
+    pincer: { w: 14, h: 11, dir: true, gen(P) {
+      for (let x = 0; x <= 5; x++) { P.set(x, 4, 'm'); P.set(x, 5, 'd'); P.set(x, 6, 'm'); }
+      P.line(5, 4, 9, 1, 'l', 1, 'm'); P.line(9, 1, 13, 2, 'w');
+      P.line(5, 6, 9, 9, 'm', 1, 'd'); P.line(9, 9, 13, 8, 'l');
+      P.outline();
+    } },
     claw: { w: 13, h: 13, gen(P) {
       for (let i = 0; i < 3; i++) P.line(1 + i * 3.5, 11, 6 + i * 3.5, 1, 'w', 1, 'l');
       P.outline();
@@ -396,6 +403,7 @@ G.VFX = (() => {
     'agility':       { buff: 'arrow', pal: 'flying' },
     'harden':        { buff: 'arrow', pal: 'steel' },
     'bonemerang':    { proj: 'crescent' },
+    'beat':          { proj: 'pincer', pal: 'rock' },
     'psycho-cut':    { proj: 'crescent' },
     'spikes':        { proj: 'star' },
     'toxic-spikes':  { proj: 'star' },

@@ -629,6 +629,18 @@
       desc: 'A cone of dark flames in front of you; it can stun.',
       cd: 0.7, dmg: 7, count: 7, arc: 0.9, speed: 350, life: 0.42, size: 6, pierce: 1, fx: { stun: [0.08, 0.5] } },
 
+    // Dwebble's signature move (sig: only that Pokémon learns it, and it starts every run with it).
+    { id: 'beat', name: 'Beat', type: 'bug', kind: 'boomerang', cat: 'physical', sig: 557,
+      desc: 'Dwebble\'s signature move: a long-range punch where its pincer shoots out, clamps everything in its path and snaps back.',
+      cd: 0.85, dmg: 22, speed: 420, count: 1, radius: 320, size: 10, knock: 90,
+      ups: [
+        { t: '+30% damage',                          m: { dmg: 1.30 } },
+        { t: '+25% range and a faster pincer',       m: { radius: 1.25, speed: 1.15 } },
+        { t: '-15% cooldown',                        m: { cd: 0.85 } },
+        { t: 'Both pincers: +1 punch',               m: { count: 1 } },
+        { t: '+40% damage and a bigger pincer',      m: { dmg: 1.40, size: 1.3 } }
+      ] },
+
     { id: 'disarming-voice', name: 'Disarming Voice', type: 'fairy', kind: 'nova', cat: 'special',
       desc: 'Charming cries all around you that home in on foes.',
       cd: 1.05, dmg: 10, count: 9, speed: 240, life: 1.3, size: 7, pierce: 0, homing: 1.2 },
@@ -712,7 +724,7 @@
                    'ice-punch', 'icicle-spear', 'vacuum-wave', 'shadow-claw', 'spirit-shackle', 'ominous-wind', 'dragon-claw',
                    'dragon-darts', 'breaking-swipe', 'play-rough', 'spirit-break', 'disarming-voice',
                    'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig', 'sand-tomb', 'infestation', 'rollout',
-                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath']
+                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath', 'beat']
   };
   for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
 
@@ -730,7 +742,7 @@
 
   // Move pool by type. Everyone has the `normal` pool.
   const POOL = {};
-  for (const m of RAW) (POOL[m.type] = POOL[m.type] || []).push(m.id);
+  for (const m of RAW) if (!m.sig) (POOL[m.type] = POOL[m.type] || []).push(m.id);
 
   const BY_ID = {};
   for (const m of RAW) {
@@ -743,6 +755,7 @@
   function poolFor(mon) {
     const ids = new Set(POOL.normal);
     for (const t of mon.types) for (const id of (POOL[t] || [])) ids.add(id);
+    for (const m of RAW) if (m.sig === mon.dex) ids.add(m.id);       // its signature move
     return [...ids];
   }
 
@@ -791,6 +804,8 @@
     dark: 'bite', normal: 'tackle'
   };
   function startFor(mon) {
+    const sig = RAW.find(m => m.sig === mon.dex);
+    if (sig) return sig.id;
     if (mon.start && BY_ID[mon.start]) return mon.start;
     for (const t of mon.types) if (START[t]) return START[t];
     return 'tackle';
@@ -860,7 +875,8 @@
     'infestation': ['Attack Order', 'xp'],      'rollout': ['Head Smash', 'hp'],
     'power-gem': ['Meteor Beam', 'cd'],         'seismic-toss': ['Superpower', 'atk'],
     'gyro-ball': ['Heavy Slam', 'def'],         'mirror-shot': ['Doom Desire', 'xp'],
-    'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd']
+    'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd'],
+    'beat': ['Rock Wrecker', 'atk']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {
@@ -890,7 +906,10 @@
   };
 
   // Moves whose evolution differs from the generic one of their kind.
-  const EVO_OWN = { substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } },
+  const EVO_OWN = {
+    // Rock Wrecker: Dwebble's pincers turn to stone.
+    beat: { t: '×1.8 damage, +1 punch, +25% range and much harder knockback', m: { dmg: 1.8, count: 1, radius: 1.25, size: 1.2, knock: 160 } },
+    substitute: { t: '×1.8 damage, +8 hits before it breaks and a bigger, stronger explosion', m: { dmg: 1.8, hp: 8, radius: 1.25, boom: 1.4 } },
     // Fell Stinger: the projectile evolution, and every kill gives +5% damage for 4 s (up to 5 at once).
     // Mirror Coat: shots that hit the barrier fly back at enemies, doing double damage.
     reflect: { t: 'Shots that hit it fly back at enemies, and it is 30% wider and lasts longer', m: { reflect: 1, width: 1.3, dur: 1.2 } },

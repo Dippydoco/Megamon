@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:25Z', title: 'Dwebble gets its own move: Beat', new: [
+    'Beat (Bug): Dwebble\'s signature move, and it starts every run with it. Its pincer shoots out in a long-range punch, hits everything on the way out and on the way back, and knocks foes away. Only Dwebble can learn it. At max level it evolves into Rock Wrecker with Power.'
+  ], chg: [
+    'Dwebble is stronger: more health (92 to 120), more damage (×1.06 to ×1.35) and a little more speed (101 to 108).'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:02Z', title: 'Bonded moves going quiet', fix: [
     'In a bond, short-range moves (Dragon Claw, Breaking Swipe, Wing Attack and the like) could stop attacking for several seconds while a far-away boss or chest was the bond\'s target, even with foes right next to you. Each move now attacks whatever is within its own reach.'
   ] },
