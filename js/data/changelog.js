@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:52Z', title: 'Change your nickname', new: [
+    'You can now change your nickname in Settings → Account (cloud accounts). Your old nickname becomes free for others to take.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:48Z', title: 'Pause menu pauses the whole group', chg: [
     'In group runs, opening the menu now pauses the game for everyone (on PC and mobile) until you close it. A banner shows who is in a menu. Solo runs already paused.'
   ] },

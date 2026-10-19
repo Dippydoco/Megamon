@@ -109,6 +109,12 @@ service cloud.firestore {
         && resource.data.status == 'pending'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'at', 'names'])
         && request.resource.data.status == 'ok';
+      // Either friend can change THEIR OWN name inside an accepted friendship (nickname change).
+      allow update: if signedIn()
+        && me() in resource.data.users
+        && resource.data.status == 'ok'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['names'])
+        && request.resource.data.names.diff(resource.data.names).affectedKeys().hasOnly([me()]);
       allow delete: if signedIn() && me() in resource.data.users;
     }
 

@@ -77,7 +77,7 @@ G.Social = (() => {
     fb = G.DB.fb; uid = fb.uid;
     started = true;
     measureSkew();
-    // The nickname never changes: it's remembered in this browser so the
+    // The nickname rarely changes (Settings > Account): it's remembered in this browser so the
     // profile isn't read on every visit (one read fewer per player and session).
     const NICK = 'ps.nick.' + uid;
     let cachedNick = null;
@@ -104,12 +104,16 @@ G.Social = (() => {
     name = (name || '').trim();
     if (!VALID.test(name)) return { ok: false, error: 'The nickname must be 3-16 letters, numbers or _.' };
     const lower = name.toLowerCase();
+    const oldLower = me && me.name ? me.name.toLowerCase() : '';
     try {
       await fb.fs.runTransaction(async tx => {
         const nref = fb.fs.collection('names').doc(lower);
+        const oref = oldLower && oldLower !== lower ? fb.fs.collection('names').doc(oldLower) : null;
         const n = await tx.get(nref);
+        const o = oref ? await tx.get(oref) : null;         // (all reads go before the writes)
         if (n.exists && n.data().uid !== uid) throw { code: 'taken' };
         if (!n.exists) tx.set(nref, { uid });
+        if (o && o.exists && o.data().uid === uid) tx.delete(oref);       // changing it: the old nickname is free again
         tx.set(fb.fs.collection('profiles').doc(uid),
           { name, lower, at: firebase.firestore.FieldValue.serverTimestamp() });
       });
@@ -122,6 +126,12 @@ G.Social = (() => {
     G.DB.setName(name);
     if (started && !beatT) online();
     publishProfile(true);
+    // Friends keep your name inside each friendship: update your side (needs the rule in firestore.rules; if it is refused, they see it after a re-add).
+    {
+      for (const f of friends.values()) {
+        if (f.pid && f.status === 'ok') fb.fs.collection('friendships').doc(f.pid).update({ ['names.' + uid]: name }).catch(() => {});
+      }
+    }
     return { ok: true };
   }
 
