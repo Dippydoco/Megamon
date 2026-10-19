@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T22:03Z', title: 'Spectating shows your teammate\'s moves', chg: [
+    'While you are down in a group run and spectating a teammate, the move bar and held item now show theirs instead of yours.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T22:01Z', title: 'Arceus stars count per Pokémon', chg: [
     'The ×number next to a Pokémon\'s gold Arceus star now shows how many times that Pokémon has reached Arceus, instead of your total across all Pokémon (in the Pokédex, on the menu and on team portraits in runs). Stars earned before this update count as 1.'
   ] },

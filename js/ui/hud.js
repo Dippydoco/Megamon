@@ -26,6 +26,27 @@ G.HUD = (() => {
     }
   }
 
+  /** The spectated teammate's moves and item, rebuilt only when their loadout string changes. */
+  let svKey = null, svView = null;
+  function specView() {
+    const spec = G.Game.spectating;
+    const lo = spec && spec.lo;
+    if (!lo) return null;
+    if (lo === svKey) return svView;
+    const [slotsTxt, item, active] = lo.split('~');
+    const slots = slotsTxt ? slotsTxt.split(';').map(g => g.split('+').map(t => {
+      const [id, lvl, ev] = t.split('.');
+      if (!G.Moves.BY_ID[id]) return null;
+      const m = G.Moves.instance(id, Math.max(1, +lvl || 1));
+      if (ev === '1') G.Moves.evolve(m);
+      return m;
+    }).filter(Boolean)).filter(g => g.length) : [];
+    svKey = lo;
+    svView = { slots, active: Math.min(+active || 0, Math.max(0, slots.length - 1)), item: G.Items.BY[item] ? item : null,
+               maxMoves: Math.max(4, slots.length), cdMul: 1, bonds: 0 };
+    return svView;
+  }
+
   function draw(ctx, w, h, pl, st) {
     HUD_SCALE = w < 640 ? 1.2 : w < 1000 ? 1.4 : 1.55;      // on narrow screens, smaller so it doesn't cover the clock
     ctx.save();
@@ -397,6 +418,9 @@ G.HUD = (() => {
     }
 
     // ---------- move slots ----------
+    // Spectating a teammate: show THEIR moves and held item (from their shared loadout) instead of yours.
+    const ownPl = pl, sv = specView();
+    if (sv) pl = sv;
     const S = w < 640 ? 58 : 72, GAP = w < 640 ? 9 : 12, K = S / 54;      // bigger on wider screens
     const n = Math.max(1, pl.slots.length);
     const totalW = n * S + (n - 1) * GAP;
@@ -433,7 +457,7 @@ G.HUD = (() => {
       const x = sx + i * (S + GAP);
       const y = on ? sy - 6 : sy;
       // Tapping (or clicking) an icon activates that move.
-      if (m) G.Touch.addButton(x, y, S, S, () => { if (G.Game.state === 'playing' && pl.active !== i) { pl.setActive(i); G.Audio.sfx('click'); } }, GAP / 2 + 3);
+      if (m && !sv) G.Touch.addButton(x, y, S, S, () => { if (G.Game.state === 'playing' && pl.active !== i) { pl.setActive(i); G.Audio.sfx('click'); } }, GAP / 2 + 3);
       const col = m ? G.U.TYPE_COLOR[m.type] : '#4a5468';
 
       // background
@@ -567,6 +591,8 @@ G.HUD = (() => {
         tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.BY[pl.item].desc] });
       }
     }
+
+    pl = ownPl;
 
     // The weather chip also explains itself on hover: what is boosted, what is weakened, who it hurts.
     if (wxBox && wx) {

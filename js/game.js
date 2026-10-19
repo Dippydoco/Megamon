@@ -1551,7 +1551,7 @@ G.Game = (() => {
       const m = spectated();
       if (!m) return null;
       const list = specList();
-      return { name: m.name, color: m.color, index: list.indexOf(m) + 1, count: list.length };
+      return { name: m.name, color: m.color, index: list.indexOf(m) + 1, count: list.length, lo: m.pl.net && m.pl.net.lo };
     },
     cycleSpectate,
     get state() { return state; }, get player() { return pl; }, st

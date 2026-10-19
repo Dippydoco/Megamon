@@ -137,12 +137,24 @@ G.Coop = (() => {
     return [r1(local.x), r1(local.y), r2(local.moveAngle), local.walking ? 1 : 0, r1(local.hp), r1(local.maxHp),
             local.dead ? 1 : 0, m ? m.id : '', m ? m.lvl : 1, r1(local.magnet), r2(local.aim), r2(local.xpMul),
             r2(local.reviveT || 0), api.choosing && api.choosing() ? 1 : 0, doneSeq,
-            G.arcCount(G.DB.save, local.dex)];     // gold star (and how many times this Pokémon has reached Arceus)
+            G.arcCount(G.DB.save, local.dex),     // gold star (and how many times this Pokémon has reached Arceus)
+            loadout()];                           // moves and held item, for teammates spectating you
+  }
+
+  /** Moves (slot by slot, "id.lvl.evolved" joined by + in a bond) ~ held item ~ active slot. */
+  let loCache = '', loAt = 0;
+  function loadout() {
+    const now = performance.now();
+    if (now - loAt < 500) return loCache;
+    loAt = now;
+    loCache = local.slots.map(g => g.map(m => m.id + '.' + m.lvl + '.' + (m.evolved ? 1 : 0)).join('+')).join(';')
+      + '~' + (local.item || '') + '~' + (local.active || 0);
+    return loCache;
   }
 
   function readState(a) {
     return { x: a[0], y: a[1], ang: a[2], walk: a[3], hp: a[4], maxHp: a[5], dead: a[6], mv: a[7], ml: a[8],
-             mag: a[9], aim: a[10], xpMul: a[11], rev: a[12], ch: a[13], ld: a[14], ar: a[15] };
+             mag: a[9], aim: a[10], xpMul: a[11], rev: a[12], ch: a[13], ld: a[14], ar: a[15], lo: a[16] };
   }
 
   // ---------------- sending ----------------
