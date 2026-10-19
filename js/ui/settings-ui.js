@@ -40,7 +40,12 @@ G.SettingsUI = (() => {
   const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = () => !!navigator.standalone || (window.matchMedia && matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches);
   function iosTip() { return IOS && !canFull() && !standalone(); }
-  const IOS_TIP = 'On iPhone, Safari does not let websites go fullscreen. Tap Share and then "Add to Home Screen": opening the game from that icon plays it fullscreen.';
+  // Links opened from Discord, Instagram, Messenger... open in a mini browser with no "Add to Home Screen": it has to be Safari.
+  const UA = navigator.userAgent;
+  const IN_APP = /FBAN|FBAV|FB_IAB|Instagram|Line\/|Discord|Snapchat|TikTok|Twitter|WhatsApp|GSA\/|MicroMessenger/i.test(UA) || (IOS && !/Safari\//.test(UA));
+  const IOS_TIP = IN_APP
+    ? 'This page is open inside another app, which can\'t go fullscreen or add it to your home screen. Open it in Safari first (the compass or "Open in Safari" button, or the ⋯ menu).'
+    : 'On iPhone, Safari does not let websites go fullscreen. In Safari tap Share (the square with an arrow; on newer iOS it may be under the ⋯ menu), scroll down and tap "Add to Home Screen", then open the game from that icon: it plays fullscreen.';
   function toggleFull() {
     if (!canFull()) { if (iosTip()) G.UI.toast(IOS_TIP, 9000); return; }
     if (isFull()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);

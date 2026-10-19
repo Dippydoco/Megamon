@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:42Z', title: 'Clearer fullscreen help on iPhone', fix: [
+    'On iPhone, the fullscreen help now explains how to add the game to your home screen, and tells you to open it in Safari first if you opened the link from another app (Discord, Instagram...), where that option does not exist.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:33Z', title: 'No team chat during runs on mobile', chg: [
     'On phones and tablets, team chat is hidden during co-op runs so it can\'t get in the way of the controls. You can still chat in the waiting room.'
   ] },
