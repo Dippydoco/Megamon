@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T14:07Z', title: 'Bonded moves in your run history', new: [
+    'Damage by move in your run history now marks bonded moves with 🔗. If you had more than one bond, a number shows which moves were bonded together. This shows on runs played from now on.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T14:03Z', title: 'Defense now counts', chg: [
     'Defense now changes the damage you take. 70 is neutral; each point above it takes 0.25% off (up to 35% less), and each point below adds 0.1% (up to 10% more). It stacks with Armor, items and other damage reduction.',
     'Lower-rarity Pokémon get a bigger rarity bonus to Defense: +60% at 1★, +38% at 2★ and +16% at 3★.',

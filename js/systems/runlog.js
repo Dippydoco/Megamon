@@ -7,7 +7,8 @@
  * z = {
  *   v   format (1) · gv game version · ts team size · in 't' touch / 'k' keyboard
  *   end how it ended: 'd' fainted · 'q' left · 'j' Arceus's Judgment · 'p' lost the Zygarde Portal
- *   mv  per move: [code, level, evolved 0/1, damage dealt (burn and poison included), seconds active, casts]
+ *   mv  per move: [code, level, evolved 0/1, damage dealt (burn and poison included), seconds active, casts,
+ *       bond: 0 if not bonded, else the same number (1, 2...) for moves bonded together at the end]
  *   lu  level-up cards, one group per level-up separated by '|': the 3 cards offered, the one picked marked '*'.
  *       Card = n (new move) / u (upgrade) / e (evolution) + move code, or s + upgrade id (satk, scd, sarea...).
  *       A group ending in '~' was rerolled, in '-' skipped. Up to 60 groups.
@@ -127,7 +128,11 @@ G.RunLog = (() => {
     const z = {
       v: 1, gv: VERSION, ts: o.team || 1, in: L.in,
       end: o.fail ? 'p' : o.judged ? 'j' : o.dead ? 'd' : 'q',
-      mv: pl.moves.map(m => { const s = L.mv[m.id] || { d: 0, a: 0, c: 0 }; return [code(m.id), m.lvl, m.evolved ? 1 : 0, Math.round(s.d), Math.round(s.a), s.c]; }),
+      mv: pl.moves.map(m => {
+        const s = L.mv[m.id] || { d: 0, a: 0, c: 0 };
+        const groups = (pl.slots || []).filter(g => g.length > 1), b = groups.findIndex(g => g.includes(m)) + 1;
+        return [code(m.id), m.lvl, m.evolved ? 1 : 0, Math.round(s.d), Math.round(s.a), s.c, b];
+      }),
       lu: L.lu.join('|'), rr: pl.rerolls || 0, sk: pl.skips || 0, sw: L.sw,
       st: Object.keys(st).filter(k => st[k] > 0).map(k => k + st[k]).join(','),
       ev: L.ev, bd: L.bd, it: L.it, lc: L.lc, pw: L.pw, rf: L.rf, ec: L.ec, wx: L.wx, pk: L.pk
@@ -152,7 +157,7 @@ G.RunLog = (() => {
     return {
       v: n(z.v) || 1, gv: s(z.gv, 16), ts: Math.min(n(z.ts) || 1, 5), in: z.in === 't' ? 't' : 'k',
       end: ['d', 'q', 'j', 'p'].includes(z.end) ? z.end : 'q',
-      mv: pairs(z.mv, 12, x => [c(x[0]), Math.min(n(x[1]), 9), x[2] ? 1 : 0, n(x[3]), n(x[4]), n(x[5])]).filter(x => idOf(x[0])),
+      mv: pairs(z.mv, 12, x => [c(x[0]), Math.min(n(x[1]), 9), x[2] ? 1 : 0, n(x[3]), n(x[4]), n(x[5]), Math.min(n(x[6]), 4)]).filter(x => idOf(x[0])),
       lu: s(z.lu, 1600), rr: n(z.rr), sk: n(z.sk), sw: n(z.sw), st: s(z.st, 200),
       ev: pairs(z.ev, 12, x => [c(x[0]), n(x[1])]), bd: pairs(z.bd, 8, x => [n(x[0]), n(x[1])]),
       it: pairs(z.it, 10, x => [c(x[0]), n(x[1])]), lc: (Array.isArray(z.lc) ? z.lc : []).slice(0, MAX_LC).map(n),

@@ -60,14 +60,17 @@
     function dmgByMove(e) {
       const z = e.z;
       if (!z || !z.mv || !z.mv.length) return '';
-      const rows = z.mv.map(([c, lv, ev, d, a]) => ({ id: G.RunLog.idOf(c), lv, ev, d, a })).filter(r => r.id && G.Moves.BY_ID[r.id]);
+      const rows = z.mv.map(([c, lv, ev, d, a, , bd]) => ({ id: G.RunLog.idOf(c), lv, ev, d, a, bd: bd || 0 })).filter(r => r.id && G.Moves.BY_ID[r.id]);
       if (!rows.length) return '';
       const total = rows.reduce((s, r) => s + r.d, 0) || 1, top = Math.max(...rows.map(r => r.d)) || 1;
       rows.sort((a, b) => b.d - a.d);
-      return `<div class="hist-dmg"><span>Damage by move</span>${rows.map(r => {
+      const bonds = new Set(rows.filter(r => r.bd).map(r => r.bd)).size;
+      return `<div class="hist-dmg"><span>Damage by move${bonds ? ' <small class="sub">· 🔗 bonded</small>' : ''}</span>${rows.map(r => {
         const m = G.Moves.BY_ID[r.id], name = r.ev && G.Moves.EVO[r.id] ? G.Moves.EVO[r.id][0] : m.name;
-        return `<div class="hist-dmg-row" title="Active for ${fmt(r.a)} of the run">
-          <i>${G.Icons.html('move:' + r.id, 16)} ${esc(name)} <small>Lv.${r.lv}${r.ev ? ' ★' : ''}</small></i>
+        // Bonded moves: a chip with the bond's number (moves with the same number were bonded together).
+        const bond = r.bd ? ` <small class="hist-bond" title="Bonded${bonds > 1 ? ' (bond ' + r.bd + ')' : ''}: cast together with its partner move" style="color:#ffd23f">🔗${bonds > 1 ? r.bd : ''}</small>` : '';
+        return `<div class="hist-dmg-row" title="Active for ${fmt(r.a)} of the run${r.bd ? ' · bonded' : ''}">
+          <i>${G.Icons.html('move:' + r.id, 16)} ${esc(name)} <small>Lv.${r.lv}${r.ev ? ' ★' : ''}</small>${bond}</i>
           <b class="hist-dmg-bar"><em style="width:${(r.d / top * 100).toFixed(1)}%;background:${G.U.TYPE_COLOR[m.type]}"></em></b>
           <small translate="no">${num(r.d)} · ${Math.round(r.d / total * 100)}%</small></div>`;
       }).join('')}</div>`;
