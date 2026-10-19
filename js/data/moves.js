@@ -494,7 +494,7 @@
     // moment you switch to them; then you switch back. They can't go in a bond (it would fire them
     // on its own and there'd be no reason to switch) and you can carry 2 at most. See burst() in combat.js.
     { id: 'hyper-beam', name: 'Hyper Beam', type: 'normal', kind: 'burst',
-      desc: 'Burst · 18 s. A huge beam across the screen that pierces everything. You slow down for a moment after.',
+      desc: 'Burst · 18 s. A huge beam across the screen, aimed where it hits the most enemies, that pierces everything. You slow down for a moment after.',
       cd: 18, dmg: 200, radius: 560, width: 56,
       ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
             { t: 'A wider and longer beam', m: { width: 1.30, radius: 1.15 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },

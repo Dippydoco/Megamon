@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T12:53Z', title: 'Hyper Beam aims at the biggest group', chg: [
+    'Hyper Beam now fires along the line that hits the most enemies in its reach, instead of at the nearest one.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T12:46Z', title: 'Attack and Sp. Atk', new: [
     'Every Pokémon now has two attacking stats, taken from its real base stats: Attack powers physical moves and Sp. Atk powers special moves. Before, both used whichever was higher.',
     'Each Pokémon is a physical, special or mixed attacker, shown in the Pokédex along with both stat bars. Moves that suit your Pokémon turn up more often on level-up cards, and physical and special attackers always start with a move of their kind (for example a physical Ghost starts with Shadow Claw, and a physical Water type with no physical Water move starts with Tackle). This includes the starter Pokémon.',

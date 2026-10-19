@@ -499,10 +499,34 @@ G.Combat = (() => {
   // They fire once, the moment you switch to them with their cooldown ready (tickMove does that:
   // they don't wait for a target). The cooldown then runs whether they're active or not (tick).
 
+  /** Hyper Beam: turns to the line through the most enemies it can reach (keeps the aim if there are none). */
+  function aimBestLine(pl, m) {
+    const near = G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius);
+    if (!near.length) return;
+    const half = (m.width || 56) / 2;
+    let best = -1, bestA = pl.aim, bestD = Infinity;
+    for (const t of near) {
+      const a = Math.atan2(t.y - pl.y, t.x - pl.x), ca = Math.cos(a), sa = Math.sin(a);
+      // The beam stops at the first wall: only what's before it counts.
+      let len = m.radius;
+      for (let d = 8; d < m.radius; d += 8) if (G.World.isWall(pl.x + ca * d, pl.y + sa * d)) { len = d; break; }
+      let n = 0;
+      for (const e of near) {
+        const dx = e.x - pl.x, dy = e.y - pl.y, along = dx * ca + dy * sa;
+        if (along >= -e.r && along <= len + e.r && Math.abs(-dx * sa + dy * ca) <= half + e.r) n++;
+      }
+      const d = Math.hypot(t.x - pl.x, t.y - pl.y);     // a tie goes to the nearer target
+      if (n > best || (n === best && d < bestD)) { best = n; bestA = a; bestD = d; }
+    }
+    pl.aim = bestA;
+    pl.attackFace = Math.max(pl.attackFace || 0, 0.4);
+  }
+
   function burst(pl, m) {
     const col = G.U.TYPE_COLOR[m.type];
     switch (m.id) {
       case 'hyper-beam':
+        if (!ghost) aimBestLine(pl, m);      // (teammates' copies use the aim the owner sends)
         beam(pl, m);
         G.FX.ring(pl.x, pl.y, pl.r, pl.r * 5, col, 0.35, 4);
         if (!ghost) { G.Camera.kick(0.35); pl.slowT = Math.max(pl.slowT, 1); }       // it has to recharge
