@@ -290,7 +290,7 @@
           b.type = 'button';
           swatch(b, it);
           b.title = it.name + (ok ? '' : ' (locked): ' + C.hint(it));
-          b.insertAdjacentHTML('beforeend', `<small>${esc(it.name)}</small>`);
+          b.insertAdjacentHTML('beforeend', `<small>${esc(it.name)}${it.anim ? ' ✦' : ''}</small>`);
           b.onclick = () => {
             if (!ok) { G.UI.toast(C.hint(it), 2600); G.Audio.sfx('error'); return; }
             P[key] = it.id; save(); render();
@@ -301,6 +301,26 @@
       };
       pick('Profile banner', C.BANNERS, 'banner', (b, it) => { b.style.setProperty('--bg', it.bg); b.classList.add('bn'); });
       pick('Profile border', C.FRAMES, 'frame', (b, it) => { b.classList.add('fr'); b.dataset.frame = it.id; if (it.color) b.style.setProperty('--fc', it.color); });
+      box.insertAdjacentHTML('beforeend', '<p class="sub" style="margin:2px 0 0">✦ animated</p>');
+      // Profile background colour and wallpaper (19-10-2026).
+      box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Profile background</h3>`);
+      const bgr = document.createElement('div');
+      bgr.className = 'cos-row';
+      for (const it of C.BG_COLORS) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'cos-col' + ((P.pbg || '') === it.id ? ' on' : '');
+        b.style.background = it.c || 'linear-gradient(180deg, var(--box1), var(--box2))';
+        b.title = it.name;
+        b.onclick = () => { P.pbg = it.id; save(); render(); };
+        bgr.appendChild(b);
+      }
+      box.appendChild(bgr);
+      pick('Profile wallpaper', C.WALLPAPERS, 'wall', (b, it) => {
+        b.classList.add('wp'); b.dataset.wall = it.id;
+        const c = C.find(C.BG_COLORS, P.pbg).c;
+        if (c) b.style.setProperty('--pbg', c);
+      });
       box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Chat name colour</h3>`);
       const cr = document.createElement('div');
       cr.className = 'cos-row';

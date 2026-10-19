@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T18:40Z', title: 'More profile customisation', new: [
+    'New profile banners: Starfall (animated: drifting, twinkling stars and shooting stars), Aurora, Thunderstorm and Deep sea (also animated), Sakura, Dunes, Meadow, and Haunted (unlocked by defeating a legendary).',
+    'New profile borders: Bronze, Obsidian, Frost, Leaf, and the animated Flame, Neon and Starlight (unlocked by catching a shiny).',
+    'You can now change your public profile\'s background colour and add a wallpaper pattern (Dots, Grid, Poké Balls, Waves, Diamonds, Stars, Scales or Stripes).'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T17:29Z', title: 'Copy nicknames', new: [
     'New Copy buttons next to your nickname (in Friends and Settings → Account) and on other players\' profiles, so nicknames with emoji are easy to share and paste into Add friend.'
   ] },

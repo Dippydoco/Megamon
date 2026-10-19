@@ -973,6 +973,116 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   100% { border-color: #ff5d73; box-shadow: 0 0 0 3px #7a2a36, 0 0 22px #ff5d73; }
 }
 
+/* ---------- 19-10-2026: more banners, borders, profile background colour and wallpaper ---------- */
+.prof-head { position: relative; overflow: hidden; isolation: isolate; }
+.prof-head > * { position: relative; z-index: 2; }
+.prof-head::before, .prof-head::after { content: none; position: absolute; inset: 0; pointer-events: none; z-index: 1; border-radius: inherit; }
+
+/* Starfall: three layers of stars drifting at different speeds (parallax), twinkling, and a shooting star now and then. */
+.prof-head[data-banner="starfall"]::before {
+  content: '';
+  background:
+    radial-gradient(circle, #fff 0 1px, transparent 1.6px) 0 0 / 46px 34px,
+    radial-gradient(circle, #cfe0ff 0 .8px, transparent 1.4px) 13px 9px / 31px 23px,
+    radial-gradient(circle, rgba(255,240,200,.9) 0 1.4px, transparent 2.2px) 27px 17px / 83px 51px;
+  animation: stars-drift 40s linear infinite, stars-twinkle 3.2s ease-in-out infinite alternate;
+}
+.prof-head[data-banner="starfall"]::after {
+  content: ''; inset: auto; top: 18%; left: -30%; width: 90px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95) 70%, #fff);
+  box-shadow: 0 0 6px rgba(200,220,255,.9);
+  transform: rotate(14deg); opacity: 0;
+  animation: shooting-star 7s ease-in 1.5s infinite;
+}
+@keyframes stars-drift {
+  from { background-position: 0 0, 13px 9px, 27px 17px; }
+  to { background-position: -460px 0, -297px 9px, -803px 17px; }
+}
+@keyframes stars-twinkle { from { opacity: .55; } to { opacity: 1; } }
+@keyframes shooting-star {
+  0% { left: -30%; top: 8%; opacity: 0; }
+  3% { opacity: 1; }
+  14% { left: 110%; top: 62%; opacity: 0; }
+  100% { left: 110%; top: 62%; opacity: 0; }
+}
+
+/* Aurora: the curtains of light sway slowly. */
+.prof-head[data-banner="aurora"] { background-size: 220% 100%, 100% 100% !important; animation: aurora-sway 14s ease-in-out infinite alternate; }
+@keyframes aurora-sway { from { background-position: 0 0, 0 0; } to { background-position: 100% 0, 0 0; } }
+
+/* Thunderstorm: falling rain and a flash of lightning every few seconds. */
+.prof-head[data-banner="storm"]::before {
+  content: ''; background: repeating-linear-gradient(105deg, rgba(190,210,255,.28) 0 1px, transparent 1px 11px);
+  background-size: 200% 200%; animation: rain-fall .6s linear infinite;
+}
+.prof-head[data-banner="storm"]::after { content: ''; background: #eef3ff; opacity: 0; animation: lightning 6s linear infinite; }
+@keyframes rain-fall { from { background-position: 0 0; } to { background-position: -20px 60px; } }
+@keyframes lightning { 0%, 78%, 81%, 84%, 100% { opacity: 0; } 79% { opacity: .55; } 82.5% { opacity: .35; } }
+
+/* Deep sea: bubbles rising. */
+.prof-head[data-banner="deepsea"]::before {
+  content: '';
+  background:
+    radial-gradient(circle, rgba(170,230,255,.55) 0 1.5px, transparent 2.5px) 0 0 / 37px 29px,
+    radial-gradient(circle, rgba(170,230,255,.35) 0 2.5px, transparent 3.5px) 11px 7px / 59px 41px;
+  animation: bubbles-rise 9s linear infinite;
+}
+@keyframes bubbles-rise { from { background-position: 0 0, 11px 7px; } to { background-position: 6px -290px, 3px -410px; } }
+
+/* Haunted: wisps drifting across. */
+.prof-head[data-banner="ghostly"]::before {
+  content: '';
+  background:
+    radial-gradient(ellipse 60px 18px at 20% 60%, rgba(190,150,255,.35), transparent 70%),
+    radial-gradient(ellipse 80px 22px at 70% 35%, rgba(150,255,220,.22), transparent 70%);
+  background-size: 200% 100%; animation: wisps 11s ease-in-out infinite alternate;
+}
+@keyframes wisps { from { background-position: 0 0, 100% 0; opacity: .6; } to { background-position: 100% 0, 0 0; opacity: 1; } }
+
+.prof-head[data-banner="sakura"], .prof-head[data-banner="dunes"], .prof-head[data-banner="meadow"] { text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 2px #000; }
+
+/* New borders: Obsidian and Frost have a second ring; Flame, Neon and Starlight move. */
+.profile-box[data-frame="obsidian"] { box-shadow: 0 0 0 3px #0c0a14, 0 0 0 6px #6a5a9a, 0 0 18px rgba(106,90,154,.6), 0 18px 50px rgba(0,0,0,.55); }
+.profile-box[data-frame="frost"] { box-shadow: 0 0 0 3px #3b7fa8, inset 0 0 18px rgba(168,230,255,.35), 0 0 22px rgba(168,230,255,.7), 0 18px 50px rgba(0,0,0,.55); }
+.profile-box[data-frame="flame"] { animation: frame-flame 1.4s ease-in-out infinite alternate; }
+.profile-box[data-frame="neon"] { animation: frame-neon 2.4s ease-in-out infinite; }
+.profile-box[data-frame="starlight"] { animation: frame-starlight 5s linear infinite; }
+@keyframes frame-flame {
+  from { border-color: #ff7a2e; box-shadow: 0 0 0 3px #7a2a0e, 0 -4px 18px #ff7a2e, 0 0 30px rgba(255,180,60,.45), 0 18px 50px rgba(0,0,0,.55); }
+  to { border-color: #ffc14d; box-shadow: 0 0 0 3px #8a3a12, 0 -8px 26px #ffb13d, 0 0 40px rgba(255,90,30,.55), 0 18px 50px rgba(0,0,0,.55); }
+}
+@keyframes frame-neon {
+  0%, 100% { border-color: #3df5ff; box-shadow: 0 0 0 3px #0b3a44, 0 0 14px #3df5ff, 0 0 30px rgba(61,245,255,.5), 0 18px 50px rgba(0,0,0,.55); }
+  50% { border-color: #ff4fd8; box-shadow: 0 0 0 3px #44103a, 0 0 14px #ff4fd8, 0 0 30px rgba(255,79,216,.5), 0 18px 50px rgba(0,0,0,.55); }
+}
+@keyframes frame-starlight {
+  0%, 100% { border-color: #e6e0ff; box-shadow: 0 0 0 3px #3a3270, 0 0 18px rgba(230,224,255,.7), 0 18px 50px rgba(0,0,0,.55); }
+  33% { border-color: #ffe9a8; box-shadow: 0 0 0 3px #5a4a20, 0 0 26px rgba(255,233,168,.85), 0 18px 50px rgba(0,0,0,.55); }
+  66% { border-color: #a8d8ff; box-shadow: 0 0 0 3px #1e3a5a, 0 0 22px rgba(168,216,255,.8), 0 18px 50px rgba(0,0,0,.55); }
+}
+.cos-sw.fr[data-frame="flame"]::before { animation: frame-flame 1.4s ease-in-out infinite alternate; }
+.cos-sw.fr[data-frame="neon"]::before { animation: frame-neon 2.4s ease-in-out infinite; }
+.cos-sw.fr[data-frame="starlight"]::before { animation: frame-starlight 5s linear infinite; }
+
+/* Profile background colour and wallpaper. */
+.profile-box { --pb1: var(--box1); --pb2: var(--box2); }
+.profile-box[data-pbg] { --pb1: color-mix(in srgb, var(--pbg), #fff 9%); --pb2: var(--pbg); background: linear-gradient(180deg, var(--pb1), var(--pb2)); }
+[data-wall="d"] { --wp: radial-gradient(circle, rgba(255,255,255,.09) 0 1.5px, transparent 2.2px); --wps: 18px 18px; }
+[data-wall="g"] { --wp: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); --wps: 22px 22px, 22px 22px; }
+[data-wall="b"] { --wp: radial-gradient(circle, rgba(255,255,255,.1) 0 2.5px, transparent 3px 7.5px, rgba(255,255,255,.09) 8px 9.5px, transparent 10px), linear-gradient(transparent 19px, rgba(255,255,255,.06) 19px 21px, transparent 21px); --wps: 40px 40px, 40px 40px; }
+[data-wall="v"] { --wp: radial-gradient(circle at 50% 0, transparent 9px, rgba(255,255,255,.08) 10px 11.5px, transparent 12.5px); --wps: 24px 14px; }
+[data-wall="z"] { --wp: linear-gradient(45deg, rgba(255,255,255,.05) 25%, transparent 25% 75%, rgba(255,255,255,.05) 75%), linear-gradient(-45deg, rgba(255,255,255,.05) 25%, transparent 25% 75%, rgba(255,255,255,.05) 75%); --wps: 26px 26px, 26px 26px; }
+[data-wall="x"] { --wp: radial-gradient(circle at 20% 30%, rgba(255,255,255,.22) 0 1px, transparent 1.6px), radial-gradient(circle at 70% 60%, rgba(255,240,200,.18) 0 1.4px, transparent 2px), radial-gradient(circle at 45% 85%, rgba(200,220,255,.16) 0 1px, transparent 1.6px); --wps: 90px 70px, 90px 70px, 90px 70px; }
+[data-wall="h"] { --wp: radial-gradient(circle at 0 0, transparent 9px, rgba(255,255,255,.07) 10px 11px, transparent 12px), radial-gradient(circle at 100% 0, transparent 9px, rgba(255,255,255,.07) 10px 11px, transparent 12px); --wps: 20px 12px, 20px 12px; }
+[data-wall="l"] { --wp: repeating-linear-gradient(135deg, rgba(255,255,255,.045) 0 8px, transparent 8px 16px); --wps: auto; }
+.profile-box[data-wall] { background: var(--wp), linear-gradient(180deg, var(--pb1), var(--pb2)); background-size: var(--wps), auto; background-attachment: local; }
+.cos-sw.wp::before { background: var(--wp, none), var(--pbg, #1b2a4a); background-size: var(--wps, auto), auto; border: 1px solid rgba(244,248,255,.18); box-sizing: border-box; }
+.cos-sw.wp[data-wall=""]::before { background: var(--pbg, #1b2a4a); }
+
+@media (prefers-reduced-motion: reduce) {
+  .prof-head::before, .prof-head::after, .prof-head[data-banner="aurora"], .profile-box[data-frame], .cos-sw.fr::before { animation: none !important; }
+}
+
 .cos-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
 .cos-sw {
   width: 84px; padding: 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
