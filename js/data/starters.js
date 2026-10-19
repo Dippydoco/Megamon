@@ -42,7 +42,8 @@ for (const s of G.STARTERS) G.STARTER_BY[s.dex] = s;
 /** Starting move of any Pokémon (starter or from the gacha). */
 G.startMoveOf = dex => {
   const s = G.STARTER_BY[dex];
-  return s ? s.start : G.Moves.startFor(G.DEX_BY[dex]);
+  // The starter's chosen move, unless it doesn't suit a physical or special attacker (then the usual rule picks one).
+  return s ? G.Moves.startFor(Object.assign({}, G.DEX_BY[dex], { start: s.start })) : G.Moves.startFor(G.DEX_BY[dex]);
 };
 
 /** Short description of each trait, for the result screen. */

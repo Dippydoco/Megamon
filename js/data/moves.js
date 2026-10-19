@@ -814,13 +814,17 @@
   function startFor(mon) {
     const sig = RAW.find(m => m.sig === mon.dex);
     if (sig) return sig.id;
-    if (mon.start && BY_ID[mon.start]) return mon.start;
-    for (const t of mon.types) if (START[t]) {
-      const alt = START_ALT[t];
-      if (alt && mon.lean && mon.lean !== 'mixed' && BY_ID[START[t]].cat !== mon.lean && BY_ID[alt] && BY_ID[alt].cat === mon.lean) return alt;
-      return START[t];
+    const lean = mon.lean && mon.lean !== 'mixed' ? mon.lean : null;
+    if (mon.start && BY_ID[mon.start] && (!lean || BY_ID[mon.start].cat === lean)) return mon.start;
+    if (!lean) {
+      for (const t of mon.types) if (START[t]) return START[t];
+      return 'tackle';
     }
-    return 'tackle';
+    // Physical or special attacker: always a first move of its kind. Its own types first (usual move, then the
+    // other-kind one), and if none of them has one (a physical pure Water type...), the Normal move of its kind.
+    const fits = id => id && BY_ID[id] && BY_ID[id].cat === lean;
+    for (const t of mon.types) for (const id of [START[t], START_ALT[t]]) if (fits(id)) return id;
+    return lean === 'physical' ? 'tackle' : 'hyper-voice';
   }
 
   // ---------------- move evolution ----------------

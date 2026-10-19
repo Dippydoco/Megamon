@@ -11,7 +11,7 @@
 G.CHANGELOG = [
   { d: '2026-10-19', at: '2026-10-19T12:46Z', title: 'Attack and Sp. Atk', new: [
     'Every Pokémon now has two attacking stats, taken from its real base stats: Attack powers physical moves and Sp. Atk powers special moves. Before, both used whichever was higher.',
-    'Each Pokémon is a physical, special or mixed attacker, shown in the Pokédex along with both stat bars. Moves that suit your Pokémon turn up more often on level-up cards, and a Pokémon whose type\'s usual first move doesn\'t suit it starts with one of the other kind (for example a physical Ghost starts with Shadow Claw).',
+    'Each Pokémon is a physical, special or mixed attacker, shown in the Pokédex along with both stat bars. Moves that suit your Pokémon turn up more often on level-up cards, and physical and special attackers always start with a move of their kind (for example a physical Ghost starts with Shadow Claw, and a physical Water type with no physical Water move starts with Tackle). This includes the starter Pokémon.',
     'Level-up cards and the Codex now show whether each move is Physical or Special. Damage boosts (Power, items, Swords Dance...) raise both stats alike. Defense is unchanged.'
   ] },
   { d: '2026-10-19', at: '2026-10-19T12:30Z', title: 'Skip upgrade hidden by the Ban picker', fix: [
