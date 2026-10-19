@@ -22,7 +22,16 @@
  * The rest of the game listens for changes with G.Social.on(fn).
  */
 G.Social = (() => {
-  const VALID = /^[A-Za-z0-9_ñÑáéíóúÁÉÍÓÚ]{3,16}$/;
+  // Nicknames: letters, numbers, _ and emoji (3-16 characters, an emoji counts as one). The invisible emoji-style marker
+  // (U+FE0F) is dropped so two names can't look the same while being different.
+  const NICK_CH = '(?:[A-Za-z0-9_ñÑáéíóúÁÉÍÓÚ]|\\p{Extended_Pictographic}(?:[\\u{1F3FB}-\\u{1F3FF}])?(?:\\u200d\\p{Extended_Pictographic}(?:[\\u{1F3FB}-\\u{1F3FF}])?)*|[\\u{1F1E6}-\\u{1F1FF}]{2})';
+  const NICK_RE = new RegExp('^' + NICK_CH + '+$', 'u');
+  const cleanNick = s => String(s || '').replace(/[\ufe0e\ufe0f]/g, '').trim();
+  const VALID = { test(s) {
+    if (!NICK_RE.test(s)) return false;
+    const n = [...s].length;                       // characters (code points)
+    return n >= 3 && n <= 16 && s.length <= 24;
+  } };
   const MAX_PLAYERS = 5;
   const INVITE_TTL = 3 * 60 * 1000;
   /*
@@ -101,8 +110,8 @@ G.Social = (() => {
 
   /** Reserves a unique nickname and creates the public profile. */
   async function claimNick(name) {
-    name = (name || '').trim();
-    if (!VALID.test(name)) return { ok: false, error: 'The nickname must be 3-16 letters, numbers or _.' };
+    name = cleanNick(name);
+    if (!VALID.test(name)) return { ok: false, error: 'The nickname must be 3-16 letters, numbers, _ or emoji.' };
     const lower = name.toLowerCase();
     const oldLower = me && me.name ? me.name.toLowerCase() : '';
     try {
@@ -313,7 +322,7 @@ G.Social = (() => {
 
   /** Sends a friend request (or accepts the one they had already sent you). */
   async function request(name) {
-    name = (name || '').trim();
+    name = cleanNick(name);
     if (!me) return { ok: false, error: 'Choose your nickname first.' };
     if (!VALID.test(name)) return { ok: false, error: 'Type your friend\'s exact nickname.' };
     const n = await fb.fs.collection('names').doc(name.toLowerCase()).get().catch(() => null);

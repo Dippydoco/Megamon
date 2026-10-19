@@ -62,7 +62,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['uid'])
         && request.resource.data.uid == me()
-        && lower.size() >= 3 && lower.size() <= 16
+        && lower.size() >= 3 && lower.size() <= 64
         && lower == lower.lower();
       allow delete: if signedIn() && resource.data.uid == me();
     }

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T10:59Z', title: 'Emoji in nicknames', new: [
+    'Nicknames can now include emoji (3 to 16 characters, an emoji counts as one). Change yours in Settings → Account.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T10:52Z', title: 'Change your nickname', new: [
     'You can now change your nickname in Settings → Account (cloud accounts). Your old nickname becomes free for others to take.'
   ] },
