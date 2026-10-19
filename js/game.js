@@ -1358,8 +1358,7 @@ G.Game = (() => {
       if (goldT > 0) goldT -= dt;
       evT -= dt;
       if (evT <= 0) { evT = G.U.rand(14, 22); startEvent(); }
-      for (const tg of tags) tg.t += dt;
-      tags = tags.filter(tg => tg.t < 2.4);
+      // (Tag ages come from the clock in drawTags: if this update stops, e.g. a run starts, they still fade out.)
 
       for (let i = wanderers.length - 1; i >= 0; i--) {
         const wd = wanderers[i];
@@ -1413,6 +1412,11 @@ G.Game = (() => {
     }
 
     function drawTags(ctx) {
+      // Age by the real clock, not by update(): a "Caught!" left over when the backdrop stopped updating
+      // (starting a run right after catching the thief) used to stay on screen for good.
+      const now = performance.now();
+      for (const tg of tags) { if (tg.born == null) tg.born = now - tg.t * 1000; tg.t = (now - tg.born) / 1000; }
+      tags = tags.filter(tg => tg.t < 2.4);
       ctx.font = FONT; ctx.textAlign = 'center';
       for (const tg of tags) {
         const k = tg.t / 2.4;

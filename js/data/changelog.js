@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T15:15Z', title: '"Caught!" stuck on screen', fix: [
+    'Catching the treasure thief on the menu and then starting a run could leave the "Caught!" text on screen for the whole run. It now always fades out after a couple of seconds.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T14:49Z', title: 'Clearer burst move cooldowns', chg: [
     'While a burst move recharges, its icon dims and the seconds left show in large numbers on top of it. Double-digit cooldowns no longer hide behind the icon.'
   ] },
