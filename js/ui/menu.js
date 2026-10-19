@@ -403,6 +403,7 @@ G.MenuUI = (() => {
     $('upg-stage').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
     const box = $('upg-list');
     box.innerHTML = '';
+    let banLvl = 0;
     for (const u of G.Upgrades.LIST) {
       const lvl = levels[u.id] || 0;
       const maxed = lvl >= u.max;
@@ -419,7 +420,7 @@ G.MenuUI = (() => {
           ${u.id === 'ban' && lvl > 0 ? `<button class="btn small" data-ban>Choose (${banList().length}/${lvl})</button>` : ''}
           <button class="btn small ${maxed ? '' : 'gold'}" data-buy data-sfx="none" ${maxed || s.coins < cost ? 'disabled' : ''}>
           ${maxed ? 'Max.' : `<span class="coin"></span> ${cost}`}</button></div>`;
-      if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; renderUpgrades(); };
+      if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; banScroll = banOpen; renderUpgrades(); };
       el.querySelector('[data-buy]').onclick = () => {
         // Everything is read again on pressing (the save may have changed since it was drawn).
         const sv = G.DB.save, lv = G.DB.upgradesOf(upgDex), now = lv[u.id] || 0;
@@ -435,7 +436,13 @@ G.MenuUI = (() => {
         renderUpgrades();
       };
       box.appendChild(el);
-      if (u.id === 'ban' && lvl > 0 && banOpen) box.appendChild(banPicker(lvl));
+      if (u.id === 'ban') banLvl = lvl;
+    }
+    // The ban picker goes AFTER the whole list (it used to sit between Ban and Skip, which pushed Skip off the screen).
+    if (banLvl > 0 && banOpen) {
+      const pk = banPicker(banLvl);
+      box.appendChild(pk);
+      if (banScroll) { banScroll = false; setTimeout(() => pk.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); }
     }
     box.appendChild(bindPanel());
   }
@@ -475,7 +482,7 @@ G.MenuUI = (() => {
 
   // ---------------- veto: blocked moves ----------------
   // List per Pokémon in save.pban[dex]; with N levels of Veto, N moves.
-  let banOpen = false;
+  let banOpen = false, banScroll = false;
   function banList() {
     const s = G.DB.save;
     s.pban = s.pban || {};

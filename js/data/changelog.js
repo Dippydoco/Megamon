@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-19', at: '2026-10-19T12:30Z', title: 'Skip upgrade hidden by the Ban picker', fix: [
+    'In Upgrades, pressing Choose on Ban opened the move list between Ban and Skip and pushed the Skip upgrade off the screen. The list now opens below the upgrades and scrolls into view, so Skip stays where it is.'
+  ] },
   { d: '2026-10-19', at: '2026-10-19T12:24Z', title: 'Easier to find changes in What\'s new', new: [
     'What\'s new now has a search box and filters. Filter by type (New, Changes, Fixes) and by topic (Moves, Pokémon, Co-op, Balance, Account, Interface), click a topic tag on any entry to jump to similar ones, and see changes grouped by day. Entries you haven\'t seen yet are marked NEW.'
   ] },
