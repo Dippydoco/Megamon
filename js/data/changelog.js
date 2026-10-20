@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T15:07Z', title: 'Abilities (preview)', new: [
+    'Every Pokémon now has an innate ability, based on its abilities in the main games (Arcanine has Intimidate, Dragonite has Multiscale...). You can see it on each Pokémon\'s page in the Pokémon tab; hover or tap it to see what it does.',
+    'The Codex has a new Abilities tab listing all 236 abilities, with search and category filters.',
+    'Abilities are a preview for now: they don\'t affect runs yet.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T14:54Z', title: 'Movement stuck in one direction', fix: [
     'Fixed your Pokémon sometimes walking on its own in one direction (on phones and computers), even with the joystick still showing in the pause menu. Letting go anywhere now always stops it, and opening the pause menu, a level-up or switching apps resets movement.'
   ] },

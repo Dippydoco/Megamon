@@ -23,11 +23,36 @@ G.MenuUI = (() => {
     el.style.left = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX + 14)) + 'px';
     el.style.top = Math.max(6, Math.min(innerHeight - h - 6, ev.clientY + 16)) + 'px';
   }
+  // Abilities use the same tooltip box: name, category, what it does (and who has it, in the Codex).
+  const AB_COL = { Offense: '#ff8a5c', Defense: '#7fb8ff', Mobility: '#8fe07a', Sustain: '#5fe0b0', Status: '#c58aff',
+                   Weather: '#ffd23f', Utility: '#d6e0f2', Team: '#ff8ad8' };
+  G.AB_COL = AB_COL;
+  function showAbilityTip(id, ev) {
+    const a = G.ABILITIES && G.ABILITIES[id];
+    if (!a) return;
+    const el = moveTip(), col = AB_COL[a.c] || '#9fb1c9';
+    const who = G.DEX.filter(p => G.MON_ABILITY[p.dex] === id).map(p => p.name);
+    el.style.borderColor = col;
+    el.innerHTML = `<div class="mt-head"><b>${a.n}</b> <span class="mt-type" style="background:${col}">${a.c}</span></div>
+      <div class="mt-desc">${a.d}</div>
+      <div class="mt-who">${who.length <= 6 ? who.join(', ') : who.slice(0, 6).join(', ') + ' +' + (who.length - 6) + ' more'}</div>
+      <div class="mt-soon">Coming soon: not active in runs yet</div>`;
+    el.style.display = 'block';
+    const w = el.offsetWidth, h = el.offsetHeight;
+    el.style.left = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX + 14)) + 'px';
+    el.style.top = Math.max(6, Math.min(innerHeight - h - 6, ev.clientY + 16)) + 'px';
+  }
+  function tipFor(e) {
+    const t = e.target.closest && e.target.closest('[data-mv],[data-ab]');
+    if (!t) return false;
+    if (t.dataset.ab) showAbilityTip(t.dataset.ab, e); else showMoveTip(t.dataset.mv, e);
+    return true;
+  }
   function hideMoveTip() { const el = document.getElementById('mv-tip'); if (el) el.style.display = 'none'; }
-  document.addEventListener('mouseover', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); else hideMoveTip(); });
-  document.addEventListener('mousemove', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); });
+  document.addEventListener('mouseover', e => { if (!tipFor(e)) hideMoveTip(); });
+  document.addEventListener('mousemove', e => { tipFor(e); });
   document.addEventListener('scroll', hideMoveTip, true);
-  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('[data-mv]'); if (t) showMoveTip(t.dataset.mv, e); else hideMoveTip(); });
+  document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
     const ICON = { play: 'ball', dex: 'book', codex: 'codex', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear' };
@@ -282,6 +307,7 @@ G.MenuUI = (() => {
         <h3>${own ? p.name : '???'}${own && reachedArceus(p.dex) ? ' ' + arcStar(20, p.dex) : ''}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
         <div style="color:${G.Gacha.RARITY_COLOR[p.rarity]}">${G.UI.stars(p.rarity, 24)} ${G.Gacha.RARITY_NAME[p.rarity]}</div>
         <div style="margin:6px 0">${own ? G.UI.typeChips(p.types) : ''}</div>
+        ${own && G.abilityOf(dex) ? `<div class="ab-line">Ability <span class="ab-chip" data-ab="${G.abilityOf(dex).id}" style="--ac:${AB_COL[G.abilityOf(dex).c]}">${G.abilityOf(dex).n}</span></div>` : ''}
       </div>
       ${own ? `
         ${bar('HP', p.hp, max.hp, p.hp)}

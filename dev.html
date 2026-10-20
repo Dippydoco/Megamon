@@ -493,14 +493,20 @@
   <div class="box wide">
     <div class="row between"><h2>Codex <span id="cx-count" class="sub" style="font-size:15px"></span></h2><button class="btn small ghost" data-back>Back</button></div>
     <div class="tabs hidden" id="cx-tabs"></div>
-    <div class="row cx-tools">
+    <div class="row cx-tools" id="cx-tools">
       <input id="cx-q" class="field grow" type="search" autocomplete="off" spellcheck="false" placeholder="Search moves or evolutions">
       <select id="cx-kind" class="field" aria-label="Style"></select>
       <select id="cx-sort" class="field" aria-label="Sort"></select>
     </div>
     <div class="filters cx-types" id="cx-types"></div>
     <div class="filters" id="cx-only"></div>
-    <div class="split cx-split">
+    <div class="cx-ab hidden" id="cx-ab">
+      <input id="cx-ab-q" class="field" type="search" autocomplete="off" spellcheck="false" placeholder="Search abilities, effects or Pokémon">
+      <div class="filters" id="cx-ab-cats"></div>
+      <p class="sub cx-ab-note">Every Pokémon has one ability. Hover (or tap) one for the full details. Coming soon: abilities aren't active in runs yet.</p>
+      <div class="ab-list" id="cx-ab-list"></div>
+    </div>
+    <div class="split cx-split" id="cx-split">
       <div class="cx-list" id="cx-list"></div>
       <div class="panel cx-detail" id="cx-detail"></div>
     </div>
@@ -627,6 +633,7 @@
 <script defer src="js/data/music.js"></script>
 <script defer src="js/data/cosmetics.js"></script>
 <script defer src="js/data/pokedex.js"></script>
+<script defer src="js/data/abilities.js"></script>
 <script defer src="js/data/overrides.js"></script>
 <script defer src="js/data/sprites-meta.js"></script>
 <!-- core -->

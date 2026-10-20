@@ -1297,3 +1297,32 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .run-stats .st-row + .st-row { border-top: 1px solid rgba(140,170,210,.08); }
 .run-stats b.up { color: #5fe08a; } .run-stats b.down { color: #ff8a8a; }
 @media (max-height: 640px) { .run-stats.compact { display: none; } }
+
+/* Abilities: Pokémon tab line, Codex tab and tooltip (codex-ui.js, menu.js) */
+#mv-tip .mt-who { margin-top: 5px; font-size: 11px; color: #9fb1c9; font-weight: 400; }
+#mv-tip .mt-soon { margin-top: 3px; font-size: 10px; color: #ffd23f; font-weight: 400; }
+.ab-line { margin: 2px 0 6px; font-size: 13px; color: var(--muted); }
+.ab-chip { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 6px; cursor: help; color: #fff;
+  border: 2px solid var(--ac); background: color-mix(in srgb, var(--ac) 25%, transparent); }
+.cx-tabs-big, #cx-tabs { display: flex; gap: 10px; margin: 6px 0 10px; }
+#cx-tabs.hidden { display: none; }
+.cx-bigtab { appearance: none; flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+  padding: 12px 10px; font: inherit; font-size: 20px; color: inherit; border-radius: 12px;
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.18); text-shadow: 1px 1px 0 var(--shadow); }
+.cx-bigtab.on { border-color: #ffd23f; background: rgba(255,210,63,.16); color: #ffd23f; }
+.cx-ab .field { width: 100%; padding: 7px 10px; font-size: 15px; margin-bottom: 6px; }
+.cx-ab-note { font-size: 12px; margin: 2px 0 8px; }
+.ab-list { display: flex; flex-direction: column; gap: 4px; max-height: 56vh; overflow-y: auto; padding-right: 4px; }
+.ab-row { display: grid; grid-template-columns: 150px 74px 1fr 150px; gap: 10px; align-items: center; cursor: help;
+  padding: 6px 10px; border-radius: 8px; background: rgba(0,0,0,.2); border: 1px solid rgba(244,248,255,.1); border-left: 4px solid var(--ac); }
+.ab-row:hover { background: rgba(255,255,255,.06); }
+.ab-row b { font-weight: 400; }
+.ab-row .ab-cat { font-size: 11px; color: var(--ac); }
+.ab-row .ab-d { font-size: 13px; color: #d6e0f2; line-height: 1.3; }
+.ab-row small { font-size: 11px; color: var(--muted); text-align: right; }
+@media (max-width: 760px) {
+  .ab-row { grid-template-columns: 1fr auto; gap: 2px 8px; }
+  .ab-row .ab-d { grid-column: 1 / -1; }
+  .ab-row small { display: none; }
+  .cx-bigtab { font-size: 17px; padding: 10px 8px; }
+}

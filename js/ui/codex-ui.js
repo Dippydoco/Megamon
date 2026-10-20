@@ -171,13 +171,38 @@ G.CodexUI = (() => {
     renderDetail();
   }
 
-  const SECTIONS = { moves: { label: 'Moves', render: renderMoves } };
+  // ---------------- abilities ----------------
+  const AB_CATS = ['Offense', 'Defense', 'Mobility', 'Sustain', 'Status', 'Weather', 'Utility', 'Team'];
+  const ab = { q: '', cat: 'all' };
+  function renderAbilities() {
+    const all = Object.entries(G.ABILITIES || {}).map(([id, a]) => Object.assign({ id }, a));
+    const holders = {};
+    for (const p of G.DEX) { const id = G.MON_ABILITY[p.dex]; if (id) (holders[id] = holders[id] || []).push(p.name); }
+    const q = ab.q.trim().toLowerCase();
+    const rows = all.filter(a => (ab.cat === 'all' || a.c === ab.cat)
+      && (!q || (a.n + ' ' + a.d + ' ' + (holders[a.id] || []).join(' ')).toLowerCase().includes(q)))
+      .sort((a, b) => a.n.localeCompare(b.n));
+    $('cx-count').textContent = rows.length === all.length ? all.length + ' abilities' : rows.length + ' of ' + all.length + ' abilities';
+    $('cx-ab-cats').innerHTML = `<button class="chip${ab.cat === 'all' ? ' on' : ''}" data-cat="all">All</button>` +
+      AB_CATS.map(c => `<button class="chip cx-tchip${ab.cat === c ? ' on' : ''}" data-cat="${c}" style="--tc:${G.AB_COL[c]}">${c}</button>`).join('');
+    $('cx-ab-list').innerHTML = rows.length ? rows.map(a => {
+      const h = holders[a.id] || [];
+      return `<div class="ab-row" data-ab="${a.id}" style="--ac:${G.AB_COL[a.c]}">
+        <b>${esc(a.n)}</b><span class="ab-cat">${a.c}</span><span class="ab-d">${esc(a.d)}</span>
+        <small>${esc(h.slice(0, 3).join(', '))}${h.length > 3 ? ' +' + (h.length - 3) : ''}</small></div>`;
+    }).join('') : '<p class="sub cx-empty">No ability matches.</p>';
+  }
+
+  const SECTIONS = { moves: { label: 'Moves', icon: 'codex', render: renderMoves },
+                     abilities: { label: 'Abilities', icon: 'star', render: renderAbilities } };
 
   function render() {
     const keys = Object.keys(SECTIONS);
-    // Tabs only once there's more than one section (items, shrines... later).
     $('cx-tabs').classList.toggle('hidden', keys.length < 2);
-    $('cx-tabs').innerHTML = keys.map(k => `<div class="tab${st.section === k ? ' on' : ''}" data-sec="${k}">${SECTIONS[k].label}</div>`).join('');
+    $('cx-tabs').innerHTML = keys.map(k => `<button class="cx-bigtab${st.section === k ? ' on' : ''}" data-sec="${k}">${G.Icons.html(SECTIONS[k].icon, 24)} ${SECTIONS[k].label}</button>`).join('');
+    const isAb = st.section === 'abilities';
+    for (const id of ['cx-tools', 'cx-types', 'cx-only', 'cx-split']) $(id).classList.toggle('hidden', isAb);
+    $('cx-ab').classList.toggle('hidden', !isAb);
     SECTIONS[st.section].render();
   }
 
@@ -197,7 +222,9 @@ G.CodexUI = (() => {
       // On narrow screens the details sit below the list: bring them into view.
       if (matchMedia('(max-width: 760px)').matches) $('cx-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-    $('cx-tabs').onclick = e => { const t = e.target.closest('[data-sec]'); if (!t) return; st.section = t.dataset.sec; render(); };
+    $('cx-tabs').onclick = e => { const t = e.target.closest('[data-sec]'); if (!t) return; st.section = t.dataset.sec; G.Audio.sfx('click'); render(); };
+    $('cx-ab-q').oninput = e => { ab.q = e.target.value; renderAbilities(); };
+    $('cx-ab-cats').onclick = e => { const b = e.target.closest('[data-cat]'); if (!b) return; ab.cat = b.dataset.cat; G.Audio.sfx('click'); renderAbilities(); };
   }
 
   function open() {
