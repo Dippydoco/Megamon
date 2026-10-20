@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T17:03Z', title: 'Codex: levels and rarity', new: [
+    'The Mechanics tab now explains levelling up, how each rarity\'s bonus stats and per-level growth work, and how enemies get stronger over time.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T16:50Z', title: 'Codex: Mechanics', new: [
     'The Codex has a new Mechanics tab explaining the game\'s hidden rules with their numbers: STAB, critical hits, the melee guard and melee bonus vs bosses, Defense, status effects and the Afflicted bonus, type matchups, weather, bonds, burst moves and reviving.'
   ] },

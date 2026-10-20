@@ -228,6 +228,23 @@ G.CodexUI = (() => {
         ['Snowfall', wx('snow') + '. Other types lose a little HP and slow down.'],
         ['Fog', wx('fog') + '.']
       ]],
+      ['Levels and rarity', (() => {
+        const RN = G.Gacha.RARITY_NAME, cap = G.RARITY_GROWTH_CAP || 30;
+        const pct = v => Math.round(v * 1000) / 10 + '%';
+        const tier = r => {
+          const b = G.RARITY_BONUS[r] || 0, d = G.RARITY_DEF_BONUS[r] || 0, g = G.RARITY_GROWTH[r] || 0;
+          return b || d || g ? `+${pct(b)} HP, Attack and Sp. Atk, +${pct(d)} Defense; then +${pct(g)} damage and max HP every level up to level ${cap} (+${pct(g * (cap - 1))} at most).`
+                             : 'No bonus: their base stats are already the highest.';
+        };
+        return [
+          ['Levelling up', 'Each level offers 3 cards: a new move, a move upgrade, an evolution or a stat card. Each level needs a bit more experience than the last.'],
+          ['No automatic growth', 'Epic and Legendary Pokémon only get stronger through cards. Lower rarities also grow by themselves each level (below).'],
+          ...[1, 2, 3].map(r => [RN[r] + ' (' + r + '★)', tier(r)]),
+          [RN[4] + ' and ' + RN[5], 'Highest base stats, no rarity bonus or growth.'],
+          ['Enemies scale with time', 'Every minute, regular enemies gain about +63% of their starting HP and +14% damage, and get faster (up to +35%). Bosses gain about +10% HP and damage per minute.'],   // enemies.js scale/bossScale
+          ['Group runs', 'More players means more enemies, with more HP. Experience is shared, so each player levels a little slower.']
+        ];
+      })()],
       ['Moves', [
         ['Active slot', 'Only the move in your selected slot attacks. Switch with 1-4, Q/E or by tapping the move bar.'],
         ['Bonds', 'Beating a legendary gives a bond: fuse moves into one slot (up to ' + G.Player.BOND_MAX + ') and they all fire together.'],
