@@ -756,6 +756,38 @@
       }
     }
 
+    /** Small chips above the health bar: one per status, burn/poison with the stack count. */
+    drawStatus(ctx) {
+      const st = this.remote ? (this.net && this.net.st) || 0 : 0;
+      const burn = this.remote ? (st >> 7) & 15 : this.burn | 0;
+      const poison = this.remote ? (st >> 11) & 15 : this.poison | 0;
+      const slow = this.remote ? !!(st & 32768) : this.slowT > 0 && this.slow > 0;
+      const frozen = this.remote ? !!(st & 8) : this.freezeT > 0;
+      const chips = [];
+      if (burn) chips.push(['#ff7a2f', burn]);
+      if (poison) chips.push(['#b45ee0', poison]);
+      if (slow) chips.push(['#5fa8ff', 0]);
+      if (frozen) chips.push(['#bff3ff', 0]);
+      if (!chips.length) return false;
+      const H = 9, gap = 2;
+      const wOf = c => (c[1] ? 15 : 7);
+      const total = chips.reduce((s, c) => s + wOf(c), 0) + gap * (chips.length - 1);
+      let x = Math.round(this.x - total / 2);
+      const y = Math.round(this.y - this.bodyH - (this.boss || this.hp < this.maxHp ? 22 : 14));
+      ctx.save();
+      ctx.font = '700 8px Pixelify,"Segoe UI",system-ui,sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (const c of chips) {
+        const w = wOf(c);
+        ctx.fillStyle = 'rgba(0,0,0,.75)'; ctx.fillRect(x - 1, y - 1, w + 2, H + 2);
+        ctx.fillStyle = c[0]; ctx.fillRect(x, y, w, H);
+        if (c[1]) { ctx.fillStyle = '#10131a'; ctx.fillText(String(c[1]), x + w / 2, y + H / 2 + 0.5); }
+        x += w + gap;
+      }
+      ctx.restore();
+      return true;
+    }
+
     draw(ctx) {
       const alpha = this.dead ? G.U.clamp(this.fade / 0.5, 0, 1) : 1;
       if (alpha <= 0) return;
@@ -818,7 +850,7 @@
           ctx.beginPath(); ctx.ellipse(this.x, this.y - this.bodyH * 0.45, this.r * 1.2, this.bodyH * 0.6, 0, 0, 6.2832); ctx.fill();
         }
         ctx.restore();
-        if (!stun) G.Icons.draw(ctx, 'stopwatch', Math.round(this.x - 6), Math.round(top), 12);
+        if (!stun) G.Icons.draw(ctx, 'stopwatch', Math.round(this.x - 6), Math.round(top - 12), 12);
       }
 
       // Acid Spray: green acid drips off it while it takes more damage.
@@ -833,15 +865,18 @@
 
       if (this.burn > 0 || this.poison > 0 || (this.net && this.net.st & 3)) {
         ctx.save();
-        ctx.globalAlpha = 0.45;
+        ctx.globalAlpha = 0.55;
         ctx.fillStyle = this.burn > 0 || (this.net && this.net.st & 1) ? '#ff8a3d' : '#c86bdc';
         ctx.beginPath(); ctx.ellipse(this.x, this.y, this.r * 1.2, this.r * 0.5, 0, 0, 6.2832); ctx.fill();
         ctx.restore();
       }
 
+      // Status badges over its head: burn and poison with their stacks, slowed, frozen/stunned (20-10-2026).
+      const lift = this.drawStatus(ctx) ? 12 : 0;     // icons above go up a row to make room
+
       // Supports: an icon above, so you know who to go for first.
       const SUP = { healer: 'heart', shielder: 'shield', summoner: 'friends' };
-      if (SUP[this.behavior]) G.Icons.draw(ctx, SUP[this.behavior], Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18)), 12);
+      if (SUP[this.behavior]) G.Icons.draw(ctx, SUP[this.behavior], Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18) - lift), 12);
 
       if (this.boss || this.hp < this.maxHp) {
         const w = this.boss ? 90 : Math.max(22, this.r * 2);

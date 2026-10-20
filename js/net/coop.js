@@ -183,7 +183,9 @@ G.Coop = (() => {
       const a = ANIMS.indexOf(e.anim.cur);
       out.push([e.id, r1(e.x), r1(e.y), Math.ceil(e.hp), a < 0 ? 0 : a, e.anim.dir,
                 (e.burn > 0 ? 1 : 0) | (e.poison > 0 ? 2 : 0) | (e.shield > 0 ? 4 : 0) | (e.freezeT > 0 ? 8 : 0) | (e.aegisShield ? 16 : 0) |
-                (e.freezeT > 0 && e.stunned ? 32 : 0) | (e.vulnT > 0 ? 64 : 0)]);
+                (e.freezeT > 0 && e.stunned ? 32 : 0) | (e.vulnT > 0 ? 64 : 0) |
+                // status stacks for the badges over enemies: burn 0-8 (bits 7-10), poison 0-8 (11-14), slowed (15)
+                (Math.min(15, e.burn | 0) << 7) | (Math.min(15, e.poison | 0) << 11) | (e.slowT > 0 && e.slow > 0 ? 32768 : 0)]);
     }
     return out;
   }

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T16:45Z', title: 'See enemy status at a glance', chg: [
+    'Enemies now show small status badges above their health bar: orange for burn and purple for poison (each with its number of stacks), blue when slowed and pale blue when frozen or stunned. Teammates in group runs see them too.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T16:36Z', title: 'Dash moves reworked, and status pays off', chg: [
     'Dash moves (Quick Attack, Aerial Ace, Aqua Jet, Spark, Psyshield Bash, Spirit Break) now lunge at the target, hit everything in the way and spring straight back. You stay where you were, so you keep full control of your movement and no longer end up inside the crowd.'
   ], new: [
