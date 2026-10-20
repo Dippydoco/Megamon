@@ -14,6 +14,9 @@ G.UI = (() => {
   function show(id, keepMenu = false) {
     for (const s of SCREENS) if (s !== id && !(keepMenu && s === 'scr-menu')) $(s).classList.add('hidden');
     $(id).classList.remove('hidden');
+    // Opening any screen (pause, level-up, menus) drops held keys and the joystick, so movement can't get stuck.
+    if (G.Input) G.Input.reset();
+    if (G.Touch && G.Touch.reset) G.Touch.reset();
   }
   function hide(id) { $(id).classList.add('hidden'); }
   function hideAll() { for (const s of SCREENS) $(s).classList.add('hidden'); }

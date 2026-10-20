@@ -40,6 +40,11 @@ G.Touch = (() => {
     cv.addEventListener('pointermove', move);
     cv.addEventListener('pointerup', up);
     cv.addEventListener('pointercancel', up);
+    // Stuck joystick (20-10-2026): if the release is lost (it lands on an overlay, the capture is dropped,
+    // the window loses focus), the stick kept pushing. Any release anywhere now ends it.
+    cv.addEventListener('lostpointercapture', up);
+    addEventListener('pointerup', up, true);
+    addEventListener('pointercancel', up, true);
     cv.addEventListener('contextmenu', e => e.preventDefault());
     // iPhone: a long press on the game opened the magnifier and the
     // "Copy / Select all" menu. Cutting the touch short here prevents it (the pointer
@@ -100,6 +105,7 @@ G.Touch = (() => {
 
   function move(e) {
     if (!stick || e.pointerId !== stick.id) return;
+    if (e.pointerType === 'mouse' && !(e.buttons & 1)) { stick = null; return; }   // button already released
     stick.x = e.clientX; stick.y = e.clientY;
     if (stick.fixed || stick.lock) return;
     const dx = stick.x - stick.ox, dy = stick.y - stick.oy, d = Math.hypot(dx, dy), r = R();
@@ -111,6 +117,7 @@ G.Touch = (() => {
 
   /** Joystick direction (with strength 0..1), or null if it isn't in use. */
   function vector() {
+    if (stick && (!G.Game || G.Game.state !== 'playing')) stick = null;   // never carried into menus or pauses
     if (!stick) return null;
     const dx = stick.x - stick.ox, dy = stick.y - stick.oy, d = Math.hypot(dx, dy);
     if (d < 7) return [0, 0];

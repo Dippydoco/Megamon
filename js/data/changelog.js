@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T14:54Z', title: 'Movement stuck in one direction', fix: [
+    'Fixed your Pokémon sometimes walking on its own in one direction (on phones and computers), even with the joystick still showing in the pause menu. Letting go anywhere now always stops it, and opening the pause menu, a level-up or switching apps resets movement.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T12:55Z', title: 'Dragon Dance buff and cleaner run history', chg: [
     'Dragon Dance is now a stronger Swords Dance: besides stacking faster, each stack gives +15% Attack (was +11%; Swords Dance gives +13%).',
     'Runs you leave (quitting, or a group run ending under you) no longer go in your run history, so they don\'t push out your real runs. Runs that reached Arceus are always kept.'
