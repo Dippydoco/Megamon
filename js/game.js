@@ -89,7 +89,9 @@ G.Game = (() => {
     holdBy = []; awayBy = null;
     openItem = null; laterItems.length = 0;      // nothing left over from the last run's choice screens
     const save = G.DB.save;
-    const mon = G.DEX_BY[save.partner];
+    // Draft Night (ui/minigames.js): the group run uses the Pokémon you drafted, not your partner.
+    const drafted = coop && coop.draft ? (coop.members.find(m => m.uid === G.Social.uid) || {}).dex : null;
+    const mon = G.DEX_BY[drafted] || G.DEX_BY[save.partner];
     const perks = G.Upgrades.perks(G.DB.upgradesOf(mon.dex));
 
     G.UI.hideAll();
@@ -112,7 +114,7 @@ G.Game = (() => {
     time = 0; pendingLevels = 0;
     runReal = performance.now(); tampered = false;
 
-    pl = new G.Player(mon, perks, !!save.partnerShiny && G.DB.ownsShiny(mon.dex));
+    pl = new G.Player(mon, perks, !drafted && !!save.partnerShiny && G.DB.ownsShiny(mon.dex));
     banked = { t1: 0, t10: 0 };
     caught = [];
     // Shortcuts: moves with a fixed slot (save.pbind[dex] = [id of 1, id of 2, ...]),
@@ -1569,7 +1571,7 @@ G.Flow = {
   boot() {
     G.UI.initChrome();
     G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init();
-    G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.CodexUI.init(); G.Updater.init();
+    G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.CodexUI.init(); G.MiniUI.init(); G.Updater.init();
     // Your name at the top right opens your profile.
     document.getElementById('user-pill').onclick = () => G.GoalsUI.open('profile');
     G.Audio.music('village');     // plays after the first click (the browser requires it)

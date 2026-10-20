@@ -326,6 +326,7 @@
         $('lobby-status-text').textContent = gl.text;
         $('lobby-status-hint').textContent = gl.hint;
       }
+      G.MiniUI.lobbyTools($('lobby-mini'));
       const btn = $('lobby-start');
       btn.classList.toggle('hidden', !room.isHost);
       const connecting = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'connecting');
@@ -347,20 +348,24 @@
       try { ok = await G.Updater.gate(); } finally { starting = false; }
       if (!ok) return;                                       // new version out: reload instead of starting
       if (G.Social.room !== room || room.members.length < 2) return;
+      // Draft Night: everyone plays the Pokémon they drafted (not their own partner).
+      const drafted = room.members.some(m => G.MiniUI.draftedFor(m.uid));
       const cfg = {
-        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host,
+        k: 'start', seed: Math.floor(Math.random() * 1e6), host: room.host, draft: drafted ? 1 : 0,
         // Your own partner is taken from your save (the most recent), not from what
         // has already come back from the room.
         members: room.members.map(m => m.uid === G.Social.uid
           ? { uid: m.uid, name: m.name, dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }
           : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny })
       };
+      if (drafted) for (const m of cfg.members) { const d = G.MiniUI.draftedFor(m.uid); if (d) { m.dex = d; m.shiny = false; } }
+      if (drafted) G.Social.setGame(null);          // the draft is used up by this run
       G.Social.setOpen(false);
       G.Net.broadcast(cfg);
       G.Flow.startCoop(cfg);
     }
 
-    return { init, open, close, render };
+    return { init, open, close, render, startDraftRun: () => { open(); start(); } };
   })();
 
   // ======================= INVITACIONES =======================

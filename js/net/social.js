@@ -442,7 +442,10 @@ G.Social = (() => {
       if (on && wasOn && room && room.id === id) { if (room.isHost) restoreRoom(id); else rejoinSpot(id); }
       wasOn = on;
     });
-    roomRefs = [mref, href, oref, cref];
+    // Mini-games (ui/minigames.js): the host's shared state at rooms/{id}/g (Gacha Battle, Draft Night).
+    const gref = fb.rtdb.ref('rooms/' + id + '/g');
+    gref.on('value', s => { if (room && room.id === id) { room.game = s.val(); emit('game'); } }, () => {});
+    roomRefs = [mref, href, oref, cref, gref];
     writeStatus();
     emit('room');
   }
@@ -471,7 +474,7 @@ G.Social = (() => {
       const m = {};
       for (const mm of room.members) { const o = Object.assign({}, mm); delete o.uid; m[mm.uid] = o; }
       if (!m[uid]) m[uid] = memberInfo();
-      await ref.set({ host: uid, open: room.open !== false && !(G.Coop && G.Coop.active), at: ts(), m });
+      await ref.set(Object.assign({ host: uid, open: room.open !== false && !(G.Coop && G.Coop.active), at: ts(), m }, room.game ? { g: room.game } : {}));
       watchRoomDisconnect();
       console.warn('[Social] room restored after a drop');
     } catch (e) { console.warn('[Social] could not restore the room:', e.code || e.message); }
@@ -542,6 +545,17 @@ G.Social = (() => {
     writeStatus();
     rtOff();
     emit('room');
+  }
+
+  /** Mini-games: the host writes the shared game state (null clears it). */
+  function setGame(v) {
+    if (!room || !room.isHost) return Promise.resolve();
+    return fb.rtdb.ref('rooms/' + room.id + '/g').set(v || null).catch(e => console.warn('[Social] game:', e.code || e.message));
+  }
+  /** Mini-games: a field of your own place in the room (only you can write it; everyone in the room reads it). */
+  function setMine(key, v) {
+    if (!room) return Promise.resolve();
+    return fb.rtdb.ref('rooms/' + room.id + '/m/' + uid + '/' + key).set(v == null ? null : v).catch(e => console.warn('[Social] mine:', e.code || e.message));
   }
 
   /** The host closes the room to new players when the run starts. */
@@ -727,7 +741,7 @@ G.Social = (() => {
 
   return {
     start, stop, claimNick, request, accept, remove, publishProfile, getProfile, profileData, publishHistory, getHistory,
-    createRoom, joinRoom, leaveRoom, setOpen, refreshMember, setPlaying, setActivity, touch, refreshPresence,
+    createRoom, joinRoom, leaveRoom, setOpen, refreshMember, setGame, setMine, setPlaying, setActivity, touch, refreshPresence,
     invite, acceptInvite, declineInvite,
     on(fn) { listeners.add(fn); }, off(fn) { listeners.delete(fn); },
     get me() { return me; },

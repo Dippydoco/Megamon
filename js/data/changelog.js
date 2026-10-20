@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T17:46Z', title: 'Mini-Games: Gacha Battle and Draft Night', new: [
+    'New Mini-Games button on the main menu. Both games are played with friends in a room: the host starts them from the room.',
+    'Gacha Battle: everyone who joins stakes 1, 3 or 5 ×1 tickets and pulls at the same time, revealed live on everyone\'s screen. You keep what you pull, and the best pulls (★1 1 point up to ★5 100, shiny ×3) win everyone else\'s staked tickets. Up to 3 battles a day; battle pulls don\'t count towards pity.',
+    'Draft Night: the host deals a pool of Pokémon and everyone takes turns picking one (25 seconds each). The next group run is played with the drafted Pokémon, even ones you don\'t own.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T17:21Z', title: 'Daily featured Pokémon', new: [
     'Every day three Pokémon are featured, the same for everyone: one Common or Uncommon, one Rare and one Epic or Legendary-rarity. Runs with a featured Pokémon earn +50% PokéCoins.',
     'They\'re shown under your partner on the main menu: tap one you own to make it your partner.'

@@ -180,6 +180,7 @@
       <div class="menu-list">
         <button class="menu-item play" data-go="play">Play<small>Enter the dungeon</small></button>
         <button class="menu-item" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
+        <button class="menu-item" data-go="mini">Mini-Games<small>Gacha Battles and Draft Night</small></button>
         <button class="menu-item" data-go="codex">Codex<small>Learn everything about the game!</small></button>
         <button class="menu-item" data-go="upgrades">Upgrades<small>Make every run stronger</small></button>
         <button class="menu-item" data-go="gacha">Gacha<small>9 regions · Pokémon and shinies</small></button>
@@ -371,6 +372,39 @@
 </section>
 
 <!-- ====== Room (group run) ====== -->
+<!-- ====== Mini-Games (js/ui/minigames.js) ====== -->
+<section id="scr-mini" class="scr dim hidden">
+  <div class="box">
+    <div class="row between"><h2>Mini-Games</h2><button class="btn small ghost" data-back>Back</button></div>
+    <p class="sub">Played with friends in a room. Open one, invite your friends, and the host starts a game from there.</p>
+    <div class="mini-cards">
+      <button class="mini-card" id="mini-gb"><b>Gacha Battle</b><span>Everyone stakes the same number of ×1 tickets and pulls at once, live. You keep what you pull, and the best pulls win everyone else's tickets.</span></button>
+      <button class="mini-card" id="mini-draft"><b>Draft Night</b><span>Take turns drafting Pokémon from a shared pool, then play the next group run with what you drafted. You don't need to own them.</span></button>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:12px"><button id="mini-room" class="btn gold">Open a room</button></div>
+  </div>
+</section>
+
+<section id="scr-gbattle" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2 id="gb-title">Gacha Battle</h2><button id="gb-back" class="btn small ghost">Room</button></div>
+    <div id="gb-body"></div>
+  </div>
+</section>
+
+<section id="scr-draft" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Draft Night</h2><button id="dr-back" class="btn small ghost">Room</button></div>
+    <p class="sub" id="dr-sub"></p>
+    <div class="dr-order" id="dr-order"></div>
+    <div class="dr-pool" id="dr-pool"></div>
+    <div class="row" style="justify-content:center;gap:8px;margin-top:12px">
+      <button id="dr-start" class="btn gold hidden" data-sfx="confirm">Start the run</button>
+      <button id="dr-cancel" class="btn ghost hidden">Cancel the draft</button>
+    </div>
+  </div>
+</section>
+
 <section id="scr-lobby" class="scr dim hidden">
   <div class="box wide">
     <div class="row between"><h2>Room</h2>
@@ -380,6 +414,8 @@
     <div id="lobby-members" class="lobby-members"></div>
     <h3 id="lobby-inv-title" style="margin:14px 0 6px">Invite friends</h3>
     <div id="lobby-invite" class="fr-list"></div>
+    <h3 style="margin:14px 0 6px">Mini-games</h3>
+    <div id="lobby-mini"></div>
     <h3 style="margin:14px 0 6px">Room chat</h3>
     <div id="lobby-chatlog" class="chat-log small" translate="no"></div>
     <form id="lobby-chatform" class="row" autocomplete="off">
@@ -699,6 +735,7 @@
 <script defer src="js/ui/login.js"></script>
 <script defer src="js/ui/test.js"></script>
 <script defer src="js/ui/menu.js"></script>
+<script defer src="js/ui/minigames.js"></script>
 <script defer src="js/ui/slots.js"></script>
 <script defer src="js/ui/gacha-ui.js"></script>
 <script defer src="js/ui/run-ui.js"></script>
