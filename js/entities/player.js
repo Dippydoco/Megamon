@@ -279,9 +279,9 @@ G.Player = class Player {
       eff = G.Types.label(k);
       amount *= k * G.Weather.mult(type);
     }
-    // With a melee attack active you take 30 % less: you have to
+    // With a melee attack active you take 25 % less (30 % until 20-10-2026): you have to
     // be right on top of enemies to hit (they were lagging far behind).
-    let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.7 : 1;
+    let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
     // In a rift arena the legendary's shots, beams and blasts do 25 % less to a melee build (it has to cross its fire to hit it).
     if (close < 1 && G.Rift.inArena && src && (src.k === 'shot' || src.k === 'beam' || src.k === 'zone')) close *= 0.75;
     const d = pure ? Math.max(1, amount) : Math.max(1, amount * Math.max(0.15, (1 - this.reduction) * this.defMul) * close);   // never below 15% (before the melee cut)

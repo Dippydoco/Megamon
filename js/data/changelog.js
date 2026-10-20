@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T16:17Z', title: 'STAB for single-type Pokémon, melee toned down', new: [
+    'Same-type attack bonus: single-type Pokémon (like Charmander or Pikachu) now deal ×1.2 damage with moves of their own type. Dual-type Pokémon don\'t get it.'
+  ], chg: [
+    'Having a melee move active now cuts damage taken by 25% (was 30%).'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T15:07Z', title: 'Abilities (preview)', new: [
     'Every Pokémon now has an innate ability, based on its abilities in the main games (Arcanine has Intimidate, Dragonite has Multiscale...). You can see it on each Pokémon\'s page in the Pokémon tab; hover or tap it to see what it does.',
     'The Codex has a new Abilities tab listing all 236 abilities, with search and category filters.',

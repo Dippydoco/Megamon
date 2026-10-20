@@ -140,6 +140,10 @@ G.Combat = (() => {
 
   /** Type chart × weather for an attack of type `type` against `e`. */
   function typeK(type, e) { return G.Types.mult(type, e.types) * G.Weather.mult(type); }
+  /** STAB (20-10-2026): single-type Pokémon deal ×1.2 with moves of their own type. Dual types don't get it
+   *  (their pool is almost all their own types already, so it would just be a flat boost). */
+  const STAB = 1.2;
+  const stab = (pl, type) => (pl && pl.mon && pl.mon.types.length === 1 && type === pl.mon.types[0] ? STAB : 1);
 
   function fireProjectiles(pl, m) {
     const col = G.U.TYPE_COLOR[m.type];
@@ -1176,7 +1180,7 @@ G.Combat = (() => {
   }
 
   function hit(pl, e, dmg, col, dx, dy, knock, m) {
-    const k = typeK(m.type, e);
+    const k = typeK(m.type, e) * stab(pl, m.type);
     const crit = isCrit(pl, m.fx);
     dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
     if (m.kind === 'melee' && (e.boss || e.legend || e.judge)) dmg *= 1.25;      // melee has to stand in the boss's fire: +25% against bosses and legendaries
@@ -1332,7 +1336,7 @@ G.Combat = (() => {
         }
 
         const crit = isCrit(pl, p.fx);
-        const k = (p.mtype ? typeK(p.mtype, e) : 1) * (crit ? CRIT_MUL : 1) * execMul(p.fx, e);
+        const k = (p.mtype ? typeK(p.mtype, e) * stab(pl, p.mtype) : 1) * (crit ? CRIT_MUL : 1) * execMul(p.fx, e);
         const lethal = e.hp <= p.dmg * k;
         e.hurt(p.dmg * k, p.color, p.vx || (e.x - pl.x), p.vy || (e.y - pl.y), p.knock,
                crit ? 'crit' : p.mtype ? G.Types.label(G.Types.mult(p.mtype, e.types)) : null);

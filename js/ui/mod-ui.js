@@ -28,6 +28,33 @@ G.ModUI = (() => {
       render();
     };
     document.querySelectorAll('#mod-tabs .tab').forEach(t => { t.onclick = () => { tab = t.dataset.tab; render(); }; });
+    $('mod-export').onclick = exportRuns;
+  }
+
+  /**
+   * Downloads every shared run history (histories/{uid}: players who left "Share my run history" on)
+   * as one JSON file, with each player's nickname, for balance analysis. One read per player.
+   */
+  async function exportRuns() {
+    const b = $('mod-export');
+    b.disabled = true; b.textContent = 'Exporting…';
+    try {
+      const fs = G.DB.fb.fs;
+      const snap = await fs.collection('histories').get();
+      const players = await Promise.all(snap.docs.map(async d => {
+        const prof = await fs.collection('profiles').doc(d.id).get().catch(() => null);
+        const runs = ((d.data() || {}).runs || []).map(r => { try { return typeof r === 'string' ? JSON.parse(r) : r; } catch (e) { return null; } }).filter(Boolean);
+        return { uid: d.id, name: prof && prof.exists ? prof.data().name : '', runs };
+      }));
+      const data = { exportedAt: new Date().toISOString(), version: (G.VERSION || ''), players };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = 'megamon-runs-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      G.UI.toast('Exported ' + players.reduce((n, p) => n + p.runs.length, 0) + ' runs from ' + players.length + ' players', 5000);
+    } catch (e) { G.UI.toast('Export failed: ' + (e.code || e.message), 5000); }
+    b.disabled = false; b.textContent = 'Export runs';
   }
 
   function open() {
