@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T12:55Z', title: 'Dragon Dance buff and cleaner run history', chg: [
+    'Dragon Dance is now a stronger Swords Dance: besides stacking faster, each stack gives +15% Attack (was +11%; Swords Dance gives +13%).',
+    'Runs you leave (quitting, or a group run ending under you) no longer go in your run history, so they don\'t push out your real runs. Runs that reached Arceus are always kept.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T12:31Z', title: 'Gyro Ball reaches further', chg: [
     'Gyro Ball\'s balls still spin around you, but now also fly off at foes up to about 280 away (more with Reach), hitting harder than a spinning ball, and come back to your orbit about a second later. It still hits harder the slower you move.',
     'The stats panel now shows Defense as "DMG Reduced" instead of damage taken.'

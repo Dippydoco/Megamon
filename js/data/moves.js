@@ -358,8 +358,8 @@
       cd: 1.0, dmg: 24, radius: 230, width: 34 },
 
     { id: 'dragon-dance', name: 'Dragon Dance', type: 'dragon', kind: 'buff',
-      desc: 'Deals no damage. Stacks ATTACK faster than Swords Dance.',
-      cd: 0.7, stat: 'atk', amount: 0.11, dur: 7, stacks: 5 },
+      desc: 'Deals no damage. Stacks ATTACK faster and stronger than Swords Dance.',
+      cd: 0.7, stat: 'atk', amount: 0.15, dur: 7, stacks: 5 },
 
     // ---------------- FAIRY ----------------
     { id: 'fairy-wind', name: 'Fairy Wind', type: 'fairy', kind: 'nova',

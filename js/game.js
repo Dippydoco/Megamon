@@ -349,13 +349,16 @@ G.Game = (() => {
     save.stats.coinsEarned += coins;
     const judge = G.Judgment.summary();
     // Match history (last 100 runs): see core/db.js, cleanHistory.
-    G.DB.addHistory({
+    // Runs that were left (quit, or the group ended under you) aren't recorded, so they don't take up slots
+    // (20-10-2026). Runs that reached Arceus are always kept (their star count comes from the history).
+    const runLog = G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 });
+    if (dead || portalLost || judge) G.DB.addHistory({
       id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
       dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
       mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
       ar: judge ? [Math.floor(judge.time), judge.bosses] : 0,
       kb: dead && pl.killer ? pl.killer : 0,
-      z: G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 })
+      z: runLog
     });
     portalLost = false;
     if (judge) G.Progress.event('judgeEnd', judge);
