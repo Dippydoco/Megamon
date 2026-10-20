@@ -197,9 +197,30 @@ service cloud.firestore {
         && (resource == null || (board.matches('sk_.*|gk_.*') ? d.kills > resource.data.kills : d.t > resource.data.t));
     }
 
+    // Moderation (21-10-2026): the admin can add a VERIFIED run from a player's history that the
+    // server refused at the time. Same shape and sanity limits as a normal record, minus the
+    // "your own run, timed from its start" checks (it's added later, on someone else's behalf).
+    function validAdminEntry(board, id) {
+      let d = request.resource.data;
+      return admin()
+        && d.keys().hasOnly(['t', 'uids', 'names', 'dex', 'shiny', 'lv', 'kills', 'at'])
+        && d.t is int && d.t > 0 && d.t <= 7200
+        && d.lv is int && d.lv >= 1 && d.lv <= 10 + d.t / 4
+        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 20
+        && d.uids is list && d.uids.size() >= 1
+        && d.names is list && d.names.size() == d.uids.size()
+        && d.dex is list && d.dex.size() == d.uids.size()
+        && d.shiny is list && d.shiny.size() == d.uids.size()
+        && d.at == request.time
+        && (board.matches('s_.*|sk_.*')
+              ? (d.uids.size() == 1 && id == d.uids[0])
+              : (d.uids.size() >= 2 && d.uids.size() <= 5 && id == d.uids.join('_')))
+        && (resource == null || (board.matches('sk_.*|gk_.*') ? d.kills > resource.data.kills : d.t > resource.data.t));
+    }
+
     match /lb/{board}/e/{id} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && validEntry(board, id);
+      allow create, update: if signedIn() && (validEntry(board, id) || validAdminEntry(board, id));
       allow delete: if signedIn() && (me() in resource.data.uids || admin());
     }
 
@@ -225,7 +246,7 @@ service cloud.firestore {
     function addMine(board, d, old, changed) {
       let e = getAfter(/databases/$(database)/documents/lb/$(board)/e/$(d.me)).data;
       let row = d.top[d.me];
-      return me() in e.uids
+      return (me() in e.uids || admin())
         && changed.hasOnly([d.me, d.ev])
         && row.t == e.t && row.uids == e.uids && row.names == e.names && row.dex == e.dex
         && (d.ev == '' || (!(d.ev in d.top) && d.ev in old

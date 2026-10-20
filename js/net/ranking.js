@@ -198,7 +198,7 @@ G.Ranking = (() => {
   function track(p) { busy = p.catch(() => {}); return p; }
 
   /** Saves the entry in each table where it improves. → periods improved */
-  async function store(boards, id, entry) {
+  async function store(boards, id, entry, errs = null) {
     const fb = fbx();
     const better = [];
     const known = bests();
@@ -258,7 +258,7 @@ G.Ranking = (() => {
         if (/^g/.test(b)) known[b + ':*'] = Math.max(known[b + ':*'] || 0, v);
         mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nothing */ }
         if (vk === 't' && period && period !== 'p' && !better.includes(period)) better.push(period);
-      } catch (e) { console.warn('[Ranking] could not save to', b, e.code || e.message); }
+      } catch (e) { console.warn('[Ranking] could not save to', b, e.code || e.message); if (errs) errs.push(b + ': ' + (e.code || e.message)); }
     }));
     saveBests(known);
     return better;
@@ -602,6 +602,51 @@ G.Ranking = (() => {
     return { rows, boards };
   }
 
+  /**
+   * Admin: puts a verified run from a player's history on the leaderboard (one the server refused
+   * at the time, e.g. over the old 1-hour limit). It goes to the tables of the day, week and month
+   * it was played, all-time, its Pokémon's all-time table and the kills tables, like a normal record.
+   * @param run    a history entry ({ id: end time ms, d, sh, t, lv, k, g, mt: [[name, dex, shiny]] })
+   * @param owner  { uid, name } of the player whose history it is
+   * → { boards: tables written, better: tables where it improved, missing: teammates not found }
+   */
+  async function adminAdd(run, owner) {
+    const fb = fbx();
+    if (!fb || !isAdmin()) throw new Error('admin only');
+    const when = new Date(run.id || Date.now());
+    const ids = boardIds(when);
+    let members = [{ uid: owner.uid, name: owner.name, dex: run.d, shiny: !!run.sh }];
+    const missing = [];
+    if (run.g && Array.isArray(run.mt)) {
+      for (const [name, dex, sh] of run.mt) {
+        const n = await fb.fs.collection('names').doc(String(name).toLowerCase()).get().catch(() => null);
+        if (n && n.exists && n.data().uid) members.push({ uid: n.data().uid, name, dex, shiny: !!sh });
+        else missing.push(name);
+      }
+    }
+    if (run.g && members.length < 2) throw new Error('teammates not found: ' + missing.join(', '));
+    const group = members.length > 1;
+    members = members.sort((a, b) => (a.uid < b.uid ? -1 : 1));
+    const id = members.map(m => m.uid).join('_');
+    const entry = { t: Math.floor(run.t), uids: members.map(m => m.uid), names: members.map(m => m.name),
+                    dex: members.map(m => m.dex), shiny: members.map(m => m.shiny), lv: Math.max(1, run.lv | 0), kills: run.k | 0 };
+    const boards = [];
+    if (group) {
+      const n = '_n' + members.length;
+      for (const [p] of PERIODS) boards.push(['g_' + ids[p] + n, p]);
+      for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d + n, 'p']);
+      if (entry.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p] + n, p]);
+    } else {
+      for (const [p] of PERIODS) boards.push(['s_' + ids[p], p]);
+      boards.push(['s_' + ALL + '_p' + run.d, 'p']);
+      if (entry.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);
+    }
+    const errs = [];
+    const better = await store(boards, id, entry, errs);
+    for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
+    return { boards: boards.length, better, missing, errs };
+  }
+
   /** Admin: bans or unbans an account from the leaderboard (banned = can't upload records). */
   function setMarked(uid, on) { return fbx().fs.collection('saves').doc(uid).update({ ban: !!on }); }
   /** Admin: deletes reports already seen. */
@@ -614,5 +659,5 @@ G.Ranking = (() => {
   }
 
   return { PERIODS, SIZES, periodIds, board, runStarted, submitSolo, submitGroup, top, myRank, removeMine,
-           report, reported, isAdmin, reports, entryInfo, removeEntry, purgeAbove, removeEverywhere, setMarked, dismiss, markedAccounts };
+           report, reported, isAdmin, reports, adminAdd, entryInfo, removeEntry, purgeAbove, removeEverywhere, setMarked, dismiss, markedAccounts };
 })();

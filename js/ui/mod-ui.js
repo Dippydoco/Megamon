@@ -72,10 +72,60 @@ G.ModUI = (() => {
     list.innerHTML = '<p class="sub">Loading…</p>';
     try {
       if (tab === 'rep') await renderReports(list);
+      else if (tab === 'add') renderAdd(list);
       else await renderMarked(list);
     } catch (e) {
       list.innerHTML = '<p class="sub">Could not load (' + esc(e.code || e.message) + ').</p>';
     }
+  }
+
+  /**
+   * Add record: a verified run from a player's shared history goes on the leaderboard (for runs the
+   * server refused at the time). Find the player by nickname, pick the run, confirm.
+   */
+  function renderAdd(list) {
+    list.innerHTML = `<p class="sub">Put a verified run from a player's run history on the leaderboard (for runs the server refused at the time).
+      Only runs they share on their profile can be found.</p>
+      <form class="row" id="mod-add-form" autocomplete="off" style="gap:6px;margin:6px 0">
+        <input id="mod-add-name" class="field grow" placeholder="Player nickname" spellcheck="false">
+        <button class="btn small gold" type="submit">Find runs</button></form><div id="mod-add-runs"></div>`;
+    $('mod-add-form').onsubmit = async e => {
+      e.preventDefault();
+      const name = $('mod-add-name').value.trim();
+      const out = $('mod-add-runs');
+      if (!name) return;
+      out.innerHTML = '<p class="sub">Loading…</p>';
+      try {
+        const n = await G.DB.fb.fs.collection('names').doc(name.toLowerCase()).get();
+        if (!n.exists) { out.innerHTML = '<p class="sub">No player with that nickname.</p>'; return; }
+        const owner = { uid: n.data().uid, name };
+        const prof = await G.DB.fb.fs.collection('profiles').doc(owner.uid).get().catch(() => null);
+        if (prof && prof.exists && prof.data().name) owner.name = prof.data().name;
+        const runs = (await G.Social.getHistory(owner.uid)).slice().sort((a, b) => b.t - a.t).slice(0, 25);
+        if (!runs.length) { out.innerHTML = '<p class="sub">No shared runs for ' + esc(owner.name) + '.</p>'; return; }
+        out.innerHTML = '';
+        for (const r of runs) {
+          const row = document.createElement('div');
+          row.className = 'rk-row mod-row';
+          const mon = G.DEX_BY[r.d];
+          const team = r.g ? 'Group of ' + (1 + (r.mt || []).length) + ': ' + (r.mt || []).map(m => m[0]).join(', ') : 'Solo';
+          row.innerHTML = `<span class="pos">${fmt(r.t)}</span><span class="who"><b>${esc(mon ? mon.name : '#' + r.d)} · ${(r.k || 0).toLocaleString('en-GB')} defeated · Lv. ${r.lv}</b>
+            <small>${esc(team)} · ${new Date(r.id).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${r.ar ? ' · reached Arceus' : ''}</small></span>`;
+          row.appendChild(btn('Add to leaderboard', 'gold', async ev => {
+            const b = ev.currentTarget;
+            if (!confirm('Add ' + owner.name + "'s " + fmt(r.t) + ' run (' + (r.k || 0) + ' defeated) to the leaderboard?')) return;
+            b.disabled = true; b.textContent = 'Adding…';
+            try {
+              const res = await G.Ranking.adminAdd(r, owner);
+              const msg = res.errs.length ? 'Some tables refused it: ' + res.errs.join('; ') : 'Added to ' + res.boards + ' tables' + (res.missing.length ? ' (not found: ' + res.missing.join(', ') + ')' : '');
+              G.UI.toast(msg, 6000);
+              b.textContent = res.errs.length ? 'Partly added' : 'Added';
+            } catch (err) { G.UI.toast('Failed: ' + (err.code || err.message), 6000); b.disabled = false; b.textContent = 'Add to leaderboard'; }
+          }));
+          out.appendChild(row);
+        }
+      } catch (err) { out.innerHTML = '<p class="sub">Could not load (' + esc(err.code || err.message) + ').</p>'; }
+    };
   }
 
   /** "s_w2026-42" -> "Solo · Week" */
