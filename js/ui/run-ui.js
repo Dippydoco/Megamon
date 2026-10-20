@@ -24,7 +24,7 @@ G.RunUI = (() => {
       row('HP', mon.hp, Math.ceil(p.hp) + ' / ' + Math.round(p.maxHp), 'st' + up(mon.hp, p.maxHp)),
       row('Attack', x(p.baseAtk), x(p.atk), 'st' + up(p.baseAtk, p.atk), 'Multiplies physical moves'),
       row('Sp. Atk', x(p.baseSpa), x(p.spa), 'st' + up(p.baseSpa, p.spa), 'Multiplies special moves'),
-      row('Defense', p.baseDef, 'Damage taken ' + pct(taken), 'st' + up(taken, 1), 'Defense plus damage reduction from cards, items and buffs'),
+      row('Defense', p.baseDef, 'DMG Reduced - ' + pct(Math.max(0, 1 - taken)), 'st' + up(taken, 1), 'Defense plus damage reduction from cards, items and buffs'),
       row('Speed', mon.spd, Math.round(p.spd), 'st' + up(mon.spd, p.spd))
     ];
     if (full) rows.push(

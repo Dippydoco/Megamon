@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T12:31Z', title: 'Gyro Ball reaches further', chg: [
+    'Gyro Ball\'s balls still spin around you, but now also fly off at foes up to about 280 away (more with Reach), hitting harder than a spinning ball, and come back to your orbit about a second later. It still hits harder the slower you move.',
+    'The stats panel now shows Defense as "DMG Reduced" instead of damage taken.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T10:16Z', title: 'See your stats during a run', new: [
     'The level-up screen and the pause menu now show your Pokémon\'s stats: whether it is a physical, special or mixed attacker, and its HP, Attack, Sp. Atk, Defense (as damage taken) and Speed, base value next to its current value with every bonus applied.',
     'The pause menu also shows cooldowns, critical hit chance, regeneration, area size, pickup range and experience.'

@@ -696,8 +696,8 @@
       cd: 1.3, dmg: 44, radius: 70, speed: 300, splash: 50 },
 
     { id: 'gyro-ball', name: 'Gyro Ball', type: 'steel', kind: 'spin', cat: 'physical',
-      desc: 'A steel ball spinning around you that hits harder the slower you move (double standing still).',
-      cd: 0.35, dmg: 16, count: 1, radius: 38, speed: 3.0, size: 10, still: 1 },
+      desc: 'Steel balls spin around you and fly off at nearby foes, then return. Hits harder the slower you move (double standing still).',
+      cd: 0.35, dmg: 16, count: 1, radius: 38, speed: 3.0, size: 10, still: 1, range: 280, launch: 0.45, back: 1.1, shotMul: 1.5 },
 
     { id: 'mirror-shot', name: 'Mirror Shot', type: 'steel', kind: 'ricochet', cat: 'special',
       desc: 'A flash of light that bounces between foes and slows them.',

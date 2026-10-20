@@ -1075,7 +1075,10 @@ G.Combat = (() => {
 
   function orbit(pl, m, dt, now, isGhost = false) {
     const col = G.U.TYPE_COLOR[m.type];
-    const want = Math.max(1, m.count | 0);
+    // Gyro Ball (spin, 20-10-2026): balls that are launched at a foe leave the orbit and come back after a moment.
+    const gy = m.kind === 'spin' ? ((pl._gyro || (pl._gyro = {}))[m.id] || (pl._gyro[m.id] = { out: [], t: 0 })) : null;
+    if (gy) gy.out = gy.out.filter(t => t > now);
+    const want = Math.max(gy ? 0 : 1, (m.count | 0 || 1) - (gy ? gy.out.length : 0));
     // Each orbit move has its own orbs (there can be two in a bond).
     const mine = p => p.orb && p.owner === pl && p.mid === m.id;
     const orbs = G.Projectiles.all().filter(mine);
@@ -1105,6 +1108,25 @@ G.Combat = (() => {
       p.r = m.size;
       if (relayout) p.oa = base + (i / live.length) * 6.2832;
     });
+
+    // Gyro Ball: every so often a ball flies off at the nearest foe in range (same standing-still bonus).
+    if (gy && live.length && (gy.t -= dt) <= 0) {
+      const range = (m.range || 280) * (pl.areaMul || 1);
+      const tg = G.Projectiles.nearest(G.EnemyMgr.all(), pl.x, pl.y, range);
+      if (tg) {
+        const p = live[0];
+        const [dx, dy] = G.U.norm(tg.x - p.x, tg.cy() - p.y);
+        const sp = m.shot || 560;
+        G.Projectiles.remove(p);
+        G.Projectiles.spawn(Object.assign({
+          x: p.x, y: p.y, vx: dx * sp, vy: dy * sp,
+          dmg: m.dmg * pl.pow(m) * spinK * (m.shotMul || 1.5), r: m.size, life: (range + 80) / sp,
+          pierce: 1, color: col, homing: 4, hits: new Set(), vis: G.VFX.forMove(m), ghost: isGhost, owner: pl
+        }, payload(m)));
+        gy.out.push(now + (m.back || 1.1));
+        gy.t = m.launch || 0.45;
+      }
+    }
 
     // A focus animation every so often, so it looks alive.
     pl.orbCastT = (pl.orbCastT || 0) - dt;
