@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T19:01Z', title: 'Group runs: more enemies and faster levelling', chg: [
+    'Group runs now allow more enemies on the field at once (64 solo, up to 160 with 4 players). Before, a whole team shared the solo amount, so each player had far fewer foes to fight.',
+    'Group runs level up faster: the experience split between players is gentler.'
+  ], fix: [
+    'Fixed your shared run history sometimes disappearing from your profile when you signed in on a device that hadn\'t loaded your runs yet.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T17:53Z', title: 'Arceus Stars are now a currency', new: [
     'Arceus Stars now show in the top bar next to your PokéCoins and tickets: you have one for every run that reached Arceus. They\'ll be spendable soon. Spending them won\'t change the gold stars on your Pokémon.'
   ] },

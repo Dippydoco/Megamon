@@ -121,7 +121,9 @@ G.Spawner = (() => {
   /** @param who  the player or the list of players (co-op) */
   function update(dt, who, t) {
     players = Array.isArray(who) ? who : [who];
-    CAP = players.length > 4 ? 76 : 64;
+    // More players, more room on the field (20-10-2026): a flat 64 split across a whole team left each
+    // player a third of the enemies, so group runs got ~1/3 of solo's kills (and levels) in the same time.
+    CAP = 64 + 32 * Math.min(3, Math.max(0, players.length - 1)) + (players.length > 4 ? 12 : 0);
     if (announceT > 0) announceT -= dt;
     // In the rift arena nothing else spawns (and the boss clock waits).
     // In Arceus's Judgment, only its legendaries (systems/judgment.js).

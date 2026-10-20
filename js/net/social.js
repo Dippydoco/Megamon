@@ -693,7 +693,10 @@ G.Social = (() => {
     if (!me || !fb || !uid) return;
     const on = G.Settings.get('shareHist') !== false;
     const list = (G.DB.save && G.DB.save.history) || [];
-    const key = on && list.length ? list[0].id + ':' + list.length : on ? 'empty' : 'off';
+    // An empty local history never wipes the shared copy (20-10-2026): a device whose save hasn't loaded
+    // its runs yet (or a fresh browser) used to delete it. Only turning sharing off removes it.
+    if (on && !list.length) return;
+    const key = on ? list[0].id + ':' + list.length : 'off';
     const lsKey = 'ps.hist.' + uid;
     if (!histPub) { try { histPub = localStorage.getItem(lsKey) || ''; } catch (e) { /* nothing */ } }
     if (key === histPub) return;
@@ -702,7 +705,7 @@ G.Social = (() => {
     const fail = e => console.warn('[Social] history:', e.code || e.message);
     // Firestore refuses arrays inside arrays (a run has moves and teammates lists), so each run goes up as a JSON string.
     try {
-      if (!on || !list.length) ref.delete().then(done).catch(fail);
+      if (!on) ref.delete().then(done).catch(fail);
       else ref.set({ at: firebase.firestore.FieldValue.serverTimestamp(), runs: list.slice(0, G.DB.HISTORY_MAX).map(r => JSON.stringify(r)) }).then(done).catch(fail);
     } catch (e) { fail(e); }   // never let this break the end of a run
   }

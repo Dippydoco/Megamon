@@ -123,7 +123,7 @@ G.Coop = (() => {
   function xpFactor() {
     let s = local.xpMul, n = 1;
     for (const m of mates.values()) if (m.connected) { s += m.xpMul || 1; n++; }
-    return (s / n) / local.xpMul / (1 + 0.6 * (n - 1));
+    return (s / n) / local.xpMul / (1 + 0.35 * (n - 1));      // (0.6 until 20-10-2026: groups levelled far slower than solo)
   }
 
   // ---------------- a player's state ----------------
