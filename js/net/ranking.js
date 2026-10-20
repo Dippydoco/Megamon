@@ -23,7 +23,7 @@
  *   team's size, so existing records kept their place; nothing new is written to them.
  *
  * Savings:
- *   - What's read is cached for 30 min in the browser (switching tabs and back: 0).
+ *   - What's read is cached for 5 min in the browser (switching tabs and back: 0).
  *   - Your best records are remembered in the browser: at the end of a run
  *     nothing needs reading to know whether you've improved, and it only writes
  *     where you improve.
@@ -47,7 +47,7 @@ G.Ranking = (() => {
   // matters and they were many reads and writes for nothing: beginners
   // often die in the first minute; it was 1 min until 14-10-2026).
   const MIN_T = 120;
-  const TTL = 30 * 60 * 1000;            // cache of what's been read (30 min: fewer Firestore reads)
+  const TTL = 5 * 60 * 1000;             // cache of what's been read (5 min since 21-10-2026; it was 30: new records took too long to show for others)
 
   const fbx = () => G.DB.online ? G.DB.fb : null;
 
@@ -305,7 +305,7 @@ G.Ranking = (() => {
 
   // ---------------- leer ----------------
 
-  /** A table's top 50 (1 read, or 0 if it was read less than 30 min ago). */
+  /** A table's top 50 (1 read, or 0 if it was read less than 5 min ago). */
   const inflight = new Map();             // table -> read in progress (the list and your rank share it)
   async function summary(b) {
     const c = cacheGet('s:' + b);
@@ -385,7 +385,7 @@ G.Ranking = (() => {
     const inTop = rows.filter(r => r.uids.some(u => circle.includes(u)));
     // In daily, weekly, monthly and per-Pokémon there are no records outside the top 50.
     if (TOP_ONLY.has(period) || dex) return inTop;
-    // Friends who aren't in the top 50: looked up separately (and cached for 30 min).
+    // Friends who aren't in the top 50: looked up separately (and cached for 5 min).
     const ck = 'f:' + b + ':' + circle.slice().sort().join(',');
     let extra = cacheGet(ck);
     if (extra === undefined) {

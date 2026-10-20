@@ -1,7 +1,7 @@
 /* ============ ranking-ui.js — leaderboard screen ============
  * Solo / Group tabs, period (daily ... all-time), everyone or friends only,
  * per-Pokémon filter (all-time only) and your rank at the bottom even if you're not
- * in the top. What's read is cached for 30 min (see ranking.js).
+ * in the top. What's read is cached for 5 min (see ranking.js).
  */
 G.RankingUI = (() => {
   const $ = G.UI.$;
