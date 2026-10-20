@@ -131,7 +131,7 @@
         el.className = 'fr-row';
         const dot = f.status !== 'ok' ? 'pend' : !f.online ? 'off' : f.play || isRun(f) ? 'play' : 'on';
         const inRoom = room && room.members.some(m => m.uid === f.uid);
-        el.innerHTML = `<i class="dot ${dot}"></i><b translate="no"><a href="#" class="plink" title="Ver su perfil">${esc(f.name)}</a></b><span class="st" data-uid="${esc(f.uid)}">${inRoom ? 'In your room' : stateText(f)}</span><span class="grow"></span>`;
+        el.innerHTML = `<i class="dot ${dot}"></i><b translate="no"><a href="#" class="plink">${esc(f.name)}</a></b><span class="st" data-uid="${esc(f.uid)}">${inRoom ? 'In your room' : stateText(f)}</span><span class="grow"></span>`;
         if (f.status === 'ok') el.querySelector('.plink').onclick = e => { e.preventDefault(); G.ProfileUI.show(f.uid); };
         if (f.status === 'ok') {
           // Favourite Pokémon (up to 3) next to the name; profile comes from the 10-min cache.

@@ -162,14 +162,15 @@ G.MenuUI = (() => {
       tabs.appendChild(b);
     });
 
-    const F = [['all', 'All'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
+    const F = [['all', 'All'], ['fav', 'Favourites'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
                ['5', 5], ['4', 4], ['3', 3], ['2', 2], ['1', 1]];
     const fb = $('dex-filters');
     fb.innerHTML = '';
     for (const [k, label] of F) {
       const c = document.createElement('button');
       c.className = 'chip' + (k === dexFilter ? ' on' : '');
-      c.innerHTML = k === 'shiny' ? G.Icons.html('shiny', 12) + ' Shiny'
+      c.innerHTML = k === 'fav' ? G.Icons.html('heart', 12) + ' Favourites'
+                  : k === 'shiny' ? G.Icons.html('shiny', 12) + ' Shiny'
                   : typeof label === 'number' ? G.Icons.rarity(label, 12) + ' ' + G.Gacha.RARITY_NAME[label] : label;
       c.onclick = () => { dexFilter = k; openDex(); };
       fb.appendChild(c);
@@ -182,6 +183,9 @@ G.MenuUI = (() => {
   // Recently added Pokémon: they carry a "NEW" tag in the Pokédex.
   // (To remove it, delete the number here. Added on 17-10-2026.)
   const NEW_DEX = new Set([593, 865, 879, 948, 1025]);
+
+  /** Favourite Pokémon (heart in the Pokémon tab, and the Favourites filter). */
+  const isFav = dex => !!(G.DB.save.favMon && G.DB.save.favMon[dex]);
 
   /** Gold star: this Pokémon has reached Arceus in a run. */
   const reachedArceus = dex => !!(G.DB.save.arceus && G.DB.save.arceus[dex]);
@@ -213,8 +217,10 @@ G.MenuUI = (() => {
         const known = !!s.owned[p.dex];
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
-      } else if (p.gen !== dexGen && dexFilter !== 'new') continue;      // the New filter shows every generation
+      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // New and Favourites show every generation
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
+      const fav = own && isFav(p.dex);
+      if (dexFilter === 'fav' && !fav) continue;
       if (dexFilter === 'own' && !own) continue;
       if (dexFilter === 'miss' && own) continue;
       if (dexFilter === 'shiny' && !sh) continue;
@@ -226,9 +232,10 @@ G.MenuUI = (() => {
       cell.className = 'cell' + (own ? '' : ' locked') + (p.dex === dexSel ? ' on' : '');
       cell.insertAdjacentHTML('beforeend', `<span class="no">${String(p.dex).padStart(3, '0')}</span>`);
       if (NEW_DEX.has(p.dex)) cell.insertAdjacentHTML('beforeend', '<span class="tag-new">NEW</span>');
+      if (fav) cell.insertAdjacentHTML('beforeend', `<span class="badge-fav" title="Favourite">${G.Icons.html('heart', 12)}</span>`);
       if (own && reachedArceus(p.dex)) cell.insertAdjacentHTML('beforeend', `<span class="badge-arc${p.dex === s.partner || sh ? ' shift' : ''}" title="${arcTitle(p.dex)}">${G.Icons.html('star', 14)}</span>`);
       if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Partner">${G.Icons.html('crown', 14)}</span>`);
-      else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Tienes su shiny">${G.Icons.html('shiny', 12)}</span>`);
+      else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="You have its shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
       cell.appendChild(G.UI.spriteCanvas(p.dex, 92, 80, { scale: 2, silhouette: !own, shadow: own, shiny: useShiny }));
       cell.insertAdjacentHTML('beforeend', `<b>${own ? p.name : '???'}</b>${G.UI.stars(p.rarity, 9)}`);
@@ -286,6 +293,7 @@ G.MenuUI = (() => {
         <p style="font-size:14px;margin:10px 0 4px">Starts with <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
         <p class="move-icons">
           ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
+        <button id="dex-fav" class="btn ghost" style="width:100%;margin-bottom:6px">${G.Icons.html('heart', 14)} ${isFav(dex) ? 'Remove from favourites' : 'Add to favourites'}</button>
         ${usingThis
           ? '<button class="btn grow" disabled style="width:100%">It\'s your partner</button>'
           : `<button id="dex-pick" class="btn gold" data-sfx="confirm" style="width:100%">Choose as partner${viewShiny ? ' (shiny)' : ''}</button>`}
@@ -298,6 +306,14 @@ G.MenuUI = (() => {
     box.querySelectorAll('.seg button').forEach(b => {
       b.onclick = () => { viewShiny = b.dataset.v === '1'; showDetail(dex); };
     });
+    const favBtn = $('dex-fav');
+    if (favBtn) favBtn.onclick = () => {
+      s.favMon = s.favMon || {};
+      if (s.favMon[dex]) delete s.favMon[dex]; else s.favMon[dex] = 1;
+      G.DB.commit();
+      G.UI.toast(p.name + (s.favMon[dex] ? ' added to' : ' removed from') + ' favourites');
+      renderGrid(); showDetail(dex);
+    };
     const pick = $('dex-pick');
     if (pick) pick.onclick = () => {
       s.partner = dex;

@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T10:05Z', title: 'Favourite Pokémon', new: [
+    'Mark any Pokémon you own as a favourite with the new button on its page in the Pokémon tab. Favourites get a heart in the grid, and the new Favourites filter shows them all, from every generation.'
+  ] },
+  { d: '2026-10-20', at: '2026-10-20T10:05Z', title: 'Friends list tooltip', fix: [
+    'Hovering over a friend\'s name no longer shows a stray Spanish tooltip. The shiny badge tooltip in the Pokémon tab is now in English too.'
+  ] },
   { d: '2026-10-20', at: '2026-10-19T23:17Z', title: 'Group leaderboards by team size', chg: [
     'The Group leaderboard now has a separate table for each team size: 2, 3, 4 and 5 players. Existing group records have been sorted into the table for their team\'s size.'
   ] },

@@ -446,6 +446,7 @@ img.pix { image-rendering: pixelated; image-rendering: crisp-edges; vertical-ali
 .badge-r { position: absolute; top: 3px; right: 4px; }
 .badge-arc { position: absolute; top: 3px; right: 4px; z-index: 2; }
 .badge-arc.shift { right: 22px; }
+.badge-fav { position: absolute; bottom: 4px; right: 4px; z-index: 2; }
 .move-icons { display: flex; flex-wrap: wrap; gap: 3px; margin: 0 0 10px; }
 .card .ico img { display: block; }
 .upg-item .ic { display: flex; justify-content: center; }

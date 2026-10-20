@@ -93,6 +93,7 @@ G.DB = (() => {
       legends: {},            // dex -> date: legendaries defeated in rifts
       history: [],            // latest runs (most recent first, max. HISTORY_MAX): see cleanHistory()
       arceus: {},             // dex -> date: Pokémon that have reached Arceus (gold star)
+      favMon: {},             // dex -> 1: Pokémon marked as favourite in the Pokémon tab
       arceusN: {},            // dex -> how many times that Pokémon has reached Arceus (since 19-10-2026)
       arenas: {},             // type -> date: rift arenas won
       itemsFound: {},         // id -> date: held items found
