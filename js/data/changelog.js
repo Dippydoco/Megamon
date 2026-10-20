@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T17:53Z', title: 'Arceus Stars are now a currency', new: [
+    'Arceus Stars now show in the top bar next to your PokéCoins and tickets: you have one for every run that reached Arceus. They\'ll be spendable soon. Spending them won\'t change the gold stars on your Pokémon.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T17:46Z', title: 'Mini-Games: Gacha Battle and Draft Night', new: [
     'New Mini-Games button on the main menu. Both games are played with friends in a room: the host starts them from the room.',
     'Gacha Battle: everyone who joins stakes 1, 3 or 5 ×1 tickets and pulls at the same time, revealed live on everyone\'s screen. You keep what you pull, and the best pulls (★1 1 point up to ★5 100, shiny ×3) win everyone else\'s staked tickets. Up to 3 battles a day; battle pulls don\'t count towards pity.',

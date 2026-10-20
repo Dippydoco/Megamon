@@ -103,7 +103,8 @@ G.DB = (() => {
       gb: {},                 // Gacha Battles: { day, n: battles today, done: { battle id: 1 } } (ui/minigames.js)
       profile: { favs: [], title: '' },   // public profile: 3 favourites and title
       stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
-               bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0 }
+               bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0,
+               judged: 0, starsSpent: 0 }
     };
   }
 
@@ -930,6 +931,16 @@ G.DB = (() => {
 
   return {
     ready, register, login, loginWithGoogle, playAsGuest, labSave, logout, commit, deleteAccount, flush: pushNow,
+    /** Arceus Stars to spend: every run that reached Arceus (stats.judged) minus those already spent.
+     *  Spending never touches the per-Pokémon star counts (save.arceus / arceusN). Both stats only grow,
+     *  so the cloud merge (max of each stat) keeps them right across devices. */
+    stars() { return save ? Math.max(0, (save.stats.judged || 0) - (save.stats.starsSpent || 0)) : 0; },
+    spendStars(n) {
+      if (!save || n <= 0 || this.stars() < n) return false;
+      save.stats.starsSpent = (save.stats.starsSpent || 0) + n;
+      commit();
+      return true;
+    },
     owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, cleanHistory, HISTORY_MAX,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },
