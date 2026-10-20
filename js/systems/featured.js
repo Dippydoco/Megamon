@@ -3,7 +3,7 @@
  * one Common/Uncommon, one Rare and one Epic/Legendary-rarity (never a legendary Pokémon).
  * Everyone gets the same three: they're picked from the date alone.
  * A run with a featured Pokémon earns +50% PokéCoins at the end (game.js endRun).
- * Shown on the main menu (menu.js) and as a filter in the Pokémon tab.
+ * Shown on the main menu (menu.js).
  */
 G.Featured = (() => {
   const BONUS = 1.5;

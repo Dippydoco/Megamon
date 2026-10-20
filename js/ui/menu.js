@@ -215,7 +215,7 @@ G.MenuUI = (() => {
       tabs.appendChild(b);
     });
 
-    const F = [['all', 'All'], ['fav', 'Favourites'], ['feat', 'Featured today'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
+    const F = [['all', 'All'], ['fav', 'Favourites'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
                ['5', 5], ['4', 4], ['3', 3], ['2', 2], ['1', 1]];
     const fb = $('dex-filters');
     fb.innerHTML = '';
@@ -270,11 +270,10 @@ G.MenuUI = (() => {
         const known = !!s.owned[p.dex];
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
-      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav' && dexFilter !== 'feat') continue;      // these filters show every generation
+      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // these filters show every generation
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
       const fav = own && isFav(p.dex);
       if (dexFilter === 'fav' && !fav) continue;
-      if (dexFilter === 'feat' && !G.Featured.is(p.dex)) continue;
       if (dexFilter === 'own' && !own) continue;
       if (dexFilter === 'miss' && own) continue;
       if (dexFilter === 'shiny' && !sh) continue;
