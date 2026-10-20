@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T21:05Z', title: 'No more losing a run by accident', new: [
+    'During a run, closing or reloading the page (or going to another site in the same tab) now asks you to confirm first. The Back button and the phone\'s back gesture open the pause menu instead of leaving the game.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T19:01Z', title: 'Group runs: more enemies and faster levelling', chg: [
     'Group runs now allow more enemies on the field at once (64 solo, up to 160 with 4 players). Before, a whole team shared the solo amount, so each player had far fewer foes to fight.',
     'Group runs level up faster: the experience split between players is gentler.'
