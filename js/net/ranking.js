@@ -569,7 +569,7 @@ G.Ranking = (() => {
   /**
    * Admin: removes from ALL tables the records longer than `maxT` seconds (the
    * rows of each top 50 and the loose records in the all-time table). With Arceus's
-   * Judgment nobody legitimate goes past ~32 min. → { rows, boards }
+   * Judgment most runs end by ~33 min (a few strong ones pass an hour; the server allows up to 2 h). → { rows, boards }
    */
   async function purgeAbove(maxT, onProgress) {
     const fs = fbx().fs;

@@ -172,19 +172,19 @@ service cloud.firestore {
 
     // An entry can only improve, never get worse. Anti-cheat:
     //   - it can't last longer than the real time since your run started
-    //     (runs/{uid}), with a 30 s margin; nor more than 1 h (Arceus's
-    //     Judgment ends runs around minute 31-32; 1 h in case someone
-    //     very good survives much longer)
-    //   - level and defeated count with plenty of margin (a very good group of 4)
+    //     (runs/{uid}), with a 30 s margin; nor more than 2 h (raised from 1 h on
+    //     21-10-2026: a legit run passed an hour in Arceus's Judgment and was refused)
+    //   - level, and defeated count up to 20 a second (was 12: top solo runs kill ~9 a second
+    //     and groups now have up to 160 enemies on the field)
     //   - the account can't be banned by the admin (saves/{uid}.ban)
     function validEntry(board, id) {
       let d = request.resource.data;
       let run = get(/databases/$(database)/documents/runs/$(me())).data;
       return d.keys().hasOnly(['t', 'uids', 'names', 'dex', 'shiny', 'lv', 'kills', 'at'])
-        && d.t is int && d.t > 0 && d.t <= 3600
+        && d.t is int && d.t > 0 && d.t <= 7200
         && d.t <= (request.time - run.startedAt).seconds() + 30
         && d.lv is int && d.lv >= 1 && d.lv <= 10 + d.t / 4
-        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 12
+        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 20
         && get(/databases/$(database)/documents/saves/$(me())).data.get('ban', false) == false
         && d.uids is list && me() in d.uids
         && d.names is list && d.names.size() == d.uids.size()

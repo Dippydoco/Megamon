@@ -17,14 +17,14 @@ G.ModUI = (() => {
   function init() {
     $('mod-back').onclick = () => G.RankingUI.open();
     $('mod-purge').onclick = async () => {
-      if (!confirm('Remove ALL entries over 1 hour from the leaderboard (all boards)? This cannot be undone.')) return;
+      if (!confirm('Remove ALL entries over 2 hours from the leaderboard (all boards)? This cannot be undone.')) return;
       const b = $('mod-purge');
       b.disabled = true;
       try {
-        const r = await G.Ranking.purgeAbove(3600, (i, n) => { b.textContent = 'Checking ' + i + ' / ' + n + '…'; });
-        G.UI.toast('Removed ' + r.rows + ' entries over 1 hour (' + r.boards + ' boards)', 5000);
+        const r = await G.Ranking.purgeAbove(7200, (i, n) => { b.textContent = 'Checking ' + i + ' / ' + n + '…'; });
+        G.UI.toast('Removed ' + r.rows + ' entries over 2 hours (' + r.boards + ' boards)', 5000);
       } catch (e) { G.UI.toast('Failed: ' + (e.code || e.message), 5000); }
-      b.disabled = false; b.textContent = 'Remove entries over 1 hour';
+      b.disabled = false; b.textContent = 'Remove entries over 2 hours';
       render();
     };
     document.querySelectorAll('#mod-tabs .tab').forEach(t => { t.onclick = () => { tab = t.dataset.tab; render(); }; });
@@ -86,8 +86,9 @@ G.ModUI = (() => {
     const dex = (b.match(/_p(\d+)$/) || [])[1];
     return mode + ' · ' + per + (dex && G.DEX_BY[dex] ? ' · only ' + G.DEX_BY[dex].name : '');
   }
-  // With Arceus's Judgment (minute 30) almost nobody gets past ~32-33 min.
-  const SUSPECT_T = 33 * 60;
+  // Arceus's Judgment (minute 30) ends most runs by minute ~33, but strong players have survived past an hour
+  // (21-10-2026), so only runs past 90 minutes are flagged as unusual.
+  const SUSPECT_T = 90 * 60;
 
   async function renderReports(list) {
     const groups = await G.Ranking.reports();
@@ -107,7 +108,7 @@ G.ModUI = (() => {
       row.appendChild(mons);
       row.insertAdjacentHTML('beforeend', `<span class="who"><b translate="no">${g.names.map(esc).join(' · ')}</b>
           <small>${esc(boardName(g.board))}${info ? ' · Lv. ' + (info.lv || 1) + ' · ' + (info.kills || 0).toLocaleString('en') + ' defeated' : ' · no longer in the top 50'}</small>
-          ${sus ? '<small class="mod-warn">Over 33 min: almost impossible with the Judgment of Arceus</small>' : ''}</span>
+          ${sus ? '<small class="mod-warn">Over 90 min: very unusual, check it</small>' : ''}</span>
         <span class="time${sus ? ' mod-warn' : ''}">${fmt(t)}</span>`);
       const acts = document.createElement('span');
       acts.className = 'mod-acts';
