@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T16:36Z', title: 'Dash moves reworked, and status pays off', chg: [
+    'Dash moves (Quick Attack, Aerial Ace, Aqua Jet, Spark, Psyshield Bash, Spirit Break) now lunge at the target, hit everything in the way and spring straight back. You stay where you were, so you keep full control of your movement and no longer end up inside the crowd.'
+  ], new: [
+    'Afflicted foes: an enemy takes +8% damage from everyone for each kind of status it has (burned, poisoned, slowed, frozen or stunned), up to +32%. Bosses too.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T16:17Z', title: 'STAB for single-type Pokémon, melee toned down', new: [
     'Same-type attack bonus: single-type Pokémon (like Charmander or Pikachu) now deal ×1.2 damage with moves of their own type. Dual-type Pokémon don\'t get it.'
   ], chg: [

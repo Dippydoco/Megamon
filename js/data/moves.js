@@ -169,7 +169,7 @@
       cd: 0.50, dmg: 13, radius: 48, arc: 1.7, knock: 90 },
 
     { id: 'quick-attack', name: 'Quick Attack', type: 'normal', kind: 'dash',
-      desc: 'Dash toward the nearest enemy, hitting everything along the way.',
+      desc: 'Lunge at the nearest foe, hitting everything in the way, and spring straight back.',
       cd: 0.75, dmg: 20, radius: 110, width: 34, knock: 40 },
 
     { id: 'swords-dance', name: 'Swords Dance', type: 'normal', kind: 'buff',
@@ -433,7 +433,7 @@
       ] },
 
     { id: 'aerial-ace', name: 'Aerial Ace', type: 'flying', kind: 'dash',
-      desc: 'Dive through enemies, slashing everything you pass.',
+      desc: 'Dive at a foe, slashing everything in the way, and spring straight back.',
       cd: 0.75, dmg: 18, radius: 120, width: 40, knock: 60 },
 
     { id: 'flame-wheel', name: 'Flame Wheel', type: 'fire', kind: 'trail',
@@ -531,7 +531,7 @@
 
     // ---------------- 19-10-2026: Water finally gets physical moves ----------------
     { id: 'aqua-jet', name: 'Aqua Jet', type: 'water', kind: 'dash', cat: 'physical',
-      desc: 'Shoot through foes in a jet of water, knocking them aside.',
+      desc: 'Shoot at a foe in a jet of water, knocking everything in the way aside, and spring back.',
       cd: 0.7, dmg: 17, radius: 125, width: 38, knock: 70 },
 
     { id: 'liquidation', name: 'Liquidation', type: 'water', kind: 'melee', cat: 'physical',
@@ -539,7 +539,7 @@
       cd: 0.6, dmg: 16, radius: 54, arc: 1.7, knock: 90, fx: { vuln: 2 } },
 
     { id: 'spark', name: 'Spark', type: 'electric', kind: 'dash', cat: 'physical',
-      desc: 'Charge through foes crackling with electricity; it can stun them.',
+      desc: 'Lunge at a foe crackling with electricity, and spring back; it can stun what it hits.',
       cd: 0.75, dmg: 18, radius: 115, width: 36, knock: 50, fx: { stun: [0.15, 0.6] } },
 
     { id: 'thunder-punch', name: 'Thunder Punch', type: 'electric', kind: 'melee', cat: 'physical',
@@ -555,7 +555,7 @@
       cd: 0.6, dmg: 17, radius: 46, arc: 1.2, knock: 120, fx: { stun: [0.15, 0.7] } },
 
     { id: 'psyshield-bash', name: 'Psyshield Bash', type: 'psychic', kind: 'dash', cat: 'physical',
-      desc: 'Dash in wrapped in psychic energy: you take 30% less damage for a moment after.',
+      desc: 'Lunge at a foe wrapped in psychic energy and spring back: you take 30% less damage for a moment after.',
       cd: 0.8, dmg: 21, radius: 115, width: 40, knock: 60, guard: [0.3, 1.5] },
 
     { id: 'cross-poison', name: 'Cross Poison', type: 'poison', kind: 'melee', cat: 'physical',
@@ -631,7 +631,7 @@
       cd: 0.6, dmg: 16, radius: 52, arc: 1.9, knock: 80, fx: { vuln: 2 } },
 
     { id: 'spirit-break', name: 'Spirit Break', type: 'fairy', kind: 'dash', cat: 'physical',
-      desc: 'Dash through foes with a burst of fairy power.',
+      desc: 'Lunge at a foe with a burst of fairy power and spring straight back.',
       cd: 0.75, dmg: 19, radius: 115, width: 38, knock: 60 },
 
     { id: 'fiery-wrath', name: 'Fiery Wrath', type: 'dark', kind: 'cone', cat: 'special',

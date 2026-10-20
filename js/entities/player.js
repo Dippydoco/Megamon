@@ -532,7 +532,20 @@ G.Player = class Player {
     this.anim.loop(this.walking ? 'Walk' : 'Idle', this.walking ? this.baseSpd / 110 : 1);
   }
 
+  /** Dash moves draw the body springing out to the strike and back (combat.js dash); the real position never moves. */
   draw(ctx) {
+    const L = this.lunge;
+    if (L) {
+      const k = (performance.now() - L.at) / L.dur;
+      if (k >= 1 || this.dead) { this.lunge = null; return this.drawBody(ctx); }
+      const f = k < 0.4 ? k / 0.4 : 1 - (k - 0.4) / 0.6;       // fast out, a little slower back
+      ctx.save(); ctx.translate(L.dx * f, L.dy * f); this.drawBody(ctx); ctx.restore();
+      return;
+    }
+    this.drawBody(ctx);
+  }
+
+  drawBody(ctx) {
     // Halo in the active move's type, on the ground.
     const m = this.activeMove();
     if (m && !this.dead) {

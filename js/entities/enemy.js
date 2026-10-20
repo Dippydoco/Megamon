@@ -118,6 +118,12 @@
       // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
       if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }
       if (this.vulnT > 0) amount *= 1.25;             // Acid Spray: takes more damage from everyone (only the host's copy has vulnT)
+      // Afflicted (20-10-2026): +8% damage taken for each kind of status it carries (burn, poison, slow, frozen/stunned),
+      // so status builds pay off. Bosses count too. (Host's copy; guests' numbers show without it.)
+      if (!this.remote) {
+        const n = (this.burn > 0) + (this.poison > 0) + (this.slowT > 0 && this.slow > 0) + (this.freezeT > 0);
+        if (n) amount *= 1 + 0.08 * n;
+      }
       const d = Math.max(1, Math.round(amount));
       // Copy of an enemy from the host: the hit is sent to them, since they're
       // the one who decides whether it falls. Here it's only shown (number, flash and animation).

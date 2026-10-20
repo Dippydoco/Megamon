@@ -439,31 +439,39 @@ G.Combat = (() => {
     breakDecoy(best);
   }
 
-  /** Charge: you dash like lightning at the enemy and hit everything on the way. */
+  /**
+   * Lunge (dash moves, reworked 20-10-2026): you spring at the target, strike everything on the line,
+   * and snap straight back. You end where you started, so you keep walking wherever you were going and
+   * don't land inside the crowd (they used to leave you in the middle of the enemies, taking hits).
+   * The body's trip out and back is only drawn (Player.lunge), it doesn't move you.
+   */
   function dash(pl, m) {
     const col = G.U.TYPE_COLOR[m.type], vis = G.VFX.forMove(m);
     const ca = Math.cos(pl.aim), sa = Math.sin(pl.aim);
     const sx = pl.x, sy = pl.y;
+    // Reach the target (a little past it), never further than the move's range.
+    const tg = pl.target && !pl.target.dead ? pl.target : null;
+    const want = tg ? Math.min(m.radius, Math.hypot(tg.x - sx, tg.y - sy) + 24) : m.radius;
     let len = 0;
-    for (let d = 8; d <= m.radius; d += 8) {
+    for (let d = 8; d <= want; d += 8) {
       if (!G.World.isFree(sx + ca * d, sy + sa * d, pl.r * 0.8, true)) break;
       len = d;
     }
     // Trail: several copies of the hit along the path.
     for (let d = 0; d <= len; d += 22) G.FX.sp(vis.proj || 'streak', vis.pal, sx + ca * d, sy + sa * d - G.LIFT * 0.6, { life: 0.22, angle: pl.aim });
     G.FX.slash(sx + ca * len, sy + sa * len - G.LIFT * 0.5, pl.aim, 34, 2.2, col, vis);
+    pl.lunge = { dx: ca * len, dy: sa * len, at: performance.now(), dur: 200 };
     if (ghost) return;
-    pl.x = sx + ca * len; pl.y = sy + sa * len;
-    G.World.collide(pl);
-    pl.invuln = Math.max(pl.invuln || 0, 0.3);
+    const ex = sx + ca * len, ey = sy + sa * len;     // the far end of the strike
+    pl.invuln = Math.max(pl.invuln || 0, 0.2);
     if (m.guard) { pl.guardAmt = m.guard[0]; pl.guardT = m.guard[1]; }      // Psyshield Bash: less damage taken for a moment
     const w = m.width || 34;
     const mx = sx + ca * len / 2, my = sy + sa * len / 2;
     for (const e of G.EnemyMgr.queryCircle(mx, my, len / 2 + w)) {
-      if (segDist2(sx, sy, pl.x, pl.y, e.x, e.y) <= (w / 2 + e.r) ** 2) hit(pl, e, m.dmg * pl.pow(m), col, ca, sa, m.knock || 0, m);
+      if (segDist2(sx, sy, ex, ey, e.x, e.y) <= (w / 2 + e.r) ** 2) hit(pl, e, m.dmg * pl.pow(m), col, ca, sa, m.knock || 0, m);
     }
     for (const p of G.World.propsInCircle(mx, my, len / 2 + w)) {
-      if (segDist2(sx, sy, pl.x, pl.y, p.x, p.y) <= (w / 2 + p.r) ** 2) G.World.damageProp(p, m.dmg * pl.pow(m), col);
+      if (segDist2(sx, sy, ex, ey, p.x, p.y) <= (w / 2 + p.r) ** 2) G.World.damageProp(p, m.dmg * pl.pow(m), col);
     }
     G.Camera.kick(0.12);
   }
