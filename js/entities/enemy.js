@@ -872,11 +872,11 @@
       }
 
       // Status badges over its head: burn and poison with their stacks, slowed, frozen/stunned (20-10-2026).
-      const lift = this.drawStatus(ctx) ? 12 : 0;     // icons above go up a row to make room
+      const stLift = this.drawStatus(ctx) ? 12 : 0;     // icons above go up a row to make room
 
       // Supports: an icon above, so you know who to go for first.
       const SUP = { healer: 'heart', shielder: 'shield', summoner: 'friends' };
-      if (SUP[this.behavior]) G.Icons.draw(ctx, SUP[this.behavior], Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18) - lift), 12);
+      if (SUP[this.behavior]) G.Icons.draw(ctx, SUP[this.behavior], Math.round(this.x - 6), Math.round(this.y - this.bodyH - (this.hp < this.maxHp ? 26 : 18) - stLift), 12);
 
       if (this.boss || this.hp < this.maxHp) {
         const w = this.boss ? 90 : Math.max(22, this.r * 2);
