@@ -1283,3 +1283,17 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .hist-dmg-bar { display: block; height: 8px; background: rgba(0,0,0,.35); border-radius: 6px; overflow: hidden; }
 .hist-dmg-bar em { display: block; height: 100%; border-radius: 6px; }
 .hist-dmg-row > small { color: var(--muted); white-space: nowrap; min-width: 92px; text-align: right; }
+
+/* Your stats: level-up screen (compact) and pause menu (run-ui.js statsHtml) */
+.run-stats { width: min(420px, 100%); margin: 12px auto 6px; padding: 8px 12px; text-align: left; font-size: 13px;
+  background: rgba(10,16,28,.55); border: 1px solid rgba(140,170,210,.18); border-radius: 12px; }
+.run-stats.compact { margin-top: 14px; font-size: 12px; }
+.run-stats .st-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.run-stats .st-lean { color: #ffd23f; font-weight: 800; font-size: 12px; cursor: help; }
+.run-stats .st-cols, .run-stats .st-row { display: grid; grid-template-columns: 1fr 70px minmax(110px, auto); gap: 8px; padding: 2px 0; }
+.run-stats .st-cols small { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.run-stats .st-row small { color: var(--muted); }
+.run-stats .st-row b { text-align: left; font-weight: 700; }
+.run-stats .st-row + .st-row { border-top: 1px solid rgba(140,170,210,.08); }
+.run-stats b.up { color: #5fe08a; } .run-stats b.down { color: #ff8a8a; }
+@media (max-height: 640px) { .run-stats.compact { display: none; } }

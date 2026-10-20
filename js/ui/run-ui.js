@@ -3,6 +3,46 @@ G.RunUI = (() => {
   const $ = G.UI.$;
   let offers = null, offerCb = null, coopMode = false;
 
+  // ---------------- your stats (level-up screen and pause menu) ----------------
+  /*
+   * Read straight from the player's live stat getters (entities/player.js), the same ones the
+   * damage code uses, so what's shown is always what's applied. Base = the Pokémon's own value.
+   */
+  const LEAN = { physical: ['Physical attacker', 'Physical moves use Attack: they suit this Pokémon best'],
+                 special: ['Special attacker', 'Special moves use Sp. Atk: they suit this Pokémon best'],
+                 mixed: ['Mixed attacker', 'Physical and special moves work about as well'] };
+  function statsHtml(p, full) {
+    if (!p) return '';
+    const mon = p.mon, x = v => '×' + v.toFixed(2), pct = v => Math.round(v * 100) + '%';
+    const up = (b, c) => c > b * 1.005 ? ' up' : c < b * 0.995 ? ' down' : '';
+    const row = (label, base, cur, cls, tip) =>
+      `<div class="st-row"${tip ? ` title="${tip}"` : ''}><span>${label}</span><small>${base}</small><b class="${cls || ''}">${cur}</b></div>`;
+    const lean = LEAN[mon.lean] || LEAN.mixed;
+    const taken = p.defMul * (1 - p.reduction);
+    const crit = p.critChance + (p.hasItem('scopelens') ? 0.2 : 0);
+    const rows = [
+      row('HP', mon.hp, Math.ceil(p.hp) + ' / ' + Math.round(p.maxHp), 'st' + up(mon.hp, p.maxHp)),
+      row('Attack', x(p.baseAtk), x(p.atk), 'st' + up(p.baseAtk, p.atk), 'Multiplies physical moves'),
+      row('Sp. Atk', x(p.baseSpa), x(p.spa), 'st' + up(p.baseSpa, p.spa), 'Multiplies special moves'),
+      row('Defense', p.baseDef, 'Damage taken ' + pct(taken), 'st' + up(taken, 1), 'Defense plus damage reduction from cards, items and buffs'),
+      row('Speed', mon.spd, Math.round(p.spd), 'st' + up(mon.spd, p.spd))
+    ];
+    if (full) rows.push(
+      row('Cooldowns', '×1.00', x(p.cdMul), 'st' + up(p.cdMul, 1), 'Lower is faster'),
+      row('Critical hits', '', pct(crit) + ' chance · ×1.5 damage', 'st'),
+      row('Regeneration', '', p.regen > 0 ? p.regen.toFixed(1) + ' HP/s' : 'None', 'st'),
+      row('Area size', '', x(p.areaMul || 1), 'st' + up(1, p.areaMul || 1)),
+      row('Pickup range', '', Math.round(p.magnet), 'st'),
+      row('Experience', '', x(p.xpMul), 'st' + up(1, p.xpMul)));
+    return `<div class="st-head"><b>${mon.name}</b><span class="st-lean" title="${lean[1]}">${lean[0]}</span></div>
+      <div class="st-cols"><span></span><small>Base</small><small>Now</small></div>${rows.join('')}`;
+  }
+  function renderStats(id, full) {
+    let el = $(id);
+    if (!el) return;
+    el.innerHTML = statsHtml(G.Game.player, full);
+  }
+
   /** @param coop  in a group: after choosing, it waits for the others */
   function showLevelUp(level, list, cb, coop = false) {
     offerCb = cb; coopMode = coop;
@@ -13,6 +53,7 @@ G.RunUI = (() => {
     renderCards(list);
     $('lvl-reroll').onclick = reroll;
     $('lvl-skip').onclick = skip;
+    renderStats('lvl-stats', false);
     G.UI.show('scr-levelup');
   }
 
@@ -418,6 +459,7 @@ G.RunUI = (() => {
     G.UI.soundControls($('pause-sound'));
     $('pause-coop').classList.toggle('hidden', !coop);
     $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
+    renderStats('pause-stats', true);
     G.UI.show('scr-pause');
   }
 

@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T10:16Z', title: 'See your stats during a run', new: [
+    'The level-up screen and the pause menu now show your Pokémon\'s stats: whether it is a physical, special or mixed attacker, and its HP, Attack, Sp. Atk, Defense (as damage taken) and Speed, base value next to its current value with every bonus applied.',
+    'The pause menu also shows cooldowns, critical hit chance, regeneration, area size, pickup range and experience.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T10:05Z', title: 'Favourite Pokémon', new: [
     'Mark any Pokémon you own as a favourite with the new button on its page in the Pokémon tab. Favourites get a heart in the grid, and the new Favourites filter shows them all, from every generation.'
   ] },
