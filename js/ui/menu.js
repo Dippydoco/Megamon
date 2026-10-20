@@ -94,6 +94,33 @@ G.MenuUI = (() => {
 
   // ---------------- main menu ----------------
 
+  /** Today's featured Pokémon under the partner: tap one you own to make it your partner. */
+  function featuredStrip() {
+    const box = $('menu-featured');
+    const list = G.Featured.today();
+    if (!list.length) { box.classList.add('hidden'); return; }
+    const s = G.DB.save;
+    box.classList.remove('hidden');
+    box.innerHTML = `<div class="ft-h">Today's featured <b>+${Math.round((G.Featured.BONUS - 1) * 100)}% PokéCoins</b></div><div class="ft-row"></div>`;
+    const row = box.querySelector('.ft-row');
+    for (const d of list) {
+      const p = G.DEX_BY[d], own = !!s.owned[d];
+      const b = document.createElement('button');
+      b.className = 'ft-mon' + (own ? '' : ' locked') + (d === s.partner ? ' on' : '');
+      b.title = own ? (d === s.partner ? p.name + ' is your partner' : 'Make ' + p.name + ' your partner') : 'You don\'t have ' + p.name + ' yet';
+      b.appendChild(G.UI.spriteCanvas(d, 52, 46, { scale: 1, silhouette: !own }));
+      b.insertAdjacentHTML('beforeend', `<small>${own ? p.name : '???'}</small>`);
+      b.onclick = () => {
+        if (!own || d === s.partner) return;
+        s.partner = d; s.partnerShiny = false;
+        G.DB.commit(); G.Social.refreshMember(); G.Audio.sfx('confirm');
+        G.UI.toast(p.name + ' is now your partner');
+        open();
+      };
+      row.appendChild(b);
+    }
+  }
+
   function open() {
     const s = G.DB.save;
     const mon = G.DEX_BY[s.partner];
@@ -105,6 +132,7 @@ G.MenuUI = (() => {
     $('menu-partner').classList.toggle('shiny', shiny);
     $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '') + (reachedArceus(mon.dex) ? ' ' + arcStar(24, mon.dex) : '');
     $('menu-partner-info').innerHTML = G.UI.typeChips(mon.types) + ' ' + G.UI.stars(mon.rarity);
+    featuredStrip();
     // Normal / shiny by hand, right here (on mobile it couldn't be found in the details).
     const seg = $('menu-shiny');
     seg.classList.toggle('hidden', !G.DB.ownsShiny(mon.dex));
@@ -187,7 +215,7 @@ G.MenuUI = (() => {
       tabs.appendChild(b);
     });
 
-    const F = [['all', 'All'], ['fav', 'Favourites'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
+    const F = [['all', 'All'], ['fav', 'Favourites'], ['feat', 'Featured today'], ['own', 'Owned'], ['miss', 'Missing'], ['shiny', 'Shiny'], ['new', 'New'],
                ['5', 5], ['4', 4], ['3', 3], ['2', 2], ['1', 1]];
     const fb = $('dex-filters');
     fb.innerHTML = '';
@@ -242,10 +270,11 @@ G.MenuUI = (() => {
         const known = !!s.owned[p.dex];
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
-      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // New and Favourites show every generation
+      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav' && dexFilter !== 'feat') continue;      // these filters show every generation
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
       const fav = own && isFav(p.dex);
       if (dexFilter === 'fav' && !fav) continue;
+      if (dexFilter === 'feat' && !G.Featured.is(p.dex)) continue;
       if (dexFilter === 'own' && !own) continue;
       if (dexFilter === 'miss' && own) continue;
       if (dexFilter === 'shiny' && !sh) continue;

@@ -242,6 +242,7 @@ G.CodexUI = (() => {
           ...[1, 2, 3].map(r => [RN[r] + ' (' + r + '★)', tier(r)]),
           [RN[4] + ' and ' + RN[5], 'Highest base stats, no rarity bonus or growth.'],
           ['Enemies scale with time', 'Every minute, regular enemies gain about +63% of their starting HP and +14% damage, and get faster (up to +35%). Bosses gain about +10% HP and damage per minute.'],   // enemies.js scale/bossScale
+          ['Featured Pokémon', 'Every day three Pokémon are featured (shown on the main menu). Runs with one of them earn +' + Math.round((G.Featured.BONUS - 1) * 100) + '% PokéCoins.'],
           ['Group runs', 'More players means more enemies, with more HP. Experience is shared, so each player levels a little slower.']
         ];
       })()],

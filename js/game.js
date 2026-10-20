@@ -336,7 +336,9 @@ G.Game = (() => {
       bosses: pl.bosses * 80,
       collected: pl.coins
     };
-    const coins = Math.round((parts.time + parts.defeated + parts.bosses + parts.collected) * mul);
+    // Daily featured Pokémon (systems/featured.js): +50% PokéCoins.
+    const feat = G.Featured && G.Featured.is(pl.dex) ? G.Featured.BONUS : 1;
+    const coins = Math.round((parts.time + parts.defeated + parts.bosses + parts.collected) * mul * feat);
     const record = time > save.stats.bestTime;
 
     save.coins += coins;
@@ -386,7 +388,7 @@ G.Game = (() => {
       time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
       moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
-                 (mul > 1 ? ` · ×${mul.toFixed(2)} Fortune` : '')
+                 (mul > 1 ? ` · ×${mul.toFixed(2)} Fortune` : '') + (feat > 1 ? ` · ×${feat} Featured Pokémon` : '')
     }, () => { pl = null; G.Flow.afterRun(); });
   }
 

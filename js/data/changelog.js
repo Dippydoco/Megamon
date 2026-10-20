@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T17:21Z', title: 'Daily featured Pokémon', new: [
+    'Every day three Pokémon are featured, the same for everyone: one Common or Uncommon, one Rare and one Epic or Legendary-rarity. Runs with a featured Pokémon earn +50% PokéCoins.',
+    'They\'re shown under your partner on the main menu (tap one you own to make it your partner), and the Pokémon tab has a Featured today filter.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T17:03Z', title: 'Codex: levels and rarity', new: [
     'The Mechanics tab now explains levelling up, how each rarity\'s bonus stats and per-level growth work, and how enemies get stronger over time.'
   ] },

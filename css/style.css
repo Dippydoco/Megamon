@@ -1335,3 +1335,15 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .mech-card { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 9px; background: rgba(0,0,0,.22); border: 1px solid rgba(244,248,255,.12); }
 .mech-card b { font-weight: 400; font-size: 15px; }
 .mech-card span { font-size: 13px; color: #d6e0f2; line-height: 1.35; }
+
+/* Daily featured Pokémon (menu.js featuredStrip) */
+.featured { margin-top: 10px; padding: 6px 8px; border-radius: 10px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,210,63,.35); }
+.featured .ft-h { font-size: 13px; color: var(--muted); }
+.featured .ft-h b { color: #ffd23f; font-weight: 400; }
+.featured .ft-row { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
+.ft-mon { appearance: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 4px; width: 76px;
+  font: inherit; color: inherit; border-radius: 8px; background: rgba(255,255,255,.04); border: 2px solid transparent; }
+.ft-mon:hover { border-color: rgba(255,210,63,.6); }
+.ft-mon.on { border-color: #ffd23f; }
+.ft-mon.locked { cursor: default; opacity: .6; }
+.ft-mon small { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72px; }
