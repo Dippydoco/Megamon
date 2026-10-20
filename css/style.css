@@ -1326,3 +1326,12 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   .ab-row small { display: none; }
   .cx-bigtab { font-size: 17px; padding: 10px 8px; }
 }
+
+/* Codex Mechanics tab */
+.cx-mech { max-height: 62vh; overflow-y: auto; padding-right: 4px; }
+.mech-h { margin: 10px 0 6px; color: #ffd23f; font-size: 16px; }
+.mech-h:first-child { margin-top: 0; }
+.mech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px; }
+.mech-card { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 9px; background: rgba(0,0,0,.22); border: 1px solid rgba(244,248,255,.12); }
+.mech-card b { font-weight: 400; font-size: 15px; }
+.mech-card span { font-size: 13px; color: #d6e0f2; line-height: 1.35; }

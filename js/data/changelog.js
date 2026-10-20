@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-20', at: '2026-10-20T16:50Z', title: 'Codex: Mechanics', new: [
+    'The Codex has a new Mechanics tab explaining the game\'s hidden rules with their numbers: STAB, critical hits, the melee guard and melee bonus vs bosses, Defense, status effects and the Afflicted bonus, type matchups, weather, bonds, burst moves and reviving.'
+  ] },
   { d: '2026-10-20', at: '2026-10-20T16:45Z', title: 'See enemy status at a glance', chg: [
     'Enemies now show small status badges above their health bar: orange for burn and purple for poison (each with its number of stacks), blue when slowed and pale blue when frozen or stunned. Teammates in group runs see them too.'
   ] },

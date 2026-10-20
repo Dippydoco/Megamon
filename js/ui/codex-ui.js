@@ -193,16 +193,69 @@ G.CodexUI = (() => {
     }).join('') : '<p class="sub cx-empty">No ability matches.</p>';
   }
 
+  // ---------------- mechanics ----------------
+  /*
+   * The hidden rules, one short card each. Weather and type numbers are read from the game data;
+   * the rest mirror constants in the code (named next to each card), so update both together.
+   */
+  function mechCards() {
+    const W = G.Weather.KINDS, TN = t => G.U.TYPE_NAME[t] || t;
+    const wx = k => Object.entries(W[k].mult).map(([t, v]) => TN(t) + ' ×' + v).join(', ');
+    return [
+      ['Damage', [
+        ['Physical and special', 'Physical moves use your Attack, special moves your Sp. Atk. Moves with neither use the higher one.'],
+        ['Same-type bonus (STAB)', 'Single-type Pokémon deal ×1.2 damage with moves of their own type. Dual types don\'t get it.'],   // combat.js STAB
+        ['Critical hits', 'Deal ×1.5 damage. Raised by Focus cards, the Critical Hit upgrade, Scope Lens (+20%) and some moves.'],   // combat.js CRIT_MUL
+        ['Melee vs bosses', 'Melee moves deal +25% damage to bosses and legendaries.']                                                 // combat.js hit()
+      ]],
+      ['Defense', [
+        ['Melee guard', 'While a melee move is in your active slot you take 25% less damage (another 25% less from legendaries\' attacks in rift arenas).'],   // player.js hurt()
+        ['Defense stat', 'At 70 Defense you take normal damage. Each point above takes off 0.25% (up to -35%); each point below adds 0.1% (up to +10%).'],     // player.js defMul
+        ['Damage reduction', 'Armor cards, items and buffs stack up to 80%. However much you stack, every hit still deals at least 15%.']
+      ]],
+      ['Status', [
+        ['Afflicted', 'Enemies take +8% damage from everyone for each kind of status they have: burned, poisoned, slowed, frozen or stunned (up to +32%). Bosses too.'],   // enemy.js hurt()
+        ['Burn', 'Stacks up to 8 and lasts 3 s, refreshed by each new burn. Damage every 0.5 s grows with stacks and your level.'],
+        ['Poison', 'Stacks up to 8 and lasts 4 s. Deals a share of the enemy\'s max HP per stack, so it shines on tough foes (bosses resist most of it).'],
+        ['Slow, freeze and stun', 'Slowed foes move slower. Frozen or stunned foes can\'t move or attack. Bosses can\'t be frozen or stunned.'],
+        ['Status badges', 'The coloured chips over an enemy show its statuses: orange burn and purple poison (with stacks), blue slow, pale blue frozen.']
+      ]],
+      ['Types and weather', [
+        ['Type matchups', 'Super effective ×1.6, not very effective ×0.6, immune ×0.3. Two types multiply, between ×0.3 and ×2.4. It works both ways: enemies hit you by type too.'],
+        ['Harsh sunlight', wx('sun') + '.'],
+        ['Rain', wx('rain') + '.'],
+        ['Sandstorm', wx('sand') + '. Other types lose a little HP.'],
+        ['Snowfall', wx('snow') + '. Other types lose a little HP and slow down.'],
+        ['Fog', wx('fog') + '.']
+      ]],
+      ['Moves', [
+        ['Active slot', 'Only the move in your selected slot attacks. Switch with 1-4, Q/E or by tapping the move bar.'],
+        ['Bonds', 'Beating a legendary gives a bond: fuse moves into one slot (up to ' + G.Player.BOND_MAX + ') and they all fire together.'],
+        ['Burst moves', 'Big moves that charge in the background even when not selected. Switch to them when they glow. At most 2, and they can\'t be bonded.'],
+        ['Evolving moves', 'A move at max level evolves once you\'ve taken the stat card it needs in that run. Check the Moves tab.'],
+        ['Reviving', 'In a group, stand next to a downed teammate for ' + G.Player.REVIVE_TIME + ' s to revive them. During Arceus\'s Judgment the progress doesn\'t drain away.']
+      ]]
+    ];
+  }
+  function renderMech() {
+    const groups = mechCards();
+    $('cx-count').textContent = groups.reduce((n, g) => n + g[1].length, 0) + ' rules';
+    $('cx-mech').innerHTML = groups.map(([h, cards]) => `<h4 class="mech-h">${esc(h)}</h4><div class="mech-grid">` +
+      cards.map(([t, d]) => `<div class="mech-card"><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join('') + '</div>').join('');
+  }
+
   const SECTIONS = { moves: { label: 'Moves', icon: 'codex', render: renderMoves },
-                     abilities: { label: 'Abilities', icon: 'star', render: renderAbilities } };
+                     abilities: { label: 'Abilities', icon: 'star', render: renderAbilities },
+                     mech: { label: 'Mechanics', icon: 'gear', render: renderMech } };
 
   function render() {
     const keys = Object.keys(SECTIONS);
     $('cx-tabs').classList.toggle('hidden', keys.length < 2);
     $('cx-tabs').innerHTML = keys.map(k => `<button class="cx-bigtab${st.section === k ? ' on' : ''}" data-sec="${k}">${G.Icons.html(SECTIONS[k].icon, 24)} ${SECTIONS[k].label}</button>`).join('');
-    const isAb = st.section === 'abilities';
-    for (const id of ['cx-tools', 'cx-types', 'cx-only', 'cx-split']) $(id).classList.toggle('hidden', isAb);
-    $('cx-ab').classList.toggle('hidden', !isAb);
+    const isMv = st.section === 'moves';
+    for (const id of ['cx-tools', 'cx-types', 'cx-only', 'cx-split']) $(id).classList.toggle('hidden', !isMv);
+    $('cx-ab').classList.toggle('hidden', st.section !== 'abilities');
+    $('cx-mech').classList.toggle('hidden', st.section !== 'mech');
     SECTIONS[st.section].render();
   }
 
