@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-21', at: '2026-10-21T08:44Z', title: 'Treasure thief no longer stuck in your run', fix: [
+    'Fixed the main menu\'s treasure thief (Meowth or Gholdengo) and its "Caught!" text staying frozen on screen for the whole run if you pressed Play while it was on the menu or just after catching it.'
+  ] },
   { d: '2026-10-21', at: '2026-10-21T08:36Z', title: 'Featured Pokémon are fully upgraded for the day', new: [
     'Today\'s featured Pokémon now have every upgrade at max in runs (except Ban, for now), on top of the +50% PokéCoins.',
     'It only lasts while they\'re featured: the next day they go back to the upgrades you bought, and anything you buy for them is yours to keep.'

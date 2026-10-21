@@ -791,7 +791,8 @@ G.Game = (() => {
     // The network is always serviced (also with the level cards open).
     if (G.Coop.active && pl && state !== 'ui' && state !== 'over') G.Coop.tick(dt);
 
-    if (pl && state !== 'ui') render(); else Backdrop.render(ctx, w, h, dpr, dt);
+    // In a run the menu backdrop doesn't draw, so its thief layer (above this canvas) is wiped here.
+    if (pl && state !== 'ui') { Backdrop.hideLayer(); render(); } else Backdrop.render(ctx, w, h, dpr, dt);
     G.UI.tick(dt);
 
     G.Input.endFrame();
@@ -1306,6 +1307,19 @@ G.Game = (() => {
       layer.on = true;
     }
 
+    /** The menu backdrop has stopped drawing (a run is on): wipe the thief layer and forget the thief and
+     *  its tags. The layer sits above the game canvas and only the menu clears it, so before this a thief
+     *  or "Caught!" on it when a run started stayed frozen over the whole run. */
+    function hideLayer() {
+      if (tags.length) tags = [];
+      if (wanderers.some(w => w.thief)) wanderers = wanderers.filter(w => !w.thief);
+      if (layer && layer.on) {
+        layer.c.setTransform(1, 0, 0, 1, 0, 0);
+        layer.c.clearRect(0, 0, layer.cv.width, layer.cv.height);
+        layer.on = false;
+      }
+    }
+
     // ---------------- touching a Pokémon ----------------
 
     function tap(px, py) {
@@ -1513,7 +1527,7 @@ G.Game = (() => {
       return { wanderers: wanderers.map(w => ({ dex: w.dex, x: w.x, y: w.y, label: w.m && w.m.label, temp: !!w.temp })), scene: cur };
     }
 
-    return { init, render, restore, tap, debug };
+    return { init, render, restore, tap, debug, hideLayer };
   })();
 
   return {
