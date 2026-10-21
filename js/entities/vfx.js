@@ -348,6 +348,9 @@ G.VFX = (() => {
   //   melee: the hit's extra (impact, jaws, claw, vine, feather)
   //   aura / buff: accompanying particle
   //   pal: palette if it isn't the type's · trail: trail particles
+  //   pscale: projectile draw size (x the usual) · bscale: size of the shapes along a beam (default 1.5)
+  //   fade: the projectile fades as it flies, and dims once it has hit something
+  //   (all looks only: hitboxes, damage and timing come from moves.js)
 
   const MOVE = {
     'quick-attack':  { proj: 'streak' },
@@ -366,9 +369,11 @@ G.VFX = (() => {
     'thunder-shock': { proj: 'bolt', trail: 'spark' },
     'discharge':     { aura: 'bolt' },
     'thunderbolt':   { beam: 'lightning' },
-    'confusion':     { proj: 'ring' },
-    'psybeam':       { beam: 'ring' },
-    'psychic':       { proj: 'ring' },
+    // Psychic: drawn closer to their real hitbox and fading out, so a screen of them stays readable (21-10-2026).
+    'confusion':     { proj: 'ring', pscale: 0.6, fade: true },
+    'psybeam':       { beam: 'ring', bscale: 1 },
+    'psychic':       { proj: 'ring', pscale: 0.7, fade: true },
+    'psycho-cut':    { proj: 'ring', pscale: 0.8 },
     'sludge':        { proj: 'blob', trail: 'bubbles' },
     'poison-sting':  { proj: 'needle' },
     'toxic':         { aura: 'bubble', rise: true },

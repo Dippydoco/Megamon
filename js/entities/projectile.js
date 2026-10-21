@@ -123,12 +123,17 @@ G.Projectiles = (() => {
     for (const p of list) {
       const v = p.vis || G.VFX.forType('normal');
       const shape = v.proj;
-      const a = p.orb ? 1 : Math.min(1, (p.life - p.t) * 4);
+      let a = p.orb ? 1 : Math.min(1, (p.life - p.t) * 4);
+      // `fade` moves (psychic): fade with age, and dim once they've hit something (looks only).
+      if (v.fade && !p.orb) {
+        a *= 1 - 0.55 * Math.min(1, p.t / p.life);
+        if (p.hits && p.hits.size) a *= 0.6;
+      }
       let angle = 0;
       if (G.VFX.isDir(shape)) angle = p.orb ? p.oa + Math.PI / 2 : Math.atan2(p.vy, p.vx);
       else if (G.VFX.spins(shape)) angle = p.t * 9;
       G.VFX.draw(ctx, shape, v.pal, p.x, p.y - L, {
-        angle, alpha: a, scale: p.r >= 8 ? 1.5 : 1,
+        angle, alpha: a, scale: (p.r >= 8 ? 1.5 : 1) * (v.pscale || 1),
         frame: Math.floor(p.t * 12)
       });
     }

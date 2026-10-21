@@ -119,7 +119,7 @@ G.FX = (() => {
 
   /** Straight beam. fx: { pal, beam } — beam = shape travelling along it, or 'lightning'. */
   function beam(x, y, angle, len, width, color, fx = {}) {
-    beams.push({ x, y, angle, len, width, pal: fx.pal || 'normal', shape: fx.beam || null, t: 0, life: fx.life || 0.2, seed: Math.random() * 100 });
+    beams.push({ x, y, angle, len, width, pal: fx.pal || 'normal', shape: fx.beam || null, bscale: fx.bscale || 1.5, t: 0, life: fx.life || 0.2, seed: Math.random() * 100 });
     sp('impact', fx.pal || 'normal', x + Math.cos(angle) * 10, y + Math.sin(angle) * 10, { life: 0.12, scale: 1 });
     sp('impact', fx.pal || 'normal', x + Math.cos(angle) * len, y + Math.sin(angle) * len, { life: 0.18, scale: 1.5 });
   }
@@ -198,7 +198,7 @@ G.FX = (() => {
         const gap = 26, off = (now * 420) % gap;
         for (let d = off; d < b.len - 6; d += gap) {
           const yo = Math.sin(d * 0.3 + b.seed) * b.width * 0.18;
-          G.VFX.draw(ctx, b.shape, b.pal, d, yo, { angle: 0.0001, scale: 1.5, frame: (d / gap + now * 12) | 0 });
+          G.VFX.draw(ctx, b.shape, b.pal, d, yo, { angle: 0.0001, scale: b.bscale, frame: (d / gap + now * 12) | 0 });
         }
       }
     }

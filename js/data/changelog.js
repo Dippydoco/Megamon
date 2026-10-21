@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-21', at: '2026-10-21T08:51Z', title: 'Psychic moves are easier on the eyes', chg: [
+    'Confusion, Psychic and Psycho Cut are drawn smaller, closer to the area they actually hit.',
+    'Confusion and Psychic shots fade out as they fly, and Psychic shots dim once they\'ve hit something, so they no longer crowd the screen.',
+    'Psybeam\'s rings no longer overlap along the beam.',
+    'Looks only: damage, range, speed and homing are exactly the same.'
+  ] },
   { d: '2026-10-21', at: '2026-10-21T08:44Z', title: 'Treasure thief no longer stuck in your run', fix: [
     'Fixed the main menu\'s treasure thief (Meowth or Gholdengo) and its "Caught!" text staying frozen on screen for the whole run if you pressed Play while it was on the menu or just after catching it.'
   ] },
