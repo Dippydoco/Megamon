@@ -248,8 +248,12 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .rnd-info { min-height: 26px; }
 .partner-card .nm { font-size: 24px; font-weight: 700; text-shadow: 3px 3px 0 var(--shadow); }
 .partner-card .lv { color: var(--muted); font-size: 14px; text-shadow: 2px 2px 0 var(--shadow); }
+/* Your record, a small line under the partner. */
+.menu-stats { margin-top: 10px; font-size: 13px; color: var(--muted); text-shadow: 2px 2px 0 var(--shadow); line-height: 1.5; }
+.menu-stats b { color: var(--ink); font-weight: 400; }
+.menu-stats .guest { color: #ffb0b8; }
 .menu-right {
-  width: min(380px, 100%); display: flex; flex-direction: column;
+  width: min(560px, 48vw); display: flex; flex-direction: column;
   /* Leaves room at the top for the top bar; if it doesn't all fit, it scrolls
      (the auto margins centre it without it overflowing at the top). */
   padding: 70px 24px 18px; gap: 14px; overflow-y: auto;
@@ -257,19 +261,62 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 }
 .menu-right > :first-child { margin-top: auto; }
 .menu-right > :last-child { margin-bottom: auto; }
-/* Laptops with little height: a more compact menu and, if needed, in two columns. */
+
+/* Tile grid (6 columns): Play takes a whole row, normal tiles a third, wide tiles a half.
+   A new screen is one more tile; the line under each name shows something live. */
+.menu-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 12px; }
+.menu-item.tile {
+  grid-column: span 2; position: relative; min-width: 0; min-height: 104px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  text-align: center; padding: 12px 6px 10px; font-size: 18px; border-radius: 10px;
+  background: rgba(255,255,255,.04); border: 2px solid rgba(244,248,255,.12);
+  transition: background .1s, border-color .1s, transform .1s;
+}
+.menu-item.tile::before { display: none; }
+.menu-item.tile .mi-ico { margin-bottom: 4px; }
+.menu-item.tile .mi-ico img { width: 34px; height: 34px; }
+.menu-item.tile small { max-width: 100%; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-item.tile small.gold { color: var(--gold); }
+.menu-item.tile:hover, .menu-item.tile:focus-visible { background: rgba(255,255,255,.10); border-color: var(--gold); transform: translateY(-1px); }
+/* Play and the wide tiles: icon on the left, text beside it. */
+.menu-item.tile.play, .menu-item.tile.wide {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center;
+  justify-items: start; text-align: left; padding: 10px 16px;
+}
+.menu-item.tile.play .mi-ico, .menu-item.tile.wide .mi-ico { grid-row: span 2; margin: 0; }
+.menu-item.tile.play small, .menu-item.tile.wide small { grid-column: 2; }
+.menu-item.tile.play {
+  grid-column: 1 / -1; min-height: 88px; font-size: 34px; padding: 12px 22px;
+  background: rgba(255,210,63,.10); border-color: rgba(255,210,63,.55);
+}
+.menu-item.tile.play .mi-ico img { width: 44px; height: 44px; }
+.menu-item.tile.play small { font-size: 14px; }
+.menu-item.tile.wide { grid-column: span 3; min-height: 70px; }
+.menu-item.tile.wide .mi-ico img { width: 30px; height: 30px; }
+/* Red dot: rewards to claim, friend requests, new messages. */
+.menu-item.tile.alert::after {
+  content: ''; position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; border-radius: 50%;
+  background: #ff4d5e; box-shadow: 0 0 0 2px var(--edge-out);
+}
+
+/* Laptops with little height: smaller tiles. */
 @media (max-height: 780px) and (min-height: 521px) {
   .menu-right { padding-top: 62px; gap: 10px; }
-  .menu-right .box { padding: 10px 14px; }
-  .menu-item { font-size: 17px; padding: 5px 10px; }
-  .menu-item.play { font-size: 24px; }
-  .menu-item small { font-size: 11px; }
+  .menu-grid { gap: 6px; padding: 10px; }
+  .menu-item.tile { min-height: 84px; font-size: 16px; padding: 8px 6px; }
+  .menu-item.tile .mi-ico img { width: 28px; height: 28px; }
+  .menu-item.tile small { font-size: 11px; }
+  .menu-item.tile.play { min-height: 70px; font-size: 28px; }
+  .menu-item.tile.play .mi-ico img { width: 36px; height: 36px; }
+  .menu-item.tile.play small { font-size: 12px; }
+  .menu-item.tile.wide { min-height: 58px; padding: 8px 14px; }
 }
 @media (max-height: 660px) and (min-height: 521px) {
-  .menu-right { width: min(500px, 52vw); }
-  .menu-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; }
-  .menu-item.play { grid-column: span 2; }
-  .menu-item small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .menu-item.tile { min-height: 70px; }
+  .menu-item.tile .mi-ico { margin-bottom: 2px; }
+  .menu-item.tile .mi-ico img { width: 24px; height: 24px; }
+  .menu-item.tile.play { min-height: 60px; font-size: 26px; }
+  .menu-item.tile.wide { min-height: 50px; }
   .menu-left .logo .t1 { font-size: clamp(32px, 5vw, 52px); }
   #menu-partner { height: min(30vh, 200px); width: auto; }
 }
@@ -789,26 +836,34 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   .partner-card { margin-top: 2px; }
   .partner-card .nm { font-size: 17px; }
   .partner-card .lv { font-size: 12px; }
-  .menu-right { width: min(54vw, 420px); padding: 50px 8px 6px; gap: 6px; justify-content: flex-start; overflow-y: auto; }
+  .menu-right { width: min(56vw, 480px); padding: 50px 8px 6px; gap: 6px; justify-content: flex-start; overflow-y: auto; }
   .menu-right .box { padding: 6px 8px; }
-  .menu-right > .box:last-child { display: none; }
   .menu-right > :first-child { margin-top: 0; }
+  .menu-stats { display: none; }
   .ach-pop { top: auto; bottom: 8px; }
-  .menu-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; }
-  .menu-item { font-size: 15px; padding: 4px 6px; grid-template-columns: 22px 1fr; column-gap: 6px; }
-  .menu-item small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .menu-item.play { grid-column: span 2; font-size: 21px; }
-  .menu-item::before { display: none; }
+  /* Tiles become compact rows: icon on the left, name and live line beside it. */
+  .menu-grid { gap: 4px; padding: 6px; }
+  .menu-item.tile, .menu-item.tile.wide {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; align-items: center;
+    justify-items: start; text-align: left; min-height: 0; padding: 4px 6px; font-size: 13px; border-radius: 8px;
+  }
+  .menu-item.tile .mi-ico { grid-row: span 2; margin: 0; }
+  .menu-item.tile small { grid-column: 2; font-size: 10px; }
+  .menu-item.tile .mi-ico img, .menu-item.tile.wide .mi-ico img { width: 18px; height: 18px; }
+  .menu-item.tile.play { min-height: 0; font-size: 20px; padding: 5px 10px; }
+  .menu-item.tile.play .mi-ico img { width: 24px; height: 24px; }
+  .menu-item.tile.play small { font-size: 10px; }
+  .menu-item.tile.alert::after { top: 4px; right: 4px; width: 7px; height: 7px; }
   .mi-ico img { width: 20px; height: 20px; }
   .box.settings { max-height: calc(100dvh - 12px); }
 }
 /* Very short phones (iPhone SE and similar): no subtitles in the menu, so it all fits. */
 @media (max-height: 400px) {
   .menu-right { padding-top: 48px; }
-  .menu-item small { display: none; }
-  .menu-item { font-size: 14px; padding: 5px 6px; }
-  .menu-item.play { font-size: 19px; }
-  .menu-item.play small { display: block; }
+  .menu-item.tile small { display: none; }
+  .menu-item.tile { padding: 6px; }
+  .menu-item.tile.play { font-size: 19px; }
+  .menu-item.tile.play small { display: block; }
   #menu-partner { height: min(30vh, 110px); }
 }
 
@@ -1341,6 +1396,12 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .featured .ft-h { font-size: 13px; color: var(--muted); }
 .featured .ft-h b { color: #ffd23f; font-weight: 400; }
 .featured .ft-row { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
+.featured .ft-note { font-size: 11px; color: var(--muted); margin-top: 4px; max-width: 250px; margin-inline: auto; line-height: 1.4; }
+/* Upgrades screen: the Pokémon is featured today (every upgrade at max in runs, except Ban). */
+.featured-note { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.5;
+  background: rgba(255,210,63,.10); border: 1px solid rgba(255,210,63,.45); color: var(--muted); }
+.featured-note b { color: var(--gold); font-weight: 400; }
+@media (max-height: 520px) { .featured .ft-note { display: none; } }
 .ft-mon { appearance: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 4px; width: 76px;
   font: inherit; color: inherit; border-radius: 8px; background: rgba(255,255,255,.04); border: 2px solid transparent; }
 .ft-mon:hover { border-color: rgba(255,210,63,.6); }

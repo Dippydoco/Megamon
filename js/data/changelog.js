@@ -9,6 +9,15 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-21', at: '2026-10-21T08:36Z', title: 'Featured Pokémon are fully upgraded for the day', new: [
+    'Today\'s featured Pokémon now have every upgrade at max in runs (except Ban, for now), on top of the +50% PokéCoins.',
+    'It only lasts while they\'re featured: the next day they go back to the upgrades you bought, and anything you buy for them is yours to keep.'
+  ] },
+  { d: '2026-10-21', at: '2026-10-21T08:36Z', title: 'New main menu layout', chg: [
+    'The main menu is now a grid of tiles with a big Play button on top, so everything fits on screen without scrolling.',
+    'Each tile shows something live: your Pokédex count, gacha tickets ready, your partner\'s upgrade levels, friends online and rewards to claim. A red dot means something is waiting for you.',
+    'Your record (runs, best time, best level, defeated) now sits under your partner. Settings is on the gear button in the top bar.'
+  ] },
   { d: '2026-10-21', at: '2026-10-20T23:43Z', title: 'Leaderboard updates faster', chg: [
     'New records now show up on everyone\'s leaderboard within 5 minutes (it could take up to 30).'
   ] },

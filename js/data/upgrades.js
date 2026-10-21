@@ -48,5 +48,19 @@ G.Upgrades = (() => {
     };
   }
 
-  return { LIST, BY, cost, perks };
+  // Upgrades a featured Pokémon does NOT get for free (it keeps the levels you bought).
+  const NOT_FEATURED = ['ban'];
+
+  /** The levels a run actually uses. Today's featured Pokémon (systems/featured.js) get every
+   *  upgrade at max except NOT_FEATURED. It's a fresh object worked out at the start of each run
+   *  and never saved, so it ends by itself when the featured Pokémon change; what you bought stays. */
+  function forRun(dex) {
+    const own = G.DB.upgradesOf(dex);
+    if (!G.Featured || !G.Featured.is(dex)) return own;
+    const out = {};
+    for (const u of LIST) out[u.id] = NOT_FEATURED.includes(u.id) ? (own[u.id] || 0) : u.max;
+    return out;
+  }
+
+  return { LIST, BY, cost, perks, forRun, NOT_FEATURED };
 })();

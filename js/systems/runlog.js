@@ -70,7 +70,7 @@ G.RunLog = (() => {
   // ---------------- during the run ----------------
 
   function start(pl) {
-    const up = G.DB.upgradesOf ? G.DB.upgradesOf(pl.dex) || {} : {};
+    const up = G.Upgrades && G.Upgrades.forRun ? G.Upgrades.forRun(pl.dex) || {} : {};   // what the run really used
     L = {
       mv: {}, lu: [], cur: null, sw: 0, ev: [], bd: [], it: [], lc: [], pw: {}, rf: {}, ec: {}, wx: {},
       pk: Object.keys(up).filter(k => up[k] > 0).sort().map(k => k + up[k]).join(','),

@@ -2,7 +2,8 @@
  * Every day (Europe/Madrid, like the leaderboard and missions) three Pokémon are featured:
  * one Common/Uncommon, one Rare and one Epic/Legendary-rarity (never a legendary Pokémon).
  * Everyone gets the same three: they're picked from the date alone.
- * A run with a featured Pokémon earns +50% PokéCoins at the end (game.js endRun).
+ * A run with a featured Pokémon earns +50% PokéCoins at the end (game.js endRun), and the
+ * Pokémon has every upgrade at max for that run except Ban (G.Upgrades.forRun, never saved).
  * Shown on the main menu (menu.js).
  */
 G.Featured = (() => {

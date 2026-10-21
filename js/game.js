@@ -92,7 +92,7 @@ G.Game = (() => {
     // Draft Night (ui/minigames.js): the group run uses the Pokémon you drafted, not your partner.
     const drafted = coop && coop.draft ? (coop.members.find(m => m.uid === G.Social.uid) || {}).dex : null;
     const mon = G.DEX_BY[drafted] || G.DEX_BY[save.partner];
-    const perks = G.Upgrades.perks(G.DB.upgradesOf(mon.dex));
+    const perks = G.Upgrades.perks(G.Upgrades.forRun(mon.dex));    // featured today: every upgrade but Ban
 
     G.UI.hideAll();
     G.UI.chrome(false);

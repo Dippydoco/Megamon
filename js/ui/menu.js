@@ -102,7 +102,8 @@ G.MenuUI = (() => {
     if (!list.length) { box.classList.add('hidden'); return; }
     const s = G.DB.save;
     box.classList.remove('hidden');
-    box.innerHTML = `<div class="ft-h">Today's featured <b>+${Math.round((G.Featured.BONUS - 1) * 100)}% PokéCoins</b></div><div class="ft-row"></div>`;
+    box.innerHTML = `<div class="ft-h">Today's featured <b>+${Math.round((G.Featured.BONUS - 1) * 100)}% PokéCoins</b></div><div class="ft-row"></div>` +
+      `<div class="ft-note">They have every upgrade for the day (except Ban, for now)</div>`;
     const row = box.querySelector('.ft-row');
     for (const d of list) {
       const p = G.DEX_BY[d], own = !!s.owned[d];
@@ -154,18 +155,28 @@ G.MenuUI = (() => {
     const shinies = Object.keys(s.shiny || {}).length;
     $('menu-dex-count').textContent = `${owned} / ${G.DEX.length}` + (shinies ? ` · ${shinies} shiny` : '');
 
+    // Gacha tile: tickets ready to use.
+    const tk = s.tickets || { t1: 0, t10: 0 };
+    const pulls = (tk.t1 || 0) + (tk.t10 || 0);
+    $('menu-gacha-sub').textContent = pulls ? pulls + (pulls === 1 ? ' ticket ready' : ' tickets ready') : 'Pokémon and shinies';
+    $('menu-gacha-sub').classList.toggle('gold', pulls > 0);
+    // Upgrades tile: how many levels your partner has.
+    const plv = Object.values(s.pupg && s.pupg[s.partner] || {}).reduce((a, b) => a + b, 0);
+    $('menu-upg-sub').textContent = plv ? mon.name + ': ' + plv + (plv === 1 ? ' level' : ' levels') : 'Stronger every run';
+
+    // Your record, in a small line under the partner (it used to be a box under the menu).
     const st = s.stats;
     $('menu-stats').innerHTML =
-      `Runs <b style="color:#fff">${st.runs}</b> · Best time <b style="color:#fff">${G.U.mmss(st.bestTime)}</b><br>` +
-      `Best level <b style="color:#fff">${st.bestLevel}</b> · Defeated <b style="color:#fff">${st.totalKills.toLocaleString('en')}</b>` +
-      (G.DB.guest ? '<br><span style="color:#ffb0b8">Guest mode: nothing is saved</span>' : '');
+      `Runs <b>${st.runs}</b> · Best <b>${G.U.mmss(st.bestTime)}</b> · Lv <b>${st.bestLevel}</b> · Defeated <b>${st.totalKills.toLocaleString('en')}</b>` +
+      (G.DB.guest ? '<br><span class="guest">Guest mode: nothing is saved</span>' : '');
 
     socialLine();
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, achievements and profile';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Achievements and profile';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
+    tileAlert('goals', pend > 0);
     // With a cloud account: friends online, invitations and (once) the nickname.
     if (G.DB.online && !G.Social.started) {
       G.Social.start().then(r => {
@@ -191,6 +202,13 @@ G.MenuUI = (() => {
     if (msgs) parts.push(msgs + (msgs === 1 ? ' new message' : ' new messages'));
     $('menu-friends-sub').textContent = parts.length ? parts.join(' · ') : 'Play in a group, up to 5';
     $('menu-friends-sub').classList.toggle('gold', req > 0 || msgs > 0);
+    tileAlert('friends', req > 0 || msgs > 0);
+  }
+
+  /** Red dot on a menu tile: something there is waiting for you. */
+  function tileAlert(go, on) {
+    const b = document.querySelector('#scr-menu [data-go=' + go + ']');
+    if (b) b.classList.toggle('alert', !!on);
   }
 
   // ---------------- collection ----------------
@@ -485,6 +503,11 @@ G.MenuUI = (() => {
     const shiny = upgDex === s.partner && !!s.partnerShiny && G.DB.ownsShiny(upgDex);
     G.UI.sprite($('upg-stage'), upgDex, { lively: true, scale: 2, hero: true, shiny });
     $('upg-stage').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
+    // Featured today: runs use every upgrade at max (except Ban); what's bought here is kept for later.
+    const feat = G.Featured.is(upgDex);
+    $('upg-feat').classList.toggle('hidden', !feat);
+    if (feat) $('upg-feat').innerHTML = `${G.Icons.html('star', 16)} <b>${mon.name} is featured today:</b> in runs it has every upgrade at max, except Ban. ` +
+      `What you buy here is yours to keep after today.`;
     const box = $('upg-list');
     box.innerHTML = '';
     let banLvl = 0;
