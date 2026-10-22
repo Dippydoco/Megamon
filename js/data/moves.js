@@ -506,7 +506,7 @@
             { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+40% damage and it only costs 7.5% HP', m: { dmg: 1.40, selfHp: 0.075 } }] },
 
     { id: 'protect', name: 'Protect', type: 'normal', kind: 'burst',
-      desc: 'Burst · 20 s. A shield: you take no damage at all for 3 seconds.',
+      desc: 'Burst · 20 s. A shield: you take no damage at all for 3 seconds. The cooldown starts when the shield ends.',
       cd: 20, dur: 3, radius: 60, knock: 160,
       ups: [{ t: '+0.5 s shield', m: { dur: 3.5 / 3 } }, { t: '-15% cooldown', m: { cd: 0.85 } },
             { t: '+0.5 s shield', m: { dur: 4 / 3.5 } }, { t: '-15% cooldown', m: { cd: 0.85 } }] },

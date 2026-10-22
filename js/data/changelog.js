@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-22', at: '2026-10-22T21:46Z', title: 'Full-field bonus removed; Protect cooldown', chg: [
+    'Enemies that appear when the field is nearly full no longer get +60% health, +25% damage and +60% experience.',
+    'Protect\'s cooldown now starts when the shield ends, so it can no longer be kept up permanently.'
+  ] },
   { d: '2026-10-22', at: '2026-10-22T21:40Z', title: 'Enemy scaling rebalance', chg: [
     'Healers no longer heal enemies you hit in the last 2 seconds, and their healing no longer grows with your Attack.',
     'Kills give more experience as the run goes on: ×1.75 at minute 15, ×2.5 at minute 30.',

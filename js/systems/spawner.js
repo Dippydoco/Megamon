@@ -11,10 +11,10 @@
  * of you are playing (see G.Coop.scaleRate / scaleHp).
  */
 G.Spawner = (() => {
-  // Cap on enemies at once (previously 420: with that many it slowed down). When
-  // the cap is reached, those that keep spawning are "elite" (more health, damage and
-  // experience), so the difficulty doesn't drop.
-  const ELITE_FROM = 0.85;
+  // Cap on enemies at once (previously 420: with that many it slowed down).
+  // (22-10-2026: enemies spawned near the cap no longer get +60% health, +25% damage and +60% XP. Only a player
+  //  who couldn't keep up met them, which pushed them further behind; refreshOldest keeps a full field current now.)
+  const FULL_FROM = 0.85;           // from this share of the cap the field counts as full (refreshOldest)
   let CAP = 64;                 // grows a little with a 5th player
   // Fewer Pokémon but stronger (the screen doesn't get cluttered): ~24% of
   // the previous number spawn, each with more health, damage and experience.
@@ -99,7 +99,6 @@ G.Spawner = (() => {
     e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
     const rp = G.Enemies.ramp(def, t);
     if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
-    if (G.EnemyMgr.count >= CAP * ELITE_FROM) { e.maxHp = e.hp = Math.round(e.maxHp * 1.6); e.dmg *= 1.25; e.xp = Math.round(e.xp * 1.6); }
     if (shiny) e.makeShiny();
     if (G.Events.golden) e.makeGolden();
     G.EnemyMgr.add(e);
@@ -129,11 +128,11 @@ G.Spawner = (() => {
     const p = nearestTo(pick);
     if (!p) return;
     const sc = G.Enemies.scale(t), rp = G.Enemies.ramp(pick.def, t);
-    const hp = Math.round(pick.def.hp * sc.hp * G.Coop.scaleHp(players.length) * hpK(t) * (rp ? rp.hp : 1) * 1.6);
-    const dmg = pick.def.dmg * sc.dmg * DMG_K * (rp ? rp.dmg : 1) * 1.25;
+    const hp = Math.round(pick.def.hp * sc.hp * G.Coop.scaleHp(players.length) * hpK(t) * (rp ? rp.hp : 1));
+    const dmg = pick.def.dmg * sc.dmg * DMG_K * (rp ? rp.dmg : 1);
     if (hp > pick.maxHp) { pick.hp = Math.round(pick.hp / pick.maxHp * hp); pick.maxHp = hp; }
     pick.dmg = Math.max(pick.dmg, dmg);
-    pick.xp = Math.max(pick.xp, Math.round(pick.def.xp * XP_K * xpT(t) * 1.6));
+    pick.xp = Math.max(pick.xp, Math.round(pick.def.xp * XP_K * xpT(t)));
     pick.spd = Math.max(pick.spd, pick.def.spd * sc.spd);
     pick.born = t; pick.chaseT = 0;
     if (G.Camera.sees(pick.x, pick.y, 0)) G.FX.burst(pick.x, pick.y - pick.bodyH * 0.5, '#c9d4e8', 8, 90);
@@ -188,7 +187,7 @@ G.Spawner = (() => {
     }
 
     // --- full field: keep it fresh (see refreshOldest) ---
-    if (G.EnemyMgr.count >= CAP * ELITE_FROM && !bossFight && (refreshT -= dt) <= 0) { refreshT = 1.5; refreshOldest(t); }
+    if (G.EnemyMgr.count >= CAP * FULL_FROM && !bossFight && (refreshT -= dt) <= 0) { refreshT = 1.5; refreshOldest(t); }
 
     // --- marea ---
     if (!bossFight) surgeT -= dt;

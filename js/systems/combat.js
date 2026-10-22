@@ -51,7 +51,9 @@ G.Combat = (() => {
         if (!alt) { m.t = 0.05; return; }
       }
     }
-    m.t = Math.max(0.05, m.cd * pl.cdMul);
+    // Protect (22-10-2026): its cooldown only starts once the shield is over (with enough cooldown cuts it lasted
+    // longer than its cooldown, so it could be kept up for ever).
+    m.t = Math.max(0.05, m.cd * pl.cdMul) + (m.id === 'protect' ? m.dur || 0 : 0);
     const aim0 = pl.aim;
     if (alt) pl.aim = Math.atan2(alt.y - pl.y, alt.x - pl.x);
     pl.cast(m);
