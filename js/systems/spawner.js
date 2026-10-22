@@ -22,6 +22,9 @@ G.Spawner = (() => {
   // The extra toughness grows with the run: ×3.3 at the start and up to ×5
   // around minute 6, when you already have attacks to take them down.
   const hpK = t => 3.3 + Math.min(1.7, t / 210);
+  // Kills are worth more as the run goes on (22-10-2026): ×1 at the start, ×1.75 at minute 15, ×2.5 at minute 30.
+  // Enemy health grows ~175× over a run but XP per kill only grew ~4×, so a run that fell behind stopped levelling.
+  const xpT = t => 1 + t / 1200;
   const SHINY_RATE = 1 / 4096;
   let acc = 0, bossIdx = 0, surgeT = 32, announce = null, announceT = 0, announceDur = 0, announceDex = 0, preloadT = 0;
   let forceShiny = 0;           // for testing: the next N come out shiny
@@ -93,7 +96,7 @@ G.Spawner = (() => {
     if (!pt) return null;
     const shiny = rollShiny(def.dex);
     const e = new G.Enemy(def, pt[0], pt[1], scaled(G.Enemies.scale(t), G.Coop.scaleHp(players.length) * hpK(t)));
-    e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K);
+    e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
     const rp = G.Enemies.ramp(def, t);
     if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
     if (G.EnemyMgr.count >= CAP * ELITE_FROM) { e.maxHp = e.hp = Math.round(e.maxHp * 1.6); e.dmg *= 1.25; e.xp = Math.round(e.xp * 1.6); }
@@ -105,6 +108,41 @@ G.Spawner = (() => {
       G.Audio.sfx('shiny');
     }
     return e;
+  }
+
+  // ---- a full field never freezes (22-10-2026) ----
+  // Nothing spawns while the field is full, so a herd you can't kill kept the stats it was born with and the
+  // run stopped getting harder: you could walk it in circles for ever. Now, while it's full, every 1.5 s the
+  // oldest enemy at the back (out of view or far behind) comes round ahead of you with the stats a new one would have.
+  const NO_REFRESH = new Set(['thief', 'aegis', 'tutor', 'healer', 'shielder', 'summoner']);
+  let refreshT = 0;
+  function refreshOldest(t) {
+    let pick = null, best = 25;            // at least 25 s old
+    for (const e of G.EnemyMgr.all()) {
+      if (e.dead || e.boss || e.shiny || e.golden || e.remote || e.legend || e.judge || NO_REFRESH.has(e.behavior)) continue;
+      const age = t - (e.born || 0);
+      if (age < best) continue;
+      if (players.some(o => G.U.dist2(o.x, o.y, e.x, e.y) < 330 * 330)) continue;      // not one close to anyone
+      best = age; pick = e;
+    }
+    if (!pick) return;
+    const p = nearestTo(pick);
+    if (!p) return;
+    const sc = G.Enemies.scale(t), rp = G.Enemies.ramp(pick.def, t);
+    const hp = Math.round(pick.def.hp * sc.hp * G.Coop.scaleHp(players.length) * hpK(t) * (rp ? rp.hp : 1) * 1.6);
+    const dmg = pick.def.dmg * sc.dmg * DMG_K * (rp ? rp.dmg : 1) * 1.25;
+    if (hp > pick.maxHp) { pick.hp = Math.round(pick.hp / pick.maxHp * hp); pick.maxHp = hp; }
+    pick.dmg = Math.max(pick.dmg, dmg);
+    pick.xp = Math.max(pick.xp, Math.round(pick.def.xp * XP_K * xpT(t) * 1.6));
+    pick.spd = Math.max(pick.spd, pick.def.spd * sc.spd);
+    pick.born = t; pick.chaseT = 0;
+    if (G.Camera.sees(pick.x, pick.y, 0)) G.FX.burst(pick.x, pick.y - pick.bodyH * 0.5, '#c9d4e8', 8, 90);
+    G.Spawner.ahead(pick, p);
+  }
+  function nearestTo(e) {
+    let best = null, bd = Infinity;
+    for (const o of players) { if (o.dead) continue; const d = G.U.dist2(o.x, o.y, e.x, e.y); if (d < bd) { bd = d; best = o; } }
+    return best;
   }
 
   function spawnBoss(pl, t, b) {
@@ -148,6 +186,9 @@ G.Spawner = (() => {
       acc -= n;
       while (n-- > 0 && G.EnemyMgr.count < CAP) spawnOne(anchor(), t);
     }
+
+    // --- full field: keep it fresh (see refreshOldest) ---
+    if (G.EnemyMgr.count >= CAP * ELITE_FROM && !bossFight && (refreshT -= dt) <= 0) { refreshT = 1.5; refreshOldest(t); }
 
     // --- marea ---
     if (!bossFight) surgeT -= dt;

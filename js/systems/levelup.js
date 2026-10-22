@@ -50,7 +50,8 @@ G.LevelUp = (() => {
         // Moves that suit the Pokémon's better attacking stat turn up more often (mixed ones: all the same).
         const lean = pl.mon.lean, fit = !d.cat || !lean || lean === 'mixed' ? 1 : d.cat === lean ? 1.4 : 0.6;
         out.push({
-          w: (d.kind === 'burst' ? 5 : 10) * fit, type: 'new', key: 'new:' + id,
+          // (22-10-2026: fewer once you have 2 moves; only one slot fires at a time, so they add options, not damage.)
+          w: (d.kind === 'burst' ? 5 : 10) * fit * (pl.moves.length >= 2 ? 0.6 : 1), type: 'new', key: 'new:' + id,
           icon: 'move:' + id, color: G.U.TYPE_COLOR[d.type],
           tag: G.U.TYPE_NAME[d.type] + (d.cat ? ' · ' + (d.cat === 'physical' ? 'Physical' : 'Special') : ''), kind: d.kind,
           title: d.name, desc: d.desc,
@@ -81,11 +82,14 @@ G.LevelUp = (() => {
     }
 
     // --- upgrades for moves you already have ---
+    // (22-10-2026: the move you're using turns up twice as often. Before, your main attack's upgrade was on only
+    //  about a quarter of the early level-ups, and some runs never saw it.)
+    const using = new Set((pl.slots[pl.active] || []).map(m => m.id));
     for (const m of pl.moves) {
       const txt = G.Moves.nextUpText(m);
       if (!txt) continue;
       out.push({
-        w: 8, type: 'up', key: 'up:' + m.id,
+        w: using.has(m.id) ? 16 : 8, type: 'up', key: 'up:' + m.id,
         icon: 'move:' + m.id, color: G.U.TYPE_COLOR[m.type],
         tag: 'Lv.' + m.lvl + ' > ' + (m.lvl + 1), kind: m.kind,
         title: m.name, desc: txt,

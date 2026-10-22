@@ -135,6 +135,7 @@
         this.showHurt(shown, color, dirX, dirY, eff);
         return;
       }
+      this.hurtAt = G.Game.st.time;        // healers skip enemies hit in the last 2 s (healAround)
       // Shield: absorbs first.
       if (this.shield > 0) {
         const a = Math.min(this.shield, d);
@@ -358,7 +359,8 @@
         } else if (le.slow) terrainMul = le.slow < 0.5 ? 0.45 : 0.55;
       }
 
-      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1);
+      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1)
+                * this.catchUp(dt, pl);
       let [dx, dy] = G.U.norm(pl.x - this.x, pl.y - this.y);
       const dist = G.U.dist(this.x, this.y, pl.x, pl.y);
       // Treasure goblin: flees from you (zigzagging) as soon as you get close.
@@ -671,15 +673,14 @@
     }
 
     healAround() {
-      // 7 % of health (it was 15 %: with several healers they healed more than you
-      // hit), and more the harder you hit, but less and less each time: with
-      // double the attack it heals 27 % more, with 10 times more 124 %, and at
-      // most ×2.5. (Like the enemies that have more health if you deal more damage.)
-      const pow = Math.max(1, ...G.Game.everyone().map(p => (p.atk > 0 && p.baseAtk > 0 ? p.atk / p.baseAtk : 1)));
-      const k = 0.07 * Math.min(2.5, Math.pow(pow, 0.35));
+      // 7 % of health (it was 15 %: with several healers they healed more than you hit).
+      // 22-10-2026: no longer grows with your Attack, and it skips anything hit in the last 2 s, so
+      // focused fire always wins. Before, a herd of 64 inside 3 healers' range got back 50-130 % of
+      // all the damage dealt from minute 10 on, and runs stalled with no kills (and no XP) for good.
+      const k = 0.07, now = G.Game.st.time;
       let n = 0;
       for (const e of G.EnemyMgr.queryCircle(this.x, this.y, 150)) {
-        if (e.dead || e.boss || e.hp >= e.maxHp) continue;      // bosses don't heal
+        if (e.dead || e.boss || e.hp >= e.maxHp || e.hurtAt > now - 2) continue;      // bosses don't heal
         e.hp = Math.min(e.maxHp, e.hp + e.maxHp * k);
         G.FX.burst(e.x, e.y - e.bodyH * 0.6, '#7dffb0', 5, 60);
         n++;
@@ -688,6 +689,20 @@
       G.FX.ring(this.x, this.y, 8, 150, '#5fe08a', 0.5, 3);
       if (G.Coop.isHost) G.Coop.broadcast(['fxr', Math.round(this.x), Math.round(this.y), 150, '#5fe08a']);
       if (n && G.Camera.sees(this.x, this.y, 0)) G.Audio.sfx('heal');
+    }
+
+    /**
+     * Catch-up (22-10-2026): most enemies are slower than you, so a herd that can't be killed could be
+     * walked in circles for ever. One that has been chasing you for over 8 s without landing a hit speeds
+     * up (+3 % a second, up to +35 %); hitting you, or losing you, resets it. Not bosses, the event
+     * Pokémon or those that keep their distance.
+     */
+    catchUp(dt, pl) {
+      if (this.boss || this.legend || this.judge || this.keepsDistance() || ['thief', 'aegis', 'tutor'].includes(this.behavior)) return 1;
+      if (this.touchCd > 0.4) this.chaseT = 0;                                  // it has just hit you
+      else if (G.U.dist2(this.x, this.y, pl.x, pl.y) < 420 * 420) this.chaseT = (this.chaseT || 0) + dt;
+      else this.chaseT = Math.max(0, (this.chaseT || 0) - dt * 2);
+      return 1 + Math.min(0.35, Math.max(0, this.chaseT - 8) * 0.03);
     }
 
     castShields() {

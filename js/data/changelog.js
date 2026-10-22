@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-22', at: '2026-10-22T21:40Z', title: 'Enemy scaling rebalance', chg: [
+    'Healers no longer heal enemies you hit in the last 2 seconds, and their healing no longer grows with your Attack.',
+    'Kills give more experience as the run goes on: ×1.75 at minute 15, ×2.5 at minute 30.',
+    'When the field is full, the oldest enemies far behind you return ahead of you with up-to-date stats.',
+    'Enemies chasing you for over 8 seconds without hitting you speed up, by up to 35%.',
+    'Upgrade cards for your active move appear twice as often. New-move cards appear less often once you have 2 moves.'
+  ] },
   { d: '2026-10-21', at: '2026-10-21T08:51Z', title: 'Psychic moves are easier on the eyes', chg: [
     'Confusion, Psychic and Psycho Cut are drawn smaller, closer to the area they actually hit.',
     'Confusion and Psychic shots fade out as they fly, and Psychic shots dim once they\'ve hit something, so they no longer crowd the screen.',
