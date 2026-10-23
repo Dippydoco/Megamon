@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-23', at: '2026-10-23T17:54Z', title: 'Gacha Battle rolling animation', new: [
+    'In Gacha Battles each card now spins and flashes through the rarity colours before it turns over, and 4★, 5★ and shiny pulls burst onto the table. Battles take a little longer as a result.'
+  ] },
   { d: '2026-10-23', at: '2026-10-23T17:52Z', title: 'Gacha Battles have equal shiny odds', chg: [
     'Shiny Charms no longer double shiny odds in Gacha Battles: every player (and the Bot) has the same 1 in 100 chance per pull.'
   ] },

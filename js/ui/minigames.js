@@ -29,7 +29,8 @@ G.MiniUI = (() => {
   const BOT = 'bot';
   const POINTS = { 1: 1, 2: 3, 3: 8, 4: 25, 5: 100 };
   const LEAD_MS = 2500;                         // the reveal starts LEAD_MS after the host starts
-  const REVEAL_TOTAL = 14000;                   // big stakes reveal faster, so a battle never takes much longer than this
+  const REVEAL_TOTAL = 20000;                   // big stakes reveal faster, so a battle never takes much longer than this
+  const ROLL_MS = 900;                          // each card spins this long before it turns over (the rolling animation)
   const TURN = 25;                              // seconds per draft pick
 
   // ---------------- seeded randomness (identical on every device) ----------------
@@ -97,7 +98,7 @@ G.MiniUI = (() => {
   const clampStake = n => Math.max(1, Math.min(MAX_STAKE, Math.floor(+n) || 1));
   const plural = n => n + ' ×1 ticket' + (n === 1 ? '' : 's');
   const potFor = (g, uid) => g.players.filter(u => u !== uid).reduce((a, u) => a + stakeOf(g, u), 0);
-  const revealMs = g => Math.max(140, Math.min(1100, Math.floor(REVEAL_TOTAL / Math.max(...g.players.map(u => stakeOf(g, u))))));
+  const revealMs = g => Math.max(220, Math.min(1300, Math.floor(REVEAL_TOTAL / Math.max(...g.players.map(u => stakeOf(g, u))))));
 
   /** Host: opens a battle for everyone in the room (each player picks their own stake when joining). */
   function hostBattle() {
@@ -310,12 +311,26 @@ G.MiniUI = (() => {
         <div class="gb-pulls${x.pulls.length > 20 ? ' many' : ''}">${x.pulls.map(() => '<div class="gb-card back">?</div>').join('')}</div></div>`).join('')}</div>
       <p class="sub center gb-ready">Get ready…</p>`;
     const cols = [...box.querySelectorAll('.gb-col')];
-    let shownBefore = 0;
+    // Card i starts rolling at i·step and turns over ROLL_MS later (from startAt, so every screen is in step).
+    let shownBefore = 0, rollBefore = 0;
     const tick = () => {
       if (!G.UI.isOpen('scr-gbattle') || (cur() || {}).id !== g.id) return;
       const t = now() - g.startAt;
-      const shown = t < 0 ? 0 : Math.min(n, Math.floor(t / step) + 1);
-      const done = shown >= n && t > n * step + 600;
+      const rolling = t < 0 ? 0 : Math.min(n, Math.floor(t / step) + 1);
+      const shown = t < ROLL_MS ? 0 : Math.min(n, Math.floor((t - ROLL_MS) / step) + 1);
+      const done = shown >= n && t > (n - 1) * step + ROLL_MS + 600;
+      if (rolling > rollBefore) {
+        const rd = box.querySelector('.gb-ready'); if (rd) rd.remove();
+        res.rows.forEach((x, ci) => {
+          const cards = cols[ci].querySelectorAll('.gb-pulls > .gb-card');
+          for (let i = Math.max(rollBefore, shownBefore); i < Math.min(rolling, x.pulls.length); i++) {
+            cards[i].classList.add('rolling');
+            cards[i].style.animationDelay = -((t - i * step) / 1000) + 's';      // late joiners pick up mid-spin
+          }
+        });
+        if (shown === shownBefore) G.Audio.sfx('select');
+        rollBefore = rolling;
+      }
       if (shown > shownBefore) {
         const rd = box.querySelector('.gb-ready'); if (rd) rd.remove();
         res.rows.forEach((x, ci) => {
@@ -323,7 +338,7 @@ G.MiniUI = (() => {
           for (let i = shownBefore; i < Math.min(shown, x.pulls.length); i++) {
             const p = x.pulls[i];
             const el = document.createElement('div');
-            el.className = 'gb-card r' + p.rarity + (p.shiny ? ' sh' : '');
+            el.className = 'gb-card r' + p.rarity + (p.shiny ? ' sh' : '') + (p.rarity >= 4 || p.shiny ? ' big' : '');
             el.style.setProperty('--rc', G.Gacha.RARITY_COLOR[p.rarity]);
             el.title = G.DEX_BY[p.dex].name;
             el.innerHTML = spr(p.dex, 48, 42, p.shiny) + `<small>${'★'.repeat(p.rarity)}${p.shiny ? ' ✦' : ''}</small>`;
@@ -332,7 +347,8 @@ G.MiniUI = (() => {
           }
           cols[ci].querySelector('.gb-score').textContent = scoreOf(x.pulls.slice(0, shown));
         });
-        G.Audio.sfx('select');
+        const fresh = res.rows.some(x => x.pulls.slice(shownBefore, shown).some(p => p.rarity >= 4 || p.shiny));
+        G.Audio.sfx(fresh ? 'confirm' : 'select');
         shownBefore = shown;
       }
       if (done) {

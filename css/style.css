@@ -1439,6 +1439,21 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .gb-card.back { color: var(--muted); font-size: 22px; animation: none; }
 .gb-card.r4, .gb-card.r5 { box-shadow: 0 0 12px var(--rc); }
 .gb-card.sh { background: rgba(154,230,255,.12); }
+/* Rolling: the face-down card shakes and flashes through the rarity colours before it turns over. */
+.gb-card.back.rolling { animation: gbRoll .9s linear both; color: #fff; }
+@keyframes gbRoll {
+  0%   { transform: rotate(0) scale(1); border-color: #9fb1c9; }
+  15%  { transform: rotate(-7deg) scale(1.04); border-color: #5fe08a; }
+  30%  { transform: rotate(7deg) scale(1.06); border-color: #4fb4ff; }
+  45%  { transform: rotate(-9deg) scale(1.08); border-color: #c47bff; }
+  60%  { transform: rotate(9deg) scale(1.1); border-color: #ffcb3d; box-shadow: 0 0 10px rgba(255,203,61,.5); }
+  75%  { transform: rotate(-6deg) scale(1.08); border-color: #9ae6ff; }
+  90%  { transform: rotate(3deg) scale(1.05); border-color: #fff; }
+  100% { transform: rotate(0) scale(1); border-color: #fff; box-shadow: 0 0 16px rgba(255,255,255,.7); }
+}
+.gb-card.big { animation: gbBig .6s ease-out; }
+@keyframes gbBig { 0% { transform: scale(.3) rotateY(90deg); opacity: 0; filter: brightness(3); } 60% { transform: scale(1.25); opacity: 1; filter: brightness(1.8); } 100% { transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .gb-card.back.rolling, .gb-card.big { animation-duration: .01s; } }
 @keyframes gbIn { from { transform: scale(.4) rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .gb-stake { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 6px 0 10px; }
 .gb-stake label { font-size: 15px; }
