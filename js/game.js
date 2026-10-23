@@ -120,15 +120,25 @@ G.Game = (() => {
     // Shortcuts: moves with a fixed slot (save.pbind[dex] = [id of 1, id of 2, ...]),
     // before learning anything: addMove already places them.
     (save.pbind && save.pbind[mon.dex] || []).forEach((id, i) => { if (id) pl.bind[id] = i; });
-    pl.addMove(G.startMoveOf(mon.dex));
+    // "Starting Moves" upgrade (23-10-2026, replaced Repertoire): level 1 = the move you chose instead of the
+    // default one, level 2 = up to 2 chosen moves. A pick you haven't made is filled as before: the default
+    // starting move, then a random attacking move.
+    const picks = perks.startPicks || 0;
+    const startOk = G.startableMoves(mon);
+    const chosen = picks ? (save.pstart && save.pstart[mon.dex] || []).filter(id => startOk.includes(id)).slice(0, picks) : [];
+    for (const id of chosen) pl.addMove(id);
+    if (!pl.moves.length) pl.addMove(G.startMoveOf(mon.dex));
     // "Veto" upgrade: moves you don't want to come up.
     pl.banned = new Set((save.pban && save.pban[mon.dex] || []).slice(0, perks.bans));
-    // "Repertoire" upgrade: a second random attacking move.
-    if (perks.startMoves >= 2) {
-      const pool = G.Moves.poolFor(mon).filter(id => !pl.hasMove(id) && !pl.banned.has(id) && G.Moves.BY_ID[id].kind !== 'buff');
-      if (pool.length) pl.addMove(G.U.pick(pool));
-      pl.setActive(0);
+    if (picks >= 2 && pl.moves.length < 2) {
+      const def = G.startMoveOf(mon.dex);
+      if (!pl.hasMove(def)) pl.addMove(def);
+      else {
+        const pool = G.Moves.poolFor(mon).filter(id => !pl.hasMove(id) && !pl.banned.has(id) && G.Moves.BY_ID[id].kind !== 'buff');
+        if (pool.length) pl.addMove(G.U.pick(pool));
+      }
     }
+    pl.setActive(0);
     G.RunLog.start(pl);          // run details for balancing (added to the history entry at the end)
 
     teamStats.clear();
@@ -559,7 +569,7 @@ G.Game = (() => {
           }
           // Remembered in openItem like the item choice: in co-op the level-up cards can arrive while this is open
           // and replace it; afterLevelUp() shows it again. (Before, it was lost and the band locked whatever move
-          // was active, most often with Repertoire, which gives you 2 moves while level-ups are still very fast.)
+          // was active, most often with 2 starting moves (then Repertoire), which give you 2 moves while level-ups are still very fast.)
           const pick = i => {
             openItem = null;
             if (i !== pl.active) { pl.active = i; G.Projectiles.clearOrbs(pl); }

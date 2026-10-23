@@ -12,7 +12,9 @@ G.Upgrades = (() => {
     { id: 'magnet', icon: 'magnet', name: 'Magnet',           unit: '+12% pickup',      max: 6,  base: 50,  grow: 1.4 },
     { id: 'xp',     icon: 'book', name: 'Wisdom',      unit: '+5% experience',    max: 8,  base: 100, grow: 1.42 },
     { id: 'coins',  icon: 'coin', name: 'Fortune',        unit: '+8% PokéCoins',    max: 8,  base: 120, grow: 1.45 },
-    { id: 'moves',  icon: 'cards', name: 'Repertoire',     unit: 'Start with 2 moves', max: 1, base: 1500, grow: 1 },
+    // (23-10-2026: replaces Repertoire, which gave a second random move. Level 1: choose your starting move;
+    //  level 2: choose 2. Picks are in save.pstart[dex]; see game.js startRun.)
+    { id: 'moves',  icon: 'cards', name: 'Starting Moves', unit: 'Choose your starting move (level 2: choose 2)', max: 2, base: 800, grow: 1.9 },
     { id: 'crit',   icon: 'star', name: 'Critical Hit',  unit: '+3% critical chance (x1.5 damage)', max: 10, base: 90, grow: 1.4 },
     { id: 'reroll', icon: 'up', name: 'Card reroll', unit: '+1 level-up card reroll per run', max: 5, base: 150, grow: 1.6 },
     { id: 'ban',    icon: 'ban', name: 'Ban',           unit: 'Ban 1 move: it never shows up in your cards', max: 3, base: 300, grow: 1.9 },
@@ -40,7 +42,7 @@ G.Upgrades = (() => {
       magnetMul: 1 + L('magnet') * 0.12,
       xpMul: 1 + L('xp') * 0.05,
       coinMul: 1 + L('coins') * 0.08,
-      startMoves: 1 + L('moves'),
+      startPicks: L('moves'),          // how many starting moves you choose (0-2)
       crit: L('crit') * 0.03,
       rerolls: L('reroll'),
       bans: L('ban'),

@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-23', at: '2026-10-23T17:07Z', title: 'Starting Moves upgrade', new: [
+    'Repertoire is replaced by Starting Moves (2 levels). Level 1: choose the move your Pokémon starts with. Level 2: choose up to 2. Use the Choose button in Upgrades.',
+    'If you owned Repertoire, you now have Starting Moves level 2. With no moves chosen, you start with 2 moves as before.'
+  ], fix: [
+    'The level-up screen no longer stretches across the screen with the cards stuck on the left when a card has a long description.'
+  ] },
   { d: '2026-10-22', at: '2026-10-22T21:46Z', title: 'Full-field bonus removed; Protect cooldown', chg: [
     'Enemies that appear when the field is nearly full no longer get +60% health, +25% damage and +60% experience.',
     'Protect\'s cooldown now starts when the shield ends, so it can no longer be kept up permanently.'

@@ -510,7 +510,7 @@ G.MenuUI = (() => {
       `What you buy here is yours to keep after today.`;
     const box = $('upg-list');
     box.innerHTML = '';
-    let banLvl = 0;
+    let banLvl = 0, startLvl = 0;
     for (const u of G.Upgrades.LIST) {
       const lvl = levels[u.id] || 0;
       const maxed = lvl >= u.max;
@@ -525,9 +525,11 @@ G.MenuUI = (() => {
         </div>
         <div class="upg-btns">
           ${u.id === 'ban' && lvl > 0 ? `<button class="btn small" data-ban>Choose (${banList().length}/${lvl})</button>` : ''}
+          ${u.id === 'moves' && lvl > 0 ? `<button class="btn small" data-start>Choose (${startList().length}/${lvl})</button>` : ''}
           <button class="btn small ${maxed ? '' : 'gold'}" data-buy data-sfx="none" ${maxed || s.coins < cost ? 'disabled' : ''}>
           ${maxed ? 'Max.' : `<span class="coin"></span> ${cost}`}</button></div>`;
       if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; banScroll = banOpen; renderUpgrades(); };
+      if (u.id === 'moves' && lvl > 0) el.querySelector('[data-start]').onclick = () => { startOpen = !startOpen; startScroll = startOpen; renderUpgrades(); };
       el.querySelector('[data-buy]').onclick = () => {
         // Everything is read again on pressing (the save may have changed since it was drawn).
         const sv = G.DB.save, lv = G.DB.upgradesOf(upgDex), now = lv[u.id] || 0;
@@ -544,6 +546,12 @@ G.MenuUI = (() => {
       };
       box.appendChild(el);
       if (u.id === 'ban') banLvl = lvl;
+      if (u.id === 'moves') startLvl = lvl;
+    }
+    if (startLvl > 0 && startOpen) {
+      const pk = startPicker(startLvl);
+      box.appendChild(pk);
+      if (startScroll) { startScroll = false; setTimeout(() => pk.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); }
     }
     // The ban picker goes AFTER the whole list (it used to sit between Ban and Skip, which pushed Skip off the screen).
     if (banLvl > 0 && banOpen) {
@@ -579,6 +587,45 @@ G.MenuUI = (() => {
         for (let j = 0; j < 4; j++) if (id && l[j] === id) l[j] = null;
         l[i] = id;
         s.pbind[upgDex] = l;
+        G.DB.commit();
+        G.Audio.sfx('select');
+        renderUpgrades();
+      };
+    });
+    return el;
+  }
+
+  // ---------------- starting moves: the moves a run begins with ----------------
+  // List per Pokémon in save.pstart[dex]; with N levels of Starting Moves, up to N moves (game.js startRun).
+  let startOpen = false, startScroll = false;
+  function startList() {
+    const s = G.DB.save;
+    s.pstart = s.pstart || {};
+    return s.pstart[upgDex] || (s.pstart[upgDex] = []);
+  }
+  function startPicker(max) {
+    const mon = G.DEX_BY[upgDex];
+    const def = G.startMoveOf(upgDex);
+    const ids = G.startableMoves(mon)
+      .sort((a, b) => (b === def) - (a === def) || G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'en'));
+    const list = startList();
+    const dn = G.Moves.BY_ID[def].name;
+    const rest = list.length >= max ? ''
+      : max >= 2 ? (list.length ? ' The open pick is filled with ' + dn + ' (or a random attacking move if you chose ' + dn + ').' : ' With none chosen you start with ' + dn + ' and a random attacking move.')
+      : ' With none chosen you start with ' + dn + '.';
+    const el = document.createElement('div');
+    el.className = 'panel ban-picker';
+    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Tap the move${max > 1 ? 's' : ''} ${mon.name} starts every run with (${list.length}/${max}).${rest}</p>
+      <div class="ban-moves">${ids.map(id => { const d = G.Moves.BY_ID[id]; const on = list.includes(id);
+        return `<button class="chip ${on ? 'on' : ''}" data-id="${id}" data-mv="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${id === def ? ' <small>(default)</small>' : ''}${on ? ' ' + G.Icons.html('star', 14) : ''}</button>`; }).join('')}</div>`;
+    el.querySelectorAll('[data-id]').forEach(b => {
+      b.onclick = () => {
+        const l = startList(), id = b.dataset.id, i = l.indexOf(id);
+        if (i >= 0) l.splice(i, 1);
+        else if (l.length >= max) {
+          if (max === 1) l.splice(0, 1, id);                  // one pick: tapping another swaps it
+          else { G.UI.toast('You already have ' + max + ' chosen: remove one first'); return; }
+        } else l.push(id);
         G.DB.commit();
         G.Audio.sfx('select');
         renderUpgrades();

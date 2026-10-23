@@ -87,6 +87,8 @@ G.DB = (() => {
       personality: null,      // { trait, scores }
       upgrades: {},           // (old) account upgrades; now they're per Pokémon
       pupg: {},               // dex -> { id -> level }: each Pokémon's upgrades
+      pstart: {},             // dex -> [move ids]: chosen starting moves (Starting Moves upgrade, up to 2)
+      startV2: true,          // Repertoire owners already moved to Starting Moves level 2 (migrate)
       tickets: { t1: 0, t10: 0 },   // gacha tickets (x1 and x10)
       codes: {},              // code fingerprint -> date: redeemed codes (js/systems/redeem.js)
       pity: {},               // banner generation -> pulls without a ★5
@@ -153,6 +155,7 @@ G.DB = (() => {
 
   /** Fills in fields missing from saves of earlier versions. */
   function migrate(s, name) {
+    const startV1 = !s.startV2;          // (read before the defaults below fill it in)
     const base = newSave(name || s.name);
     for (const k in base) if (s[k] == null) s[k] = base[k];
     for (const k in base.stats) if (s.stats[k] == null) s.stats[k] = base.stats[k];
@@ -164,6 +167,13 @@ G.DB = (() => {
         s.pupg[s.partner] = Object.assign({}, s.upgrades);
       }
       s.pupgDone = true;
+    }
+    // 23-10-2026: Repertoire (1 level: a second random starting move) became Starting Moves (2 levels). Those who
+    // bought it get level 2, which with no moves chosen plays exactly like Repertoire did.
+    if (startV1) {
+      for (const d in s.pupg || {}) if (s.pupg[d] && s.pupg[d].moves >= 1) s.pupg[d].moves = 2;
+      if (s.upgrades && s.upgrades.moves >= 1) s.upgrades.moves = 2;
+      s.startV2 = true;
     }
     s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
     s.history = cleanHistory(s.history);
@@ -225,6 +235,13 @@ G.DB = (() => {
         s.pban[d] = [...new Set(l.filter(id => typeof id === 'string' && (!G.Moves || G.Moves.BY_ID[id])))].slice(0, 3);
       }
     } else s.pban = {};
+    // Starting moves: moves that exist, without repeats, at most 2.
+    if (s.pstart && typeof s.pstart === 'object') {
+      for (const d of Object.keys(s.pstart)) {
+        const l = Array.isArray(s.pstart[d]) ? s.pstart[d] : [];
+        s.pstart[d] = [...new Set(l.filter(id => typeof id === 'string' && (!G.Moves || G.Moves.BY_ID[id])))].slice(0, 2);
+      }
+    } else s.pstart = {};
     if (G.Upgrades) for (const d of Object.keys(s.pupg || {})) {
       const u = s.pupg[d];
       if (!u || typeof u !== 'object') { delete s.pupg[d]; continue; }

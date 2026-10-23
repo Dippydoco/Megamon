@@ -46,6 +46,14 @@ G.startMoveOf = dex => {
   return s ? G.Moves.startFor(Object.assign({}, G.DEX_BY[dex], { start: s.start })) : G.Moves.startFor(G.DEX_BY[dex]);
 };
 
+/** Moves a Pokémon can be given to start with (Starting Moves upgrade): its default starting move and any attacking
+ *  move it can learn. Not boosters, burst moves or moves that deal no damage (a run would start unable to fight). */
+G.startableMoves = mon => {
+  const def = G.startMoveOf(mon.dex);
+  const ok = id => { const m = G.Moves.BY_ID[id]; return m && !!m.cat && m.kind !== 'buff' && m.kind !== 'burst'; };
+  return [def, ...G.Moves.poolFor(mon).filter(id => id !== def && ok(id))];
+};
+
 /** Short description of each trait, for the result screen. */
 G.TRAIT_TEXT = {
   brave:  'You don\'t think twice when someone needs help.',

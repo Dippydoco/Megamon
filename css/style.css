@@ -441,7 +441,10 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 @keyframes legend { to { box-shadow: 0 0 40px var(--rc), 0 0 80px var(--rc); } }
 
 /* ---------- cartas de nivel ---------- */
-.cards { display: flex; flex-direction: column; gap: 10px; width: min(560px, 100%); }
+.cards { display: flex; flex-direction: column; gap: 10px; width: min(560px, 100%); margin: 0 auto; }
+/* Card screens get a fixed width (23-10-2026): with a shrink-to-fit box, a long card text (Hyper Beam's)
+   stretched the box to the whole line's length and left the cards stuck on the left. */
+#scr-levelup .box, #scr-item .box, #scr-bond .box { width: min(620px, 100%); }
 .card {
   display: flex; align-items: center; gap: 14px; text-align: left; cursor: pointer;
   background: rgba(0,0,0,.2); border: 2px solid rgba(244,248,255,.3); border-radius: 12px;
