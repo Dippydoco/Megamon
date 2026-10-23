@@ -4,7 +4,7 @@
  *   - wild enemies in runs (systems/spawner.js rollShiny)
  *   - rift legendaries (systems/rift.js)
  *   - gacha pulls (systems/gacha.js pull)
- *   - Gacha Battle pulls (ui/minigames.js): each player's own charms, sent when they join the battle.
+ * Not in Gacha Battles (ui/minigames.js): there everyone has the same odds.
  * In group runs only the host spawns enemies and rifts, so the host's charms count there.
  * Having a charm needs nothing stored: it's worked out from save.owned. save.charms (gen -> date) only
  * remembers which ones you've already been told about (check(), run from DB.commit).

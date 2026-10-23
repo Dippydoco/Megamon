@@ -5,14 +5,15 @@
  * Everyone in the room listens to both, so all screens move together.
  *
  * GACHA BATTLE  g = { type:'gb', id, phase:'join'|'roll', host seed `hs`, seed, players:[uid], stakes:{uid:n},
- *                     charms:{uid:[gen]}, startAt }
+ *                     startAt }
  *   Each player who joins picks their own stake: 1..MAX_STAKE ×1 tickets, and pulls that many
- *   (m/{uid}/gb = { id, s: their seed, n: stake, c: their Shiny Charm regions }). When the host starts,
+ *   (m/{uid}/gb = { id, s: their seed, n: stake }). When the host starts,
  *   everybody's pulls come from one shared seed, so every screen shows the same pulls, revealed card by card
  *   at the same moment (startAt, server time). Everyone keeps what they pull, as with a normal pull (no pity).
  *   The winner (highest total score) also wins the other players' stakes as tickets. A bigger stake means more
  *   pulls, so a better chance to win, but more to lose.
- *   Score: ★1 1 · ★2 3 · ★3 8 · ★4 25 · ★5 100 points, shiny ×3. Ties: best single pull, then a seeded coin flip.
+ *   Score: ★1 1 · ★2 3 · ★3 8 · ★4 25 · ★5 100 points, shiny ×3. Ties: best single pull, then a seeded coin flip. Shiny odds are the same for everyone:
+ *   Shiny Charms (systems/charms.js) don't count in battles.
  *   No daily limit (save.gb.done only stops one battle being settled twice).
  *   Alone (no room, or nobody else in it): a battle against the Bot, played on your own device (`solo`).
  *   The Bot matches your stake; beat it and you win that many tickets. Its pulls aren't kept by anyone.
@@ -118,7 +119,7 @@ G.MiniUI = (() => {
     if (!solo || solo.phase !== 'join' || tickets() < n) return;
     const me = meUid();
     solo = Object.assign({}, solo, { phase: 'roll', players: [me, BOT], stakes: { [me]: n, [BOT]: n },
-      charms: { [me]: G.Charms.list().slice() }, seed: 'solo:' + Math.floor(Math.random() * 1e9), startAt: now() + LEAD_MS });
+      seed: 'solo:' + Math.floor(Math.random() * 1e9), startAt: now() + LEAD_MS });
     renderBattle();
   }
 
@@ -126,7 +127,6 @@ G.MiniUI = (() => {
   function pullsFor(g, uid) {
     const r = rng(g.seed + ':' + uid);
     const total = G.Gacha.RATES.reduce((a, [, w]) => a + w, 0);
-    const charms = ((g.charms || {})[uid]) || [];
     const out = [];
     for (let i = 0, n = stakeOf(g, uid); i < n; i++) {
       let x = r() * total, want = 1;
@@ -141,7 +141,7 @@ G.MiniUI = (() => {
       }
       if (!list.length) list = G.DEX.filter(p => p.gen === gen && G.SPRITE_META[p.dex]);
       const mon = pickR(r, list);
-      const shiny = G.Sprites.hasShiny(mon.dex) && r() < G.Gacha.SHINY_RATE * G.Charms.mult(mon.dex, charms);
+      const shiny = G.Sprites.hasShiny(mon.dex) && r() < G.Gacha.SHINY_RATE;      // no Shiny Charms here: equal odds for everyone
       out.push({ dex: mon.dex, rarity, shiny });
     }
     return out;
@@ -256,7 +256,7 @@ G.MiniUI = (() => {
           return `<div class="gb-chip${inIt ? ' in' : ''}">${spr(m.dex, 40, 36, m.shiny)}<span>${esc(m.name)}</span><small>${inIt ? 'Stakes ' + stakeOf({ stakes: { x: m.gb.n } }, 'x') : 'Watching'}</small></div>`;
         }).join('')}</div>
         ${joined.length ? `<p class="center">Pot: <b class="gold">${plural(pot)}</b></p>` : ''}`;
-      const sendMine = n => G.Social.setMine('gb', { id: g.id, s: (myEntry && myEntry.s) || Math.floor(Math.random() * 1e9), n, c: G.Charms.list().slice() });
+      const sendMine = n => G.Social.setMine('gb', { id: g.id, s: (myEntry && myEntry.s) || Math.floor(Math.random() * 1e9), n });
       if (t1 >= 1) {
         let actBtn;
         const label = () => {
@@ -281,10 +281,10 @@ G.MiniUI = (() => {
         addBtn(row, 'Start (' + joined.length + ' in)', 'gold', () => {
           const players = joined.map(m => m.uid);
           if (players.length < 2) return;
-          const stakes = {}, charms = {};
-          for (const m of joined) { stakes[m.uid] = stakeOf({ stakes: { x: m.gb.n } }, 'x'); charms[m.uid] = Array.isArray(m.gb.c) ? m.gb.c : []; }
+          const stakes = {};
+          for (const m of joined) { stakes[m.uid] = stakeOf({ stakes: { x: m.gb.n } }, 'x'); }
           const seed = String(g.hs) + ':' + joined.map(m => m.uid + '=' + m.gb.s + '*' + stakes[m.uid]).sort().join(',');
-          G.Social.setGame(Object.assign({}, g, { phase: 'roll', players, stakes, charms, seed, startAt: now() + LEAD_MS }));
+          G.Social.setGame(Object.assign({}, g, { phase: 'roll', players, stakes, seed, startAt: now() + LEAD_MS }));
         }, joined.length < 2);
         addBtn(row, 'Cancel', 'ghost', () => G.Social.setGame(null));
         box.appendChild(row);

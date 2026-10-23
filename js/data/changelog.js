@@ -9,8 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-23', at: '2026-10-23T17:52Z', title: 'Gacha Battles have equal shiny odds', chg: [
+    'Shiny Charms no longer double shiny odds in Gacha Battles: every player (and the Bot) has the same 1 in 100 chance per pull.'
+  ] },
   { d: '2026-10-23', at: '2026-10-23T17:49Z', title: 'Shiny Charms', new: [
-    'Own every Pokémon of a region to earn its Shiny Charm: shiny odds are doubled for that region\'s Pokémon, in runs, rifts, the gacha and Gacha Battles.',
+    'Own every Pokémon of a region to earn its Shiny Charm: shiny odds are doubled for that region\'s Pokémon, in runs, rifts and the gacha.',
     'Completed regions show a sparkle on their Pokédex tab, and each gacha banner shows whether you have its charm. In group runs the host\'s charms count for wild shinies and rifts.'
   ] },
   { d: '2026-10-23', at: '2026-10-23T17:49Z', title: 'Gacha Battle: your own stake, no daily limit, and a Bot', new: [
