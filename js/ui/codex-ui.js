@@ -246,6 +246,10 @@ G.CodexUI = (() => {
           ['Group runs', 'More players means more enemies, with more HP. Experience is shared, so each player levels a little slower.']
         ];
       })()],
+      ['Shinies', [
+        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it.'],   // spawner.js, rift.js, gacha.js
+        ['Shiny Charms', 'Own every Pokémon of a region to earn its Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for that region\'s Pokémon in runs, rifts, the gacha and Gacha Battles. In group runs the host\'s charms count. Completed regions show a sparkle in the Pokédex.']   // charms.js
+      ]],
       ['Moves', [
         ['Active slot', 'Only the move in your selected slot attacks. Switch with 1-4, Q/E or by tapping the move bar.'],
         ['Bonds', 'Beating a legendary gives a bond: fuse moves into one slot (up to ' + G.Player.BOND_MAX + ') and they all fire together.'],

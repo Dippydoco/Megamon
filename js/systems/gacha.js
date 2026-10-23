@@ -6,7 +6,8 @@
  * Guarantees:
  *   - the ×10 pull brings at least one 4★ or higher
  *   - after 70 pulls without a 5★ on that banner, the next one is a guaranteed 5★
- * Shiny: 1 in 100 pulls comes out in its shiny version.
+ * Shiny: 1 in 100 pulls comes out in its shiny version (1 in 50 for a region whose Shiny Charm you have:
+ *   systems/charms.js).
  * Duplicates: turned into Poké Coins (duplicate shinies, triple).
  *
  * You pull with TICKETS (earned by playing):
@@ -100,7 +101,7 @@ G.Gacha = (() => {
       const { rarity, list } = poolNear(want, g);
       if (rarity === 5) save.pity[pk] = 0;
       let mon = G.U.pick(list);
-      let shiny = G.Sprites.hasShiny(mon.dex) && (forceShiny > 0 ? (forceShiny--, true) : Math.random() < SHINY_RATE);
+      let shiny = G.Sprites.hasShiny(mon.dex) && (forceShiny > 0 ? (forceShiny--, true) : Math.random() < SHINY_RATE * G.Charms.mult(mon.dex));
       // Shinies don't repeat: if you already have that one, another of the same rarity
       // whose shiny you're missing comes out; if you have them all, a normal one comes out.
       if (shiny && save.shiny[mon.dex]) {

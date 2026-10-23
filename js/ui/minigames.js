@@ -4,13 +4,18 @@
  *   - each player writes their own answer to rooms/{id}/m/{uid}/...  (G.Social.setMine)
  * Everyone in the room listens to both, so all screens move together.
  *
- * GACHA BATTLE  g = { type:'gb', id, stake, phase:'join'|'roll', host seed `hs`, seed, players:[uid], startAt }
- *   Each player who joins stakes `stake` ×1 tickets (m/{uid}/gb = { id, s: their seed }). When the host
- *   starts, everybody's pulls come from one shared seed, so every screen shows the same pulls, revealed
- *   card by card at the same moment (startAt, server time). Everyone keeps what they pull, as with a normal
- *   pull (no pity). The winner (highest score) also wins the other players' stakes as tickets.
+ * GACHA BATTLE  g = { type:'gb', id, phase:'join'|'roll', host seed `hs`, seed, players:[uid], stakes:{uid:n},
+ *                     charms:{uid:[gen]}, startAt }
+ *   Each player who joins picks their own stake: 1..MAX_STAKE ×1 tickets, and pulls that many
+ *   (m/{uid}/gb = { id, s: their seed, n: stake, c: their Shiny Charm regions }). When the host starts,
+ *   everybody's pulls come from one shared seed, so every screen shows the same pulls, revealed card by card
+ *   at the same moment (startAt, server time). Everyone keeps what they pull, as with a normal pull (no pity).
+ *   The winner (highest total score) also wins the other players' stakes as tickets. A bigger stake means more
+ *   pulls, so a better chance to win, but more to lose.
  *   Score: ★1 1 · ★2 3 · ★3 8 · ★4 25 · ★5 100 points, shiny ×3. Ties: best single pull, then a seeded coin flip.
- *   At most DAILY battles a day per player (save.gb).
+ *   No daily limit (save.gb.done only stops one battle being settled twice).
+ *   Alone (no room, or nobody else in it): a battle against the Bot, played on your own device (`solo`).
+ *   The Bot matches your stake; beat it and you win that many tickets. Its pulls aren't kept by anyone.
  *
  * DRAFT NIGHT   g = { type:'draft', id, pool:[dex], order:[uid], picks:{uid:dex}, turn, turnAt, phase:'pick'|'done' }
  *   The host deals a pool of 3 Pokémon per player; players pick one each in a random order (TURN s each,
@@ -19,10 +24,11 @@
 G.MiniUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const STAKES = [1, 3, 5];
-  const DAILY = 3;
+  const MAX_STAKE = 100;
+  const BOT = 'bot';
   const POINTS = { 1: 1, 2: 3, 3: 8, 4: 25, 5: 100 };
-  const REVEAL_MS = 1100, LEAD_MS = 2500;      // one card per player every REVEAL_MS, starting LEAD_MS after the host starts
+  const LEAD_MS = 2500;                         // the reveal starts LEAD_MS after the host starts
+  const REVEAL_TOTAL = 14000;                   // big stakes reveal faster, so a battle never takes much longer than this
   const TURN = 25;                              // seconds per draft pick
 
   // ---------------- seeded randomness (identical on every device) ----------------
@@ -44,8 +50,8 @@ G.MiniUI = (() => {
 
   const room = () => G.Social.room;
   const game = () => (room() && room().game) || null;
-  const meUid = () => G.Social.uid;
-  const nameOf = uid => ((room() && room().members.find(m => m.uid === uid)) || {}).name || 'Someone';
+  const meUid = () => G.Social.uid || 'me';
+  const nameOf = uid => uid === BOT ? 'Bot' : ((room() && room().members.find(m => m.uid === uid)) || {}).name || (uid === meUid() ? 'You' : 'Someone');
   const mineOf = (uid, key) => ((room() && room().members.find(m => m.uid === uid)) || {})[key];
   const now = () => G.Social.now();
   // Sprites go in as placeholders (a canvas's drawing is lost in innerHTML) and are filled in afterwards.
@@ -73,27 +79,56 @@ G.MiniUI = (() => {
   // ================= Gacha Battle =================
   function gbState() {
     const s = G.DB.save;
-    const day = new Date().toISOString().slice(0, 10);
     s.gb = s.gb && typeof s.gb === 'object' ? s.gb : {};
-    if (s.gb.day !== day) { s.gb.day = day; s.gb.n = 0; s.gb.done = {}; }
-    s.gb.done = s.gb.done || {};
+    const done = s.gb.done && typeof s.gb.done === 'object' ? s.gb.done : {};
+    // Old saves: { day, n, done: { id: 1 } }. Keep only the last 3 days of settled battles.
+    const cut = Date.now() - 3 * 864e5;
+    for (const k in done) if (typeof done[k] !== 'number' || done[k] < cut) { if (done[k] === 1) done[k] = Date.now(); else delete done[k]; }
+    s.gb = { done };
     return s.gb;
   }
-  const battlesLeft = () => Math.max(0, DAILY - (gbState().n || 0));
 
-  /** Host: opens a battle for everyone in the room. */
-  function hostBattle(stake) {
+  let solo = null;                              // a battle against the Bot (only on this device)
+  let wantStake = 3;                            // the stake typed in the box (kept across re-renders)
+  const cur = () => solo || game();
+  const stakeOf = (g, uid) => Math.max(1, Math.min(MAX_STAKE, ((g.stakes || {})[uid]) || g.stake || 1));
+  const tickets = () => (G.DB.save.tickets || {}).t1 || 0;
+  const clampStake = n => Math.max(1, Math.min(MAX_STAKE, Math.floor(+n) || 1));
+  const plural = n => n + ' ×1 ticket' + (n === 1 ? '' : 's');
+  const potFor = (g, uid) => g.players.filter(u => u !== uid).reduce((a, u) => a + stakeOf(g, u), 0);
+  const revealMs = g => Math.max(140, Math.min(1100, Math.floor(REVEAL_TOTAL / Math.max(...g.players.map(u => stakeOf(g, u))))));
+
+  /** Host: opens a battle for everyone in the room (each player picks their own stake when joining). */
+  function hostBattle() {
     const r = room();
     if (!r || !r.isHost || game()) return;
-    G.Social.setGame({ type: 'gb', id: Date.now().toString(36), stake, phase: 'join', hs: Math.floor(Math.random() * 1e9) });
+    solo = null;
+    G.Social.setGame({ type: 'gb', id: Date.now().toString(36), phase: 'join', hs: Math.floor(Math.random() * 1e9) });
+  }
+
+  /** On your own: a battle against the Bot, set up on this device. */
+  function soloBattle() {
+    if (game() && game().type === 'gb') { showBattle(); return; }
+    solo = { type: 'gb', solo: true, id: 's' + Date.now().toString(36), phase: 'join' };
+    showBattle();
+  }
+  function soloFrom(from) { lastFrom = from; soloBattle(); }
+  function startSolo() {
+    const n = clampStake(wantStake);
+    if (!solo || solo.phase !== 'join' || tickets() < n) return;
+    const me = meUid();
+    solo = Object.assign({}, solo, { phase: 'roll', players: [me, BOT], stakes: { [me]: n, [BOT]: n },
+      charms: { [me]: G.Charms.list().slice() }, seed: 'solo:' + Math.floor(Math.random() * 1e9), startAt: now() + LEAD_MS });
+    renderBattle();
   }
 
   /** Every pull of one player, from the shared seed. Like a "surprise me" pull: a random region per pull. */
   function pullsFor(g, uid) {
     const r = rng(g.seed + ':' + uid);
     const total = G.Gacha.RATES.reduce((a, [, w]) => a + w, 0);
+    const charms = ((g.charms || {})[uid]) || [];
     const out = [];
-    for (let i = 0; i < g.stake; i++) {
+    for (let i = 0, n = stakeOf(g, uid); i < n; i++) {
       let x = r() * total, want = 1;
       for (const [rr, w] of G.Gacha.RATES) { x -= w; if (x <= 0) { want = rr; break; } }
       const gen = pickR(r, G.Gacha.BANNERS).gen;
@@ -106,7 +141,7 @@ G.MiniUI = (() => {
       }
       if (!list.length) list = G.DEX.filter(p => p.gen === gen && G.SPRITE_META[p.dex]);
       const mon = pickR(r, list);
-      const shiny = G.Sprites.hasShiny(mon.dex) && r() < G.Gacha.SHINY_RATE;
+      const shiny = G.Sprites.hasShiny(mon.dex) && r() < G.Gacha.SHINY_RATE * G.Charms.mult(mon.dex, charms);
       out.push({ dex: mon.dex, rarity, shiny });
     }
     return out;
@@ -127,13 +162,13 @@ G.MiniUI = (() => {
 
   /** Your share of a finished battle, applied to your save once (stake out, pulls in, the pot if you won). */
   function settle(g) {
-    const s = G.DB.save, st = gbState();
-    if (!g.players.includes(meUid()) || st.done[g.id]) return;
-    st.done[g.id] = 1; st.n = (st.n || 0) + 1;
-    s.tickets.t1 = Math.max(0, s.tickets.t1 - g.stake);
+    const s = G.DB.save, st = gbState(), me = meUid();
+    if (!g.players.includes(me) || st.done[g.id]) return;
+    st.done[g.id] = Date.now();
+    s.tickets.t1 = Math.max(0, s.tickets.t1 - stakeOf(g, me));
     s.shiny = s.shiny || {};
     const { rows, winner } = results(g);
-    const mine = rows.find(x => x.uid === meUid());
+    const mine = rows.find(x => x.uid === me);
     for (const p of mine.pulls) {
       let refund = 0;
       if (p.shiny) {
@@ -144,7 +179,7 @@ G.MiniUI = (() => {
       s.coins += refund;
     }
     s.stats.pulls = (s.stats.pulls || 0) + mine.pulls.length;
-    if (winner === meUid()) s.tickets.t1 += g.stake * (g.players.length - 1);
+    if (winner === me) s.tickets.t1 += potFor(g, me);
     G.DB.commit(true);
   }
 
@@ -156,85 +191,187 @@ G.MiniUI = (() => {
     renderBattle();
   }
 
+  /** The stake box: a number from 1 to what you can afford (MAX_STAKE at most), with quick buttons. */
+  function stakePicker(box, onChange) {
+    const max = Math.max(1, Math.min(MAX_STAKE, tickets()));
+    wantStake = clampStake(Math.min(wantStake, max));
+    const wrap = document.createElement('div'); wrap.className = 'gb-stake';
+    wrap.innerHTML = `<label>Your stake <input type="number" min="1" max="${max}" step="1" inputmode="numeric" value="${wantStake}"> ×1 tickets</label>`;
+    const inp = wrap.querySelector('input');
+    const set = v => { wantStake = clampStake(Math.min(v, max)); inp.value = wantStake; if (onChange) onChange(); };
+    inp.oninput = () => { const v = Math.floor(+inp.value); if (v >= 1) { wantStake = clampStake(Math.min(v, max)); if (onChange) onChange(); } };
+    inp.onchange = () => set(inp.value);
+    inp.onblur = () => { if (pendingRender) { pendingRender = false; setTimeout(() => { if (G.UI.isOpen('scr-gbattle')) renderBattle(); }, 250); } };
+    const quick = document.createElement('div'); quick.className = 'gb-quick';
+    for (const [t, v] of [['1', 1], ['5', 5], ['10', 10], ['25', 25], ['Max', max]]) {
+      if (v > max && t !== 'Max') continue;
+      const b = document.createElement('button'); b.className = 'btn small ghost'; b.textContent = t; b.onclick = () => set(v);
+      quick.appendChild(b);
+    }
+    wrap.appendChild(quick);
+    box.appendChild(wrap);
+    return inp;
+  }
+  const btnRow = () => { const row = document.createElement('div'); row.className = 'row'; row.style.justifyContent = 'center'; row.style.gap = '8px'; row.style.flexWrap = 'wrap'; return row; };
+  const addBtn = (row, t, cls, fn, dis) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = t; b.onclick = fn; b.disabled = !!dis; row.appendChild(b); return b; };
+  const SCORE_NOTE = 'Score: ★1 1 · ★2 3 · ★3 8 · ★4 25 · ★5 100 points, shiny ×3.';
+
+  function renderSoloJoin(box) {
+    const t1 = tickets();
+    box.innerHTML = `<p class="sub">Nobody to battle? Take on the <b>Bot</b>. It matches your stake and you both pull at once.
+      You keep what you pull, and if your pulls beat the Bot's you win its stake as tickets.</p>
+      <div class="gb-join"><div class="gb-chip in">${spr(G.DB.save.partner, 40, 36, !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner))}<span>You</span><small>In</small></div>
+      <div class="gb-chip in"><span class="gb-bot">🤖</span><span>Bot</span><small>Matches you</small></div></div>`;
+    if (t1 < 1) {
+      box.insertAdjacentHTML('beforeend', '<p class="note">You need at least 1 ×1 ticket to battle.</p>');
+    } else {
+      const go = () => { startBtn.textContent = 'Battle the Bot (' + plural(clampStake(wantStake)) + ')'; };
+      stakePicker(box, go);
+      const row = btnRow();
+      const startBtn = addBtn(row, '', 'gold', startSolo);
+      go();
+      box.appendChild(row);
+    }
+    box.insertAdjacentHTML('beforeend', `<p class="note">${SCORE_NOTE} Want to play friends instead? Open a room from Mini-Games.</p>`);
+    fillSprites(box);
+  }
+
   function renderBattle() {
-    const g = game(), r = room();
-    if (!g || g.type !== 'gb' || !r) { closeBattle(); return; }
+    const g = cur(), r = room();
+    if (!g || g.type !== 'gb' || (!g.solo && !r)) { closeBattle(); return; }
     const box = $('gb-body');
-    $('gb-title').textContent = 'Gacha Battle · ' + g.stake + (g.stake === 1 ? ' pull' : ' pulls') + ' each';
+    $('gb-back').textContent = g.solo ? 'Back' : 'Room';
     if (g.phase === 'join') {
+      $('gb-title').textContent = g.solo ? 'Gacha Battle vs Bot' : 'Gacha Battle';
+      if (g.solo) { renderSoloJoin(box); return; }
       const joined = r.members.filter(m => (m.gb || {}).id === g.id);
       const me = r.members.find(m => m.uid === meUid());
-      const amIn = me && (me.gb || {}).id === g.id;
-      const t1 = G.DB.save.tickets.t1, left = battlesLeft();
-      box.innerHTML = `<p class="sub">Everyone who joins stakes <b class="gold">${g.stake} ×1 ticket${g.stake > 1 ? 's' : ''}</b> and pulls ${g.stake}.
-        You keep what you pull. The best pulls win everyone else's tickets.</p>
-        <div class="gb-join">${r.members.map(m => `<div class="gb-chip${(m.gb || {}).id === g.id ? ' in' : ''}">${spr(m.dex, 40, 36, m.shiny)}<span>${esc(m.name)}</span><small>${(m.gb || {}).id === g.id ? 'In' : 'Watching'}</small></div>`).join('')}</div>
-        <p class="note">Score: ★1 1 · ★2 3 · ★3 8 · ★4 25 · ★5 100 points, shiny ×3. You can battle ${left} more time${left === 1 ? '' : 's'} today.</p>`;
-      const row = document.createElement('div'); row.className = 'row'; row.style.justifyContent = 'center'; row.style.gap = '8px';
-      const btn = (t, cls, fn, dis) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = t; b.onclick = fn; b.disabled = !!dis; row.appendChild(b); };
-      if (!amIn) btn('Join (' + g.stake + ' ticket' + (g.stake > 1 ? 's' : '') + ')', 'gold', () => G.Social.setMine('gb', { id: g.id, s: Math.floor(Math.random() * 1e9) }),
-        t1 < g.stake || left <= 0);
-      else btn('Leave the battle', 'ghost', () => G.Social.setMine('gb', null));
+      const myEntry = me && (me.gb || {}).id === g.id ? me.gb : null;
+      const t1 = tickets();
+      const pot = joined.reduce((a, m) => a + stakeOf({ stakes: { x: m.gb.n } }, 'x'), 0);
+      box.innerHTML = `<p class="sub">Everyone who joins picks their own stake of ×1 tickets and pulls that many.
+        You keep what you pull. The best total score wins everyone else's tickets.</p>
+        <div class="gb-join">${r.members.map(m => {
+          const inIt = (m.gb || {}).id === g.id;
+          return `<div class="gb-chip${inIt ? ' in' : ''}">${spr(m.dex, 40, 36, m.shiny)}<span>${esc(m.name)}</span><small>${inIt ? 'Stakes ' + stakeOf({ stakes: { x: m.gb.n } }, 'x') : 'Watching'}</small></div>`;
+        }).join('')}</div>
+        ${joined.length ? `<p class="center">Pot: <b class="gold">${plural(pot)}</b></p>` : ''}`;
+      const sendMine = n => G.Social.setMine('gb', { id: g.id, s: (myEntry && myEntry.s) || Math.floor(Math.random() * 1e9), n, c: G.Charms.list().slice() });
+      if (t1 >= 1) {
+        let actBtn;
+        const label = () => {
+          if (!actBtn) return;
+          const n = clampStake(wantStake);
+          actBtn.textContent = myEntry ? (n === stakeOf({ stakes: { x: myEntry.n } }, 'x') ? 'Stake set' : 'Change stake to ' + n) : 'Join (' + plural(n) + ')';
+          actBtn.disabled = myEntry && n === stakeOf({ stakes: { x: myEntry.n } }, 'x');
+        };
+        if (!myEntry) wantStake = clampStake(wantStake);
+        else wantStake = stakeOf({ stakes: { x: myEntry.n } }, 'x');
+        stakePicker(box, label);
+        const row = btnRow();
+        actBtn = addBtn(row, '', 'gold', () => { if (tickets() >= clampStake(wantStake)) sendMine(clampStake(wantStake)); });
+        label();
+        if (myEntry) addBtn(row, 'Leave the battle', 'ghost', () => G.Social.setMine('gb', null));
+        box.appendChild(row);
+      } else if (myEntry) {
+        const row = btnRow(); addBtn(row, 'Leave the battle', 'ghost', () => G.Social.setMine('gb', null)); box.appendChild(row);
+      }
       if (r.isHost) {
-        btn('Start (' + joined.length + ' in)', 'gold', () => {
+        const row = btnRow();
+        addBtn(row, 'Start (' + joined.length + ' in)', 'gold', () => {
           const players = joined.map(m => m.uid);
           if (players.length < 2) return;
-          const seed = String(g.hs) + ':' + joined.map(m => m.uid + '=' + m.gb.s).sort().join(',');
-          G.Social.setGame(Object.assign({}, g, { phase: 'roll', players, seed, startAt: now() + LEAD_MS }));
+          const stakes = {}, charms = {};
+          for (const m of joined) { stakes[m.uid] = stakeOf({ stakes: { x: m.gb.n } }, 'x'); charms[m.uid] = Array.isArray(m.gb.c) ? m.gb.c : []; }
+          const seed = String(g.hs) + ':' + joined.map(m => m.uid + '=' + m.gb.s + '*' + stakes[m.uid]).sort().join(',');
+          G.Social.setGame(Object.assign({}, g, { phase: 'roll', players, stakes, charms, seed, startAt: now() + LEAD_MS }));
         }, joined.length < 2);
-        btn('Cancel', 'ghost', () => G.Social.setGame(null));
+        addBtn(row, 'Cancel', 'ghost', () => G.Social.setGame(null));
+        box.appendChild(row);
+        if (joined.length < 2) box.insertAdjacentHTML('beforeend', '<p class="note">At least 2 players need to join. On your own? Cancel and pick "Gacha Battle vs Bot".</p>');
       }
-      box.appendChild(row);
       fillSprites(box);
-      if (amIn && t1 < g.stake) box.insertAdjacentHTML('beforeend', '<p class="note">You no longer have enough tickets for this battle.</p>');
-      else if (!amIn && t1 < g.stake) box.insertAdjacentHTML('beforeend', `<p class="note">You need ${g.stake} ×1 tickets to join. You can still watch.</p>`);
-      else if (!amIn && left <= 0) box.insertAdjacentHTML('beforeend', '<p class="note">That\'s your battles for today. You can still watch.</p>');
+      if (myEntry && t1 < stakeOf({ stakes: { x: myEntry.n } }, 'x')) box.insertAdjacentHTML('beforeend', '<p class="note">You no longer have enough tickets for your stake. Lower it or leave.</p>');
+      else if (!myEntry && t1 < 1) box.insertAdjacentHTML('beforeend', '<p class="note">You need at least 1 ×1 ticket to join. You can still watch.</p>');
+      box.insertAdjacentHTML('beforeend', `<p class="note">${SCORE_NOTE}</p>`);
       return;
     }
     // Rolling: settle right away (so nothing is lost if the page closes), reveal in step with everyone.
     settle(g);
     const res = results(g);
     clearTimeout(raf);
-    const n = g.stake;
-    let last = -1;
+    const n = Math.max(...g.players.map(u => stakeOf(g, u))), step = revealMs(g);
+    const stakesSame = g.players.every(u => stakeOf(g, u) === n);
+    $('gb-title').textContent = (g.solo ? 'Gacha Battle vs Bot · ' : 'Gacha Battle · ') + (stakesSame ? n + (n === 1 ? ' pull' : ' pulls') + ' each' : 'up to ' + n + ' pulls');
+    // The columns are drawn once with face-down cards; each tick only turns over the new ones.
+    box.innerHTML = `<div class="gb-cols">${res.rows.map(x => `<div class="gb-col" data-u="${esc(x.uid)}"><div class="gb-name">${x.uid === BOT ? '🤖 ' : ''}${esc(nameOf(x.uid))}</div>
+        <small class="gb-st">${plural(stakeOf(g, x.uid))}</small>
+        <div class="gb-score">0</div>
+        <div class="gb-pulls${x.pulls.length > 20 ? ' many' : ''}">${x.pulls.map(() => '<div class="gb-card back">?</div>').join('')}</div></div>`).join('')}</div>
+      <p class="sub center gb-ready">Get ready…</p>`;
+    const cols = [...box.querySelectorAll('.gb-col')];
+    let shownBefore = 0;
     const tick = () => {
-      if (!G.UI.isOpen('scr-gbattle')) return;
+      if (!G.UI.isOpen('scr-gbattle') || (cur() || {}).id !== g.id) return;
       const t = now() - g.startAt;
-      const shown = t < 0 ? 0 : Math.min(n, Math.floor(t / REVEAL_MS) + 1);
-      const done = shown >= n && t > n * REVEAL_MS + 600;
-      const key = shown + (done ? 100 : 0);
-      if (key === last) { raf = setTimeout(tick, 100); return; }
-      if (last >= 0 && shown > (last % 100)) G.Audio.sfx('select');
-      last = key;
-      box.innerHTML = `<div class="gb-cols">${res.rows.map(x => {
-        const partial = x.pulls.slice(0, shown), sc = scoreOf(partial);
-        const win = done && x.uid === res.winner;
-        return `<div class="gb-col${win ? ' win' : ''}"><div class="gb-name">${esc(nameOf(x.uid))}${win ? ' 🏆' : ''}</div>
-          <div class="gb-score">${sc}</div>
-          <div class="gb-pulls">${x.pulls.map((p, i) => i < shown
-            ? `<div class="gb-card r${p.rarity}${p.shiny ? ' sh' : ''}" style="--rc:${G.Gacha.RARITY_COLOR[p.rarity]}" title="${esc(G.DEX_BY[p.dex].name)}">${spr(p.dex, 48, 42, p.shiny)}<small>${'★'.repeat(p.rarity)}${p.shiny ? ' ✦' : ''}</small></div>`
-            : '<div class="gb-card back">?</div>').join('')}</div></div>`;
-      }).join('')}</div>` + (shown === 0 ? '<p class="sub center">Get ready…</p>' : '');
-      fillSprites(box);
+      const shown = t < 0 ? 0 : Math.min(n, Math.floor(t / step) + 1);
+      const done = shown >= n && t > n * step + 600;
+      if (shown > shownBefore) {
+        const rd = box.querySelector('.gb-ready'); if (rd) rd.remove();
+        res.rows.forEach((x, ci) => {
+          const cards = cols[ci].querySelectorAll('.gb-pulls > .gb-card');
+          for (let i = shownBefore; i < Math.min(shown, x.pulls.length); i++) {
+            const p = x.pulls[i];
+            const el = document.createElement('div');
+            el.className = 'gb-card r' + p.rarity + (p.shiny ? ' sh' : '');
+            el.style.setProperty('--rc', G.Gacha.RARITY_COLOR[p.rarity]);
+            el.title = G.DEX_BY[p.dex].name;
+            el.innerHTML = spr(p.dex, 48, 42, p.shiny) + `<small>${'★'.repeat(p.rarity)}${p.shiny ? ' ✦' : ''}</small>`;
+            fillSprites(el);
+            cards[i].replaceWith(el);
+          }
+          cols[ci].querySelector('.gb-score').textContent = scoreOf(x.pulls.slice(0, shown));
+        });
+        G.Audio.sfx('select');
+        shownBefore = shown;
+      }
       if (done) {
-        const w = res.winner, pot = g.stake * (g.players.length - 1);
-        box.insertAdjacentHTML('beforeend', `<p class="gb-result">${w === meUid() ? 'You win' : esc(nameOf(w)) + ' wins'} <b class="gold">+${pot} ×1 ticket${pot > 1 ? 's' : ''}</b></p>`);
-        const row = document.createElement('div'); row.className = 'row'; row.style.justifyContent = 'center'; row.style.gap = '8px';
-        const b = document.createElement('button'); b.className = 'btn gold'; b.textContent = room() && room().isHost ? 'Back to the room' : 'Close';
-        b.onclick = () => { if (room() && room().isHost) G.Social.setGame(null); closeBattle(); };
-        row.appendChild(b);
+        const w = res.winner, pot = potFor(g, w);
+        const wc = cols[res.rows.findIndex(x => x.uid === w)];
+        wc.classList.add('win'); wc.querySelector('.gb-name').insertAdjacentText('beforeend', ' 🏆');
+        box.insertAdjacentHTML('beforeend', `<p class="gb-result">${w === meUid() ? 'You win' : esc(nameOf(w)) + ' wins'} <b class="gold">+${plural(pot)}</b></p>`);
+        const row = btnRow();
+        if (g.solo) {
+          addBtn(row, 'Again', 'gold', () => { solo = { type: 'gb', solo: true, id: 's' + Date.now().toString(36), phase: 'join' }; renderBattle(); }, tickets() < 1);
+          addBtn(row, 'Close', 'ghost', closeBattle);
+        } else {
+          addBtn(row, room() && room().isHost ? 'Back to the room' : 'Close', 'gold', () => { if (room() && room().isHost) G.Social.setGame(null); closeBattle(); });
+        }
         box.appendChild(row);
         G.Audio.sfx('confirm');
         return;
       }
-      raf = setTimeout(tick, 100);
+      raf = setTimeout(tick, 80);
     };
     tick();
   }
 
+  let lastFrom = 'mini';                        // where a Bot battle was opened from (to go back there)
   function closeBattle() {
     clearTimeout(raf);
-    if (G.UI.isOpen('scr-gbattle')) { if (room()) G.LobbyUI.open(); else G.MenuUI.open(); }
+    const wasSolo = !!solo;
+    solo = null;
+    if (!G.UI.isOpen('scr-gbattle')) return;
+    if (room() && (!wasSolo || lastFrom === 'lobby')) { G.LobbyUI.open(); return; }
+    open();
+    if (G.UI.isOpen('scr-gbattle')) G.MenuUI.open();
+  }
+  /** Room updates while you type your stake would wipe the box: they wait until you leave it. */
+  let pendingRender = false;
+  function roomChanged() {
+    const a = document.activeElement;
+    if (a && a.tagName === 'INPUT' && $('gb-body').contains(a)) { pendingRender = true; return; }
+    renderBattle();
   }
 
   // ================= Draft Night =================
@@ -343,6 +480,8 @@ G.MiniUI = (() => {
   function onGame() {
     const g = game();
     if (G.Game.state !== 'ui') return;
+    if (g && solo && solo.phase === 'join') solo = null;      // a room game takes over an unstarted Bot battle
+    if (!g && solo && G.UI.isOpen('scr-gbattle')) return;     // your Bot battle carries on
     if (g && g.type === 'gb') showBattle();
     else if (g && g.type === 'draft') showDraft();
     else {
@@ -351,16 +490,17 @@ G.MiniUI = (() => {
   }
 
   function init() {
-    $('mini-gb').onclick = () => { $('mini-room').click(); };
+    // Gacha Battle from the Mini-Games screen: to your room if friends are in it, otherwise against the Bot.
+    $('mini-gb').onclick = () => { if (room() && room().members.length > 1) $('mini-room').click(); else soloFrom('mini'); };
     $('mini-draft').onclick = () => { $('mini-room').click(); };
     $('dr-start').onclick = () => G.LobbyUI.startDraftRun();
     $('dr-cancel').onclick = () => G.Social.setGame(null);
-    $('gb-back').onclick = () => G.LobbyUI.open();
+    $('gb-back').onclick = () => { if (solo) { if (solo.phase === 'roll') { G.UI.toast('Wait for the battle to finish'); return; } closeBattle(); } else G.LobbyUI.open(); };
     $('dr-back').onclick = () => G.LobbyUI.open();
     G.Social.on(what => {
       if (what === 'game') onGame();
       else if (what === 'room') {
-        if (G.UI.isOpen('scr-gbattle') && game() && game().phase === 'join') renderBattle();
+        if (G.UI.isOpen('scr-gbattle') && !solo && game() && game().phase === 'join') roomChanged();
         if (G.UI.isOpen('scr-draft')) { hostTick(); renderDraft(); }
       }
     });
@@ -374,25 +514,30 @@ G.MiniUI = (() => {
     if (g) {
       box.innerHTML = `<p class="note">${g.type === 'gb' ? 'A Gacha Battle is on.' : g.phase === 'done' ? 'Draft done: the next group run uses the drafted Pokémon.' : 'Draft Night is on.'}</p>`;
       const b = document.createElement('button'); b.className = 'btn small'; b.textContent = 'Open it';
-      b.onclick = () => (g.type === 'gb' ? showBattle() : showDraft());
+      b.onclick = () => (g.type === 'gb' ? (solo = null, showBattle()) : showDraft());
       box.appendChild(b);
       return;
     }
-    if (!r.isHost) { box.innerHTML = '<p class="note">The host can start a Gacha Battle or Draft Night.</p>'; return; }
+    if (!r.isHost) {
+      box.innerHTML = '<p class="note">The host can start a Gacha Battle or Draft Night.</p>';
+      const b = document.createElement('button'); b.className = 'btn small ghost'; b.textContent = 'Gacha Battle vs Bot';
+      b.onclick = () => soloFrom('lobby');
+      box.appendChild(b);
+      return;
+    }
     box.innerHTML = '';
     const row = document.createElement('div'); row.className = 'row'; row.style.gap = '6px'; row.style.flexWrap = 'wrap';
-    for (const s of STAKES) {
-      const b = document.createElement('button'); b.className = 'btn small'; b.textContent = 'Gacha Battle ×' + s;
-      b.title = 'Everyone who joins stakes ' + s + ' ×1 ticket' + (s > 1 ? 's' : '') + '; the best pulls win the pot';
-      b.disabled = r.members.length < 2; b.onclick = () => hostBattle(s);
-      row.appendChild(b);
-    }
+    const alone = r.members.length < 2;
+    const b = document.createElement('button'); b.className = 'btn small'; b.textContent = alone ? 'Gacha Battle vs Bot' : 'Gacha Battle';
+    b.title = alone ? 'Battle the Bot on your own: it matches your stake' : 'Everyone who joins picks their own stake; the best pulls win the pot';
+    b.onclick = () => (alone ? soloFrom('lobby') : hostBattle());
+    row.appendChild(b);
     const d = document.createElement('button'); d.className = 'btn small gold'; d.textContent = 'Draft Night';
     d.title = 'Take turns drafting Pokémon for the next group run'; d.disabled = r.members.length < 2; d.onclick = hostDraft;
     row.appendChild(d);
     box.appendChild(row);
-    if (r.members.length < 2) box.insertAdjacentHTML('beforeend', '<p class="note">Invite a friend to play.</p>');
+    if (r.members.length < 2) box.insertAdjacentHTML('beforeend', '<p class="note">Invite a friend to play together, or battle the Bot meanwhile.</p>');
   }
 
-  return { init, open, lobbyTools, draftedFor, DAILY };
+  return { init, open, lobbyTools, draftedFor, MAX_STAKE };
 })();

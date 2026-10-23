@@ -111,7 +111,7 @@ G.Rift = (() => {
     const cfg = {
       bx: Math.round(here.x), by: Math.round(here.y),
       tx: 5000 + Math.floor(Math.random() * 3000), ty: 5000 + Math.floor(Math.random() * 3000), r: ARENA_R,
-      dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < 1 / 512,
+      dex: mon.dex, shiny: G.Sprites.hasShiny(mon.dex) && Math.random() < G.Charms.mult(mon.dex) / 512,
       // The arena is one of its types', at random.
       type: zy ? 'zygarde' : (forceType || G.U.pick(mon.types))
     };

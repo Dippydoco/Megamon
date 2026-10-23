@@ -3,7 +3,7 @@
  * materialise on screen. Every ~45 s there's a "surge": a concentrated
  * rush from one particular side, to break the rhythm.
  *
- * Each enemy has a 1/4096 chance to be shiny (as in the classic games).
+ * Each enemy has a 1/4096 chance to be shiny (as in the classic games), doubled by its region's Shiny Charm.
  * A run kills 1,500–4,000, so one shows up every 1–3 runs.
  *
  * Co-op (host only): they appear around a random living player,
@@ -77,7 +77,7 @@ G.Spawner = (() => {
   function rollShiny(dex) {
     if (!G.Sprites.hasShiny(dex)) return false;
     if (forceShiny > 0) { forceShiny--; return true; }
-    return Math.random() < SHINY_RATE;
+    return Math.random() < SHINY_RATE * G.Charms.mult(dex);      // Shiny Charm: ×2 for completed regions
   }
 
   // Supports never gang up: at most this many of each alive at once (on the whole map, so in co-op it's for the

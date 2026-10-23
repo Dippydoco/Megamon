@@ -9,6 +9,17 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-23', at: '2026-10-23T17:49Z', title: 'Shiny Charms', new: [
+    'Own every Pokémon of a region to earn its Shiny Charm: shiny odds are doubled for that region\'s Pokémon, in runs, rifts, the gacha and Gacha Battles.',
+    'Completed regions show a sparkle on their Pokédex tab, and each gacha banner shows whether you have its charm. In group runs the host\'s charms count for wild shinies and rifts.'
+  ] },
+  { d: '2026-10-23', at: '2026-10-23T17:49Z', title: 'Gacha Battle: your own stake, no daily limit, and a Bot', new: [
+    'No one to battle? Take on the Bot: it matches your stake, and if your pulls beat its pulls you win its stake as tickets. Start it from Mini-Games or from your room.'
+  ], chg: [
+    'Gacha Battles no longer have a limit of 3 a day.',
+    'Each player now picks their own stake, from 1 to 100 ×1 tickets, and pulls that many. The best total score wins everyone else\'s stakes.',
+    'Big battles reveal their cards faster, so they never drag on.'
+  ] },
   { d: '2026-10-23', at: '2026-10-23T17:07Z', title: 'Starting Moves upgrade', new: [
     'Repertoire is replaced by Starting Moves (2 levels). Level 1: choose the move your Pokémon starts with. Level 2: choose up to 2. Use the Choose button in Upgrades.',
     'If you owned Repertoire, you now have Starting Moves level 2. With no moves chosen, you start with 2 moves as before.'

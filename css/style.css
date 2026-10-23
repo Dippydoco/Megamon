@@ -515,6 +515,8 @@ img.pix { image-rendering: pixelated; image-rendering: crisp-edges; vertical-ali
 .gen-tab:hover { border-color: var(--edge); }
 .gen-tab.on { border-color: var(--gold); background: rgba(255,210,63,.14); }
 .gen-tab.on b { color: var(--gold); }
+.gen-tab.charm { box-shadow: inset 0 0 0 1px rgba(154,230,255,.55); }
+.gen-tab.charm small { color: #9ae6ff; }
 
 /* ============ normal / shiny ============ */
 .seg { display: flex; justify-content: center; gap: 0; margin: 2px auto 8px; width: max-content;
@@ -1438,6 +1440,14 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .gb-card.r4, .gb-card.r5 { box-shadow: 0 0 12px var(--rc); }
 .gb-card.sh { background: rgba(154,230,255,.12); }
 @keyframes gbIn { from { transform: scale(.4) rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.gb-stake { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 6px 0 10px; }
+.gb-stake label { font-size: 15px; }
+.gb-stake input { width: 76px; font: inherit; text-align: center; padding: 4px 6px; border-radius: 8px; border: 2px solid rgba(244,248,255,.25); background: rgba(0,0,0,.35); color: inherit; }
+.gb-quick { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+.gb-st { display: block; font-size: 11px; color: var(--muted); }
+.gb-bot { font-size: 26px; line-height: 36px; }
+.gb-pulls.many .gb-card { width: 46px; height: 54px; }
+.gb-pulls.many .gb-card canvas { transform: scale(.8); }
 .gb-result { text-align: center; font-size: 22px; margin: 12px 0 8px; }
 .dr-order { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0 12px; }
 .dr-seat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; border-radius: 10px; min-width: 96px;

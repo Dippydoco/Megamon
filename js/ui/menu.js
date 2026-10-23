@@ -228,8 +228,10 @@ G.MenuUI = (() => {
       const total = G.DEX.filter(p => p.gen === g).length;
       const have = G.DEX.filter(p => p.gen === g && s.owned[p.dex]).length;
       const b = document.createElement('button');
-      b.className = 'gen-tab' + (g === dexGen ? ' on' : '');
-      b.innerHTML = `<b>${name}</b><small>${have}/${total}</small>`;
+      const charm = have === total;
+      b.className = 'gen-tab' + (g === dexGen ? ' on' : '') + (charm ? ' charm' : '');
+      b.innerHTML = `<b>${name}</b><small>${charm ? G.Icons.html('shiny', 10) + ' ' : ''}${have}/${total}</small>`;
+      if (charm) b.title = 'Complete! Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for ' + name + ' Pokémon';
       b.onclick = () => { dexGen = g; openDex(); };
       tabs.appendChild(b);
     });

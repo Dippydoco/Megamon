@@ -66,8 +66,12 @@ G.GachaUI = (() => {
     $('banner-title').textContent = surprise ? '??? Mystery Banner' : banner.name + ' Mystery';
     $('banner-desc').textContent = surprise ? `Any of the ${all.length} Pokémon from any generation. Who knows what you will get?`
                                             : `The ${all.length} Pokémon of generation ${gen}. The legendaries await!`;
+    const charms = G.Charms.list();
+    const charmNote = surprise ? (charms.length ? ` · Shiny Charm${charms.length > 1 ? 's' : ''}: ${charms.map(G.Charms.regionName).join(', ')}` : '')
+      : charms.includes(gen) ? ` · ${G.Icons.html('shiny', 12)} Shiny Charm: shiny odds ×${G.Charms.MULT}`
+      : ` · Own all ${all.length} for the Shiny Charm`;
     $('gacha-owned').innerHTML = `You have ${owned} of ${all.length}` +
-      (shinies ? ` · ${G.Icons.html('shiny', 12)} ${shinies} shiny` : '');
+      (shinies ? ` · ${G.Icons.html('shiny', 12)} ${shinies} shiny` : '') + charmNote;
 
     const feat = $('gacha-feat');
     feat.innerHTML = '';
