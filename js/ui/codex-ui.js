@@ -246,6 +246,13 @@ G.CodexUI = (() => {
           ['Group runs', 'More players means more enemies, with more HP. Experience is shared, so each player levels a little slower.']
         ];
       })()],
+      ['Abilities', [
+        ['Always on', 'Every Pokémon has one ability (Abilities tab), active for the whole run. Pause the game to read yours.'],
+        ['Burned or poisoned', 'Players don\'t carry statuses: for abilities, you count as burned or poisoned for 4 s after a Fire or Poison hit, and as slowed while a trap, Hyper Beam or water slows you.'],   // abilrun.js
+        ['Debuffs', 'Defiant, Competitive and the like trigger when you get slowed or hit by a boss\'s or legendary\'s attack.'],
+        ['Weather and terrain', 'Drizzle, Drought, Sand Stream and Snow Warning bring their weather for 60 s at the start and 30 s every 4 minutes. Surge abilities do the same with their terrain.'],
+        ['Teammates', 'Team abilities (Battery, Power Spot, Telepathy...) help teammates within a short distance of you.']
+      ]],
       ['Shinies', [
         ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it.'],   // spawner.js, rift.js, gacha.js
         ['Shiny Charms', 'Own every Pokémon of a region to earn its Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for that region\'s Pokémon in runs, rifts and the gacha (not Gacha Battles, where everyone has the same odds). In group runs the host\'s charms count. Completed regions show a sparkle in the Pokédex.']   // charms.js

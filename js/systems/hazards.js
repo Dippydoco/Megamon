@@ -58,7 +58,7 @@ G.Hazards = (() => {
         detonate(h);
         if (pl && !pl.dead && inside(h, pl.x, pl.y, pl.r)) {
           pl.breakInvuln();
-          pl.hurt(h.pct ? Math.max(h.dmg, pl.maxHp * h.pct) : h.dmg, h.type, !!h.pure, { k: h.kind, d: h.sd });
+          pl.hurt(h.pct ? Math.max(h.dmg, pl.maxHp * h.pct) : h.dmg, h.type, !!h.pure, { k: h.kind, d: h.sd, e: h.from && !h.from.dead ? h.from : null });
         }
       }
       if (h.hit && h.t >= h.delay + h.end) list.splice(i, 1);

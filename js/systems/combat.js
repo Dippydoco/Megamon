@@ -39,13 +39,21 @@ G.Combat = (() => {
    */
   function fireNow(pl, m) {
     if (pl.dead || m.t > 0) return false;
-    m.t = Math.max(0.05, m.cd * pl.cdMul);
+    m.t = Math.max(0.05, m.cd * pl.cdMul * G.Abil.cdK(pl, m));
     pl.cast(m);
     G.RunLog.cast(pl, m.id);
     if (G.Coop.active) G.Coop.cast(pl, m);
     m.castAt = performance.now();
-    run(pl, m);
+    castRun(pl, m);
     return true;
+  }
+
+  /** Runs a cast with the ability hooks around it (Electromorphosis, Gulp Missile...; Dancer casts dances twice). */
+  function castRun(pl, m) {
+    G.Abil.beforeCast(pl, m);
+    run(pl, m);
+    if (G.Abil.dances(pl, m)) run(pl, m);
+    G.Abil.afterCast(pl, m);
   }
 
   function tickMove(dt, pl, m, now) {
@@ -68,7 +76,7 @@ G.Combat = (() => {
     }
     // Protect (22-10-2026): its cooldown only starts once the shield is over (with enough cooldown cuts it lasted
     // longer than its cooldown, so it could be kept up for ever).
-    m.t = Math.max(0.05, m.cd * pl.cdMul) + (m.id === 'protect' ? m.dur || 0 : 0);
+    m.t = Math.max(0.05, m.cd * pl.cdMul * G.Abil.cdK(pl, m)) + (m.id === 'protect' ? m.dur || 0 : 0);
     const aim0 = pl.aim;
     if (alt) pl.aim = Math.atan2(alt.y - pl.y, alt.x - pl.x);
     pl.cast(m);
@@ -78,7 +86,7 @@ G.Combat = (() => {
     // enemy, like Ember after Quick Attack, can hardly be seen).
     m.castAt = performance.now();
 
-    run(pl, m);
+    castRun(pl, m);
     if (alt) pl.aim = aim0;
   }
 
@@ -88,7 +96,8 @@ G.Combat = (() => {
 
   /** The move as this player casts it: same object, with area sizes scaled by Reach. */
   function sized(pl, m) {
-    const A = pl.areaMul || 1;
+    // Reach (level-up) and abilities that make moves reach further (Long Reach, Mega Launcher, Victory Star...).
+    const A = (pl.areaMul || 1) * (ghost ? 1 : G.Abil.reachK(pl, m));
     if (A === 1) return m;
     const s = Object.create(m);
     if (AREA_R.includes(m.kind) && m.radius) s.radius = m.radius * A;
@@ -156,7 +165,7 @@ G.Combat = (() => {
   }
 
   /** Type chart × weather for an attack of type `type` against `e`. */
-  function typeK(type, e) { return G.Types.mult(type, e.types) * G.Weather.mult(type); }
+  function typeK(type, e, pl) { return G.Types.mult(type, e.types) * (pl ? G.Abil.wxOut(pl, type) : G.Weather.mult(type)); }
   /** STAB (20-10-2026): single-type Pokémon deal ×1.2 with moves of their own type. Dual types don't get it
    *  (their pool is almost all their own types already, so it would just be a flat boost). */
   const STAB = 1.2;
@@ -165,16 +174,17 @@ G.Combat = (() => {
   function fireProjectiles(pl, m) {
     const col = G.U.TYPE_COLOR[m.type];
     const vis = G.VFX.forMove(m);
-    const n = Math.max(1, m.count | 0);
+    const n = Math.max(1, m.count | 0) + (ghost ? 0 : G.Abil.extraShots(pl, m));      // Skill Link: one more
     const spread = m.spread || 0;
+    const life = ghost ? 1 : G.Abil.shotLife(pl), pierce = ghost ? 0 : G.Abil.extraPierce(pl);
     for (let i = 0; i < n; i++) {
       const off = n === 1 ? 0 : (i / (n - 1) - 0.5) * spread * n;
       const a = pl.aim + off + G.U.rand(-0.03, 0.03);
       G.Projectiles.spawn(Object.assign({
         x: pl.x + Math.cos(a) * 3, y: pl.y + Math.sin(a) * 3,
         vx: Math.cos(a) * m.speed, vy: Math.sin(a) * m.speed,
-        dmg: m.dmg * pl.pow(m), r: m.size, life: m.life,
-        pierce: m.pierce | 0, color: col, homing: m.homing || 0,
+        dmg: m.dmg * pl.pow(m), r: m.size, life: m.life * life,
+        pierce: (m.pierce | 0) + pierce, color: col, homing: m.homing || 0,
         hits: new Set(), vis, ghost, owner: pl
       }, payload(m)));
     }
@@ -571,7 +581,7 @@ G.Combat = (() => {
         for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, m.radius)) hit(pl, e, m.dmg * pl.pow(m), col, e.x - pl.x, e.y - pl.y, m.knock || 0, m);
         for (const p of G.World.propsInCircle(pl.x, pl.y, m.radius)) G.World.damageProp(p, m.dmg * pl.pow(m), col);
         // The price: part of your health, but never the last of it.
-        const cost = Math.min(pl.maxHp * (m.selfHp || 0), Math.max(0, pl.hp - 1));
+        const cost = G.Abil.noRecoil(pl) ? 0 : Math.min(pl.maxHp * (m.selfHp || 0), Math.max(0, pl.hp - 1));      // (Rock Head: no recoil)
         if (cost >= 1) { pl.hp -= cost; G.FX.dmgText(pl.x, pl.y - pl.bodyH - 6, '-' + Math.round(cost), '#ff8a96'); }
         break;
       }
@@ -1190,7 +1200,7 @@ G.Combat = (() => {
   const isCrit = (pl, fx) => {
     if (ghost) return false;
     if (fx && fx.alwaysCrit) return true;                // Wicked Blow
-    const c = pl.critChance + (pl.hasItem('scopelens') ? 0.2 : 0) + (fx && fx.crit || 0);
+    const c = pl.critChance + G.Abil.crit(pl) + (pl.hasItem('scopelens') ? 0.2 : 0) + (fx && fx.crit || 0) * G.Abil.critFxK(pl);
     return c > 0 && Math.random() < c;
   };
 
@@ -1204,20 +1214,40 @@ G.Combat = (() => {
     else if (it === 'bindingband') e.applySlow(0.25, 1.5);
   }
 
+  /**
+   * Abilities at the moment of a hit (systems/abilrun.js): the move's type after Normalize & co., an extra
+   * multiplier, forced crits, piercing shields, and the move's side effects (Sheer Force, Serene Grace...).
+   */
+  function abHit(pl, e, type, m) {
+    const ty = ghost ? type : G.Abil.moveType(pl, { type, id: m && m.id }) || type;
+    const c = { type: ty, k: G.Types.mult(ty, e.types), mul: 1, crit: false, pierce: false, noFx: false, fxK: 1, miss: false, poisonK: 0 };
+    return ghost ? c : G.Abil.onHit(pl, e, c, m);
+  }
+  /** A move's side effects on a hit (burn, poison, slow and the `fx` ones), as changed by abilities. */
+  function sideFx(pl, e, src, dmg, lethal, c, mid) {
+    if (c.noFx) return;
+    const fk = c.fxK;
+    if (src.burn) e.applyBurn(Math.round(src.burn * fk), mid);
+    if (src.poison) { e.applyPoison(Math.round(src.poison * fk), mid); if (c.poisonK && !e.remote) e.poisonT *= c.poisonK; }
+    if (src.slow) e.applySlow(src.slow);
+    if (src.fx) hitFx(pl, e, dmg, src.fx, lethal, fk);
+  }
+
   function hit(pl, e, dmg, col, dx, dy, knock, m) {
-    const k = typeK(m.type, e) * stab(pl, m.type);
-    const crit = isCrit(pl, m.fx);
-    dmg *= k * (crit ? CRIT_MUL : 1) * execMul(m.fx, e);
+    const c = abHit(pl, e, m.type, m);
+    if (c.miss) { G.FX.dmgText(e.x, e.y - e.bodyH - 4, 'Miss', '#9fb1c9'); return; }      // Hustle
+    const k = typeK(c.type, e, ghost ? null : pl) * stab(pl, c.type);
+    const crit = c.crit || isCrit(pl, m.fx);
+    dmg *= k * (crit ? CRIT_MUL * G.Abil.critMul(pl) : 1) * execMul(m.fx, e) * c.mul;
     if (m.kind === 'melee' && (e.boss || e.legend || e.judge)) dmg *= 1.25;      // melee has to stand in the boss's fire: +25% against bosses and legendaries
     const lethal = e.hp <= dmg;
-    e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(m.type, e.types)));
+    e._abPierce = c.pierce;                // Infiltrator & co.: shields don't absorb it (Enemy.hurt)
+    e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(c.type, e.types)));
+    e._abPierce = false;
     if (!ghost) { pl.onDealt(dmg); G.RunLog.dmg(pl, m.id, dmg); }
     pl.dmgDealt += dmg;
     if (dmg > pl.bigHit) pl.bigHit = dmg;
-    if (m.burn) e.applyBurn(m.burn, m.id);
-    if (m.poison) e.applyPoison(m.poison, m.id);
-    if (m.slow) e.applySlow(m.slow);
-    if (m.fx) hitFx(pl, e, dmg, m.fx, lethal);
+    sideFx(pl, e, m, dmg, lethal, c, m.id);
     itemHit(pl, e);
   }
 
@@ -1237,7 +1267,7 @@ G.Combat = (() => {
     return e.boss || e.legend || e.judge ? 1 + (fx.exec - 1) / 2 : fx.exec;
   }
 
-  function hitFx(pl, e, dmg, fx, lethal) {
+  function hitFx(pl, e, dmg, fx, lethal, fk = 1) {
     if (ghost) return;
     if (fx.drain) {
       pl.drain(dmg * fx.drain);
@@ -1248,8 +1278,8 @@ G.Combat = (() => {
       }
     }
     if (fx.vuln) e.vuln(fx.vuln);
-    if (fx.freeze && Math.random() < fx.freeze[0]) e.freeze(fx.freeze[1]);
-    if (fx.stun && Math.random() < fx.stun[0]) e.freeze(fx.stun[1], true);
+    if (fx.freeze && Math.random() < fx.freeze[0] * fk) e.freeze(fx.freeze[1]);
+    if (fx.stun && Math.random() < fx.stun[0] * fk) e.freeze(fx.stun[1], true);
     if (fx.chill) {
       const now = performance.now();
       e.chill = now - (e.chillAt || 0) < 1200 ? (e.chill || 0) + 1 : 1;
@@ -1285,7 +1315,7 @@ G.Combat = (() => {
           continue;
         }
         if (G.U.dist2(p.x, p.y, pl.x, pl.y) < (p.r + pl.r) * (p.r + pl.r)) {
-          pl.hurt(p.dmg, p.mtype, false, { k: 'shot', d: p.sd });
+          pl.hurt(p.dmg, p.mtype, false, { k: 'shot', d: p.sd, e: p.from && !p.from.dead ? p.from : null });
           G.FX.burst(p.x, p.y - G.LIFT, p.color, 7, 110);
           projectiles.splice(i, 1);
         }
@@ -1360,20 +1390,21 @@ G.Combat = (() => {
           break;
         }
 
-        const crit = isCrit(pl, p.fx);
-        const k = (p.mtype ? typeK(p.mtype, e) * stab(pl, p.mtype) : 1) * (crit ? CRIT_MUL : 1) * execMul(p.fx, e);
+        const c = abHit(pl, e, p.mtype, p.mid ? G.Moves.BY_ID[p.mid] : null);
+        if (c.miss) { G.FX.dmgText(e.x, e.y - e.bodyH - 4, 'Miss', '#9fb1c9'); if (p.pierce > 0) { p.pierce--; continue; } projectiles.splice(i, 1); break; }
+        const crit = c.crit || isCrit(pl, p.fx);
+        const k = (c.type ? typeK(c.type, e, pl) * stab(pl, c.type) : 1) * (crit ? CRIT_MUL * G.Abil.critMul(pl) : 1) * execMul(p.fx, e) * c.mul;
         const lethal = e.hp <= p.dmg * k;
+        e._abPierce = c.pierce;
         e.hurt(p.dmg * k, p.color, p.vx || (e.x - pl.x), p.vy || (e.y - pl.y), p.knock,
-               crit ? 'crit' : p.mtype ? G.Types.label(G.Types.mult(p.mtype, e.types)) : null);
+               crit ? 'crit' : c.type ? G.Types.label(G.Types.mult(c.type, e.types)) : null);
+        e._abPierce = false;
         if (Math.random() < 0.5) G.FX.sp('impact', p.vis ? p.vis.pal : 'normal', e.x, e.y - e.bodyH * 0.5, { life: 0.12, scale: 1 });
         pl.dmgDealt += p.dmg * k;
         if (p.dmg * k > pl.bigHit) pl.bigHit = p.dmg * k;
         pl.onDealt(p.dmg * k);
         G.RunLog.dmg(pl, p.mid, p.dmg * k);
-        if (p.burn) e.applyBurn(p.burn, p.mid);
-        if (p.poison) e.applyPoison(p.poison, p.mid);
-        if (p.slow) e.applySlow(p.slow);
-        if (p.fx) hitFx(pl, e, p.dmg * k, p.fx, lethal);
+        sideFx(pl, e, p, p.dmg * k, lethal, c, p.mid);
         itemHit(pl, e);
 
         // Ricochet: off to the next enemy instead of stopping.
@@ -1396,7 +1427,8 @@ G.Combat = (() => {
       if (e.touchCd > 0 || e.freezeT > 0 || e.behavior === 'thief') continue;
       e.touchCd = 0.55;
       e.strike(pl);
-      pl.hurt(e.dmg, e.atkType, false, { k: 'contact', d: e.dex });
+      pl.hurt(e.dmg, e.atkType, false, { k: 'contact', d: e.dex, e });
+      G.Abil.contactHit(pl, e);           // Rough Skin, Static, Flame Body...
       if (pl.hasItem('rockyhelmet')) e.hurt(15 + pl.level * 4, '#9aa6b5', e.x - pl.x, e.y - pl.y, 80);
       const [nx, ny] = G.U.norm(e.x - pl.x, e.y - pl.y);
       e.kx += nx * 150; e.ky += ny * 150;

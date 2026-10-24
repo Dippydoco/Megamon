@@ -539,7 +539,7 @@
     <div class="cx-ab hidden" id="cx-ab">
       <input id="cx-ab-q" class="field" type="search" autocomplete="off" spellcheck="false" placeholder="Search abilities, effects or Pokémon">
       <div class="filters" id="cx-ab-cats"></div>
-      <p class="sub cx-ab-note">Every Pokémon has one ability. Hover (or tap) one for the full details. Coming soon: abilities aren't active in runs yet.</p>
+      <p class="sub cx-ab-note">Every Pokémon has one ability, always active in runs. Hover (or tap) one for the full details.</p>
       <div class="ab-list" id="cx-ab-list"></div>
     </div>
     <div class="cx-mech hidden" id="cx-mech"></div>
@@ -640,6 +640,7 @@
     <p class="sub kbd-hint"><kbd>WASD</kbd> move · <kbd>1</kbd>–<kbd>4</kbd> move · <kbd>Q</kbd>/<kbd>E</kbd> cycle · <kbd>Space</kbd> burst · <kbd>Esc</kbd> pause</p>
     <p class="sub touch-hint">Drag your finger to move · tap a move to switch</p>
     <p id="pause-coop" class="note hidden">Group game: the game is paused for everyone while this menu is open.</p>
+    <div id="pause-ability" class="pause-ability hidden"></div>
     <div id="pause-moves" class="pause-moves hidden"></div>
     <div id="pause-stats" class="run-stats"></div>
     <div id="pause-sound" class="sound-inline"></div>
@@ -724,6 +725,7 @@
 <script defer src="js/systems/progress.js"></script>
 <script defer src="js/systems/redeem.js"></script>
 <script defer src="js/systems/hazards.js"></script>
+<script defer src="js/systems/abilrun.js"></script>
 <!-- network: friends, rooms, co-op and leaderboard -->
 <script defer src="js/net/social.js"></script>
 <script defer src="js/net/activity.js"></script>

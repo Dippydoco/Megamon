@@ -28,7 +28,7 @@ G.LevelUp = (() => {
     { id: 'crit', icon: 'focus', title: 'Focus',      desc: '+4% critical-hit chance (critical hits do ×1.5 damage).',
       apply: pl => pl.critChance += 0.04, max: 6 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
-      apply: pl => pl.heal(pl.maxHp * 0.45) }
+      apply: pl => pl.healItem(0.45) }
   ];
 
   /** Builds the set of candidate cards, with weights. */

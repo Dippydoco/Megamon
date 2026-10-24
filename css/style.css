@@ -1497,3 +1497,8 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .pm-slot.on { border-color: var(--tc); }
 .pm-slot.bond { border-color: #ff8ad8; }
 .pm-slot.sel { border-color: #ffd23f; background: rgba(255,210,63,.16); transform: translateY(-3px); }
+
+/* Pause menu: your ability */
+.pause-ability { display: flex; flex-direction: column; gap: 2px; margin: 8px auto 2px; padding: 6px 10px; border-radius: 10px;
+  background: rgba(0,0,0,.22); max-width: 380px; }
+.pause-ability small { color: #d6e0f2; font-size: 12px; line-height: 1.3; }

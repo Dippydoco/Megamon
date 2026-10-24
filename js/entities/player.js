@@ -110,15 +110,16 @@ G.Player = class Player {
   /** The multiplier a move uses: Attack for physical, Sp. Atk for special, the better one if it has no category. */
   pow(m) {
     const c = m && m.cat;
-    return c === 'physical' ? this.atk : c === 'special' ? this.spa : Math.max(this.atk, this.spa);
+    // Abilities (systems/abilrun.js): Attack / Sp. Atk changes and bonuses for this move.
+    return (c === 'physical' ? this.atk : c === 'special' ? this.spa : Math.max(this.atk, this.spa)) * G.Abil.pow(this, m);
   }
   get spd() {
-    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
-    const w = G.Weather.speedFor(this.mon.types);
-    const slow = this.inLiquid && !this.hasItem('heavyboots') ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
-    return s * slow * w;
+    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 && !G.Abil.slowImmune(this) ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
+    const w = G.Abil.wxSafe(this) ? 1 : G.Weather.speedFor(this.mon.types);
+    const slow = this.inLiquid && !this.hasItem('heavyboots') && !G.Abil.waterSafe(this) ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
+    return s * slow * w * G.Abil.spdK(this);
   }
-  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (this.guardT > 0 ? this.guardAmt || 0 : 0)); }
+  get reduction() { return Math.min(0.8, this.dmgReduce + this.buffs.def.n * this.buffs.def.amount + (this.guardT > 0 ? this.guardAmt || 0 : 0) + G.Abil.drAdd(this)); }
   /** Defense: damage taken ×1 at 70; -0.25% per point above (at most -35%), +0.1% per point below (at most +10%).
    *  Separate from `reduction` (cards, items, buffs), so it doesn't use up its 80% cap. */
   get defMul() {
@@ -309,12 +310,16 @@ G.Player = class Player {
       G.FX.dmgText(this.x, this.y - this.bodyH - 4, 'Dodged!', '#f4f4ff', true);
       return;
     }
-    let eff = null;
+    let eff = null, tk = 1;
     if (type) {
-      const k = G.Types.mult(type, this.mon.types);
-      eff = G.Types.label(k);
-      amount *= k * G.Weather.mult(type);
+      tk = G.Types.mult(type, G.Abil.defTypes(this));          // (Color Change, Forecast, Zen Mode... change your types)
+      eff = G.Types.label(tk);
+      amount *= tk * G.Abil.wxIn(this, type);
     }
+    // Abilities: immunities, absorbing, blocks and damage cuts (systems/abilrun.js). -1 = no damage at all.
+    const ab = G.Abil.incoming(this, amount, type, pure, src, tk);
+    if (ab < 0) return;
+    amount = ab;
     // With a melee attack active you take 25 % less (30 % until 20-10-2026): you have to
     // be right on top of enemies to hit (they were lagging far behind).
     let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
@@ -330,6 +335,7 @@ G.Player = class Player {
     if (this.hits.length > 4) this.hits.shift();
     this.invuln = 0.45;
     this.flash = 0.14;
+    G.Abil.hurt(this, d, type, src);
     G.Audio.sfx('hurt');
     G.Camera.kick(0.28);
     G.FX.dmgText(this.x, this.y - this.bodyH - 4, '-' + Math.round(d), eff === 'super' ? '#ff3048' : eff === 'weak' ? '#c9a0a8' : '#ff6b7a', eff === 'super');
@@ -341,7 +347,10 @@ G.Player = class Player {
       G.FX.dmgText(this.x, this.y - this.bodyH - 16, 'Focus Sash!', '#ff9a3d', true);
       G.FX.ring(this.x, this.y, 6, 70, '#ff9a3d', 0.5, 4);
     }
+    // Sturdy: survives with 1 HP.
+    if (this.hp <= 0 && G.Abil.lethal(this, d)) { this.hp = 1; this.invuln = 1.2; G.FX.ring(this.x, this.y, 6, 70, '#c8a070', 0.5, 4); }
     if (this.hp <= 0) {
+      G.Abil.death(this, d);
       this.hp = 0; this.dead = true; this.downs++;
       this.killer = this.hits[this.hits.length - 1];
       this.anim.play('Faint', { hold: true });
@@ -357,7 +366,15 @@ G.Player = class Player {
     if (got >= 1) G.FX.dmgText(this.x, this.y - this.bodyH - 6, '+' + got, '#5fe08a');
   }
 
+  /** A healing item or berry: `frac` of max HP, changed by abilities (Gluttony, Ripen...). `quiet`: not counted as eating one (Harvest). */
+  healItem(frac, quiet = false) {
+    const amt = this.maxHp * frac * G.Abil.healK(this);
+    this.heal(amt);
+    if (!quiet) G.Abil.afterHeal(this, amt);
+  }
+
   addMaxHp(amount) {
+    amount *= G.Abil.maxHpK(this);                         // Wonder Guard: a quarter of everything
     // Life Orb: 30% less max HP, also on what you gain while holding it (given back if you take it off).
     if (this.hasItem('lifeorb')) { const cut = amount * 0.3; amount -= cut; this._orbCut = (this._orbCut || 0) + cut; }
     this.maxHp += amount; this.hp += amount;
@@ -398,7 +415,7 @@ G.Player = class Player {
    * (an old Giga Drain healed on every hit with no limit and made you unkillable).
    */
   drain(amount) {
-    if (amount > 0) this.drainHeal = Math.min(this.maxHp * 0.05, this.drainHeal + amount);
+    if (amount > 0) this.drainHeal = Math.min(this.maxHp * 0.05, this.drainHeal + amount * G.Abil.drainK(this));
   }
 
   /** An altar's power (see systems/interact.js): applied and removed on its own. */
@@ -461,7 +478,7 @@ G.Player = class Player {
     this.inLiquid = G.World.isLiquid(this.x, this.y);
     if (this.inLiquid) {
       const le = G.World.liquidEffect(this.mon.types);
-      if (le.dmg && !this.hasItem('heavyboots')) {
+      if (le.dmg && !this.hasItem('heavyboots') && !G.Abil.lavaSafe(this)) {
         this.lavaTick -= dt;
         if (this.lavaTick <= 0) {
           this.lavaTick = le.every; this.breakInvuln();

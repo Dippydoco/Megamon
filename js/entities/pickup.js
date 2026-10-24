@@ -88,7 +88,8 @@ G.Pickups = (() => {
       return;
     }
     push(orb(value >= 20 ? 'xpBig' : 'xp', x, y, value));
-    if (Math.random() < TICKET_RATE) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));
+    if (Math.random() < TICKET_RATE * G.Abil.ticketK()) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));      // (Ball Fetch: +15%)
+    if (Math.random() < G.Abil.berryDrop()) push(orb('heal', x + G.U.rand(-8, 8), y, 0));                      // (Pickup: berries)
 
     // Drops ocasionales.
     const r = Math.random();
@@ -131,7 +132,9 @@ G.Pickups = (() => {
       }
       if (!pl) continue;
       const dx = pl.x - p.x, dy = pl.y - p.y;
-      const mag2 = pl.magnet * pl.magnet;
+      // (Abilities: Magnet Pull reaches further; Gluttony, further for berries. Only your own Pokémon has these numbers.)
+      const mg = pl.magnet * G.Abil.magnetK(pl) * (p.kind === 'heal' ? G.Abil.healReach(pl) : 1);
+      const mag2 = mg * mg;
 
       if (p.pulled || d2 < mag2) {
         p.pulled = true;

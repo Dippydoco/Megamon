@@ -116,7 +116,7 @@
       if (this.megaT > 0) return;          // Zygarde is untouchable while it turns into Mega Zygarde (rift.js)
       if (this.dead) return;
       // Aegislash in Shield Forme: hits barely scratch it (the host decides, so this also covers teammates' hits).
-      if (!this.remote && this.behavior === 'aegis' && this.aegisShield) { amount *= 0.15; eff = 'weak'; }
+      if (!this.remote && this.behavior === 'aegis' && this.aegisShield && !this._abPierce) { amount *= 0.15; eff = 'weak'; }
       if (this.vulnT > 0) amount *= 1.25;             // Acid Spray: takes more damage from everyone (only the host's copy has vulnT)
       // Afflicted (20-10-2026): +8% damage taken for each kind of status it carries (burn, poison, slow, frozen/stunned),
       // so status builds pay off. Bosses count too. (Host's copy; guests' numbers show without it.)
@@ -137,7 +137,7 @@
       }
       this.hurtAt = G.Game.st.time;        // healers skip enemies hit in the last 2 s (healAround)
       // Shield: absorbs first.
-      if (this.shield > 0) {
+      if (this.shield > 0 && !this._abPierce) {           // (abilities like Infiltrator go straight through: combat.js)
         const a = Math.min(this.shield, d);
         this.shield -= a;
         if (a >= d) { G.FX.dmgText(this.x, this.y - this.bodyH - 4, d, '#9fd8ff'); this.flash = 0.05; return; }
@@ -558,18 +558,18 @@
       switch (id) {
         case 'slam':       // stomp: a wave around it
           c.wind = 0.85 * f;
-          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: this.x, y: this.y, r: 96 + this.r, delay: c.wind, dmg: this.dmg * 1.3, type, color: col });
+          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: this.x, y: this.y, r: 96 + this.r, delay: c.wind, dmg: this.dmg * 1.3, type, color: col });
           this.anim.play('Charge', { speed: 1.2 });
           break;
         case 'dash':       // charge in a straight line
           c.wind = 0.75 * f; c.len = 330; c.dur = 0.32;
-          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'beam', x: this.x, y: this.y, angle: ang, len: c.len + this.r, w: this.r * 2 + 16,
+          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'beam', x: this.x, y: this.y, angle: ang, len: c.len + this.r, w: this.r * 2 + 16,
                           delay: c.wind + c.dur, dmg: this.dmg * 1.2, type, color: col });
           this.anim.play('Charge', { speed: 1.3 });
           break;
         case 'leap':       // leap and land on you
           this.jump = { sx: this.x, sy: this.y, tx: pl.x, ty: pl.y, t: -0.5 * f, dur: 0.65 };
-          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: pl.x, y: pl.y, r: 82, delay: 0.5 * f + 0.65, dmg: this.dmg * 1.25, type, color: col });
+          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x, y: pl.y, r: 82, delay: 0.5 * f + 0.65, dmg: this.dmg * 1.25, type, color: col });
           this.anim.play('Charge', { speed: 1.4 });
           ai.cast = null; ai.cd = G.U.rand(1.4, 2) + 0.6;
           break;
@@ -577,7 +577,7 @@
           const n = ai.fury ? 6 : 4;
           for (let i = 0; i < n; i++) {
             const a = i ? Math.random() * 6.2832 : 0, d = i ? G.U.rand(40, 120) : 0;
-            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: pl.x + Math.cos(a) * d, y: pl.y + Math.sin(a) * d * 0.8, r: 50,
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x + Math.cos(a) * d, y: pl.y + Math.sin(a) * d * 0.8, r: 50,
                             delay: 1.05 + i * 0.12, dmg: this.shotDmg() * 1.15, type, color: col });
           }
           c.wind = 0.5; this.anim.play('Shoot');
@@ -586,7 +586,7 @@
         case 'beam': {     // beams in a fan
           const n = ai.fury ? 5 : 3, sp = ai.fury ? 0.42 : 0.5;
           for (let i = 0; i < n; i++) {
-            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'beam', x: this.x, y: this.y, angle: ang + (i - (n - 1) / 2) * sp, len: 400, w: 26,
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'beam', x: this.x, y: this.y, angle: ang + (i - (n - 1) / 2) * sp, len: 400, w: 26,
                             delay: 1.0, dmg: this.shotDmg() * 1.2, type, color: col });
           }
           c.wind = 1.0; c.after = 0.25; this.anim.play('Charge', { speed: 1.1 });
@@ -635,13 +635,13 @@
 
     /** Normal enemy shot (one, or several in a fan). */
     shoot(ax, ay, spread = 0, n = 1, k = 1) {
-      const sp = 190, type = this.atkType;
+      const sp = 190 * G.Abil.enemyShotK(), type = this.atkType;      // (Psychic Terrain slows enemy shots)
       const base = Math.atan2(ay, ax);
       for (let i = 0; i < n; i++) {
         const a = base + (n === 1 ? 0 : (i / (n - 1) - 0.5) * spread);
         const shot = G.Projectiles.spawn({
           x: this.x, y: this.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-          dmg: this.shotDmg() * k, r: 7, life: 2.4, friendly: false, color: '#ff7a9e', mtype: type, sd: this.dex,
+          dmg: this.shotDmg() * k, r: 7, life: 2.4 / G.Abil.enemyShotK(), friendly: false, color: '#ff7a9e', mtype: type, sd: this.dex, from: this,
           vis: G.VFX.forType(type)
         });
         if (G.Coop.isHost) G.Coop.enemyShot(shot, type);
@@ -657,14 +657,14 @@
         case 'fan': { const n = this.def.fanN || 5; this.shoot(dx, dy, n === 3 ? 0.6 : 0.9, n, 0.65); break; }
         case 'beamer':
           // Warned beam: the strip on the ground is seen first.
-          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'beam', x: this.x, y: this.y, angle: Math.atan2(dy, dx), len: 360, w: 22,
+          G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'beam', x: this.x, y: this.y, angle: Math.atan2(dy, dx), len: 360, w: 22,
                           delay: 1.0, dmg: this.shotDmg() * 1.05, type: this.atkType, color: col });
           this.anim.play('Charge', { speed: 1.2 });
           break;
         case 'zoner': {
           const n = G.U.randInt(1, this.def.zones || 3);
           for (let i = 0; i < n; i++) {
-            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: pl.x + (i ? G.U.rand(-70, 70) : 0), y: pl.y + (i ? G.U.rand(-55, 55) : 0), r: 44,
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x + (i ? G.U.rand(-70, 70) : 0), y: pl.y + (i ? G.U.rand(-55, 55) : 0), r: 44,
                             delay: 1.2, dmg: this.shotDmg() * 0.95, type: this.atkType, color: col });
           }
           this.anim.play('Shoot');
@@ -739,14 +739,14 @@
 
     startFuse() {
       this.phase = 'fuse'; this.pt = 1.0;
-      G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: this.x, y: this.y, r: 62, delay: 1.0, dmg: this.dmg * 1.4, type: this.atkType, color: '#ff7b3d' });
+      G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: this.x, y: this.y, r: 62, delay: 1.0, dmg: this.dmg * 1.4, type: this.atkType, color: '#ff7b3d' });
     }
 
     startJump(pl) {
       const tx = pl.x, ty = pl.y;
       this.jump = { sx: this.x, sy: this.y, tx, ty, t: -0.45, dur: 0.6 };
       this.anim.play('Charge', { speed: 1.4 });
-      G.Hazards.add({ sd: this.dex, own: this.hzOwner(), kind: 'zone', x: tx, y: ty, r: 50, delay: 1.05, dmg: this.dmg * 1.2, type: this.atkType,
+      G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: tx, y: ty, r: 50, delay: 1.05, dmg: this.dmg * 1.2, type: this.atkType,
                       color: G.U.TYPE_COLOR[this.atkType] || '#ff7a9e' });
     }
 

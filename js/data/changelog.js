@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T09:16Z', title: 'Abilities are live!', new: [
+    'Every Pokémon\'s ability now works in runs: all 236 of them, from Intimidate and Levitate to Drizzle, Sturdy and Wonder Guard. Check your partner\'s in the Pokémon tab, or pause during a run to read it.',
+    'Weather abilities (Drizzle, Drought, Sand Stream, Snow Warning) bring their weather for 60 s at the start and 30 s every 4 minutes. Surge abilities do the same with their terrain.',
+    'Team abilities (Battery, Power Spot, Telepathy, Victory Star...) help teammates near you in group runs.',
+    'Players still don\'t get burned or poisoned: for abilities like Guts or Marvel Scale you count as burned or poisoned for 4 s after a Fire or Poison hit. The Codex\'s Mechanics tab explains the details.',
+    'Some abilities are first versions and their effects and numbers may change.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T08:39Z', title: 'Rearrange your moves and a Burst key', new: [
     'Choose which slot each move is in during a run. On PC, drag a move icon onto another slot to swap them. On any device, pause and use Arrange moves: tap a move, then the slot to put it in. The new order stays for the rest of the run, even when you learn more moves.',
     'Burst key: on PC, press Space (or F) to fire a ready Burst move without switching to it. Ready Burst moves show SPACE above their slot.'

@@ -355,8 +355,21 @@ G.Coop = (() => {
         case 're': G.Rift.enterRequest(); break;
         case 'rz': G.Rift.startZygarde(ev[1], ev[2], ev[3], ev[4]); break;
         case 'bye': mateGone(from); break;
+        case 'sym': healTeam(ev[1], { x: ev[2], y: ev[3] }, from); break;       // a guest's Symbiosis
       }
     }
+  }
+
+  /**
+   * Symbiosis (abilities): heals the teammates near (x, y) by `frac` of their max HP. Host: heals itself and queues it
+   * for the guests near; guest: asks the host to do it.
+   */
+  function healTeam(frac, at, except = null) {
+    if (!active) return;
+    if (!host) { outEv.push(['sym', frac, Math.round(at.x), Math.round(at.y)]); return; }
+    const R2 = 300 * 300;
+    if (except && !local.dead && G.U.dist2(local.x, local.y, at.x, at.y) < R2) { local.heal(local.maxHp * frac); G.FX.ring(local.x, local.y, 6, 50, '#5fe0b0', 0.4, 3); }
+    for (const m of mates.values()) if (m.connected && m.uid !== except && !m.pl.dead && G.U.dist2(m.pl.x, m.pl.y, at.x, at.y) < R2) m.q.push(['sym', frac]);
   }
 
   /** Host: what each guest send says overrides notices that may have been lost. */
@@ -443,7 +456,8 @@ G.Coop = (() => {
       case 'pb': G.World.breakAt(ev[1], ev[2]); break;
       case 'gu': G.World.markUsed(ev[1], ev[2]); break;
       case 'say': G.Spawner.say(ev[1], ev[2], false, ev[3]); break;
-      case 'heal': if (!local.dead) { local.heal(local.maxHp * ev[1]); G.FX.ring(local.x, local.y, 6, 60, '#5fe08a', 0.4, 3); } break;
+      case 'heal': if (!local.dead) { local.healItem(ev[1]); G.FX.ring(local.x, local.y, 6, 60, '#5fe08a', 0.4, 3); } break;
+      case 'sym': if (!local.dead) { local.heal(local.maxHp * ev[1]); G.FX.ring(local.x, local.y, 6, 50, '#5fe0b0', 0.4, 3); } break;      // Symbiosis
       case 'lu': if (!ev[2] || ev[2] > seenSeq) { seenSeq = ev[2] || seenSeq; api.levelStart(ev[1]); } break;
       case 'lw': api.waiting(ev[1]); break;
       case 'lr': api.resume(); break;
@@ -577,7 +591,7 @@ G.Coop = (() => {
 
   return {
     ANIMS, COLORS, begin, end, leave, tick, players, puppets, xpFactor, scaleRate, scaleHp,
-    cast, hit, status, hurtShown, enemyAdded, enemyGone, enemyShot, pickupAdded, pickupGone, say,
+    cast, hit, status, hurtShown, healTeam, enemyAdded, enemyGone, enemyShot, pickupAdded, pickupGone, say,
     propBroken, collected, shinyCaught, levelStart, localPicked, over, holdStart, holdEnd,
     /** Host: event for everyone. Guest: event for the host. */
     broadcast(ev) { emit(ev); },

@@ -35,8 +35,7 @@ G.MenuUI = (() => {
     el.style.borderColor = col;
     el.innerHTML = `<div class="mt-head"><b>${a.n}</b> <span class="mt-type" style="background:${col}">${a.c}</span></div>
       <div class="mt-desc">${a.d}</div>
-      <div class="mt-who">${who.length <= 6 ? who.join(', ') : who.slice(0, 6).join(', ') + ' +' + (who.length - 6) + ' more'}</div>
-      <div class="mt-soon">Coming soon: not active in runs yet</div>`;
+      <div class="mt-who">${who.length <= 6 ? who.join(', ') : who.slice(0, 6).join(', ') + ' +' + (who.length - 6) + ' more'}</div>`;
     el.style.display = 'block';
     const w = el.offsetWidth, h = el.offsetHeight;
     el.style.left = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX + 14)) + 'px';

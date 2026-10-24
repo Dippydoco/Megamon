@@ -140,6 +140,7 @@ G.Game = (() => {
     }
     pl.setActive(0);
     G.RunLog.start(pl);          // run details for balancing (added to the history entry at the end)
+    G.Abil.start(pl);            // the Pokémon's ability (systems/abilrun.js)
 
     teamStats.clear();
     if (coop) {
@@ -670,7 +671,7 @@ G.Game = (() => {
       return;
     }
     if (p.kind === 'heal') {
-      if (mine) pl.heal(pl.maxHp * 0.3);
+      if (mine) pl.healItem(0.3);
       G.FX.ring(who.x, who.y, 6, 60, '#5fe08a', 0.4, 3);
       return;
     }
@@ -896,6 +897,7 @@ G.Game = (() => {
 
     pl.frozen = coop && (G.UI.isOpen('scr-pause') || G.UI.isOpen('scr-item'));
     pl.update(dt);
+    G.Abil.tick(pl, dt);                 // your ability (systems/abilrun.js)
     if (coop) {
       for (const p of G.Coop.puppets()) { p.netUpdate(dt); G.Combat.ghostOrbit(p, dt, time); }
       if (pl.dead) reviveTick(dt);
@@ -909,6 +911,7 @@ G.Game = (() => {
     else G.Spawner.tickBanner(dt);
     G.EnemyMgr.update(dt, all);
     G.EnemyMgr.rebuildGrid();
+    G.Abil.hostTick(dt);                 // abilities acting on the enemies near each player (host / solo)
     G.Combat.tick(dt, pl, time);
     G.Projectiles.update(dt, pl, G.EnemyMgr.all());
     G.Combat.resolve(dt, pl, time);
@@ -955,10 +958,10 @@ G.Game = (() => {
       if (d2 < best) { best = d2; helper = p; }
     }
     // In Arceus's Judgment the progress doesn't decay, so teammates can revive you a bit at a time while dodging.
-    pl.reviveT = helper ? (pl.reviveT || 0) + dt : G.Judgment.active ? (pl.reviveT || 0) : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
+    pl.reviveT = helper ? (pl.reviveT || 0) + dt * G.Abil.reviveK(helper) : G.Judgment.active ? (pl.reviveT || 0) : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
     if (pl.reviveT >= G.Player.REVIVE_TIME) {
       if (helper && helper.uid) pl.revivedBy.push(helper.uid);       // credited to them in the end-of-run stats
-      pl.revive(0.5);
+      pl.revive(0.5 + G.Abil.reviveHeal(helper));       // (Healer revives faster, Hospitality heals more)
     }
   }
 

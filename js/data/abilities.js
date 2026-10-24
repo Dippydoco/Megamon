@@ -2,7 +2,7 @@
  * Designed on 20-10-2026 (one real ability per Pokémon, signature abilities first).
  * G.ABILITIES: id -> { n: name, c: category, d: what it does }
  * G.MON_ABILITY: dex -> ability id
- * Shown in the Pokémon tab and the Codex. Their effects are NOT applied in runs yet.
+ * Shown in the Pokémon tab, the Codex and the pause menu. Their effects in runs: systems/abilrun.js (since 24-10-2026).
  */
 G.ABILITIES = {
 "adaptability": {

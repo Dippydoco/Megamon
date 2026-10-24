@@ -460,6 +460,13 @@ G.RunUI = (() => {
     $('pause-coop').classList.toggle('hidden', !coop);
     $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
     renderStats('pause-stats', true);
+    // Your ability (systems/abilrun.js), with what it does.
+    const ab = G.Abil.info(G.Game.player), abEl = $('pause-ability');
+    abEl.classList.toggle('hidden', !ab);
+    if (ab) {
+      const col = (G.AB_COL && G.AB_COL[ab.c]) || '#9fb1c9';
+      abEl.innerHTML = `<b>Ability: <span style="color:${col}">${esc(ab.n)}</span></b><small>${esc(ab.d)}</small>`;
+    }
     arrangeSel = -1;
     renderArrange();
     G.UI.show('scr-pause');
