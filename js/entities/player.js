@@ -114,7 +114,7 @@ G.Player = class Player {
     return (c === 'physical' ? this.atk : c === 'special' ? this.spa : Math.max(this.atk, this.spa)) * G.Abil.pow(this, m);
   }
   get spd() {
-    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.slowT > 0 && !G.Abil.slowImmune(this) ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
+    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.tailwindT > 0 ? 1 + (this.tailwindK || 0.4) : 1) * (this.slowT > 0 && !G.Abil.slowImmune(this) ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
     const w = G.Abil.wxSafe(this) ? 1 : G.Weather.speedFor(this.mon.types);
     const slow = this.inLiquid && !this.hasItem('heavyboots') && !G.Abil.waterSafe(this) ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
     return s * slow * w * G.Abil.spdK(this);
@@ -280,11 +280,15 @@ G.Player = class Player {
                    aura: 'Charge', buff: 'Charge', orbit: 'Charge', boomerang: 'Shoot', chain: 'Shoot',
                    mine: 'Charge', meteor: 'Charge', turret: 'Charge', dash: 'Attack', trail: 'Walk', cone: 'Shoot',
                    charge: 'Charge', ricochet: 'Shoot', cage: 'Charge', wall: 'Charge', burrow: 'Attack', swarm: 'Charge', roll: 'Walk',
-                   throw: 'Attack', spin: 'Charge', counter: 'Attack', burst: 'Charge' }[m.kind] || 'Attack';
+                   throw: 'Attack', spin: 'Charge', counter: 'Attack', burst: 'Charge',
+                   combo: 'Attack', thrust: 'Attack', pulse: 'Charge', vortex: 'Charge', wave: 'Attack', eruption: 'Charge',
+                   mark: 'Charge', tether: 'Shoot', focus: 'Attack', companion: 'Charge' }[m.kind] || 'Attack';
     // The new families sound like the closest of the original ones.
     const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile',
                   charge: 'beam', ricochet: 'projectile', cage: 'aura', wall: 'buff', burrow: 'melee', swarm: 'buff', roll: 'melee', throw: 'melee',
-                  spin: 'orbit', counter: 'melee', burst: 'nova' };
+                  spin: 'orbit', counter: 'melee', burst: 'nova',
+                  combo: 'melee', thrust: 'melee', pulse: 'nova', vortex: 'aura', wave: 'projectile', eruption: 'nova',
+                  mark: 'aura', tether: 'beam', focus: 'melee', companion: 'buff' };
     // The trail doesn't make a sound for every puddle (it would be a constant buzz).
     if (m.kind !== 'trail') G.Audio.sfx('shot', { kind: SND[m.kind] || m.kind, type: m.type });
     if (m.kind === 'trail') return;
@@ -335,6 +339,7 @@ G.Player = class Player {
     if (this.hits.length > 4) this.hits.shift();
     this.invuln = 0.45;
     this.flash = 0.14;
+    this.lastHitAt = performance.now();         // (Ice Fang bites harder right after)
     G.Abil.hurt(this, d, type, src);
     G.Audio.sfx('hurt');
     G.Camera.kick(0.28);
@@ -443,6 +448,7 @@ G.Player = class Player {
     if (this.reviveSafe > 0) this.reviveSafe -= dt;
     if (this.protectT > 0) this.protectT -= dt;
     if (this.guardT > 0) this.guardT -= dt;
+    if (this.tailwindT > 0) this.tailwindT -= dt;
     if (this.burrowT > 0) this.burrowT -= dt;
     // Gyro Ball: how still you are (1 standing, 0 running), smoothed so it doesn't flicker.
     this.stillK = (this.stillK || 0) + ((this.walking ? 0 : 1) - (this.stillK || 0)) * Math.min(1, dt * 3);

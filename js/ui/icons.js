@@ -272,7 +272,18 @@ G.Icons = (() => {
     roll:       ['.###.', '#..##', '#.#.#', '##..#', '.###.'],
     throw:      ['....#', '...#.', '#.#..', '.#...', '#....'],
     spin:       ['..#..', '.....', '#.#.#', '.....', '..#..'],
-    counter:    ['#...#', '.#.#.', '..#..', '.#.#.', '#...#']
+    counter:    ['#...#', '.#.#.', '..#..', '.#.#.', '#...#'],
+    // Batch 3 (24-10-2026)
+    combo:      ['#..#.', '.#..#', '#..#.', '.#..#', '#..#.'],
+    thrust:     ['.....', '..#..', '#####', '..#..', '.....'],
+    pulse:      ['#...#', '.#.#.', '#...#', '.#.#.', '#...#'],
+    vortex:     ['.###.', '#....', '#.##.', '#..#.', '.##..'],
+    wave:       ['.....', '.#.#.', '#.#.#', '.....', '#####'],
+    eruption:   ['..#..', '.#.#.', '..#..', '.###.', '#####'],
+    mark:       ['#...#', '.###.', '.#.#.', '.###.', '#...#'],
+    tether:     ['#....', '.#...', '..#..', '...#.', '....#'],
+    focus:      ['.###.', '#.#.#', '###.#', '#...#', '.###.'],
+    companion:  ['#.#..', '.#...', '...#.', '..#.#', '...#.']
   };
 
   // ---------------- render ----------------
@@ -426,7 +437,9 @@ G.Icons = (() => {
   const KIND_NAME = { projectile: 'Projectile', melee: 'Melee', beam: 'Beam', orbit: 'Orbit', nova: 'Nova', aura: 'Aura', buff: 'Buff',
     boomerang: 'Boomerang', chain: 'Chain', mine: 'Mine', meteor: 'Meteor', turret: 'Turret', dash: 'Dash', trail: 'Trail', cone: 'Cone', burst: 'Burst',
     charge: 'Charge', ricochet: 'Ricochet', cage: 'Cage', wall: 'Wall', burrow: 'Burrow', swarm: 'Swarm', roll: 'Roll', throw: 'Throw',
-    spin: 'Spin', counter: 'Counter' };
+    spin: 'Spin', counter: 'Counter',
+    combo: 'Combo', thrust: 'Thrust', pulse: 'Pulse', vortex: 'Vortex', wave: 'Wave', eruption: 'Eruption',
+    mark: 'Mark', tether: 'Tether', focus: 'Focus', companion: 'Companion' };
 
   /** Small "attack kind" tag (symbol + name) for cards. Empty if the player turned it off in Settings. */
   function kindTag(kind) {

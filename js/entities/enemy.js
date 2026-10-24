@@ -175,6 +175,17 @@
       this.freezeT = Math.max(this.freezeT || 0, dur);
     }
 
+    /** Psywave, Magical Torque: confused for `dur` s, it wanders and bumps into other foes (bosses are only slowed). */
+    confuse(dur) {
+      if (this.boss || this.legend || this.judge) { this.applySlow(0.4, dur); return; }
+      if (this.remote) { G.Coop.status(this, 'c', dur); return; }
+      this.confT = Math.max(this.confT || 0, dur);
+      this.confA = Math.random() * 6.2832;
+    }
+
+    /** Water Pulse: soaked for `dur` s, it takes +25% from Electric and Ice moves (combat.js). Kept on every copy. */
+    soak(dur) { this.soakT = Math.max(this.soakT || 0, dur); }
+
     /** Acid Spray: for `dur` seconds it takes +25% damage from everyone. */
     vuln(dur) {
       if (this.remote) { G.Coop.status(this, 'v', dur); return; }
@@ -275,6 +286,7 @@
       if (this.flash > 0) this.flash -= dt;
       if (this.dead) { this.fade -= dt; return; }
       if (this.touchCd > 0) this.touchCd -= dt;
+      if (this.soakT > 0) this.soakT -= dt;
       this.bob += dt * 6;
       if (this.shiny) {
         this.sparkT -= dt;
@@ -323,6 +335,7 @@
 
       // --- estados ---
       if (this.slowT > 0) { this.slowT -= dt; if (this.slowT <= 0) this.slow = 0; }
+      if (this.soakT > 0) this.soakT -= dt;
       if (this.vulnT > 0) this.vulnT -= dt;
       if (this.burn > 0) {
         this.burnT -= dt; this.burnTick -= dt;
@@ -348,6 +361,28 @@
         this.freezeT -= dt;
         this.kx *= Math.pow(0.001, dt); this.ky *= Math.pow(0.001, dt);
         if (seen && Math.random() < dt * 5) G.FX.px(this.x + G.U.rand(-this.r, this.r), this.y - G.U.rand(2, this.bodyH), this.stunned ? '#ffe14d' : '#bfefff', { vy: -10, life: 0.5 });
+        return;
+      }
+
+      // Confused (Psywave, Magical Torque): wanders about, doesn't attack, and the foes it bumps into take its hit.
+      if (this.confT > 0) {
+        this.confT -= dt;
+        this.confA += G.U.rand(-3, 3) * dt;
+        const sp = this.spd * 0.55;
+        this.x += (Math.cos(this.confA) * sp + this.kx) * dt; this.y += (Math.sin(this.confA) * sp + this.ky) * dt;
+        this.kx *= Math.pow(0.0015, dt); this.ky *= Math.pow(0.0015, dt);
+        if (!this.flying && G.World.collide(this)) this.confA += Math.PI * 0.7;
+        if ((this.confHitT = (this.confHitT || 0) - dt) <= 0) {
+          for (const o of G.EnemyMgr.queryCircle(this.x, this.y, this.r + 24)) {
+            if (o === this || o.dead || G.U.dist2(o.x, o.y, this.x, this.y) > (o.r + this.r) ** 2) continue;
+            o.hurt(this.dmg, '#ff9fcf', o.x - this.x, o.y - this.y, 60);
+            this.confHitT = 0.5;
+            break;
+          }
+        }
+        if (seen && Math.random() < dt * 4) G.FX.sp('star', 'psychic', this.x + G.U.rand(-6, 6), this.y - this.bodyH - 4, { life: 0.4, vy: -12, scale: 0.6 });
+        this.anim.dir = G.Sprites.dirFromAngle(this.confA);
+        this.anim.loop('Walk', 0.8);
         return;
       }
 

@@ -26,17 +26,18 @@
 G.Abil = (() => {
   // ---------------- move families (by id) ----------------
   const SET = a => new Set(a);
-  const PUNCH = SET(['drain-punch', 'thunder-punch', 'ice-punch', 'sucker-punch', 'meteor-mash', 'karate-chop']);
-  const BITE = SET(['bite', 'bug-bite', 'lick']);
+  const PUNCH = SET(['drain-punch', 'thunder-punch', 'ice-punch', 'sucker-punch', 'meteor-mash', 'karate-chop', 'focus-punch', 'arm-thrust', 'meteor-assault']);
+  const BITE = SET(['bite', 'bug-bite', 'lick', 'ice-fang']);
   const SLICE = SET(['razor-leaf', 'psycho-cut', 'air-slash', 'air-cutter', 'cross-poison', 'aerial-ace', 'karate-chop',
-                     'shadow-claw', 'dragon-claw', 'metal-claw', 'breaking-swipe', 'leaf-storm']);
-  const SOUND = SET(['hyper-voice', 'bug-buzz', 'disarming-voice']);
-  const PULSE = SET(['aura-sphere', 'dark-pulse', 'dragon-rage']);
+                     'shadow-claw', 'dragon-claw', 'metal-claw', 'breaking-swipe', 'leaf-storm',
+                     'leaf-blade', 'fury-cutter', 'sacred-sword', 'razor-shell', 'stone-axe']);
+  const SOUND = SET(['hyper-voice', 'bug-buzz', 'disarming-voice', 'boomburst', 'clanging-scales']);
+  const PULSE = SET(['aura-sphere', 'dark-pulse', 'dragon-rage', 'water-pulse', 'psywave']);
   const DANCE = SET(['swords-dance', 'dragon-dance']);
-  const WIND = SET(['gust', 'ominous-wind', 'fairy-wind', 'heat-wave', 'air-cutter', 'leaf-storm']);
-  const RECKLESS = SET(['body-slam', 'explosion', 'rollout', 'flame-wheel', 'spark', 'aqua-jet', 'spirit-break', 'psyshield-bash']);
-  const SUPPORT = SET(['protect', 'recover', 'thunder-wave', 'will-o-wisp', 'substitute', 'reflect', 'aqua-ring']);
-  const CONTACT_KIND = SET(['melee', 'dash', 'roll', 'spin', 'burrow', 'counter', 'throw']);
+  const WIND = SET(['gust', 'ominous-wind', 'fairy-wind', 'heat-wave', 'air-cutter', 'leaf-storm', 'whirlwind', 'tailwind', 'dual-wingbeat']);
+  const RECKLESS = SET(['body-slam', 'explosion', 'rollout', 'flame-wheel', 'spark', 'aqua-jet', 'spirit-break', 'psyshield-bash', 'blaze-kick', 'megahorn']);
+  const SUPPORT = SET(['protect', 'recover', 'thunder-wave', 'will-o-wisp', 'substitute', 'reflect', 'aqua-ring', 'tailwind', 'iron-defense', 'dark-void', 'tar-shot']);
+  const CONTACT_KIND = SET(['melee', 'dash', 'roll', 'spin', 'burrow', 'counter', 'throw', 'combo', 'thrust', 'focus']);
   const contact = m => CONTACT_KIND.has(m.kind);
   const hasFx = m => !!(m.burn || m.poison || m.slow || (m.fx && (m.fx.freeze || m.fx.stun || m.fx.chill || m.fx.vuln)));
 

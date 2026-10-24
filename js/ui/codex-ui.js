@@ -218,6 +218,8 @@ G.CodexUI = (() => {
         ['Burn', 'Stacks up to 8 and lasts 3 s, refreshed by each new burn. Damage every 0.5 s grows with stacks and your level.'],
         ['Poison', 'Stacks up to 8 and lasts 4 s. Deals a share of the enemy\'s max HP per stack, so it shines on tough foes (bosses resist most of it).'],
         ['Slow, freeze and stun', 'Slowed foes move slower. Frozen or stunned foes can\'t move or attack. Bosses can\'t be frozen or stunned.'],
+        ['Confused', 'Psywave and Magical Torque can confuse foes for 1.5 s: they wander, stop attacking and hit the foes they bump into. Bosses are only slowed.'],   // enemy.js confuse
+        ['Soaked', 'Water Pulse soaks foes for 4 s: soaked foes take +25% damage from Electric and Ice moves.'],   // combat.js abHit
         ['Status badges', 'The coloured chips over an enemy show its statuses: orange burn and purple poison (with stacks), blue slow, pale blue frozen.']
       ]],
       ['Types and weather', [

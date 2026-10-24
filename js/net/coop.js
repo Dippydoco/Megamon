@@ -331,6 +331,7 @@ G.Coop = (() => {
           else if (ev[2] === 'f') e.freeze(Math.min(2, ev[3]));
           else if (ev[2] === 'z') e.freeze(Math.min(2, ev[3]), true);     // stun (Dragon Breath)
           else if (ev[2] === 'v') e.vuln(Math.min(4, ev[3]));             // takes more damage (Acid Spray)
+          else if (ev[2] === 'c') e.confuse(Math.min(3, ev[3]));          // confused (Psywave, Magical Torque)
           break;
         }
         case 'c':

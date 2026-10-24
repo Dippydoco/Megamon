@@ -154,6 +154,47 @@
       { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% reach', m: { radius: 1.25 } },
       { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+50% damage', m: { dmg: 1.50 } }
     ],
+    // ---- Batch 3 (24-10-2026): new kinds (systems/combat.js, "Batch 3") ----
+    combo: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% range', m: { radius: 1.25 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: 'Heavier, wider finisher', m: { fin: 3.0, arc: 1.25 } }
+    ],
+    thrust: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+25% length', m: { radius: 1.25 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '+1 thrust and +30% damage', m: { count: 1, dmg: 1.30 } }
+    ],
+    vortex: [
+      { t: '+30% radius', m: { radius: 1.30 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+40% duration', m: { dur: 1.40 } }, { t: '-20% cooldown', m: { cd: 0.80 } }
+    ],
+    pulse: [
+      { t: '+1 ring', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+25% radius', m: { radius: 1.25 } }, { t: '-20% cooldown and +40% damage', m: { cd: 0.80, dmg: 1.40 } }
+    ],
+    focus: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: 'Charges 25% faster', m: { cd: 0.75 } },
+      { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }
+    ],
+    wave: [
+      { t: '+40% damage', m: { dmg: 1.40 } }, { t: '+30% length', m: { radius: 1.30 } },
+      { t: '-20% cooldown', m: { cd: 0.80 } }, { t: '40% wider and +40% damage', m: { width: 1.40, dmg: 1.40 } }
+    ],
+    eruption: [
+      { t: '+1 target', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+25% blast radius', m: { radius: 1.25 } }, { t: '+1 target and -20% cooldown', m: { count: 1, cd: 0.80 } }
+    ],
+    mark: [
+      { t: '+1 target', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+40% duration', m: { dur: 1.40 } }, { t: '+2 targets and -20% cooldown', m: { count: 2, cd: 0.80 } }
+    ],
+    tether: [
+      { t: '+1 link', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: '+25% range', m: { range: 1.25 } }, { t: '+1 link and +40% damage', m: { count: 1, dmg: 1.40 } }
+    ],
+    companion: [
+      { t: '+1 bee', m: { count: 1 } }, { t: '+40% damage', m: { dmg: 1.40 } },
+      { t: 'Bees attack 25% faster', m: { cd: 0.75 } }, { t: '+1 bee and +40% damage', m: { count: 1, dmg: 1.40 } }
+    ],
     buff: [
       { t: '+1 max stack',         m: { stacks: 1 } },
       { t: '+40% power',                 m: { amount: 1.40 } },
@@ -711,7 +752,186 @@
       desc: 'Burst · 20 s. A rain of 10 meteors on the enemies around you.',
       cd: 20, dmg: 70, count: 10, radius: 52, knock: 60,
       ups: [{ t: '+3 meteors', m: { count: 3 } }, { t: '+40% damage', m: { dmg: 1.40 } },
-            { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+3 meteors and +30% radius', m: { count: 3, radius: 1.30 } }] }
+            { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+3 meteors and +30% radius', m: { count: 3, radius: 1.30 } }] },
+
+    // ---------------- Batch 3 (24-10-2026): every type gets physical / special and close / ranged moves ----------------
+    // New kinds: combo, thrust, vortex, pulse, focus, wave, eruption, mark, tether, companion (systems/combat.js).
+    { id: 'pyro-ball', name: 'Pyro Ball', type: 'fire', kind: 'ricochet', cat: 'physical',
+      desc: 'Kicks a flaming ball that bounces from foe to foe, burning each one.',
+      cd: 0.95, dmg: 22, speed: 340, count: 1, size: 8, life: 1.6, bounces: 3, grow: 1, burn: 1 },
+
+    { id: 'razor-shell', name: 'Razor Shell', type: 'water', kind: 'boomerang', cat: 'physical',
+      desc: 'Throws two sharp shells that cut foes on the way out and back.',
+      cd: 0.85, dmg: 12, radius: 200, count: 2, speed: 330, size: 8, spread: 0.5 },
+
+    { id: 'fusion-bolt', name: 'Fusion Bolt', type: 'electric', kind: 'projectile', cat: 'physical',
+      desc: 'A huge bolt of lightning that tears through a line of foes and can stun them.',
+      cd: 0.90, dmg: 30, speed: 420, count: 1, spread: 0.1, pierce: 3, life: 1.4, size: 11, fx: { stun: [0.15, 0.6] } },
+
+    { id: 'arm-thrust', name: 'Arm Thrust', type: 'fighting', kind: 'thrust', cat: 'physical',
+      desc: 'Two rapid palm strikes send shockwaves through a line of foes in front of you.',
+      cd: 0.45, dmg: 11, radius: 220, width: 26, count: 2 },
+
+    { id: 'magical-torque', name: 'Magical Torque', type: 'fairy', kind: 'wave', cat: 'physical',
+      desc: 'A spinning wheel of fairy light rolls along the ground through every foe in its path, and can confuse them.',
+      cd: 1.0, dmg: 26, radius: 320, width: 44, speed: 520, fx: { confuse: [0.2, 1.5] } },
+
+    { id: 'spike-cannon', name: 'Spike Cannon', type: 'normal', kind: 'projectile', cat: 'physical',
+      desc: 'Fires a burst of five sharp spikes.',
+      cd: 0.60, dmg: 7, speed: 380, count: 5, spread: 0.22, pierce: 0, life: 1.2, size: 5 },
+
+    { id: 'boomburst', name: 'Boomburst', type: 'normal', kind: 'pulse', cat: 'special',
+      desc: 'Three booming shockwaves roll out from you one after another.',
+      cd: 1.1, dmg: 9, count: 3, radius: 140, knock: 40 },
+
+    { id: 'burn-up', name: 'Burn Up', type: 'fire', kind: 'focus', cat: 'special', focus: 'move',
+      desc: 'Builds heat while you keep moving. At full heat, erupts in a huge blast of flame around you.',
+      cd: 6, dmg: 90, radius: 140, knock: 120, burn: 3 },
+
+    { id: 'sacred-sword', name: 'Sacred Sword', type: 'fighting', kind: 'combo', cat: 'special',
+      desc: 'A three-part sword string. The third cut is a wide, heavy slash. Uses Sp. Atk.',
+      cd: 0.55, dmg: 15, radius: 75, arc: 2.0, fin: 2.2, knock: 50 },
+
+    { id: 'mud-bomb', name: 'Mud Bomb', type: 'ground', kind: 'eruption', cat: 'special',
+      desc: 'The ground under up to three nearby foes bubbles, then erupts in mud.',
+      cd: 1.2, dmg: 18, count: 3, range: 170, radius: 44, delay: 0.7, slow: 0.25 },
+
+    { id: 'whirlwind', name: 'Whirlwind', type: 'flying', kind: 'vortex', cat: 'special', follow: 1, push: 1,
+      desc: 'A gale swirls around you for a few seconds, battering foes and blowing them away.',
+      cd: 3.5, dmg: 12, radius: 100, dur: 5, knock: 120 },
+
+    { id: 'psywave', name: 'Psywave', type: 'psychic', kind: 'pulse', cat: 'special',
+      desc: 'Two waves of psychic force push out from you and can confuse foes.',
+      cd: 1.0, dmg: 9, count: 2, radius: 160, fx: { confuse: [0.2, 1.5] } },
+
+    { id: 'curse', name: 'Curse', type: 'ghost', kind: 'mark', cat: 'special',
+      desc: 'Brands up to four nearby foes. Marked foes wither (a share of their max HP every second), and the mark jumps when one falls.',
+      cd: 2.0, dmg: 3, count: 4, range: 130, dur: 6 },
+
+    { id: 'clanging-scales', name: 'Clanging Scales', type: 'dragon', kind: 'pulse', cat: 'special',
+      desc: 'Rattles its scales: two heavy sound waves around you.',
+      cd: 1.3, dmg: 16, count: 2, radius: 120, knock: 60 },
+
+    { id: 'make-it-rain', name: 'Make It Rain', type: 'steel', kind: 'eruption', cat: 'special',
+      desc: 'Marks the ground under two nearby foes; a moment later a shower of gold coins crashes down on them.',
+      cd: 1.6, dmg: 38, count: 2, range: 150, radius: 56, delay: 1.5 },
+
+    { id: 'leaf-blade', name: 'Leaf Blade', type: 'grass', kind: 'combo', cat: 'physical',
+      desc: 'A sharp leaf string. The third slash is wide and heavy. Often lands critical hits.',
+      cd: 0.50, dmg: 14, radius: 70, arc: 1.8, fin: 2.25, knock: 40, fx: { crit: 0.15 } },
+
+    { id: 'ice-fang', name: 'Ice Fang', type: 'ice', kind: 'counter', cat: 'physical',
+      desc: 'Waits for a foe to come close and bites with frozen fangs. Bites much harder right after you take a hit.',
+      cd: 1.0, dmg: 30, radius: 66, knock: 60, slow: 0.3, revenge: 1.6 },
+
+    { id: 'poison-tail', name: 'Poison Tail', type: 'poison', kind: 'thrust', cat: 'physical',
+      desc: 'A venomous tail jab that pierces a line of foes and poisons them.',
+      cd: 0.55, dmg: 20, radius: 150, width: 24, count: 1, poison: 1 },
+
+    { id: 'fury-cutter', name: 'Fury Cutter', type: 'bug', kind: 'combo', cat: 'physical',
+      desc: 'Slashes that build up: every third cut is a wide, heavy slash.',
+      cd: 0.50, dmg: 15, radius: 68, arc: 1.8, fin: 2.25, knock: 40 },
+
+    { id: 'focus-punch', name: 'Focus Punch', type: 'fighting', kind: 'focus', cat: 'physical', focus: 'still',
+      desc: 'Tightens its focus. If nothing hits you for a few seconds, the next punch lands with tremendous power. Getting hit breaks the focus.',
+      cd: 3, dmg: 100, radius: 55, knock: 220 },
+
+    { id: 'rock-tomb', name: 'Rock Tomb', type: 'rock', kind: 'wave', cat: 'physical',
+      desc: 'Sharp stones burst out of the ground in a line, slowing foes. Often lands critical hits.',
+      cd: 1.1, dmg: 28, radius: 300, width: 40, speed: 480, slow: 0.3, fx: { crit: 0.2 } },
+
+    { id: 'attack-order', name: 'Attack Order', type: 'bug', kind: 'companion', cat: 'physical',
+      desc: 'Calls worker bees that follow you and dart at nearby foes on their own while the move is active.',
+      cd: 0.65, dmg: 14, count: 3, range: 260 },
+
+    { id: 'blaze-kick', name: 'Blaze Kick', type: 'fire', kind: 'dash', cat: 'physical',
+      desc: 'A flaming leap kick through a line of foes that burns them and often lands critical hits.',
+      cd: 0.85, dmg: 26, radius: 120, width: 36, knock: 60, burn: 1, fx: { crit: 0.1 } },
+
+    { id: 'stone-axe', name: 'Stone Axe', type: 'rock', kind: 'melee', cat: 'physical',
+      desc: 'A slow, crushing stone chop that can stun what it hits.',
+      cd: 1.2, dmg: 46, radius: 52, arc: 1.6, knock: 180, fx: { stun: [0.5, 0.5] } },
+
+    { id: 'leech-seed', name: 'Leech Seed', type: 'grass', kind: 'tether', cat: 'special',
+      desc: 'Links to up to three nearby foes and saps their HP for as long as they stay close; part of it heals you.',
+      cd: 0.30, dmg: 8, count: 3, range: 220, fx: { drain: 0.3 } },
+
+    { id: 'dual-wingbeat', name: 'Dual Wingbeat', type: 'flying', kind: 'projectile', cat: 'physical',
+      desc: 'Two sharp wing gusts that cut through a foe each.',
+      cd: 0.60, dmg: 15, speed: 380, count: 2, spread: 0.35, pierce: 1, life: 1.2, size: 8 },
+
+    { id: 'water-pulse', name: 'Water Pulse', type: 'water', kind: 'pulse', cat: 'special',
+      desc: 'Two rings of water push foes back and soak them: soaked foes take +25% damage from Electric and Ice moves for 4 s.',
+      cd: 1.1, dmg: 13, count: 2, radius: 130, knock: 70, soak: 4 },
+
+    // ---- type bursts (24-10-2026): one for every type that didn't have one ----
+    { id: 'blast-burn', name: 'Blast Burn', type: 'fire', kind: 'burst', cat: 'special',
+      desc: 'Burst · 22 s. A huge explosion of fire all around you that burns everything it hits.',
+      cd: 22, dmg: 240, radius: 170, knock: 200, burn: 3, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'water-spout', name: 'Water Spout', type: 'water', kind: 'burst', cat: 'special',
+      desc: 'Burst · 20 s. Geysers burst up under up to 8 foes around you and stun them. Stronger the more HP you have.',
+      cd: 20, dmg: 110, count: 8, range: 300, radius: 52, delay: 0.4, stun: 0.6,
+      ups: [{ t: '+2 geysers', m: { count: 2 } }, { t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'bloom-doom', name: 'Bloom Doom', type: 'grass', kind: 'burst', cat: 'special',
+      desc: 'Burst · 22 s. Giant roots burst up all around you, holding foes in place for 3 s, and you heal 10% of your HP.',
+      cd: 22, dmg: 95, radius: 220, slow: 0.6, dur: 3, amount: 0.10, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'glaciate', name: 'Glaciate', type: 'ice', kind: 'burst', cat: 'special',
+      desc: 'Burst · 22 s. A wave of ice that freezes every foe around you solid for 2 s (bosses are slowed).',
+      cd: 22, dmg: 110, radius: 240, dur: 2, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'meteor-assault', name: 'Meteor Assault', type: 'fighting', kind: 'burst', cat: 'physical',
+      desc: 'Burst · 18 s. Six crushing blows in a row on everything in front of you.',
+      cd: 18, dmg: 42, count: 6, radius: 110, arc: 2.4, knock: 60,
+      ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+2 blows', m: { count: 2 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'acid-downpour', name: 'Acid Downpour', type: 'poison', kind: 'burst', cat: 'special',
+      desc: 'Burst · 20 s. A rain of 8 acid bombs on the foes around you that badly poisons them.',
+      cd: 20, dmg: 60, count: 8, radius: 60, knock: 40, poison: 3,
+      ups: [{ t: '+3 bombs', m: { count: 3 } }, { t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+3 bombs and +30% radius', m: { count: 3, radius: 1.30 } }] },
+
+    { id: 'magnitude', name: 'Magnitude', type: 'ground', kind: 'burst', cat: 'physical',
+      desc: 'Burst · 18 s. An earthquake of random strength (Magnitude 4 to 10) shakes every foe around you. Flying foes are not hit.',
+      cd: 18, dmg: 31, radius: 260, knock: 80, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'tailwind', name: 'Tailwind', type: 'flying', kind: 'burst', cat: null,
+      desc: 'Burst · 22 s. A strong tailwind for 8 s: +40% speed and your moves recharge 25% faster.',
+      cd: 22, dur: 8, amount: 0.4,
+      ups: [{ t: '+2 s', m: { dur: 1.25 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+2 s', m: { dur: 1.2 } }, { t: '-15% cooldown', m: { cd: 0.85 } }] },
+
+    { id: 'psycho-boost', name: 'Psycho Boost', type: 'psychic', kind: 'burst', cat: 'special',
+      desc: 'Burst · 20 s. Locks onto the 5 toughest foes nearby; a moment later psychic force crushes each of them.',
+      cd: 20, dmg: 180, count: 5, range: 400, radius: 40, delay: 1.2,
+      ups: [{ t: '+2 targets', m: { count: 2 } }, { t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'megahorn', name: 'Megahorn', type: 'bug', kind: 'burst', cat: 'physical',
+      desc: 'Burst · 16 s. A huge charge that rams through every foe in a long line and sends them flying.',
+      cd: 16, dmg: 165, radius: 260, width: 64, knock: 260, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'tar-shot', name: 'Tar Shot', type: 'rock', kind: 'burst', cat: 'special',
+      desc: 'Burst · 20 s. Sticky tar covers every foe around you: slowed by half and taking +25% damage from everyone for 5 s.',
+      cd: 20, dmg: 40, radius: 280, dur: 5, slow: 0.5, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'infernal-parade', name: 'Infernal Parade', type: 'ghost', kind: 'burst', cat: 'special',
+      desc: 'Burst · 20 s. Three waves of burning wisps fly out and chase down foes.',
+      cd: 20, dmg: 26, count: 12, waves: 3, speed: 260, life: 1.4, size: 8, burn: 1,
+      ups: [{ t: '+4 wisps per wave', m: { count: 4 } }, { t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+50% damage', m: { dmg: 1.50 } }] },
+
+    { id: 'dark-void', name: 'Dark Void', type: 'dark', kind: 'burst', cat: 'special',
+      desc: 'Burst · 22 s. Every foe around you falls asleep for 3 s (bosses are slowed instead).',
+      cd: 22, dmg: 15, radius: 300, dur: 3,
+      ups: [{ t: 'Sleep 0.5 s longer', m: { dur: 3.5 / 3 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: 'Sleep 0.5 s longer', m: { dur: 4 / 3.5 } }] },
+
+    { id: 'iron-defense', name: 'Iron Defense', type: 'steel', kind: 'burst', cat: null,
+      desc: 'Burst · 20 s. Hardens your body: you take 50% less damage for 6 s.',
+      cd: 20, dur: 6, amount: 0.5,
+      ups: [{ t: '+1 s', m: { dur: 7 / 6 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+1 s', m: { dur: 8 / 7 } }, { t: '-15% cooldown', m: { cd: 0.85 } }] },
+
+    { id: 'misty-explosion', name: 'Misty Explosion', type: 'fairy', kind: 'burst', cat: 'special',
+      desc: 'Burst · 22 s. A burst of fairy mist all around you; the foes it hits deal 20% less damage for 5 s.',
+      cd: 22, dmg: 175, radius: 180, knock: 200, dur: 5, ups: [{ t: '+40% damage', m: { dmg: 1.40 } }, { t: '-15% cooldown', m: { cd: 0.85 } }, { t: '+25% radius', m: { radius: 1.25 } }, { t: '+50% damage', m: { dmg: 1.50 } }] }
   ];
 
   // Melee (12-10-2026): +20 % damage and +25 % reach and arc
@@ -733,7 +953,12 @@
                    'ice-punch', 'icicle-spear', 'vacuum-wave', 'shadow-claw', 'spirit-shackle', 'ominous-wind', 'dragon-claw',
                    'dragon-darts', 'breaking-swipe', 'play-rough', 'spirit-break', 'disarming-voice',
                    'solar-beam', 'electro-ball', 'thunder-cage', 'reflect', 'dig', 'sand-tomb', 'infestation', 'rollout',
-                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath', 'beat', 'aqua-jet', 'liquidation']
+                   'power-gem', 'seismic-toss', 'gyro-ball', 'mirror-shot', 'sucker-punch', 'fiery-wrath', 'beat', 'aqua-jet', 'liquidation'],
+    '2026-10-24': ['pyro-ball', 'razor-shell', 'fusion-bolt', 'arm-thrust', 'magical-torque', 'spike-cannon', 'boomburst', 'burn-up',
+                   'sacred-sword', 'mud-bomb', 'whirlwind', 'psywave', 'curse', 'clanging-scales', 'make-it-rain', 'leaf-blade', 'ice-fang',
+                   'poison-tail', 'fury-cutter', 'focus-punch', 'rock-tomb', 'attack-order', 'blaze-kick', 'stone-axe', 'leech-seed',
+                   'dual-wingbeat', 'water-pulse', 'blast-burn', 'water-spout', 'bloom-doom', 'glaciate', 'meteor-assault', 'acid-downpour',
+                   'magnitude', 'tailwind', 'psycho-boost', 'megahorn', 'tar-shot', 'infernal-parade', 'dark-void', 'iron-defense', 'misty-explosion']
   };
   for (const [d, ids] of Object.entries(ADDED)) for (const id of ids) RAW.find(m => m.id === id).added = d;
 
@@ -780,7 +1005,7 @@
     return s;
   }
 
-  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'boom', 'delay', 'splash'];
+  const MULT = ['dmg', 'cd', 'speed', 'radius', 'dur', 'amount', 'arc', 'width', 'spread', 'life', 'size', 'rate', 'boom', 'delay', 'splash', 'range'];
   const ADD = ['count', 'pierce', 'stacks', 'hp', 'bounces'];
 
   function applyMods(s, m) {
@@ -892,12 +1117,12 @@
     'vacuum-wave': ['Secret Sword', 'cd'],      'shadow-claw': ['Spectral Thief', 'crit'],
     'spirit-shackle': ['Last Respects', 'xp'],  'ominous-wind': ['Astral Barrage', 'area'],
     'dragon-claw': ['Dragon Hammer', 'atk'],    'dragon-darts': ['Glaive Rush', 'cd'],
-    'breaking-swipe': ['Dual Chop', 'area'],    'play-rough': ['Magical Torque', 'atk'],
+    'breaking-swipe': ['Dual Chop', 'area'],    'play-rough': ['Fairy Lock', 'atk'],      // (was Magical Torque, now its own move)
     'spirit-break': ['Light of Ruin', 'spd'],   'disarming-voice': ['Sparkly Swirl', 'cd'],
     'solar-beam': ['Chloroblast', 'atk'],       'electro-ball': ['Electro Drift', 'spd'],
     'thunder-cage': ['Rising Voltage', 'area'], 'reflect': ['Mirror Coat', 'def'],
     'dig': ['Drill Run', 'spd'],                'sand-tomb': ['Sandsear Storm', 'area'],
-    'infestation': ['Attack Order', 'xp'],      'rollout': ['Head Smash', 'hp'],
+    'infestation': ['Skitter Smack', 'xp'],      // (was Attack Order, now its own move)      'rollout': ['Head Smash', 'hp'],
     'power-gem': ['Meteor Beam', 'cd'],         'seismic-toss': ['Superpower', 'atk'],
     'gyro-ball': ['Heavy Slam', 'def'],         'mirror-shot': ['Doom Desire', 'xp'],
     'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd'],
