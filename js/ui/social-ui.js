@@ -194,6 +194,52 @@
   G.LobbyUI = (() => {
     let membersKey = '';
 
+    // ---- Ready up (24-10-2026) ----
+    // Every guest in the room has to be ready before the host can start. It travels over the room's link
+    // (G.Net), not the database: a guest tells the host { k:'rdy', v }, and the host sends everyone the whole
+    // list { k:'rdys', r:{ uid: 1 } }. Everyone is set back to not ready when a run starts.
+    let myReady = false, readyRoom = null;
+    let readyBy = {};                       // uid -> true (the host's list; guests keep the host's latest copy)
+
+    function resetReady() { myReady = false; readyBy = {}; }
+
+    function isReady(uid) { return !!readyBy[uid]; }
+
+    /** Guests who are not ready yet (host's view). */
+    function notReady(room) { return room.members.filter(m => m.uid !== room.host && !isReady(m.uid)); }
+
+    function sendReadyList() {
+      const room = G.Social.room;
+      if (!room || !room.isHost) return;
+      const r = {};
+      for (const m of room.members) if (m.uid !== room.host && readyBy[m.uid]) r[m.uid] = 1;
+      readyBy = r;
+      G.Net.broadcast({ k: 'rdys', r });
+    }
+
+    function setReady(v) {
+      const room = G.Social.room;
+      if (!room || room.isHost) return;
+      myReady = !!v;
+      if (myReady) readyBy[G.Social.uid] = true; else delete readyBy[G.Social.uid];
+      G.Net.toHost({ k: 'rdy', v: myReady ? 1 : 0 });
+      render();
+    }
+
+    function onReadyMsg(from, msg) {
+      const room = G.Social.room;
+      if (!room) return;
+      if (msg.k === 'start') { resetReady(); return; }
+      if (msg.k === 'rdy' && room.isHost && room.members.some(m => m.uid === from)) {
+        if (msg.v) readyBy[from] = true; else delete readyBy[from];
+        sendReadyList();
+      } else if (msg.k === 'rdys' && !room.isHost && from === room.host) {
+        readyBy = Object.assign({}, msg.r || {});
+        myReady = !!readyBy[G.Social.uid];
+      } else return;
+      if (G.UI.isOpen('scr-lobby')) render();
+    }
+
     function init() {
       $('lobby-leave').onclick = async () => {
         await G.Social.leaveRoom();
@@ -215,9 +261,14 @@
       };
       $('lobby-start').onclick = start;
       $('lobby-start').dataset.sfx = 'confirm';
+      $('lobby-ready').onclick = () => setReady(!myReady);
+      G.Net.on(onReadyMsg);
       // Connects / disconnects the network when entering or leaving a room.
       G.Social.on(what => {
         const room = G.Social.room;
+        // A different room (or none): nobody is ready yet.
+        if ((room && room.id) !== readyRoom) { readyRoom = room && room.id; resetReady(); }
+        else if (room && room.isHost) sendReadyList();      // someone left: drop them from the list
         if (room) {
           G.Net.open(room.id, room.isHost, room.host);
           G.Net.syncMembers(room.members.map(m => m.uid));
@@ -228,7 +279,15 @@
         }
         if (G.UI.isOpen('scr-lobby')) render();
       });
-      G.Net.onPeer(() => { if (G.UI.isOpen('scr-lobby')) render(); });
+      G.Net.onPeer((u, mode) => {
+        const room = G.Social.room;
+        // A link came up: the host sends the list, a guest repeats its own answer (it may have been lost).
+        if (room && (mode === 'direct' || mode === 'relay')) {
+          if (room.isHost) sendReadyList();
+          else if (u === room.host) G.Net.toHost({ k: 'rdy', v: myReady ? 1 : 0 });
+        }
+        if (G.UI.isOpen('scr-lobby')) render();
+      });
     }
 
     function open() {
@@ -267,7 +326,7 @@
       const ms = room.members;
       $('lobby-sub').textContent = room.isHost
         ? 'You\'re the host. Invite your friends (up to ' + G.Social.MAX_PLAYERS + ') and start when you\'re ready.'
-        : 'You\'re in ' + ((ms.find(m => m.uid === room.host) || {}).name || '…') + '\'s room. The host will start the game.';
+        : 'You\'re in ' + ((ms.find(m => m.uid === room.host) || {}).name || '…') + '\'s room. Ready up, and the host will start the game.';
 
       // The cards are only rebuilt if the members change (so the sprites don't flicker).
       const key = ms.map(m => m.uid + ':' + m.dex + ':' + (m.shiny ? 1 : 0)).join('|');
@@ -292,6 +351,11 @@
         if (!m) return;
         const t = connText(m, room);
         el.textContent = t;
+        // Ready tag on every guest's card.
+        let tag = el.nextElementSibling;
+        if (!tag || !tag.classList.contains('rdy')) { tag = document.createElement('span'); el.after(tag); }
+        if (m.uid === room.host) { tag.className = 'rdy hidden'; tag.textContent = ''; }
+        else { const r = isReady(m.uid); tag.className = 'rdy ' + (r ? 'on' : 'off'); tag.textContent = r ? '✓ Ready' : 'Not ready'; }
         const gl = !room.isHost && m.uid === room.host ? guestLink(room) : null;
         el.className = 'conn' + (gl ? (gl.cls === 'ok' ? '' : ' ' + gl.cls) : t === 'Connecting…' ? ' wait' : '');
       });
@@ -331,23 +395,45 @@
       btn.classList.toggle('hidden', !room.isHost);
       const connecting = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'connecting');
       const failed = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'failed');
-      btn.disabled = !room.isHost || ms.length < 2 || connecting || failed;
-      btn.textContent = 'Start game (' + ms.length + '/' + G.Social.MAX_PLAYERS + ')';
-      $('lobby-note').textContent = !room.isHost ? ''
+      const waitFor = room.isHost ? notReady(room) : [];
+      btn.disabled = !room.isHost || ms.length < 2 || connecting || failed || waitFor.length > 0;
+      const guests = ms.length - 1;
+      btn.textContent = 'Start game (' + ms.length + '/' + G.Social.MAX_PLAYERS + ')' +
+        (room.isHost && guests > 0 ? ' · ' + (guests - waitFor.length) + '/' + guests + ' ready' : '');
+      // Guests: the Ready button.
+      const rb = $('lobby-ready');
+      rb.classList.toggle('hidden', room.isHost);
+      if (!room.isHost) {
+        const linked = guestLink(room).cls === 'ok';
+        rb.disabled = !linked;
+        rb.textContent = myReady ? '✓ Ready (tap to cancel)' : 'Ready up';
+        rb.className = 'btn grow ' + (myReady ? 'ghost' : 'gold') + (room.isHost ? ' hidden' : '');
+      }
+      $('lobby-note').textContent = !room.isHost
+        ? (myReady ? 'You\'re ready. Waiting for the host to start.' : 'Tap Ready up when you\'re set to play.')
         : ms.length < 2 ? 'You need at least one friend in the room.'
         : failed ? 'Can\'t connect to one of your friends: their network (or yours) doesn\'t allow group play. Try another Wi-Fi or mobile data; it retries automatically.'
-        : connecting ? 'Connecting to your friends…' : 'The game starts for everyone at once.';
+        : connecting ? 'Connecting to your friends…'
+        : waitFor.length ? 'Waiting for ' + waitFor.map(m => m.name).join(', ') + ' to ready up.'
+        : 'Everyone is ready. The game starts for everyone at once.';
     }
 
     let starting = false;      // Start clicked twice while the version check runs: start once
-    async function start() {
+    async function start(opts) {
       const room = G.Social.room;
       if (!room || !room.isHost || room.members.length < 2 || starting || G.Game.state !== 'ui') return;
+      // Everyone has to be ready (Draft Night skips it: they've just drafted together and pressed Start there).
+      const draftRun = opts && opts.draft;
+      if (!draftRun && notReady(room).length) {
+        G.UI.toast('Waiting for ' + notReady(room).map(m => m.name).join(', ') + ' to ready up', 2400);
+        return;
+      }
       starting = true;
       let ok = false;
       try { ok = await G.Updater.gate(); } finally { starting = false; }
       if (!ok) return;                                       // new version out: reload instead of starting
       if (G.Social.room !== room || room.members.length < 2) return;
+      if (!draftRun && notReady(room).length) return;        // someone un-readied during the version check
       // Draft Night: everyone plays the Pokémon they drafted (not their own partner).
       const drafted = room.members.some(m => G.MiniUI.draftedFor(m.uid));
       const cfg = {
@@ -361,11 +447,12 @@
       if (drafted) for (const m of cfg.members) { const d = G.MiniUI.draftedFor(m.uid); if (d) { m.dex = d; m.shiny = false; } }
       if (drafted) G.Social.setGame(null);          // the draft is used up by this run
       G.Social.setOpen(false);
+      resetReady();                                        // back in the room after the run: ready up again
       G.Net.broadcast(cfg);
       G.Flow.startCoop(cfg);
     }
 
-    return { init, open, close, render, startDraftRun: () => { open(); start(); } };
+    return { init, open, close, render, startDraftRun: () => { open(); start({ draft: true }); } };
   })();
 
   // ======================= INVITACIONES =======================
