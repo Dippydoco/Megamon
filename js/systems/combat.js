@@ -33,6 +33,21 @@ G.Combat = (() => {
     }
   }
 
+  /**
+   * Fires move `m` right now, outside the active slot (the Burst key: Player.fireBurst). Same as a normal cast
+   * in tickMove: cooldown, animation, run log, the cast sent to teammates and the HUD flash.
+   */
+  function fireNow(pl, m) {
+    if (pl.dead || m.t > 0) return false;
+    m.t = Math.max(0.05, m.cd * pl.cdMul);
+    pl.cast(m);
+    G.RunLog.cast(pl, m.id);
+    if (G.Coop.active) G.Coop.cast(pl, m);
+    m.castAt = performance.now();
+    run(pl, m);
+    return true;
+  }
+
   function tickMove(dt, pl, m, now) {
     if (m.kind === 'orbit' || m.kind === 'spin') { orbit(pl, m, dt, now); return; }
     if (m.kind === 'roll') { roll(pl, m, dt); return; }
@@ -1388,6 +1403,6 @@ G.Combat = (() => {
     }
   }
 
-  return { decoyFor, decoyTarget, netBreak, netHurt, reach, tick, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  return { decoyFor, decoyTarget, netBreak, netHurt, reach, tick, fireNow, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();

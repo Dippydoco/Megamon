@@ -750,6 +750,8 @@ G.Game = (() => {
     }
     if (G.Input.tap('keyq')) pl.cycle(-1);
     if (G.Input.tap('keye') || G.Input.tap('tab')) pl.cycle(1);
+    // Burst key: a ready Burst move goes off without switching to it.
+    if (G.Input.tap('space') || G.Input.tap('keyf')) pl.fireBurst();
   }
 
   // ---------------- bucle ----------------

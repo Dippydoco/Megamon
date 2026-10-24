@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T08:39Z', title: 'Rearrange your moves and a Burst key', new: [
+    'Choose which slot each move is in during a run. On PC, drag a move icon onto another slot to swap them. On any device, pause and use Arrange moves: tap a move, then the slot to put it in. The new order stays for the rest of the run, even when you learn more moves.',
+    'Burst key: on PC, press Space (or F) to fire a ready Burst move without switching to it. Ready Burst moves show SPACE above their slot.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T08:17Z', title: 'Fallen bosses\' attacks fizzle out', fix: [
     'When a boss or rift legendary is defeated, any attacks it was still warning on the ground now fade away instead of hitting you after it has already fallen.'
   ] },

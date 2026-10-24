@@ -456,8 +456,8 @@ G.HUD = (() => {
       const on = i === pl.active;
       const x = sx + i * (S + GAP);
       const y = on ? sy - 6 : sy;
-      // Tapping (or clicking) an icon activates that move.
-      if (m && !sv) G.Touch.addButton(x, y, S, S, () => { if (G.Game.state === 'playing' && pl.active !== i) { pl.setActive(i); G.Audio.sfx('click'); } }, GAP / 2 + 3);
+      // Tapping (or clicking) an icon activates that move. With the mouse it can also be dragged onto another slot (swap).
+      if (m && !sv) G.Touch.addButton(x, y, S, S, () => { if (G.Game.state === 'playing' && pl.active !== i) { pl.setActive(i); G.Audio.sfx('click'); } }, GAP / 2 + 3, i);
       const col = m ? G.U.TYPE_COLOR[m.type] : '#4a5468';
 
       // background
@@ -504,6 +504,12 @@ G.HUD = (() => {
           roundRect(ctx, x - 2, y - 2, S + 4, S + 4, 13);
           ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,210,63,' + pulse.toFixed(2) + ')'; ctx.stroke();
           ctx.restore();
+          // PC: the Burst key fires it without switching.
+          if (!touch && !sv) {
+            ctx.font = F(800, Math.round(10 * K)); ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText('SPACE', x + S / 2, y - 7);
+            ctx.fillStyle = '#ffd23f'; ctx.fillText('SPACE', x + S / 2, y - 7);
+          }
         }
 
         // type emblem + family badge
@@ -548,6 +554,25 @@ G.HUD = (() => {
         const hw = ctx.measureText(nm).width / 2 + 3;
         moveLbl = { x0: x + S / 2 - hw, x1: x + S / 2 + hw };
       }
+    }
+
+    // ---------- dragging a move onto another slot (PC) ----------
+    const dg = !sv && G.Touch.dragging();
+    if (dg && pl.slots[dg.slot]) {
+      const slotXY = i => [sx + i * (S + GAP), i === pl.active ? sy - 6 : sy];
+      const [ox, oy] = slotXY(dg.slot);
+      ctx.save();
+      roundRect(ctx, ox, oy, S, S, 12); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
+      const to = G.Touch.slotAt(dg.x, dg.y);
+      if (to >= 0 && to !== dg.slot) {
+        const [tx, ty] = slotXY(to);
+        roundRect(ctx, tx - 3, ty - 3, S + 6, S + 6, 14);
+        ctx.setLineDash([6, 4]); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+      }
+      ctx.globalAlpha = 0.85;
+      const IS = S >= 64 ? 48 : 32;
+      G.Icons.draw(ctx, 'move:' + pl.slots[dg.slot][0].id, dg.x - IS / 2, dg.y - IS / 2, IS);
+      ctx.restore();
     }
 
     // ---------- bond saved (there aren't two loose moves yet) ----------
@@ -660,7 +685,7 @@ G.HUD = (() => {
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(180,200,230,.55)';
       ctx.fillText(touch ? 'Drag your finger to move · tap a move to switch'
-                         : 'WASD move · 1-4 / Q / E or click a move to switch · Esc pause', w / 2, h - 4);
+                         : 'WASD move · 1-4 / Q / E or click a move to switch · drag to reorder · Space burst · Esc pause', w / 2, h - 4);
     }
 
     ctx.restore();
@@ -861,6 +886,12 @@ G.HUD = (() => {
       }
     }
   }
+
+  // A move icon dropped on another slot (touch.js, mouse drag): they swap.
+  G.Touch.onDrop((a, b) => {
+    const pl = G.Game.player;
+    if (pl && G.Game.state === 'playing' && pl.swapSlots(a, b)) G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, 'Slots swapped', '#c8d4ea');
+  });
 
   return { draw, roundRect, bar, portraitBox };
 })();

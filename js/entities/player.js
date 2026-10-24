@@ -166,6 +166,42 @@ G.Player = class Player {
 
   hasMove(id) { return this.moves.some(m => m.id === id); }
 
+  /**
+   * Moves the move in slot `from` to slot `to` (they swap places). Dragging on the move bar (PC) or the
+   * pause menu's "Arrange moves" (everywhere). You stay on the move you had selected. The new order is
+   * pinned for the rest of the run (this.bind, a copy of the Upgrades shortcuts), so learning a move
+   * later doesn't shuffle it again. → true if anything changed
+   */
+  swapSlots(from, to) {
+    const n = this.slots.length;
+    if (from === to || from < 0 || to < 0 || from >= n || to >= n) return false;
+    const cur = this.slots[this.active];
+    [this.slots[from], this.slots[to]] = [this.slots[to], this.slots[from]];
+    this.active = Math.max(0, this.slots.indexOf(cur));
+    this.bind = Object.assign({}, this.bind);
+    this.slots.forEach((g, i) => { for (const m of g) this.bind[m.id] = i; });
+    G.Audio.sfx('select');
+    return true;
+  }
+
+  /**
+   * Burst key (Space / F on PC): fires a READY burst move that isn't in your active slot, without switching to it.
+   * With two ready, the first by slot order goes (press again for the other). → true if one fired
+   */
+  fireBurst() {
+    if (this.dead) return false;
+    const act = this.activeGroup();
+    const m = this.slots.map(g => g[0]).find(x => x && x.kind === 'burst' && x.t <= 0 && !act.includes(x));
+    if (!m) {
+      const charging = this.moves.find(x => x.kind === 'burst');
+      if (charging && charging.t > 0) G.FX.dmgText(this.x, this.y - this.bodyH - 8, charging.name + ': ' + Math.ceil(charging.t) + ' s', '#c8d4ea');
+      return false;
+    }
+    // Choice Band locks you into one move: a burst from another slot can't go off either.
+    if (this.hasItem('choiceband')) { G.FX.dmgText(this.x, this.y - this.bodyH - 8, 'Choice Band', '#ff8ad8'); return false; }
+    return G.Combat.fireNow(this, m);
+  }
+
   setActive(i) {
     if (i < 0 || i >= this.slots.length || i === this.active) return;
     // Choice Band: you can't switch moves.

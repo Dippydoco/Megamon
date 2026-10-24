@@ -81,10 +81,24 @@ G.Touch = (() => {
     b.fn();
   }
 
+  /*
+   * Mouse drag of a move icon onto another (PC): swaps their slots. Buttons registered with a `drag` index
+   * (the HUD's move icons) press on RELEASE with the mouse: a click still selects the move, a drag past
+   * DRAG_PX drops it on the slot under the cursor (onDrop). Touch keeps pressing on touch-down.
+   */
+  const DRAG_PX = 8;
+  let drag = null, dropFn = null;
+
   function down(e) {
     const touchy = e.pointerType !== 'mouse';
     if (touchy && !active) { active = true; document.body.classList.add('touch'); }
     const b = hit(e.clientX, e.clientY);
+    if (b && !touchy && b.drag != null && e.button === 0) {
+      e.preventDefault();
+      drag = { id: e.pointerId, slot: b.drag, b, sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, moved: false };
+      try { cv.setPointerCapture(e.pointerId); } catch (err) { /* nothing */ }
+      return;
+    }
     if (b) { e.preventDefault(); press(b); return; }
     // Mouse: left button = floating joystick (if the setting is on).
     const mouseStick = !touchy && e.button === 0 && G.Settings.get('mouseStick') !== false;
@@ -104,6 +118,11 @@ G.Touch = (() => {
   }
 
   function move(e) {
+    if (drag && e.pointerId === drag.id) {
+      drag.x = e.clientX; drag.y = e.clientY;
+      if (!drag.moved && Math.hypot(drag.x - drag.sx, drag.y - drag.sy) > DRAG_PX) drag.moved = true;
+      return;
+    }
     if (!stick || e.pointerId !== stick.id) return;
     if (e.pointerType === 'mouse' && !(e.buttons & 1)) { stick = null; return; }   // button already released
     stick.x = e.clientX; stick.y = e.clientY;
@@ -112,8 +131,23 @@ G.Touch = (() => {
     if (d > r) { stick.ox = stick.x - dx / d * r; stick.oy = stick.y - dy / d * r; }
   }
 
-  function up(e) { if (stick && e.pointerId === stick.id) stick = null; }
-  function reset() { stick = null; }
+  function up(e) {
+    if (drag && e.pointerId === drag.id) {
+      const d = drag;
+      drag = null;
+      if (e.type === 'lostpointercapture' || e.type === 'pointercancel') return;      // lost mid-drag: nothing happens
+      if (!d.moved) { press(d.b); return; }                                         // a plain click: select it
+      const t = hit(e.clientX, e.clientY);
+      if (t && t.drag != null && t.drag !== d.slot && dropFn) dropFn(d.slot, t.drag);
+      return;
+    }
+    if (stick && e.pointerId === stick.id) stick = null;
+  }
+  function reset() { stick = null; drag = null; }
+  /** The move icon being dragged (past the threshold): { slot, x, y }, or null. */
+  function dragging() { return drag && drag.moved ? { slot: drag.slot, x: drag.x, y: drag.y } : null; }
+  /** Which slot is under (x, y) among the drag-able buttons, or -1. */
+  function slotAt(x, y) { const b = hit(x, y); return b && b.drag != null ? b.drag : -1; }
 
   /** Joystick direction (with strength 0..1), or null if it isn't in use. */
   function vector() {
@@ -145,7 +179,7 @@ G.Touch = (() => {
 
   /** The HUD clears and re-registers its buttons every frame. */
   function clearButtons() { buttons = []; }
-  function addButton(x, y, w, h, fn, pad = 6) { buttons.push({ x, y, w, h, fn, pad }); }
+  function addButton(x, y, w, h, fn, pad = 6, dragIdx = null) { buttons.push({ x, y, w, h, fn, pad, drag: dragIdx }); }
 
   /** Draws the joystick (screen coordinates, CSS px). */
   function draw(ctx) {
@@ -173,5 +207,6 @@ G.Touch = (() => {
   }
 
   return { init, vector, draw, drawStick, clearButtons, addButton, reset, safeArea, spot, stickBase, R, STICK_DEF,
+           dragging, slotAt, onDrop(fn) { dropFn = fn; },
            get active() { return active; }, get stick() { return stick; } };
 })();

@@ -460,7 +460,37 @@ G.RunUI = (() => {
     $('pause-coop').classList.toggle('hidden', !coop);
     $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
     renderStats('pause-stats', true);
+    arrangeSel = -1;
+    renderArrange();
     G.UI.show('scr-pause');
+  }
+
+  /**
+   * Pause menu, "Arrange moves": tap a move, then the slot to put it in (they swap). For touch screens
+   * mainly (on PC the icons can also be dragged on the move bar). Player.swapSlots does the rest.
+   */
+  let arrangeSel = -1;
+  function renderArrange() {
+    const box = $('pause-moves'), pl = G.Game.player;
+    const slots = pl && !pl.dead ? pl.slots : [];
+    box.classList.toggle('hidden', slots.length < 2);
+    if (slots.length < 2) return;
+    box.innerHTML = `<div class="pm-head"><b>Arrange moves</b><small>${arrangeSel < 0 ? 'Tap a move, then the slot to put it in.' : 'Now tap the slot to move it to.'}</small></div>`;
+    const row = document.createElement('div'); row.className = 'pm-row';
+    slots.forEach((g, i) => {
+      const m = g[0], b = document.createElement('button');
+      b.className = 'pm-slot' + (i === arrangeSel ? ' sel' : '') + (i === pl.active ? ' on' : '') + (g.length > 1 ? ' bond' : '');
+      b.style.setProperty('--tc', G.U.TYPE_COLOR[m.type]);
+      b.innerHTML = `<small>${i + 1}</small>${G.Icons.html('move:' + m.id, 32)}<span>${esc(m.name)}${g.length > 1 ? ' +' + (g.length - 1) : ''}</span>`;
+      b.onclick = () => {
+        if (arrangeSel < 0) { arrangeSel = i; G.Audio.sfx('click'); }
+        else if (arrangeSel === i) arrangeSel = -1;
+        else { pl.swapSlots(arrangeSel, i); arrangeSel = -1; }
+        renderArrange();
+      };
+      row.appendChild(b);
+    });
+    box.appendChild(row);
   }
 
   function wirePause(onResume, onQuit) {

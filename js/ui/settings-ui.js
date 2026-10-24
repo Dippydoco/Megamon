@@ -97,7 +97,7 @@ G.SettingsUI = (() => {
            : iosTip() ? `<div class="set-row"><div class="grow"><b>Full screen</b><small>${esc(IOS_TIP)}</small></div></div>` : '');
     } else if (tab === 'ctl') {
       box.innerHTML = section('On mobile or tablet')
-        + `<p class="sub">Put your finger anywhere and drag to move: the joystick appears where you touch. Tap an attack at the bottom to switch to it and the button at the top right to pause. The game is played in landscape.</p>`
+        + `<p class="sub">Put your finger anywhere and drag to move: the joystick appears where you touch. Tap an attack at the bottom to switch to it and the button at the top right to pause. To change which slot an attack is in, pause and use Arrange moves. The game is played in landscape.</p>`
         + `<div class="set-row"><div class="grow"><b>Joystick size</b><small>How far you have to drag your finger.</small></div></div>`
         + choice('stick', [[0.8, 'Small'], [1, 'Normal'], [1.25, 'Large']])
         + `<div class="set-row"><div class="grow"><b>Place the buttons</b><small>Put the attacks, pause and joystick (fixed, if you like) anywhere on the screen.</small></div>
@@ -109,6 +109,8 @@ G.SettingsUI = (() => {
              <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</div><span>move</span>
              <div><kbd>1</kbd>–<kbd>4</kbd> or click the icon</div><span>choose attack</span>
              <div><kbd>Q</kbd> / <kbd>E</kbd></div><span>previous / next attack</span>
+             <div><kbd>Space</kbd> or <kbd>F</kbd></div><span>fire a ready Burst move without switching to it</span>
+             <div>Drag an attack icon onto another</div><span>swap their slots (also in the pause menu)</span>
              <div><kbd>Esc</kbd> or <kbd>P</kbd></div><span>pause</span>
              <div><kbd>1</kbd>–<kbd>3</kbd></div><span>choose a card when levelling up</span>
            </div>`;

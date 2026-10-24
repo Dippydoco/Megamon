@@ -1483,3 +1483,17 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .dr-mon.gone { opacity: .3; }
 .dr-mon b { font-weight: 400; }
 #lobby-mini .row { justify-content: flex-start; }
+
+/* Pause menu: Arrange moves (run-ui.js renderArrange) */
+.pause-moves { margin: 10px 0 4px; }
+.pm-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.pm-head small { color: var(--muted); font-size: 12px; }
+.pm-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.pm-slot { appearance: none; font: inherit; color: inherit; cursor: pointer; position: relative; width: 84px; padding: 6px 4px 5px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; border-radius: 10px;
+  background: rgba(10,16,28,.8); border: 2px solid rgba(140,170,210,.25); }
+.pm-slot small { position: absolute; top: 3px; left: 6px; font-size: 11px; color: var(--muted); }
+.pm-slot span { font-size: 11px; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pm-slot.on { border-color: var(--tc); }
+.pm-slot.bond { border-color: #ff8ad8; }
+.pm-slot.sel { border-color: #ffd23f; background: rgba(255,210,63,.16); transform: translateY(-3px); }
