@@ -27,7 +27,7 @@ G.Combat = (() => {
     // Burst moves charge in the background too (the rest only charge while active).
     // When one is ready it chimes and its slot glows, so you know it's time to switch to it.
     for (const m of pl.moves) {
-      if (m.kind !== 'burst' || group.includes(m) || m.t <= 0) continue;
+      if (m.kind !== 'burst' || group.includes(m) || m.t <= 0 || shieldUp(pl, m)) continue;
       m.t -= dt;
       if (m.t <= 0) { m.t = 0; m.readyAt = performance.now(); if (pl === G.Game.player) G.Audio.sfx('ready'); }
     }
@@ -37,6 +37,13 @@ G.Combat = (() => {
    * Fires move `m` right now, outside the active slot (the Burst key: Player.fireBurst). Same as a normal cast
    * in tickMove: cooldown, animation, run log, the cast sent to teammates and the HUD flash.
    */
+  /**
+   * Protect (24-10-2026): its cooldown stays frozen at full while the shield is up and only starts counting once
+   * the shield is over. (22-10-2026 tried this by adding the shield's length to the cooldown, so the timer still
+   * visibly ran from the cast; and the Burst key, fireNow, didn't even do that.)
+   */
+  const shieldUp = (pl, m) => m.id === 'protect' && pl.protectT > 0;
+
   /** Everything that changes a move's cooldown besides pl.cdMul: abilities and Tailwind (-25%). */
   const cdK = (pl, m) => G.Abil.cdK(pl, m) * (pl.tailwindT > 0 ? 0.75 : 1);
 
@@ -66,6 +73,7 @@ G.Combat = (() => {
     if (m.kind === 'focus') { focus(pl, m, dt); return; }
     if (m.kind === 'companion') { companion(pl, m, dt); return; }
 
+    if (shieldUp(pl, m)) return;              // Protect: no cooldown while its shield is up
     m.t -= dt;
     if (m.t > 0) return;
     // Attacks that need a target wait until they have one (don't waste the animation on thin air).
@@ -79,9 +87,8 @@ G.Combat = (() => {
         if (!alt) { m.t = 0.05; return; }
       }
     }
-    // Protect (22-10-2026): its cooldown only starts once the shield is over (with enough cooldown cuts it lasted
-    // longer than its cooldown, so it could be kept up for ever).
-    m.t = Math.max(0.05, m.cd * pl.cdMul * cdK(pl, m)) + (m.id === 'protect' ? m.dur || 0 : 0);
+    // (Protect's cooldown waits for its shield to end: see shieldUp.)
+    m.t = Math.max(0.05, m.cd * pl.cdMul * cdK(pl, m));
     const aim0 = pl.aim;
     if (alt) pl.aim = Math.atan2(alt.y - pl.y, alt.x - pl.x);
     pl.cast(m);

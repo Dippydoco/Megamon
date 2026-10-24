@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T20:27Z', title: 'Protect cooldown fix', fix: [
+    'Protect\'s cooldown now really waits for the shield: it stays full while you are protected and only starts counting down once the shield ends. Before, the timer ran from the moment you cast it, and firing it with Space / F started the full cooldown straight away.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T19:30Z', title: 'Featured Pokémon for everyone', new: [
     'Today\'s featured Pokémon are now on loan to every player for their day: pick them as your partner from the main menu or the Pokémon tab, even if you don\'t own them. When the day ends you go back to your own partner. Loans don\'t count towards your collection or Shiny Charms.'
   ] },
