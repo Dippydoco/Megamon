@@ -114,9 +114,32 @@ G.HUD = (() => {
     ctx.font = F(800, 26);
     ctx.fillStyle = 'rgba(255,255,255,.95)';
     ctx.fillText(G.U.mmss(st.time), w / 2, 42);
-    ctx.font = F(600, 10);
-    ctx.fillStyle = '#8fa3c4';
-    ctx.fillText(G.World.biomeName().toUpperCase() + '  ·  ' + pl.kills + ' DEFEATED ·  ' + pl.coins + ' COINS', w / 2, 58);
+    // Stage · defeated · coins: bigger, bold, outlined and colour-coded so it reads over any ground (24-10-2026; was 10px grey).
+    {
+      const parts = [
+        [G.World.biomeName().toUpperCase(), '#8fe3ff'],
+        ['  ·  ', 'rgba(255,255,255,.6)'],
+        [Math.floor(pl.kills || 0).toLocaleString('en') + ' DEFEATED', '#ffffff'],
+        ['  ·  ', 'rgba(255,255,255,.6)'],
+        [Math.floor(pl.coins || 0).toLocaleString('en') + ' COINS', '#ffd23f']
+      ];
+      ctx.save();
+      ctx.font = F(800, 13);
+      ctx.textAlign = 'left';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(0,0,0,.85)';
+      const tw = parts.reduce((a, p) => a + ctx.measureText(p[0]).width, 0);
+      let x = w / 2 - tw / 2;
+      for (const [txt, col] of parts) {
+        ctx.strokeText(txt, x, 61);
+        ctx.fillStyle = col;
+        ctx.fillText(txt, x, 61);
+        x += ctx.measureText(txt).width;
+      }
+      ctx.restore();
+      ctx.textAlign = 'center';
+    }
 
     // ---------- weather (top right) ----------
     const wx = G.Weather.current;

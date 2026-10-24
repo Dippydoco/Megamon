@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T15:19Z', title: 'Easier to read run stats', chg: [
+    'The stage, Pokémon defeated and coins under the run timer are bigger, bold and outlined so they stand out on any ground. Each one has its own colour now: the stage in light blue, defeated in white and coins in gold.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T14:55Z', title: 'All tab in the Pokémon page', new: [
     'The Pokémon page has a new All tab before Kanto that shows every generation at once, with how many you own in total. The filters (Owned, Missing, Shiny, rarity...) work on it too.'
   ] },
