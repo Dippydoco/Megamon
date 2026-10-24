@@ -4,10 +4,13 @@
  * do anything). It's opened with the leaderboard's "Moderation" button.
  *
  *   Reports           records reported by players, most reported
- *                     first: delete the record, ban (they can't upload
- *                     records again, and their record is deleted from all current
- *                     tables) or dismiss the report.
+ *                     first: remove the record from the Time survived tables, from the Most kills
+ *                     tables (separately), ban (they can't upload records again, and their record
+ *                     is deleted from all current tables) or dismiss the report.
  *   Banned            the accounts banned from the leaderboard; they can be unbanned.
+ *   Add record        put a verified run from a player's history on Time survived and/or Most kills.
+ * The leaderboard itself also shows the admin a remove button on each row (ranking-ui.js), for the
+ * category being viewed.
  */
 G.ModUI = (() => {
   const $ = G.UI.$;
@@ -85,7 +88,7 @@ G.ModUI = (() => {
    */
   function renderAdd(list) {
     list.innerHTML = `<p class="sub">Put a verified run from a player's run history on the leaderboard (for runs the server refused at the time).
-      Only runs they share on their profile can be found.</p>
+      Time survived and Most kills are added separately. Only runs they share on their profile can be found.</p>
       <form class="row" id="mod-add-form" autocomplete="off" style="gap:6px;margin:6px 0">
         <input id="mod-add-name" class="field grow" placeholder="Player nickname" spellcheck="false">
         <button class="btn small gold" type="submit">Find runs</button></form><div id="mod-add-runs"></div>`;
@@ -111,27 +114,38 @@ G.ModUI = (() => {
           const team = r.g ? 'Group of ' + (1 + (r.mt || []).length) + ': ' + (r.mt || []).map(m => m[0]).join(', ') : 'Solo';
           row.innerHTML = `<span class="pos">${fmt(r.t)}</span><span class="who"><b>${esc(mon ? mon.name : '#' + r.d)} · ${(r.k || 0).toLocaleString('en-GB')} defeated · Lv. ${r.lv}</b>
             <small>${esc(team)} · ${new Date(r.id).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${r.ar ? ' · reached Arceus' : ''}</small></span>`;
-          row.appendChild(btn('Add to leaderboard', 'gold', async ev => {
-            const b = ev.currentTarget;
-            if (!confirm('Add ' + owner.name + "'s " + fmt(r.t) + ' run (' + (r.k || 0) + ' defeated) to the leaderboard?')) return;
-            b.disabled = true; b.textContent = 'Adding…';
-            try {
-              const res = await G.Ranking.adminAdd(r, owner);
-              const msg = res.errs.length ? 'Some tables refused it: ' + res.errs.join('; ') : 'Added to ' + res.boards + ' tables' + (res.missing.length ? ' (not found: ' + res.missing.join(', ') + ')' : '');
-              G.UI.toast(msg, 6000);
-              b.textContent = res.errs.length ? 'Partly added' : 'Added';
-            } catch (err) { G.UI.toast('Failed: ' + (err.code || err.message), 6000); b.disabled = false; b.textContent = 'Add to leaderboard'; }
-          }));
+          const acts = document.createElement('span');
+          acts.className = 'mod-acts';
+          const addBtn = (which, label, what) => {
+            const b = btn(label, 'gold', async () => {
+              if (!confirm('Add ' + owner.name + "'s run (" + what + ') to ' + CAT[which] + '?')) return;
+              b.disabled = true; b.textContent = 'Adding…';
+              try {
+                const res = await G.Ranking.adminAdd(r, owner, which);
+                const msg = res.errs.length ? 'Some tables refused it: ' + res.errs.join('; ') : 'Added to ' + res.boards + ' ' + CAT[which] + ' tables' + (res.missing.length ? ' (not found: ' + res.missing.join(', ') + ')' : '');
+                G.UI.toast(msg, 6000);
+                b.textContent = res.errs.length ? 'Partly added' : 'Added';
+              } catch (err) { G.UI.toast('Failed: ' + (err.code || err.message), 6000); b.disabled = false; b.textContent = label; }
+            });
+            return b;
+          };
+          const kb = addBtn('kills', 'Add to Most kills', (r.k || 0).toLocaleString('en-GB') + ' defeated');
+          if (!(r.k > 0)) { kb.disabled = true; kb.title = 'No kills in this run'; }
+          acts.append(addBtn('time', 'Add to Time survived', fmt(r.t)), kb);
+          row.appendChild(acts);
           out.appendChild(row);
         }
       } catch (err) { out.innerHTML = '<p class="sub">Could not load (' + esc(err.code || err.message) + ').</p>'; }
     };
   }
 
-  /** "s_w2026-42" -> "Solo · Week" */
+  const CAT = { time: 'Time survived', kills: 'Most kills', both: 'Time survived and Most kills' };
+
+  /** "s_w2026-42" -> "Solo · Time survived · Week", "gk_m202610j_n3" -> "Group of 3 · Most kills · Month" */
   function boardName(b) {
     const [m, p] = b.split('_');
-    const mode = m === 'g' ? 'Group' : 'Solo';
+    const n = (b.match(/_n(\d)$/) || [])[1];
+    const mode = (m[0] === 'g' ? 'Group' + (n ? ' of ' + n : '') : 'Solo') + ' · ' + CAT[G.Ranking.kindOf(b)];
     const per = p.startsWith('d') ? 'Today' : p.startsWith('w') ? 'Week' : p.startsWith('m') ? 'Month' : 'All time';
     const dex = (b.match(/_p(\d+)$/) || [])[1];
     return mode + ' · ' + per + (dex && G.DEX_BY[dex] ? ' · only ' + G.DEX_BY[dex].name : '');
@@ -146,7 +160,7 @@ G.ModUI = (() => {
     for (const g of groups) {
       const row = document.createElement('div');
       row.className = 'rk-row mod-row rep';
-      const mode = g.board.startsWith('g_') ? 'g' : 's';
+      const mode = G.Ranking.modeOf(g.board), kind = G.Ranking.kindOf(g.board);
       // What the record currently shows in its table (level, defeated, Pokémon).
       const info = await G.Ranking.entryInfo(g.board, g.e).catch(() => null);
       const t = info ? info.t : g.t;
@@ -157,27 +171,41 @@ G.ModUI = (() => {
       row.innerHTML = `<span class="pos" title="times reported">${g.n}×</span>`;
       row.appendChild(mons);
       row.insertAdjacentHTML('beforeend', `<span class="who"><b translate="no">${g.names.map(esc).join(' · ')}</b>
-          <small>${esc(boardName(g.board))}${info ? ' · Lv. ' + (info.lv || 1) + ' · ' + (info.kills || 0).toLocaleString('en') + ' defeated' : ' · no longer in the top 50'}</small>
+          <small>Reported in ${esc(boardName(g.board))}${info ? ' · Lv. ' + (info.lv || 1) + ' · ' + (info.kills || 0).toLocaleString('en') + ' defeated' : ' · no longer in the top 50'}</small>
           ${sus ? '<small class="mod-warn">Over 90 min: very unusual, check it</small>' : ''}</span>
         <span class="time${sus ? ' mod-warn' : ''}">${fmt(t)}</span>`);
       const acts = document.createElement('span');
       acts.className = 'mod-acts';
-      const busy = async (fn, msg) => {
+      const busy = async (fn, msg, keep) => {
         acts.querySelectorAll('button').forEach(b => { b.disabled = true; });
-        try { await fn(); G.UI.toast(msg); row.remove(); }
-        catch (e) { G.UI.toast('Failed: ' + (e.code || e.message)); acts.querySelectorAll('button').forEach(b => { b.disabled = false; }); }
+        try { await fn(); G.UI.toast(msg); if (keep) keep(); else row.remove(); }
+        catch (e) { G.UI.toast('Failed: ' + (e.code || e.message)); acts.querySelectorAll('button').forEach(b => { b.disabled = !!b.dataset.done; }); }
+      };
+      const dexes = info ? info.dex : [];
+      // Removing from one category leaves the row so the other can still be removed (or the report dismissed).
+      const removeBtn = which => {
+        const b = btn('Remove from ' + CAT[which], 'ghost', () => {
+          if (!confirm('Remove ' + g.names.join(', ') + "'s record from all current " + CAT[which] + ' tables?')) return;
+          busy(async () => {
+            await G.Ranking.removeEverywhere(g.e, mode, dexes, g.board, which);
+            if (which === kind) await G.Ranking.dismiss(g.ids);
+          }, 'Removed from ' + CAT[which], () => {
+            b.dataset.done = '1'; b.textContent = 'Removed from ' + CAT[which];
+            acts.querySelectorAll('button').forEach(x => { x.disabled = !!x.dataset.done; });
+            row.classList.add('mod-done');
+          });
+        });
+        return b;
       };
       acts.append(
-        btn('Delete entry', 'ghost', () => busy(async () => {
-          await G.Ranking.removeEverywhere(g.e, mode, [], g.board);
-          await G.Ranking.dismiss(g.ids);
-        }, 'Entry deleted')),
+        removeBtn('time'),
+        removeBtn('kills'),
         btn('Ban', 'danger', () => {
           if (!confirm('Ban ' + g.names.join(', ') + '? They will no longer be able to appear on the leaderboard, and their entry is deleted.')) return;
           busy(async () => {
             const uids = g.e.split('_');
             for (const u of uids) await G.Ranking.setMarked(u, true).catch(() => {});
-            await G.Ranking.removeEverywhere(g.e, mode, [], g.board);
+            await G.Ranking.removeEverywhere(g.e, mode, dexes, g.board, 'both');
             await G.Ranking.dismiss(g.ids);
           }, 'Banned');
         }),
@@ -207,5 +235,17 @@ G.ModUI = (() => {
     }
   }
 
-  return { init, open };
+  /** Leaderboard row (admin): removes that record from the category being viewed. */
+  async function removeRow(r, b, which, done) {
+    if (!G.Ranking.isAdmin()) return;
+    if (!confirm('Remove ' + r.names.join(', ') + "'s record from all current " + CAT[which] + ' tables? Their ' +
+      (which === 'time' ? 'Most kills' : 'Time survived') + ' record stays.')) return;
+    try {
+      await G.Ranking.removeEverywhere(r.id, G.Ranking.modeOf(b), r.dex || [], b, which);
+      G.UI.toast('Removed from ' + CAT[which]);
+      if (done) done();
+    } catch (e) { G.UI.toast('Failed: ' + (e.code || e.message), 5000); }
+  }
+
+  return { init, open, removeRow };
 })();

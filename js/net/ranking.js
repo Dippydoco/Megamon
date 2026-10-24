@@ -556,13 +556,28 @@ G.Ranking = (() => {
     cacheSet('s:' + b, undefined);
   }
 
-  /** Admin: removes a player's or team's record from all current tables (and from `also`). */
-  async function removeEverywhere(e, mode, dexes = [], also = null) {
+  /** A table's category: 'kills' (sk_ / gk_, most kills) or 'time' (time survived). */
+  const kindOf = b => (vkOf(b) === 'kills' ? 'kills' : 'time');
+  /** A table's mode: 's' solo or 'g' group (also for the kills tables sk_ / gk_). */
+  const modeOf = b => (b[0] === 'g' ? 'g' : 's');
+
+  /**
+   * Admin: removes a player's or team's record from all current tables of one category (and from `also`
+   * if it's of that category). which: 'time' (time survived, including the per-Pokémon tables), 'kills'
+   * (most kills) or 'both'.
+   */
+  async function removeEverywhere(e, mode, dexes = [], also = null, which = 'both') {
+    mode = mode[0] === 'g' ? 'g' : 's';
     const ids = boardIds();
-    const boards = new Set(PERIODS.flatMap(([p]) => [mode + '_' + ids[p], mode + 'k_' + ids[p]]));
-    for (const d of dexes) boards.add(mode + '_' + ALL + '_p' + d);
+    const time = which !== 'kills', kills = which !== 'time';
+    const boards = new Set();
+    for (const [p] of PERIODS) {
+      if (time) boards.add(mode + '_' + ids[p]);
+      if (kills) boards.add(mode + 'k_' + ids[p]);
+    }
+    if (time) for (const d of dexes) boards.add(mode + '_' + ALL + '_p' + d);
     if (mode === 'g') for (const b of [...boards]) for (const n of SIZES) boards.add(b + '_n' + n);
-    if (also) boards.add(also);
+    if (also && (which === 'both' || kindOf(also) === which)) boards.add(also);
     await Promise.all([...boards].map(b => removeEntry(b, e)));
   }
 
@@ -608,9 +623,10 @@ G.Ranking = (() => {
    * it was played, all-time, its Pokémon's all-time table and the kills tables, like a normal record.
    * @param run    a history entry ({ id: end time ms, d, sh, t, lv, k, g, mt: [[name, dex, shiny]] })
    * @param owner  { uid, name } of the player whose history it is
+   * @param which  'time' (time-survived tables, with its Pokémon's), 'kills' (most-kills tables) or 'both'
    * → { boards: tables written, better: tables where it improved, missing: teammates not found }
    */
-  async function adminAdd(run, owner) {
+  async function adminAdd(run, owner, which = 'both') {
     const fb = fbx();
     if (!fb || !isAdmin()) throw new Error('admin only');
     const when = new Date(run.id || Date.now());
@@ -641,6 +657,9 @@ G.Ranking = (() => {
       boards.push(['s_' + ALL + '_p' + run.d, 'p']);
       if (entry.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);
     }
+    const pick = boards.filter(([b]) => which === 'both' || kindOf(b) === which);
+    boards.length = 0; boards.push(...pick);
+    if (!boards.length) throw new Error(which === 'kills' ? 'this run has no kills to add' : 'nothing to add');
     const errs = [];
     const better = await store(boards, id, entry, errs);
     for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
@@ -659,5 +678,5 @@ G.Ranking = (() => {
   }
 
   return { PERIODS, SIZES, periodIds, board, runStarted, submitSolo, submitGroup, top, myRank, removeMine,
-           report, reported, isAdmin, reports, adminAdd, entryInfo, removeEntry, purgeAbove, removeEverywhere, setMarked, dismiss, markedAccounts };
+           report, reported, isAdmin, reports, adminAdd, kindOf, modeOf, entryInfo, removeEntry, purgeAbove, removeEverywhere, setMarked, dismiss, markedAccounts };
 })();

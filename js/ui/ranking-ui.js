@@ -139,6 +139,16 @@ G.RankingUI = (() => {
       };
       el.appendChild(rep);
     } else el.appendChild(document.createElement('span'));
+    // Moderation: remove this record from the category being viewed (Time survived or Most kills) only.
+    if (G.Ranking.isAdmin()) {
+      el.classList.add('admin');
+      const rm = document.createElement('button');
+      rm.className = 'rk-rep rk-del';
+      rm.title = 'Moderation: remove from ' + (kills ? 'Most kills' : 'Time survived');
+      rm.textContent = '✕';
+      rm.onclick = () => G.ModUI.removeRow(r, r.src || b, kills ? 'kills' : 'time', () => { el.style.opacity = '.35'; rm.disabled = true; });
+      el.appendChild(rm);
+    }
     return el;
   }
 
