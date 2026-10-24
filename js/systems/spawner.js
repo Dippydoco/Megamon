@@ -208,6 +208,15 @@ G.Spawner = (() => {
     for (let i = 0; i < n && G.EnemyMgr.count < CAP + 10; i++) spawnOne(target, t, base + G.U.rand(-0.6, 0.6));
   }
 
+  /** Surrounds a player: `n` at once, spread evenly from every side (Voltorb swarm waves). */
+  function ring(n) {
+    const target = anchor() || G.Game.player, t = G.Game.st.time, a0 = Math.random() * 6.2832;
+    let made = 0;
+    for (let i = 0; i < n && G.EnemyMgr.count < CAP + 24; i++)
+      if (spawnOne(target, t, a0 + (i / n) * 6.2832 + G.U.rand(-0.15, 0.15))) made++;
+    return made;
+  }
+
   /**
    * A straggler reappears ahead of the player (where they're running),
    * out of view. Returns false if there's no room (then it's removed).
@@ -235,6 +244,6 @@ G.Spawner = (() => {
   /** Co-op guest: only the notice's timer runs. */
   function tickBanner(dt) { if (announceT > 0) announceT -= dt; }
 
-  return { reset, update, ahead, burst, tickBanner, banner, say, rate, SHINY_RATE, CAP,
+  return { reset, update, ahead, burst, ring, tickBanner, banner, say, rate, SHINY_RATE, CAP,
            debugForceShiny(n = 1) { forceShiny = n; } };
 })();

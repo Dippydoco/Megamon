@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T14:38Z', title: 'New event: Voltorb swarm', new: [
+    'A new run event joins hordes, Golden hour and Lost Pokémon: the Voltorb swarm. For 25 s, waves of Voltorb and Electrode surround you from every side and rush in to self-destruct. Each one flashes and shows its blast circle for a second before it goes off, so keep moving. Electrode take over the swarm later in the run.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T14:28Z', title: 'Evolved moves keep their name', chg: [
     'An evolved move now keeps its name with a + after it (Ember+ instead of Fire Blast). It works exactly as before; only the name changed.'
   ] },

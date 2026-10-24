@@ -214,9 +214,31 @@ G.Enemies = (() => {
     return G.U.pickN(pool, 4).map(p => defFor(p, TIERS[ti], ti));
   }
 
+  /**
+   * Voltorb swarm (events.js): Voltorb and Electrode as bombers with the CURRENT tier's stats, so the swarm
+   * stays a threat at any minute. Frailer and quicker than a normal bomber (they come in numbers), and each
+   * blast hits a little softer so a chain of them is punishing but survivable. Electrode takes over later on.
+   */
+  function voltDefs(t) {
+    const ti = tierAt(t), tier = TIERS[ti];
+    const make = dex => {
+      const p = G.DEX_BY[dex];
+      if (!p || !G.SPRITE_META[dex]) return null;
+      const d = defFor(p, tier, ti);
+      d.behavior = 'bomber'; d.volt = true;
+      d.hp = Math.max(1, Math.round(d.hp * 0.6));
+      d.spd = Math.round(d.spd * 1.15);
+      d.dmg = Math.round(d.dmg * 0.8 * 10) / 10;
+      return d;
+    };
+    const v = make(100), e = make(101);
+    const nv = ti < 2 ? 3 : ti < 4 ? 2 : 1, ne = ti < 2 ? 1 : ti < 4 ? 2 : 3;
+    return [...Array(v ? nv : 0).fill(v), ...Array(e ? ne : 0).fill(e)];
+  }
+
   /** Bag of enemies available at second `t`. */
   function bagAt(t) {
-    // During a one-type horde only those of that type spawn (systems/events.js).
+    // During a one-type horde (or a Voltorb swarm) only those spawn (systems/events.js).
     const horde = G.Events && G.Events.bag();
     if (horde) return horde;
     if (!cast) rollRun();
@@ -244,7 +266,7 @@ G.Enemies = (() => {
   }
 
   return {
-    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, ramp, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs,
+    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, ramp, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs, voltDefs,
     get BOSSES() { if (!bosses) rollRun(); return bosses; },
     get cast() { if (!cast) rollRun(); return cast; }
   };

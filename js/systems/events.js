@@ -4,6 +4,8 @@
  *
  *   horde   Horde of one type: 30 s in which everything that spawns is of the
  *           same type (if your type beats them, it's your moment)
+ *   volt    Voltorb swarm: 25 s in which waves of Voltorb and Electrode surround you
+ *           from every side and rush in to self-destruct (only they spawn)
  *   gold    Golden hour: 30 s of golden enemies that give double
  *           experience and sometimes drop coins
  *   lost    Lost Pokémon: you touch it, it follows you and you lead it to the marker.
@@ -20,6 +22,8 @@
  */
 G.Events = (() => {
   const EVERY = [240, 300], DUR = 30, LOST_TIME = 120;
+  // Voltorb swarm: how long it lasts and how often a fresh wave closes in around you.
+  const VOLT_DUR = 25, VOLT_WAVE = 6.5;
   const THIEF_FIRST = [120, 240], THIEF_NEXT = [240, 360], THIEF_LIFE = 15;
   // Aegislash and its Armoury of items: kill it (it leaves after AEGIS_LIFE s) and everyone picks 1 of 3 items, or skips.
   const AEGIS_FIRST = [330, 450], AEGIS_NEXT = [420, 600], AEGIS_LIFE = 75, AEGIS_MAX = 3, AEGIS_DEX = 681;
@@ -44,6 +48,7 @@ G.Events = (() => {
     if (cur) {
       cur.t += dt;
       if (cur.id !== 'lost' && cur.t >= cur.dur && authority()) end();
+      else if (cur.id === 'volt' && authority() && (cur.wave -= dt) <= 0) { cur.wave = VOLT_WAVE; voltWave(players, time); }
     }
     if (lost) lostTick(dt, players);
     if (!authority() || G.Rift.inArena || G.Judgment.active) return;
@@ -77,7 +82,7 @@ G.Events = (() => {
     if (nextT > 0) return;
     if (G.EnemyMgr.bossAlive()) { nextT = 10; return; }
     nextT = G.U.rand(EVERY[0], EVERY[1]);
-    const ids = ['horde', 'gold', 'lost'].filter(id => id !== last);
+    const ids = ['horde', 'volt', 'gold', 'lost'].filter(id => id !== last);
     start(G.U.pick(ids), time, players);
   }
 
@@ -92,6 +97,12 @@ G.Events = (() => {
       G.Sprites.preload(defs.map(d => d.dex));
       cur = { id, t: 0, dur: DUR, type, defs };
       G.Spawner.burst(Math.round(6 * G.Coop.scaleRate(players.length)));
+    } else if (id === 'volt') {
+      const defs = G.Enemies.voltDefs(time);
+      if (!defs.length) return start('gold', time, players);
+      G.Sprites.preload(defs.map(d => d.dex));
+      cur = { id, t: 0, dur: VOLT_DUR, defs, wave: VOLT_WAVE };
+      voltWave(players, time);
     } else if (id === 'gold') {
       cur = { id, t: 0, dur: DUR };
       for (const e of G.EnemyMgr.all()) if (!e.remote) e.makeGolden();
@@ -103,9 +114,15 @@ G.Events = (() => {
     if (G.Coop.isHost) G.Coop.broadcast(['ev', 's', id, cur.type || '']);
   }
 
+  /** A ring of Voltorb / Electrode around a player; bigger later in the run and with more players. */
+  function voltWave(players, time) {
+    G.Spawner.ring(Math.round(Math.min(26, 12 + time / 60) * G.Coop.scaleRate(players.length) * 0.75));
+  }
+
   function announce() {
     if (!cur) return;
     if (cur.id === 'horde') say('A ' + G.U.TYPE_NAME[cur.type] + '-type horde!', 3, G.U.TYPE_COLOR[cur.type]);
+    else if (cur.id === 'volt') say('Voltorb swarm! Keep moving, they self-destruct!', 3.2, '#ffd23f', 100);
     else if (cur.id === 'gold') say('Golden hour! Double experience', 3, '#ffd23f');
     else if (lost) say('A ' + lost.name + ' is lost! Find it and take it to the marker', 3.4, '#7dffb0', lost.dex);
     G.Audio.sfx(cur.id === 'gold' ? 'shiny' : 'surge');
@@ -119,8 +136,8 @@ G.Events = (() => {
     if (G.Coop.isHost) G.Coop.broadcast(['ev', 'e']);
   }
 
-  /** What spawns during a horde (used by G.Enemies.bagAt). */
-  function bag() { return cur && cur.id === 'horde' && cur.defs.length ? cur.defs : null; }
+  /** What spawns during a horde or a Voltorb swarm (used by G.Enemies.bagAt). */
+  function bag() { return cur && (cur.id === 'horde' || cur.id === 'volt') && cur.defs && cur.defs.length ? cur.defs : null; }
 
   // ---------------- treasure goblin ----------------
 
@@ -319,7 +336,7 @@ G.Events = (() => {
 
   function onNet(ev) {
     switch (ev[1]) {
-      case 's': cur = { id: ev[2], t: 0, dur: ev[2] === 'lost' ? Infinity : DUR, type: ev[3] || null }; break;
+      case 's': cur = { id: ev[2], t: 0, dur: ev[2] === 'lost' ? Infinity : ev[2] === 'volt' ? VOLT_DUR : DUR, type: ev[3] || null }; break;
       case 'e': cur = null; break;
       case 'arm': G.Game.armoury(); break;
       case 'tut': G.Game.tutor(); break;
@@ -400,12 +417,12 @@ G.Events = (() => {
     }
     if (cur && cur.id !== 'lost') {
       const left = Math.max(0, Math.ceil(cur.dur - cur.t));
-      const txt = (cur.id === 'gold' ? 'GOLDEN HOUR' : G.U.TYPE_NAME[cur.type].toUpperCase() + ' HORDE') + ' · ' + left + ' s';
+      const txt = (cur.id === 'gold' ? 'GOLDEN HOUR' : cur.id === 'volt' ? 'VOLTORB SWARM' : G.U.TYPE_NAME[cur.type].toUpperCase() + ' HORDE') + ' · ' + left + ' s';
       ctx.save();
       ctx.font = F(800, 12); ctx.textAlign = 'center';
       ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.8)';
       ctx.strokeText(txt, w / 2, 112);
-      ctx.fillStyle = cur.id === 'gold' ? '#ffd23f' : G.U.TYPE_COLOR[cur.type] || '#fff';
+      ctx.fillStyle = cur.id === 'gold' ? '#ffd23f' : cur.id === 'volt' ? '#ff5a3d' : G.U.TYPE_COLOR[cur.type] || '#fff';
       ctx.fillText(txt, w / 2, 112);
       ctx.restore();
     }
