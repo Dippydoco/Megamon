@@ -3,7 +3,7 @@ G.MenuUI = (() => {
   let playing = false;          // a Play click is being handled (waiting for the version check)
   const $ = G.UI.$;
   const GEN_NAMES = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Paldea'];
-  let dexFilter = 'all', dexGen = 1, dexSel = null;
+  let dexFilter = 'all', dexGen = 1, dexSel = null;      // dexGen 0: the All tab (every generation)
 
   // ---- hover tooltip for moves (Pokémon tab and the ban picker): name, type, kind and what it does ----
   function moveTip() {
@@ -222,6 +222,13 @@ G.MenuUI = (() => {
     // Generation tabs, with how many you have of each.
     const tabs = $('dex-gens');
     tabs.innerHTML = '';
+    // All: every generation at once (24-10-2026).
+    const all = document.createElement('button');
+    const haveAll = G.DEX.filter(p => s.owned[p.dex]).length;
+    all.className = 'gen-tab' + (dexGen === 0 ? ' on' : '');
+    all.innerHTML = `<b>All</b><small>${haveAll}/${G.DEX.length}</small>`;
+    all.onclick = () => { dexGen = 0; openDex(); };
+    tabs.appendChild(all);
     GEN_NAMES.forEach((name, i) => {
       const g = i + 1;
       const total = G.DEX.filter(p => p.gen === g).length;
@@ -278,11 +285,24 @@ G.MenuUI = (() => {
     $('dex-q-clear').onclick = () => { q.value = ''; q.oninput(); q.focus(); };
   }
 
+  // The All tab can show ~1,000 cells: their sprites are drawn only as they scroll into view.
+  let dexIO = null;
   function renderGrid() {
     const s = G.DB.save;
     const grid = $('dex-grid');
     grid.innerHTML = '';
     const query = fold(dexQuery).trim();
+    if (dexIO) { dexIO.disconnect(); dexIO = null; }
+    if (dexGen === 0 && !query && 'IntersectionObserver' in window) {
+      dexIO = new IntersectionObserver(list => {
+        for (const en of list) {
+          if (!en.isIntersecting) continue;
+          dexIO.unobserve(en.target);
+          const d = en.target._lazy;
+          if (d) { en.target._lazy = null; G.UI.sprite(en.target, d.dex, d.opts); }
+        }
+      }, { rootMargin: '400px 0px' });
+    }
     const numQ = /^\d+$/.test(query) ? +query : 0;
     let shown = 0, more = 0;
     for (const p of G.DEX) {
@@ -290,7 +310,7 @@ G.MenuUI = (() => {
         const known = !!s.owned[p.dex];
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
-      } else if (p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // these filters show every generation
+      } else if (dexGen && p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // these filters show every generation
       const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
       const fav = own && isFav(p.dex);
       if (dexFilter === 'fav' && !fav) continue;
@@ -310,7 +330,13 @@ G.MenuUI = (() => {
       if (p.dex === s.partner) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="Partner">${G.Icons.html('crown', 14)}</span>`);
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="You have its shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
-      cell.appendChild(G.UI.spriteCanvas(p.dex, 92, 80, { scale: 2, silhouette: !own, shadow: own, shiny: useShiny }));
+      const sOpts = { scale: 2, silhouette: !own, shadow: own, shiny: useShiny };
+      if (dexIO) {
+        const cv = document.createElement('canvas');
+        cv.width = 92; cv.height = 80; cv._lazy = { dex: p.dex, opts: sOpts };
+        cell.appendChild(cv);
+        dexIO.observe(cv);
+      } else cell.appendChild(G.UI.spriteCanvas(p.dex, 92, 80, sOpts));
       cell.insertAdjacentHTML('beforeend', `<b>${own ? p.name : '???'}</b>${G.UI.stars(p.rarity, 9)}`);
       cell.onclick = () => {
         dexSel = p.dex;

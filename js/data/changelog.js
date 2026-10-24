@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T14:55Z', title: 'All tab in the Pokémon page', new: [
+    'The Pokémon page has a new All tab before Kanto that shows every generation at once, with how many you own in total. The filters (Owned, Missing, Shiny, rarity...) work on it too.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T14:48Z', title: 'Ready up in group rooms', new: [
     'Group rooms now have a Ready up button. Every player who isn\'t the host has to ready up before the host can start, and each card in the room shows who is ready. Tap it again to cancel. After a run everyone goes back to not ready. Draft Night runs still start straight from the draft.'
   ] },
