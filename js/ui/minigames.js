@@ -30,7 +30,9 @@ G.MiniUI = (() => {
   const POINTS = { 1: 1, 2: 3, 3: 8, 4: 25, 5: 100 };
   const LEAD_MS = 2500;                         // the reveal starts LEAD_MS after the host starts
   const REVEAL_TOTAL = 20000;                   // big stakes reveal faster, so a battle never takes much longer than this
-  const ROLL_MS = 900;                          // each card spins this long before it turns over (the rolling animation)
+  // Each card spins this long before it turns over (24-10-2026: 900 -> 1300 ms, and the spin is now the random-partner
+  // shuffle: silhouettes flick past, fast at first and slowing right down before the card turns over).
+  const ROLL_MS = 1300;
   const TURN = 25;                              // seconds per draft pick
 
   // ---------------- seeded randomness (identical on every device) ----------------
@@ -311,6 +313,10 @@ G.MiniUI = (() => {
         <div class="gb-pulls${x.pulls.length > 20 ? ' many' : ''}">${x.pulls.map(() => '<div class="gb-card back">?</div>').join('')}</div></div>`).join('')}</div>
       <p class="sub center gb-ready">Get ready…</p>`;
     const cols = [...box.querySelectorAll('.gb-col')];
+    // Silhouettes the rolling cards flick through (like the random partner shuffle on the main menu).
+    const pool = G.U.pickN(G.DEX.filter(p => G.SPRITE_META[p.dex]), 16).map(p => p.dex);
+    G.Sprites.preload(pool);
+    const rollers = [];                          // { cv, at, next }
     // Card i starts rolling at i·step and turns over ROLL_MS later (from startAt, so every screen is in step).
     let shownBefore = 0, rollBefore = 0;
     const tick = () => {
@@ -325,12 +331,27 @@ G.MiniUI = (() => {
           const cards = cols[ci].querySelectorAll('.gb-pulls > .gb-card');
           for (let i = Math.max(rollBefore, shownBefore); i < Math.min(rolling, x.pulls.length); i++) {
             cards[i].classList.add('rolling');
-            cards[i].style.animationDelay = -((t - i * step) / 1000) + 's';      // late joiners pick up mid-spin
+            cards[i].textContent = '';
+            const cv = document.createElement('canvas');
+            cv.width = 48; cv.height = 42;
+            cards[i].appendChild(cv);
+            rollers.push({ cv, at: i * step, next: 0 });
           }
         });
-        if (shown === shownBefore) G.Audio.sfx('select');
         rollBefore = rolling;
       }
+      // The shuffle: each rolling card swaps silhouette on a schedule that starts fast and slows right down.
+      let flicked = false;
+      for (let k = rollers.length - 1; k >= 0; k--) {
+        const r = rollers[k];
+        if (!r.cv.isConnected) { rollers.splice(k, 1); continue; }
+        if (t < r.next) continue;
+        const prog = G.U.clamp((t - r.at) / ROLL_MS, 0, 1);
+        G.UI.sprite(r.cv, G.U.pick(pool), { silhouette: true, scale: 1 });
+        r.next = t + 60 + 320 * Math.pow(prog, 2.4);
+        flicked = true;
+      }
+      if (flicked) G.Audio.sfx('hover');
       if (shown > shownBefore) {
         const rd = box.querySelector('.gb-ready'); if (rd) rd.remove();
         res.rows.forEach((x, ci) => {
@@ -367,7 +388,7 @@ G.MiniUI = (() => {
         G.Audio.sfx('confirm');
         return;
       }
-      raf = setTimeout(tick, 80);
+      raf = setTimeout(tick, rollers.length ? 40 : 80);
     };
     tick();
   }

@@ -9,6 +9,18 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T19:06Z', title: 'Less damage on mobile', chg: [
+    'Playing with touch controls on a phone or tablet, you now take 25% less damage from everything, to make up for the harder controls.'
+  ] },
+  { d: '2026-10-24', at: '2026-10-24T19:06Z', title: 'Gacha Battle shuffle', chg: [
+    'Gacha Battle cards now shuffle like the random partner picker: Pokémon silhouettes flick past, starting fast and slowing down, before each card turns over. The spin also lasts a little longer.'
+  ] },
+  { d: '2026-10-24', at: '2026-10-24T19:06Z', title: 'Sableye\'s Star Shop', chg: [
+    'Sableye\'s shop is now called Sableye\'s Star Shop.'
+  ] },
+  { d: '2026-10-24', at: '2026-10-24T19:06Z', title: 'Tidier friends list', chg: [
+    'The Copy button for your nickname in the friends list is smaller and sits at the right of the line.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T17:44Z', title: 'Black Flute: tougher wild Pokémon', chg: [
     'The Black Flute now also gives wild Pokémon 25% more HP. It is a flat increase that stays the same for the whole run. In a group, it is averaged across the team like the rest of the flute.'
   ] },

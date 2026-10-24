@@ -329,7 +329,9 @@ G.Player = class Player {
     let close = this.activeGroup().some(m => m.kind === 'melee') ? 0.75 : 1;
     // In a rift arena the legendary's shots, beams and blasts do 25 % less to a melee build (it has to cross its fire to hit it).
     if (close < 1 && G.Rift.inArena && src && (src.k === 'shot' || src.k === 'beam' || src.k === 'zone')) close *= 0.75;
-    const d = pure ? Math.max(1, amount) : Math.max(1, amount * Math.max(0.15, (1 - this.reduction) * this.defMul) * close);   // never below 15% (before the melee cut)
+    // Playing on mobile (touch controls in use): a flat 25% less damage taken (24-10-2026), applied last, after everything else.
+    const mob = G.Touch && G.Touch.active ? 0.75 : 1;
+    const d = (pure ? Math.max(1, amount) : Math.max(1, amount * Math.max(0.15, (1 - this.reduction) * this.defMul) * close)) * mob;   // never below 15% (before the melee cut)
     // The stats only count health actually lost (the finishing blow from the
     // Arceus arena legendaries, which double without limit, doesn't add trillions of excess damage).
     this.dmgTaken += Math.min(d, Math.max(0, this.hp));

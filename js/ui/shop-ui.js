@@ -1,4 +1,4 @@
-/* ============ shop-ui.js — the Shop: Klefki's Key Items and Sableye's Arceus Shop ============
+/* ============ shop-ui.js — the Shop: Klefki's Key Items and Sableye's Star Shop ============
  *
  * One menu tile, two stalls (24-10-2026). Both are drawn the way PokéSurvivor's Kecleon shop is: a small
  * pixel-art market stall on a canvas (scaled ×3, pixelated) with a striped awning, shelves of goods, two
@@ -9,7 +9,7 @@
  * (the item flies from the shelf into the list).
  *
  *   Key Items     Klefki (707). PokéCoins. data/keyitems.js G.KeyItems.
- *   Arceus Shop   shiny Sableye (302). Arceus Stars. Menu themes and player card themes (G.Themes).
+ *   Star Shop     shiny Sableye (302). Arceus Stars. Menu themes and player card themes (G.Themes).
  *
  * G.KeyItemUI: the Key Item slot under your partner on the main menu, and its picker.
  */
@@ -427,10 +427,10 @@ G.ShopUI = (() => {
       }
     },
     arceus: {
-      keeper: { dex: 302, shiny: true }, look: LOOKS.arceus, sign: "Sableye's Arceus Shop",
+      keeper: { dex: 302, shiny: true }, look: LOOKS.arceus, sign: "Sableye's Star Shop",
       goods: ['gem-p', 'palette', 'gem-g', 'cardi', 'star', 'gem-r', 'palette', 'gem-p', 'cardi', 'gem-g'],
       lines: {
-        greet: ['Sa-ble! Welcome to the Arceus Shop!', 'Kehehe… shiny stars for shiny things!'],
+        greet: ['Sa-ble! Welcome to the Star Shop!', 'Kehehe… shiny stars for shiny things!'],
         buy: ['Kehehe! Wear it well!', 'Ooh, sparkly choice!', 'Sa-ble! Looking shiny!'],
         idle: ['Reach Arceus in a run to earn a Star!', 'Gems… stars… all so shiny…', 'Kehehe…'],
         poor: ['You need more Arceus Stars… kehehe.', 'No Stars, no sparkles!'],
@@ -531,7 +531,7 @@ G.ShopUI = (() => {
     box.appendChild(list);
   }
 
-  // ---------------- Sableye: Arceus Shop ----------------
+  // ---------------- Sableye: Star Shop ----------------
 
   function renderArceus() {
     const s = G.DB.save, box = $('shop-body'), stars = G.DB.stars();

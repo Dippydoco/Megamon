@@ -1446,8 +1446,14 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .gb-card.back { color: var(--muted); font-size: 22px; animation: none; }
 .gb-card.r4, .gb-card.r5 { box-shadow: 0 0 12px var(--rc); }
 .gb-card.sh { background: rgba(154,230,255,.12); }
-/* Rolling: the face-down card shakes and flashes through the rarity colours before it turns over. */
-.gb-card.back.rolling { animation: gbRoll .9s linear both; color: #fff; }
+/* Rolling (24-10-2026): like the random partner shuffle, Pokémon silhouettes flick past on the face-down card
+   (minigames.js), slowing down before it turns over; the card itself just glows. */
+.gb-card.back.rolling { animation: gbShuffle 1.3s ease-in both; color: #fff; }
+@keyframes gbShuffle {
+  0% { border-color: rgba(244,248,255,.35); box-shadow: none; }
+  100% { border-color: #fff; box-shadow: 0 0 14px rgba(255,255,255,.6); }
+}
+.gb-card.back.rolling canvas { display: block; }
 @keyframes gbRoll {
   0%   { transform: rotate(0) scale(1); border-color: #9fb1c9; }
   15%  { transform: rotate(-7deg) scale(1.04); border-color: #5fe08a; }
@@ -1658,3 +1664,8 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 /* Lucky Pouch line on the level-up screen */
 .pouch-note { margin: 2px 0 8px; font-weight: 700; color: #8fe0a0; }
 .pouch-note.bad { color: #ff8a96; }
+
+/* Friends: your nickname line, with a small Copy button at the right edge (24-10-2026). */
+#fr-me { display: flex; align-items: center; gap: 10px; }
+#fr-me > span { flex: 1; min-width: 0; }
+#fr-me .fr-copy { flex: 0 0 auto; margin-left: auto; padding: 2px 9px; font-size: 12px; }

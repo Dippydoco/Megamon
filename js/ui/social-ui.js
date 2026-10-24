@@ -111,9 +111,10 @@
     function render() {
       const room = G.Social.room;
       const myName = G.Social.me ? G.Social.me.name : '';
-      $('fr-me').innerHTML = 'Your nickname: <b class="gold" translate="no">' + esc(myName) + '</b>'
-        + (myName ? ' <button class="btn small" id="fr-copy" type="button">Copy</button>' : '')
-        + ' · give it to your friends so they can add you (emoji included: copy and paste it).';
+      // (24-10-2026) The Copy button is small and sits at the right-hand edge of the line.
+      $('fr-me').innerHTML = '<span>Your nickname: <b class="gold" translate="no">' + esc(myName) + '</b>'
+        + ' · give it to your friends so they can add you (emoji included: copy and paste it).</span>'
+        + (myName ? '<button class="btn small fr-copy" id="fr-copy" type="button" title="Copy your nickname">Copy</button>' : '');
       if ($('fr-copy')) $('fr-copy').onclick = () => G.UI.copyText(myName, 'Nickname copied');
       $('fr-room').classList.toggle('hidden', !room);
       const list = G.Social.friends.sort((a, b) => {
