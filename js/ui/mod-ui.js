@@ -122,9 +122,19 @@ G.ModUI = (() => {
               b.disabled = true; b.textContent = 'Adding…';
               try {
                 const res = await G.Ranking.adminAdd(r, owner, which);
-                const msg = res.errs.length ? 'Some tables refused it: ' + res.errs.join('; ') : 'Added to ' + res.boards + ' ' + CAT[which] + ' tables' + (res.missing.length ? ' (not found: ' + res.missing.join(', ') + ')' : '');
-                G.UI.toast(msg, 6000);
-                b.textContent = res.errs.length ? 'Partly added' : 'Added';
+                // What happened in each table (24-10-2026): it used to say "Added" even when every table skipped it.
+                const rep = res.report || {}, by = { added: [], better: [], outside: [], err: [] };
+                for (const [tb, what] of Object.entries(rep)) (by[what] || by.err).push(what in by ? tb : tb + ': ' + what);
+                const short = tb => tb.replace(/^(s|g|sk|gk)_/, '').replace(/_n\d$/, '');
+                const parts = [];
+                if (by.added.length) parts.push('Added to ' + by.added.length + ' (' + by.added.map(short).join(', ') + ')');
+                if (by.better.length) parts.push('already a better record in ' + by.better.length + ' (' + by.better.map(short).join(', ') + ')');
+                if (by.outside.length) parts.push('not in the top 50 of ' + by.outside.length + ' (' + by.outside.map(short).join(', ') + ')');
+                if (by.err.length) parts.push('refused by ' + by.err.length + ': ' + by.err.join('; '));
+                if (res.missing.length) parts.push('teammates not found: ' + res.missing.join(', '));
+                G.UI.toast(parts.join(' · ') || 'Nothing to add', 9000);
+                b.textContent = by.err.length ? (by.added.length ? 'Partly added' : 'Refused') : by.added.length ? 'Added' : 'Nothing new';
+                if (by.err.length && !by.added.length) b.disabled = false;
               } catch (err) { G.UI.toast('Failed: ' + (err.code || err.message), 6000); b.disabled = false; b.textContent = label; }
             });
             return b;

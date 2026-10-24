@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T17:30Z', title: 'Leaderboard fixes', fix: [
+    'Long runs with lots of Pokémon defeated, especially in groups, were refused by the leaderboard and never showed up. The limits now match how many Pokémon a run can really defeat.',
+    'The leaderboard now times each run from its own start. Before, every run after the first one in a session was timed from that first run.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T16:29Z', title: 'The Shop: Key Items and the Arceus Shop', new: [
     'New Shop on the main menu with two stalls. Klefki runs Key Items (PokéCoins) and a shiny Sableye runs the Arceus Shop (Arceus Stars). The first time you open each stall in a session it rolls up its shutter and lights its lanterns; tap the stall to skip.',
     'Key Items are bought once and kept forever. Take one into each run from the new slot under your partner on the main menu. They are passive, last the whole run, and are separate from held items.',

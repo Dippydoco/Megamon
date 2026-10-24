@@ -182,11 +182,14 @@ G.Ranking = (() => {
    * just as safe, because the session always starts before the run).
    * It first waits for the previous run's record to finish uploading.
    */
-  let busy = Promise.resolve(), runMarked = '';
+  let busy = Promise.resolve(), runMarked = '', runMarkedAt = 0;
+  // (24-10-2026) It used to be written once per page load (runMarked held the uid forever), so every later run in
+  // the session was timed from the FIRST run's start. Now every run marks its own start; the guard only stops a
+  // second call for the same run within a few seconds.
   function runStarted(mode) {
     const fb = fbx();
-    if (!fb || runMarked === fb.uid) return;
-    runMarked = fb.uid;
+    if (!fb || (runMarked === fb.uid && Date.now() - runMarkedAt < 5000)) return;
+    runMarked = fb.uid; runMarkedAt = Date.now();
     const go = n => fb.fs.collection('runs').doc(fb.uid).set({ startedAt: now(), mode })
       .catch(e => {
         console.warn('[Ranking] start:', e.code || e.message);
@@ -197,8 +200,25 @@ G.Ranking = (() => {
   /** A record's upload (so the next run waits for it to finish). */
   function track(p) { busy = p.catch(() => {}); return p; }
 
-  /** Saves the entry in each table where it improves. → periods improved */
-  async function store(boards, id, entry, errs = null) {
+  /**
+   * The server's sanity limits on a record (firestore.rules validEntry / validAdminEntry), mirrored here so a
+   * refusal can be explained. Returns '' if the entry is within them, or which limit it breaks.
+   */
+  function overLimits(e) {
+    const n = Math.max(1, (e.uids || []).length);
+    if (!(e.t > 0) || e.t > 7200) return 'time ' + e.t + ' s is outside 1 s - 2 h';
+    if (e.lv > 20 + e.t / 3) return 'level ' + e.lv + ' is over the limit of ' + Math.floor(20 + e.t / 3);
+    if (e.kills > 100 + e.t * 30 * n) return e.kills + ' defeated is over the limit of ' + (100 + e.t * 30 * n);
+    return '';
+  }
+
+  /**
+   * Saves the entry in each table where it improves. → periods improved
+   * @param report  optional { table: what happened } ('added', 'better' = a better record was already there,
+   *                'outside' = not in that table's top 50, or the error)
+   */
+  async function store(boards, id, entry, errs = null, report = null) {
+    const note = (b, what) => { if (report) report[b] = what; };
     const fb = fbx();
     const better = [];
     const known = bests();
@@ -210,7 +230,7 @@ G.Ranking = (() => {
         // If you don't reach the 50th record this browser knows of, you don't get in: in
         // daily, weekly, monthly and per-Pokémon there's nothing to do (or read).
         const thr = thresholds()[b] || 0;
-        if (topOnly && thr && v <= thr) return;
+        if (topOnly && thr && v <= thr) { note(b, 'outside'); return; }
         // Did you already have a better record? In the all-time table, if this browser doesn't
         // know, your record is checked once (small). In the others the
         // summary says so, which is read anyway inside the transaction below.
@@ -218,14 +238,15 @@ G.Ranking = (() => {
           const old = await col(b).doc(id).get();
           known[key] = old.exists ? (old.data()[vk] || 0) : 0;
         }
-        if ((known[key] || 0) >= v) return;
+        if ((known[key] || 0) >= v) { note(b, 'better'); return; }
         const data = Object.assign({}, entry, { at: firebase.firestore.FieldValue.serverTimestamp() });
         // If the table is already full and you don't reach the top 50, the summary needn't be touched
         // (and in daily, weekly and monthly, the record isn't even stored).
         const cached = cacheGet('s:' + b);
         if (thr && v <= thr && !(cached && id in cached)) {
           if (!topOnly) await col(b).doc(id).set(data);
-          else { known[key] = v; return; }
+          else { known[key] = v; note(b, 'outside'); return; }
+          note(b, 'outside');
         } else {
           let entered = true;
           let newTop = null;
@@ -252,13 +273,18 @@ G.Ranking = (() => {
             newTop = top;
           });
           if (newTop) { cacheSet('s:' + b, newTop); noteTop(b, newTop); }
+          note(b, entered ? 'added' : newTop && id in newTop && (newTop[id][vk] || 0) >= v ? 'better' : 'outside');
           if (topOnly && !entered) { known[key] = v; return; }
         }
         known[key] = v;
         if (/^g/.test(b)) known[b + ':*'] = Math.max(known[b + ':*'] || 0, v);
         mem.delete('r:' + b); try { localStorage.removeItem('ps.rk.c.r:' + b); } catch (e) { /* nothing */ }
         if (vk === 't' && period && period !== 'p' && !better.includes(period)) better.push(period);
-      } catch (e) { console.warn('[Ranking] could not save to', b, e.code || e.message); if (errs) errs.push(b + ': ' + (e.code || e.message)); }
+      } catch (e) {
+        console.warn('[Ranking] could not save to', b, e.code || e.message);
+        if (errs) errs.push(b + ': ' + (e.code || e.message));
+        note(b, e.code || e.message);
+      }
     }));
     saveBests(known);
     return better;
@@ -277,6 +303,8 @@ G.Ranking = (() => {
     if (!fb || !G.Social.me || r.t < MIN_T) return [];
     const ids = boardIds();
     const entry = { t: r.t, uids: [fb.uid], names: [G.Social.me.name], dex: [r.dex], shiny: [!!r.shiny], lv: r.lv, kills: r.kills };
+    const over = overLimits(entry);
+    if (over) console.warn('[Ranking] the server will refuse this run:', over);
     const boards = PERIODS.map(([p]) => ['s_' + ids[p], p]);
     boards.push(['s_' + ALL + '_p' + r.dex, 'p']);
     if (r.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);       // most-kills tables
@@ -294,6 +322,8 @@ G.Ranking = (() => {
     const id = ms.map(m => m.uid).join('_');
     const entry = { t: r.t, uids: ms.map(m => m.uid), names: ms.map(m => m.name), dex: ms.map(m => m.dex),
                     shiny: ms.map(m => !!m.shiny), lv: r.lv, kills: r.kills };
+    const over = overLimits(entry);
+    if (over) console.warn('[Ranking] the server will refuse this run:', over);
     const ids = boardIds(), n = '_n' + ms.length;          // a table per team size
     const boards = PERIODS.map(([p]) => ['g_' + ids[p] + n, p]);
     for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d + n, 'p']);
@@ -660,10 +690,20 @@ G.Ranking = (() => {
     const pick = boards.filter(([b]) => which === 'both' || kindOf(b) === which);
     boards.length = 0; boards.push(...pick);
     if (!boards.length) throw new Error(which === 'kills' ? 'this run has no kills to add' : 'nothing to add');
-    const errs = [];
-    const better = await store(boards, id, entry, errs);
+    const over = overLimits(entry);
+    if (over) throw new Error('the server\'s limits refuse this run (' + over + '). Publish the latest firestore.rules if they are older.');
+    // Fresh numbers for the admin's browser: no remembered thresholds or bests decide what gets written.
     for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
-    return { boards: boards.length, better, missing, errs };
+    try {
+      const thr = thresholds(), kn = bests();
+      for (const [b] of boards) { delete thr[b]; delete kn[b + ':' + id]; }
+      localStorage.setItem(THR, JSON.stringify(thr));
+      localStorage.setItem(bestKey(), JSON.stringify(kn));
+    } catch (e) { /* nothing */ }
+    const errs = [], report = {};
+    const better = await store(boards, id, entry, errs, report);
+    for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
+    return { boards: boards.length, better, missing, errs, report };
   }
 
   /** Admin: bans or unbans an account from the leaderboard (banned = can't upload records). */

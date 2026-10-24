@@ -174,8 +174,10 @@ service cloud.firestore {
     //   - it can't last longer than the real time since your run started
     //     (runs/{uid}), with a 30 s margin; nor more than 2 h (raised from 1 h on
     //     21-10-2026: a legit run passed an hour in Arceus's Judgment and was refused)
-    //   - level, and defeated count up to 20 a second (was 12: top solo runs kill ~9 a second
-    //     and groups now have up to 160 enemies on the field)
+    //   - level up to 20 + t/3 (the same limit the game itself uses, game.js clean(); it was 10 + t/4)
+    //   - defeated up to 30 a second PER PLAYER (24-10-2026; it was 20 a second for the whole team:
+    //     spawns now reach ~17/s solo and ~27/s in pairs by minute 30, so strong group runs were refused
+    //     outright, in every table)
     //   - the account can't be banned by the admin (saves/{uid}.ban)
     function validEntry(board, id) {
       let d = request.resource.data;
@@ -183,8 +185,8 @@ service cloud.firestore {
       return d.keys().hasOnly(['t', 'uids', 'names', 'dex', 'shiny', 'lv', 'kills', 'at'])
         && d.t is int && d.t > 0 && d.t <= 7200
         && d.t <= (request.time - run.startedAt).seconds() + 30
-        && d.lv is int && d.lv >= 1 && d.lv <= 10 + d.t / 4
-        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 20
+        && d.lv is int && d.lv >= 1 && d.lv <= 20 + d.t / 3
+        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 30 * d.uids.size()
         && get(/databases/$(database)/documents/saves/$(me())).data.get('ban', false) == false
         && d.uids is list && me() in d.uids
         && d.names is list && d.names.size() == d.uids.size()
@@ -205,8 +207,8 @@ service cloud.firestore {
       return admin()
         && d.keys().hasOnly(['t', 'uids', 'names', 'dex', 'shiny', 'lv', 'kills', 'at'])
         && d.t is int && d.t > 0 && d.t <= 7200
-        && d.lv is int && d.lv >= 1 && d.lv <= 10 + d.t / 4
-        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 20
+        && d.lv is int && d.lv >= 1 && d.lv <= 20 + d.t / 3
+        && d.kills is int && d.kills >= 0 && d.kills <= 100 + d.t * 30 * d.uids.size()
         && d.uids is list && d.uids.size() >= 1
         && d.names is list && d.names.size() == d.uids.size()
         && d.dex is list && d.dex.size() == d.uids.size()
