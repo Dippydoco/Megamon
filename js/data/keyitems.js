@@ -5,7 +5,7 @@
  * (save.keyItem). A key item is not a held item: it has its own slot, is always passive, and lasts the whole run.
  *
  *   herb    Revival Herb   you revive downed teammates twice as fast, and they get up with +25% HP
- *   black   Black Flute    +35% enemy spawns (and a fuller field), +25% XP
+ *   black   Black Flute    +35% enemy spawns (and a fuller field), wild Pokémon +25% HP (flat, not growing with time), +25% XP
  *   white   White Flute    -30% enemy spawns (and a smaller field), -10% XP
  *   pouch   Lucky Pouch    each level-up: 20% you pick two cards, 10% the pouch is empty (no card)
  *   iron    Iron Ball      -15% speed, -20% damage taken
@@ -24,31 +24,31 @@
  */
 G.KeyItems = (() => {
   const LIST = [
-    { id: 'herb', name: 'Revival Herb', icon: 'ki-herb', price: 900, tag: 'Team',
+    { id: 'herb', name: 'Revival Herb', icon: 'ki-herb', price: 1800, tag: 'Team',
       desc: 'Revive downed teammates twice as fast, and they get back up with 25% more HP.',
       lines: ['Revive teammates ×2 faster', 'Revived teammates +25% HP'], note: 'Only does something in group runs.' },
-    { id: 'black', name: 'Black Flute', icon: 'ki-black', price: 1200, tag: 'Trade-off',
-      desc: 'Calls in more wild Pokémon: +35% spawns and a fuller field, and +25% experience.',
-      lines: ['+35% enemy spawns', '+25% experience'], note: 'In a group, the flutes of the whole team are averaged.' },
-    { id: 'white', name: 'White Flute', icon: 'ki-white', price: 800, tag: 'Trade-off',
+    { id: 'black', name: 'Black Flute', icon: 'ki-black', price: 2400, tag: 'Trade-off',
+      desc: 'Calls in more, tougher wild Pokémon: +35% spawns and a fuller field, wild Pokémon have +25% HP, and +25% experience.',
+      lines: ['+35% enemy spawns', 'Enemies +25% HP', '+25% experience'], note: 'In a group, the flutes of the whole team are averaged.' },
+    { id: 'white', name: 'White Flute', icon: 'ki-white', price: 1600, tag: 'Trade-off',
       desc: 'Keeps wild Pokémon away: -30% spawns and a smaller field, but -10% experience.',
       lines: ['-30% enemy spawns', '-10% experience'], note: 'In a group, the flutes of the whole team are averaged.' },
-    { id: 'pouch', name: 'Lucky Pouch', icon: 'ki-pouch', price: 1800, tag: 'Gamble',
+    { id: 'pouch', name: 'Lucky Pouch', icon: 'ki-pouch', price: 3600, tag: 'Gamble',
       desc: 'Every level-up is a gamble: 20% chance you pick two cards, 10% chance the pouch is empty.',
       lines: ['20%: pick 2 cards', '10%: no card'] },
-    { id: 'iron', name: 'Iron Ball', icon: 'ki-iron', price: 1000, tag: 'Trade-off',
+    { id: 'iron', name: 'Iron Ball', icon: 'ki-iron', price: 2000, tag: 'Trade-off',
       desc: 'Heavy and safe: you move 15% slower but take 20% less damage.',
       lines: ['-15% speed', '-20% damage taken'] },
-    { id: 'glass', name: 'Glass Charm', icon: 'ki-glass', price: 1400, tag: 'Trade-off',
+    { id: 'glass', name: 'Glass Charm', icon: 'ki-glass', price: 2800, tag: 'Trade-off',
       desc: 'Hit hard, break easily: +25% damage, -25% max HP.',
       lines: ['+25% damage', '-25% max HP'] },
-    { id: 'tail', name: 'Lagging Tail', icon: 'ki-tail', price: 1000, tag: 'Trade-off',
+    { id: 'tail', name: 'Lagging Tail', icon: 'ki-tail', price: 2000, tag: 'Trade-off',
       desc: 'Everything slows down: every enemy is 10% slower, and so are you.',
       lines: ['Enemies -10% speed', 'You -10% speed'], note: 'In a group, it slows the enemies for everyone.' },
-    { id: 'ring', name: 'Ring Target', icon: 'ki-ring', price: 1200, tag: 'Team',
+    { id: 'ring', name: 'Ring Target', icon: 'ki-ring', price: 2400, tag: 'Team',
       desc: 'Enemies go for you first. You take 15% less damage but deal 10% less.',
       lines: ['Enemies target you first', '-15% damage taken', '-10% damage dealt'], note: 'Drawing enemies matters most in group runs.' },
-    { id: 'star', name: 'Wishing Star', icon: 'ki-star', price: 2400, tag: 'Gamble',
+    { id: 'star', name: 'Wishing Star', icon: 'ki-star', price: 4800, tag: 'Gamble',
       desc: 'Bosses have 25% more HP, but each one has a 50% chance to drop 2 gacha tickets.',
       lines: ['Bosses +25% HP', '50%: 2 tickets per boss'], note: 'In a group, one holder is enough.' }
   ];
@@ -77,15 +77,17 @@ G.KeyItems = (() => {
     if (cache && now - cacheT < 400) return cache;
     cacheT = now;
     const ps = team(), n = Math.max(1, ps.length);
-    let rate = 0, cap = 0;
+    let rate = 0, cap = 0, hp = 0;
     for (const p of ps) {
       const id = of(p);
       rate += id === 'black' ? 1.35 : id === 'white' ? 0.7 : 1;
       cap += id === 'black' ? 1.25 : id === 'white' ? 0.8 : 1;
+      hp += id === 'black' ? 1.25 : 1;
     }
     cache = {
       rate: ps.length ? rate / n : 1,
       cap: ps.length ? cap / n : 1,
+      hp: ps.length ? hp / n : 1,                     // Black Flute: a flat +25% on wild Pokémon (averaged over the team)
       enemySpd: ps.some(p => of(p) === 'tail') ? 0.9 : 1,
       bossHp: ps.some(p => of(p) === 'star') ? 1.25 : 1,
       star: ps.some(p => of(p) === 'star')
@@ -111,6 +113,8 @@ G.KeyItems = (() => {
   /** Enemies per second and the field cap (spawner.js). */
   const spawnRate = () => teamFx().rate;
   const capMul = () => teamFx().cap;
+  /** Wild Pokémon health (spawner.js spawnOne): a flat multiplier, the same at minute 1 and minute 30. */
+  const enemyHp = () => teamFx().hp;
   /** Every enemy's speed (enemy.js). */
   const enemySpd = () => teamFx().enemySpd;
   /** Boss health (spawner.js spawnBoss). */
@@ -157,7 +161,7 @@ G.KeyItems = (() => {
     return true;
   }
 
-  return { LIST, BY, owns, equipped, of, apply, buy, equip, spawnRate, capMul, enemySpd, bossHp, reviveK, reviveHeal,
+  return { LIST, BY, owns, equipped, of, apply, buy, equip, spawnRate, capMul, enemyHp, enemySpd, bossHp, reviveK, reviveHeal,
            targetK, pouchRoll, bossDown, anyone, get count() { return LIST.filter(k => owns(k.id)).length; } };
 })();
 

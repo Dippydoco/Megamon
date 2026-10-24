@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T17:44Z', title: 'Black Flute: tougher wild Pokémon', chg: [
+    'The Black Flute now also gives wild Pokémon 25% more HP. It is a flat increase that stays the same for the whole run. In a group, it is averaged across the team like the rest of the flute.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T17:30Z', title: 'Leaderboard fixes', fix: [
     'Long runs with lots of Pokémon defeated, especially in groups, were refused by the leaderboard and never showed up. The limits now match how many Pokémon a run can really defeat.',
     'The leaderboard now times each run from its own start. Before, every run after the first one in a session was timed from that first run.'

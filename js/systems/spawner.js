@@ -95,7 +95,8 @@ G.Spawner = (() => {
     const pt = freePoint(pl, angle == null ? Math.random() * 6.2832 : angle, isFlyer(def));
     if (!pt) return null;
     const shiny = rollShiny(def.dex);
-    const e = new G.Enemy(def, pt[0], pt[1], scaled(G.Enemies.scale(t), G.Coop.scaleHp(players.length) * hpK(t)));
+    // (G.KeyItems.enemyHp: Black Flute, a flat +25% that doesn't grow with the run.)
+    const e = new G.Enemy(def, pt[0], pt[1], scaled(G.Enemies.scale(t), G.Coop.scaleHp(players.length) * hpK(t) * G.KeyItems.enemyHp()));
     e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
     const rp = G.Enemies.ramp(def, t);
     if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
@@ -128,7 +129,7 @@ G.Spawner = (() => {
     const p = nearestTo(pick);
     if (!p) return;
     const sc = G.Enemies.scale(t), rp = G.Enemies.ramp(pick.def, t);
-    const hp = Math.round(pick.def.hp * sc.hp * G.Coop.scaleHp(players.length) * hpK(t) * (rp ? rp.hp : 1));
+    const hp = Math.round(pick.def.hp * sc.hp * G.Coop.scaleHp(players.length) * hpK(t) * (rp ? rp.hp : 1) * G.KeyItems.enemyHp());
     const dmg = pick.def.dmg * sc.dmg * DMG_K * (rp ? rp.dmg : 1);
     if (hp > pick.maxHp) { pick.hp = Math.round(pick.hp / pick.maxHp * hp); pick.maxHp = hp; }
     pick.dmg = Math.max(pick.dmg, dmg);
