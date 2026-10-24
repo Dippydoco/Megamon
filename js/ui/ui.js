@@ -10,7 +10,7 @@ G.UI = (() => {
   const SCREENS = ['scr-login', 'scr-test', 'scr-result', 'scr-starters', 'scr-menu',
                    'scr-dex', 'scr-upgrades', 'scr-gacha', 'scr-levelup', 'scr-pause', 'scr-over',
                    'scr-nick', 'scr-friends', 'scr-lobby', 'scr-rank', 'scr-item', 'scr-goals', 'scr-bond', 'scr-mod', 'scr-random', 'scr-chat', 'scr-codex',
-                   'scr-mini', 'scr-gbattle', 'scr-draft'];
+                   'scr-mini', 'scr-gbattle', 'scr-draft', 'scr-shop', 'scr-kipick'];
 
   function show(id, keepMenu = false) {
     for (const s of SCREENS) if (s !== id && !(keepMenu && s === 'scr-menu')) $(s).classList.add('hidden');

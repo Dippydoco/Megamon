@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T16:29Z', title: 'The Shop: Key Items and the Arceus Shop', new: [
+    'New Shop on the main menu with two stalls. Klefki runs Key Items (PokéCoins) and a shiny Sableye runs the Arceus Shop (Arceus Stars). The first time you open each stall in a session it rolls up its shutter and lights its lanterns; tap the stall to skip.',
+    'Key Items are bought once and kept forever. Take one into each run from the new slot under your partner on the main menu. They are passive, last the whole run, and are separate from held items.',
+    'Nine Key Items: Revival Herb (revive teammates twice as fast, and they get up with more HP), Black Flute (more enemies, more XP), White Flute (fewer enemies, less XP), Lucky Pouch (each level-up: sometimes 2 cards, sometimes none), Iron Ball (slower, tougher), Glass Charm (more damage, less HP), Lagging Tail (enemies and you are slower), Ring Target (enemies go for you first, you take less damage and deal a bit less) and Wishing Star (tougher bosses that can drop 2 gacha tickets). All the details are in the Codex.',
+    'The Arceus Shop sells looks for your Arceus Stars: menu themes that recolour the menu, tiles and top bar, and player card themes for your card in runs (your teammates see it too). Gilded and Cosmic cards are animated.',
+    'The Missions and Codex tiles are now the same size as the others, to make room for the Shop.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T15:19Z', title: 'Easier to read run stats', chg: [
     'The stage, Pokémon defeated and coins under the run timer are bigger, bold and outlined so they stand out on any ground. Each one has its own colour now: the stage in light blue, defeated in white and coins in gold.'
   ] },

@@ -233,6 +233,7 @@
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-40, 40), this.y + G.U.rand(-30, 30), 5);
         // Bosses always drop a held item.
         G.Pickups.drop('item', this.x - 26, this.y - 10, G.Items.roll());
+        G.KeyItems.bossDown(this);          // Wishing Star: sometimes 2 tickets
       }
       G.Pickups.dropXp(this.x, this.y, this.xp, this.boss, !!this.legend, !!this.judge);
       if (this.golden && Math.random() < 0.35) G.Pickups.drop('coin', this.x + 6, this.y - 4, 3);
@@ -398,7 +399,7 @@
         } else if (le.slow) terrainMul = le.slow < 0.5 ? 0.45 : 0.55;
       }
 
-      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1)
+      const spd = this.spd * (1 - this.slow) * terrainMul * G.Weather.speedFor(this.types) * G.KeyItems.enemySpd() * (this.behavior === 'aegis' ? this.aegisTick(dt) : 1)
                 * this.catchUp(dt, pl);
       let [dx, dy] = G.U.norm(pl.x - this.x, pl.y - this.y);
       const dist = G.U.dist(this.x, this.y, pl.x, pl.y);
@@ -1082,12 +1083,12 @@
       }
     }
 
-    /** The nearest living player (fallen ones don't attract anyone). */
+    /** The nearest living player (fallen ones don't attract anyone). A Ring Target holder counts as nearer. */
     function nearestPlayer(players, x, y) {
       let best = null, bd = Infinity;
       for (const p of players) {
         if (p.dead) continue;
-        const d = G.U.dist2(x, y, p.x, p.y);
+        const d = G.U.dist2(x, y, p.x, p.y) * G.KeyItems.targetK(p);
         if (d < bd) { bd = d; best = p; }
       }
       return best;

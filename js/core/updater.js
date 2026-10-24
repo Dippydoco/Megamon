@@ -62,7 +62,7 @@ G.Updater = (() => {
   /** Can it reload now without interrupting anything? */
   function safe() {
     if (!G.Game || G.Game.state !== 'ui') return false;                   // in a run or on the summary
-    if (['scr-gacha', 'scr-upgrades', 'scr-settings', 'scr-codex', 'scr-gbattle', 'scr-draft'].some(id => document.getElementById(id) && G.UI.isOpen(id))) return false;
+    if (['scr-gacha', 'scr-upgrades', 'scr-shop', 'scr-kipick', 'scr-settings', 'scr-codex', 'scr-gbattle', 'scr-draft'].some(id => document.getElementById(id) && G.UI.isOpen(id))) return false;
     const fx = document.getElementById('pull-fx');
     if (fx && !fx.classList.contains('hidden')) return false;             // gacha pull in progress
     const a = document.activeElement;

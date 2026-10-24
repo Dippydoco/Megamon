@@ -139,6 +139,9 @@ G.Game = (() => {
       }
     }
     pl.setActive(0);
+    // Key Item (24-10-2026, data/keyitems.js): one passive item of your choice, separate from held items.
+    // (Not in Draft Night runs, where you play a Pokémon you don't own.)
+    if (drafted) pl.keyItem = ''; else G.KeyItems.apply(pl);
     G.RunLog.start(pl);          // run details for balancing (added to the history entry at the end)
     G.Abil.start(pl);            // the Pokémon's ability (systems/abilrun.js)
 
@@ -369,7 +372,7 @@ G.Game = (() => {
     const runLog = G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 });
     if (dead || portalLost || judge) G.DB.addHistory({
       id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
-      dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
+      dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', ki: pl.keyItem || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
       mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
       ar: judge ? [Math.floor(judge.time), judge.bosses] : 0,
       kb: dead && pl.killer ? pl.killer : 0,
@@ -734,7 +737,7 @@ G.Game = (() => {
     }
     if (state === 'ui') {
       // Esc on a menu sub-screen goes back to the menu.
-      if (G.Input.tap('escape') && !G.UI.isOpen('scr-profile') && ['scr-dex', 'scr-upgrades', 'scr-gacha', 'scr-friends', 'scr-rank', 'scr-goals'].some(G.UI.isOpen)
+      if (G.Input.tap('escape') && !G.UI.isOpen('scr-profile') && ['scr-dex', 'scr-upgrades', 'scr-gacha', 'scr-friends', 'scr-rank', 'scr-goals', 'scr-shop'].some(G.UI.isOpen)
           && document.getElementById('pull-fx').classList.contains('hidden')) G.MenuUI.open();
       return;
     }
@@ -958,10 +961,10 @@ G.Game = (() => {
       if (d2 < best) { best = d2; helper = p; }
     }
     // In Arceus's Judgment the progress doesn't decay, so teammates can revive you a bit at a time while dodging.
-    pl.reviveT = helper ? (pl.reviveT || 0) + dt * G.Abil.reviveK(helper) : G.Judgment.active ? (pl.reviveT || 0) : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
+    pl.reviveT = helper ? (pl.reviveT || 0) + dt * G.Abil.reviveK(helper) * G.KeyItems.reviveK(helper) : G.Judgment.active ? (pl.reviveT || 0) : Math.max(0, (pl.reviveT || 0) - dt * 0.5);
     if (pl.reviveT >= G.Player.REVIVE_TIME) {
       if (helper && helper.uid) pl.revivedBy.push(helper.uid);       // credited to them in the end-of-run stats
-      pl.revive(0.5 + G.Abil.reviveHeal(helper));       // (Healer revives faster, Hospitality heals more)
+      pl.revive(Math.min(1, 0.5 + G.Abil.reviveHeal(helper) + G.KeyItems.reviveHeal(helper)));   // (Healer revives faster, Hospitality heals more; so does the Revival Herb)
     }
   }
 
@@ -1599,7 +1602,7 @@ G.Game = (() => {
 G.Flow = {
   boot() {
     G.UI.initChrome();
-    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init();
+    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init(); G.ShopUI.init(); G.KeyItemUI.init();
     G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.CodexUI.init(); G.MiniUI.init(); G.Updater.init();
     // Your name at the top right opens your profile.
     document.getElementById('user-pill').onclick = () => G.GoalsUI.open('profile');

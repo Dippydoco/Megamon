@@ -104,6 +104,11 @@ G.DB = (() => {
       missions: {},           // the day's / week's missions (systems/progress.js)
       gb: {},                 // Gacha Battles: { done: { battle id: time settled } } (ui/minigames.js)
       charms: {},             // gen -> date: Shiny Charms already announced (systems/charms.js)
+      keyItems: {},           // id -> date: Key Items bought in Klefki's stall (data/keyitems.js)
+      keyItem: '',            // the Key Item taken into runs ('' = none)
+      themes: {},             // 'm:id' / 'c:id' -> date: Arceus Shop themes bought (menu / player card)
+      menuTheme: '',          // worn menu theme ('' = Classic Blue)
+      cardTheme: '',          // worn player card theme ('' = Classic)
       profile: { favs: [], title: '' },   // public profile: 3 favourites and title
       stats: { runs: 0, bestTime: 0, bestLevel: 0, totalKills: 0, pulls: 0, coinsEarned: 0, shinies: 0,
                bossesTotal: 0, riftWins: 0, evolutions: 0, missionsDone: 0, groupRuns: 0, bestGroupTime: 0,
@@ -115,7 +120,7 @@ G.DB = (() => {
   /*
    * Each run ends up in save.history (most recent first, up to HISTORY_MAX):
    *   id date (ms) · d dex · sh shiny · t seconds · lv level · k defeated · b bosses · c coins
-   *   dd damage dealt · dt damage taken · m [[move, level]] · it item · x 1 = you fell (0 = you quit)
+   *   dd damage dealt · dt damage taken · m [[move, level]] · it item · ki key item (if any) · x 1 = you fell (0 = you quit)
    *   g 1 = in a group · mt [[name, dex, shiny]] teammates · ar [seconds, legendaries] against Arceus (or 0)
    *   kb who defeated you { d dex, n name, a attack, ty type, h damage, e effect } (or 0): see systems/killer.js
    *   z  run details for balancing (moves' damage, level-up cards, upgrades...): see systems/runlog.js.
@@ -136,6 +141,7 @@ G.DB = (() => {
         m: arr(e.m).filter(x => Array.isArray(x) && typeof x[0] === 'string' && (!G.Moves || G.Moves.BY_ID[x[0]]))
             .slice(0, 12).map(x => [x[0], Math.min(n(x[1]), 99)]),
         it: typeof e.it === 'string' && (!G.Items || !e.it || G.Items.BY[e.it]) ? e.it : '',
+        ...(typeof e.ki === 'string' && e.ki && (!G.KeyItems || G.KeyItems.BY[e.ki]) ? { ki: e.ki } : {}),   // key item (only when there was one)
         x: e.x ? 1 : 0, g: e.g ? 1 : 0,
         mt: arr(e.mt).filter(x => Array.isArray(x)).slice(0, 4)
             .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
@@ -344,7 +350,7 @@ G.DB = (() => {
     }
     r.pupgDone = r.pupgDone || older.pupgDone;
     // What's earned is never lost: union of legendaries, arenas, items, achievements...
-    for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach']) {
+    for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach', 'keyItems', 'themes']) {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }

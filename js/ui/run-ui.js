@@ -2,6 +2,7 @@
 G.RunUI = (() => {
   const $ = G.UI.$;
   let offers = null, offerCb = null, coopMode = false;
+  let pouch = '';          // Lucky Pouch key item on the open level-up: 'double' = a second pick is still to come
 
   // ---------------- your stats (level-up screen and pause menu) ----------------
   /*
@@ -50,7 +51,17 @@ G.RunUI = (() => {
     $('lvl-wait').textContent = '';
     $('lvl-wait').classList.toggle('hidden', !coop);
     $('cards').classList.remove('done');
+    // Lucky Pouch (data/keyitems.js): sometimes two picks, sometimes nothing at all.
+    pouch = G.KeyItems.pouchRoll(G.Game.player);
+    const empty = pouch === 'empty';
+    if (empty) {
+      list = [{ key: 'pouch:empty', type: 'stat', icon: 'ki-pouch', color: '#9fb1c9', tag: 'Lucky Pouch', title: 'Empty pouch',
+                desc: 'Your Lucky Pouch came up empty this time: no reward this level.', apply() {} }];
+      pouch = '';
+    }
     renderCards(list);
+    if (empty) { $('lvl-reroll').classList.add('hidden'); $('lvl-skip').classList.add('hidden'); }
+    pouchNote(empty ? 'Lucky Pouch: empty this time…' : pouch === 'double' ? 'Lucky Pouch! You pick 2 cards this level' : '', empty);
     $('lvl-reroll').onclick = reroll;
     $('lvl-skip').onclick = skip;
     renderStats('lvl-stats', false);
@@ -76,6 +87,7 @@ G.RunUI = (() => {
   function skip() {
     if (!offers || skipsLeft() <= 0) return;
     const p = G.Game.player, cb = offerCb;
+    pouch = ''; pouchNote('');
     p.skips = (p.skips || 0) + 1;
     offers = null; offerCb = null;
     $('lvl-reroll').classList.add('hidden');
@@ -127,8 +139,26 @@ G.RunUI = (() => {
     });
   }
 
+  function pouchNote(text, bad) {
+    const el = $('lvl-pouch');
+    el.textContent = text;
+    el.classList.toggle('hidden', !text);
+    el.classList.toggle('bad', !!bad);
+  }
+
   function pick(i) {
     if (!offers || !offers[i]) return;
+    if (pouch === 'double') {
+      // Lucky Pouch: this card is taken now and a fresh set comes up for the second pick (same screen, same turn).
+      pouch = '';
+      G.RunLog.pick(i);
+      offers[i].apply(G.Game.player);
+      G.Audio.sfx('confirm');
+      renderCards(G.LevelUp.offer(G.Game.player));
+      pouchNote('Lucky Pouch! Pick your second card');
+      return;
+    }
+    pouchNote('');
     const c = offers[i], cb = offerCb;
     offers = null; offerCb = null;
     G.RunLog.pick(i);
@@ -154,7 +184,7 @@ G.RunUI = (() => {
   }
 
   function closeLevelUp() {
-    offers = null; offerCb = null;
+    offers = null; offerCb = null; pouch = '';
     $('cards').classList.remove('done');
     G.UI.hide('scr-levelup');
   }

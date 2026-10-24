@@ -174,7 +174,7 @@ G.Social = (() => {
   // What you are doing (menu, gacha, in a run...) and, for runs, when it started (server clock).
   // Friends read it with the rest of your status. Written only when it changes (at most one write
   // per ACT_GAP) plus a light heartbeat during a run; turned off by the "Show what I'm doing" setting.
-  const ACTS = new Set(['menu', 'gacha', 'upgrades', 'dex', 'rank', 'goals', 'lobby', 'run', 'group', 'arceus']);
+  const ACTS = new Set(['menu', 'gacha', 'upgrades', 'shop', 'dex', 'rank', 'goals', 'lobby', 'run', 'group', 'arceus']);
   const RUNS = new Set(['run', 'group', 'arceus']);
   const ACT_GAP = 30 * 1000, RUN_FRESH = 12 * 60 * 1000;
   let act = '', actSince = 0, actMon = 0, actOk = true, monOk = true, actT = 0;

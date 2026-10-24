@@ -265,6 +265,11 @@ G.CodexUI = (() => {
         ['Burst moves', 'Big moves that charge in the background even when not selected. Switch to them when they glow. At most 2, and they can\'t be bonded.'],
         ['Evolving moves', 'A move at max level evolves once you\'ve taken the stat card it needs in that run. Check the Moves tab.'],
         ['Reviving', 'In a group, stand next to a downed teammate for ' + G.Player.REVIVE_TIME + ' s to revive them. During Arceus\'s Judgment the progress doesn\'t drain away.']
+      ]],
+      // Key Items (data/keyitems.js): one card per item, straight from its shop text.
+      ['Key Items', [
+        ['How they work', 'Bought once in Klefki\'s Key Items (Shop) and kept forever. Take one into each run from the slot under your partner on the main menu. Always passive, for the whole run, and separate from held items. Not used in Draft Night runs.'],
+        ...G.KeyItems.LIST.map(k => [k.name, k.desc + (k.note ? ' ' + k.note : '')])
       ]]
     ];
   }

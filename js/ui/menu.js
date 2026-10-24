@@ -54,7 +54,7 @@ G.MenuUI = (() => {
   document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
-    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear' };
+    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
       b.insertAdjacentHTML('afterbegin', `<span class="mi-ico">${G.Icons.html(ICON[b.dataset.go], 26)}</span>`);
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
@@ -72,6 +72,7 @@ G.MenuUI = (() => {
         else if (go === 'codex') G.CodexUI.open();
         else if (go === 'mini') G.MiniUI.open();
         else if (go === 'upgrades') openUpgrades();
+        else if (go === 'shop') G.ShopUI.open();
         else if (go === 'gacha') G.GachaUI.open();
         else if (go === 'goals') G.GoalsUI.open();
         else if (go === 'friends') G.FriendsUI.open();
@@ -88,6 +89,7 @@ G.MenuUI = (() => {
     $('btn-logout').onclick = () => {
       if (G.DB.guest && !confirm('You\'re a guest: all your progress will be lost. Log out?')) return;
       G.Audio.music(null);
+      G.Themes.applyMenu('');          // the next account starts with the classic look until its menu opens
       G.DB.logout().then(() => G.Flow.toLogin());
     };
   }
@@ -126,8 +128,10 @@ G.MenuUI = (() => {
     const s = G.DB.save;
     const mon = G.DEX_BY[s.partner];
     const shiny = !!s.partnerShiny && G.DB.ownsShiny(mon.dex);
+    G.Themes.applyMenu();            // your Arceus Shop menu theme
     G.UI.chrome(true);
     G.UI.show('scr-menu');
+    G.KeyItemUI.renderSlot();        // the Key Item you'll take into your next run
     G.UI.sprite($('menu-partner'), mon.dex, { lively: true, scale: 4, hero: true, shiny });
     $('menu-partner').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
     $('menu-partner').classList.toggle('shiny', shiny);
@@ -162,6 +166,12 @@ G.MenuUI = (() => {
     // Upgrades tile: how many levels your partner has.
     const plv = Object.values(s.pupg && s.pupg[s.partner] || {}).reduce((a, b) => a + b, 0);
     $('menu-upg-sub').textContent = plv ? mon.name + ': ' + plv + (plv === 1 ? ' level' : ' levels') : 'Stronger every run';
+    // Shop tile: what you can afford right now.
+    const canKey = G.KeyItems.LIST.filter(k => !G.KeyItems.owns(k.id) && s.coins >= k.price).length;
+    const stars = G.DB.stars();
+    $('menu-shop-sub').textContent = stars ? stars + (stars === 1 ? ' Star to spend' : ' Stars to spend')
+      : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Key Items and themes';
+    $('menu-shop-sub').classList.toggle('gold', stars > 0 || canKey > 0);
 
     // Your record, in a small line under the partner (it used to be a box under the menu).
     const st = s.stats;

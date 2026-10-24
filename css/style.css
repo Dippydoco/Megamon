@@ -59,7 +59,7 @@ input { font: inherit; }
 .scr.hidden { display: none; }
 /* Screens that open with the top bar visible: they start below it. */
 @media (min-height: 521px) {
-  #scr-goals, #scr-dex, #scr-upgrades, #scr-gacha, #scr-friends, #scr-rank, #scr-lobby, #scr-profile { padding-top: 66px; }
+  #scr-goals, #scr-dex, #scr-upgrades, #scr-gacha, #scr-friends, #scr-rank, #scr-lobby, #scr-profile, #scr-shop { padding-top: 66px; }
 }
 .scr.dim { background: radial-gradient(circle at 50% 40%, rgba(10,20,50,.55), rgba(3,6,16,.88)); }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
@@ -269,7 +269,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
   grid-column: span 2; position: relative; min-width: 0; min-height: 104px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   text-align: center; padding: 12px 6px 10px; font-size: 18px; border-radius: 10px;
-  background: rgba(255,255,255,.04); border: 2px solid rgba(244,248,255,.12);
+  background: var(--tile-bg, rgba(255,255,255,.04)); border: 2px solid rgba(244,248,255,.12);
   transition: background .1s, border-color .1s, transform .1s;
 }
 .menu-item.tile::before { display: none; }
@@ -277,7 +277,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .menu-item.tile .mi-ico img { width: 34px; height: 34px; }
 .menu-item.tile small { max-width: 100%; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .menu-item.tile small.gold { color: var(--gold); }
-.menu-item.tile:hover, .menu-item.tile:focus-visible { background: rgba(255,255,255,.10); border-color: var(--gold); transform: translateY(-1px); }
+.menu-item.tile:hover, .menu-item.tile:focus-visible { background: rgba(255,255,255,.10); border-color: var(--tile-accent, var(--gold)); transform: translateY(-1px); }
 /* Play and the wide tiles: icon on the left, text beside it. */
 .menu-item.tile.play, .menu-item.tile.wide {
   display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center;
@@ -327,7 +327,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .pill {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 14px; border-radius: 30px;
-  background: rgba(10,20,50,.85); border: 2px solid var(--edge);
+  background: var(--pill-bg, rgba(10,20,50,.85)); border: 2px solid var(--edge);
   box-shadow: 0 0 0 2px var(--edge-out);
   font-weight: 700; text-shadow: 2px 2px 0 var(--shadow);
 }
@@ -1505,3 +1505,156 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .pause-ability { display: flex; flex-direction: column; gap: 2px; margin: 8px auto 2px; padding: 6px 10px; border-radius: 10px;
   background: rgba(0,0,0,.22); max-width: 380px; }
 .pause-ability small { color: #d6e0f2; font-size: 12px; line-height: 1.3; }
+
+
+/* ============ Shop (24-10-2026): Klefki's Key Items and Sableye's Arceus Shop — js/ui/shop-ui.js ============
+ * The stall follows PokéSurvivor's Kecleon shop: a pixel-art canvas (drawn at 1/3 size and scaled up, pixelated),
+ * a hanging sign that swings in and lights its bulbs, a speech bubble that follows the shopkeeper, and the
+ * bought item flying into the list. */
+#scr-shop .shop-box { overflow-x: hidden; }
+.shop-stall {
+  position: relative; margin: -22px -24px 14px; height: 294px;
+  border-radius: 9px 9px 0 0; overflow: hidden; background: #6fb8f0;
+}
+.shop-stall[data-shop="arceus"] { background: #140c2e; }
+.shop-scene { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; cursor: default; }
+.shop-stall.opening .shop-scene { cursor: pointer; }
+.shop-sign {
+  position: absolute; z-index: 2; left: 50%; top: 6px;
+  font-size: 18px; color: #3a1f08; text-shadow: none; white-space: nowrap;
+  padding: 3px 16px; background: #e2b26a; border: 3px solid #5a3412; border-radius: 4px;
+  box-shadow: 0 3px 0 #5a3412;
+  transform: translateX(-50%); transform-origin: 50% -14px; opacity: 0;
+}
+.shop-stall[data-shop="keys"] .shop-sign { background: #ffd6ea; border-color: #6a4a7a; color: #3a1a40; box-shadow: 0 3px 0 #6a4a7a; }
+.shop-stall[data-shop="arceus"] .shop-sign { background: #3a1f6e; border-color: #ffd23f; color: #ffe27a; box-shadow: 0 3px 0 #a07a10; }
+.shop-sign::before, .shop-sign::after {
+  content: ''; position: absolute; left: 4px; right: 4px; height: 4px;
+  background: radial-gradient(circle, #6b4a20 1.6px, transparent 2px) 0 0 / 10px 4px repeat-x;
+}
+.shop-sign::before { top: 2px; }
+.shop-sign::after { bottom: 2px; }
+.shop-sign.show { opacity: 1; animation: shopSign 1.1s ease-out both; }
+.shop-sign.shown { opacity: 1; animation: none; }
+.shop-sign.lit::before, .shop-sign.lit::after { animation: shopBulbs .5s steps(1) infinite; }
+.shop-sign.lit::after { animation-delay: .25s; }
+.shop-sign.lit { box-shadow: 0 3px 0 #5a3412, 0 0 16px rgba(255,210,63,.55); }
+.shop-stall[data-shop="keys"] .shop-sign.lit { box-shadow: 0 3px 0 #6a4a7a, 0 0 16px rgba(255,150,200,.55); }
+.shop-stall[data-shop="arceus"] .shop-sign.lit { box-shadow: 0 3px 0 #a07a10, 0 0 16px rgba(150,110,255,.6); }
+@keyframes shopSign {
+  0% { transform: translate(-50%, -70px) rotate(-18deg); }
+  30% { transform: translate(-50%, 0) rotate(12deg); }
+  55% { transform: translate(-50%, 0) rotate(-7deg); }
+  78% { transform: translate(-50%, 0) rotate(3deg); }
+  100% { transform: translate(-50%, 0) rotate(0); }
+}
+@keyframes shopBulbs {
+  0% { background-image: radial-gradient(circle, #fff4b0 1.8px, transparent 2.2px); }
+  50% { background-image: radial-gradient(circle, #ff8a3d 1.8px, transparent 2.2px); }
+}
+.shop-bubble {
+  position: absolute; z-index: 3; left: 0; top: 0; max-width: 60%; white-space: nowrap;
+  padding: 6px 10px; font-size: 13px; color: #1b1528; text-shadow: none;
+  background: #f4f8ff; border: 3px solid #1b1528; border-radius: 10px;
+  transition: opacity .3s, transform .3s; transform-origin: 100% 60%;
+}
+.shop-bubble::after {
+  content: ''; position: absolute; right: -11px; top: 9px;
+  border: 7px solid transparent; border-left-color: #1b1528; border-right: 0;
+}
+.shop-bubble.flip { transform-origin: 0 60%; }
+.shop-bubble.flip::after { right: auto; left: -11px; border-left-color: transparent; border-right: 7px solid #1b1528; border-left: 0; }
+.shop-bubble.hide { opacity: 0; transform: scale(.6); }
+.shop-bubble.pop { animation: shopBubble .35s ease-out both; }
+@keyframes shopBubble { 0% { transform: scale(0); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.shop-fly { position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); }
+.shop-fly img { width: 32px; height: 32px; display: block; }
+#shop-body .ic.bump { animation: shopBump .4s ease-out; }
+@keyframes shopBump { 30% { transform: scale(1.25); } 60% { transform: scale(.92); } 100% { transform: scale(1); } }
+@keyframes shopFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.shop-stall.opening ~ .shop-inner { animation: shopFade .5s ease-out 1.8s both; }
+
+.shop-head { align-items: flex-start; }
+.shop-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.shop-tab {
+  appearance: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px 7px 10px; border-radius: 10px; text-align: left;
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.22); text-shadow: 2px 2px 0 var(--shadow);
+}
+.shop-tab span { display: flex; flex-direction: column; line-height: 1.15; }
+.shop-tab b { font-size: 17px; }
+.shop-tab small { font-size: 11px; color: var(--muted); }
+.shop-tab:hover { border-color: var(--edge); }
+.shop-tab.on { border-color: var(--gold); background: rgba(255,210,63,.14); }
+.shop-tab.on b { color: var(--gold); }
+.shop-tab[data-tab="arceus"].on { border-color: #c79bff; background: rgba(160,110,255,.16); }
+.shop-tab[data-tab="arceus"].on b { color: #e0c8ff; }
+.shop-wallet { display: flex; align-items: center; gap: 6px; font-size: 15px; white-space: nowrap; }
+.shop-wallet b { color: var(--gold); }
+.shop-sub { margin: 8px 0 12px; }
+.shop-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 10px; }
+.shop-row { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; }
+.shop-row.on { border-color: var(--gold); background: rgba(255,210,63,.08); }
+.shop-row .ic { display: flex; justify-content: center; }
+.shop-row .txt b { font-size: 16px; }
+.shop-row .ds { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.shop-row .have { font-size: 12px; color: var(--gold); }
+.ki-tag { font-size: 10px; padding: 1px 6px; border-radius: 6px; vertical-align: 2px; text-shadow: none; color: #12101a; background: #9fb1c9; }
+.ki-tag.t-team { background: #ff8ad8; }
+.ki-tag.t-tradeoff { background: #ffb35c; }
+.ki-tag.t-gamble { background: #c47bff; }
+.ki-tag.t-premium { background: #ffd23f; }
+.ki-lines { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.ki-lines span { font-size: 11px; padding: 1px 7px; border-radius: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(244,248,255,.18); }
+.ki-note { font-size: 11px; color: #9fc4ff; margin-top: 4px; }
+.shop-h { display: flex; align-items: center; gap: 8px; margin: 6px 0 8px; font-size: 18px; }
+.shop-h small { font-size: 12px; color: var(--muted); font-weight: 400; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.theme-grid.cards { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.theme-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; text-align: center; }
+.theme-card.on { border-color: var(--gold); background: rgba(255,210,63,.08); }
+.theme-card.premium { box-shadow: inset 0 0 0 1px rgba(255,210,63,.35); }
+.theme-card b { font-size: 15px; }
+.mt-pv { position: relative; width: 100%; height: 58px; border-radius: 8px; border: 2px solid var(--edge);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 18px 8px 8px; }
+.mt-pv i { display: block; border-radius: 4px; border: 1px solid rgba(244,248,255,.18); }
+.mt-pv .mt-pill { position: absolute; top: 4px; right: 6px; width: 36px; height: 9px; border-radius: 6px; border: 1px solid var(--edge); }
+.card-pv { width: 100%; max-width: 330px; height: auto; aspect-ratio: 330 / 54; image-rendering: pixelated; border-radius: 8px; background: rgba(0,0,0,.25); }
+@media (max-height: 520px) {
+  .shop-stall { margin: -10px -14px 10px; height: 200px; }
+  .shop-sign { font-size: 14px; top: 3px; }
+}
+@media (max-width: 640px) {
+  .shop-stall { height: 220px; }
+  .shop-sign { font-size: 14px; }
+  .shop-bubble { font-size: 11px; }
+  .shop-list { grid-template-columns: 1fr; }
+  .shop-row { grid-template-columns: 34px 1fr; }
+  .shop-row .buy { grid-column: 1 / -1; justify-self: end; }
+}
+
+/* Key Item slot under the partner on the main menu, and its picker */
+.ki-slot {
+  appearance: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  margin: 8px auto 0; padding: 5px 14px 5px 8px; border-radius: 10px; text-align: left;
+  background: rgba(0,0,0,.35); border: 2px solid rgba(255,210,63,.55); text-shadow: 2px 2px 0 var(--shadow);
+}
+.ki-slot:hover { border-color: var(--gold); background: rgba(255,210,63,.12); }
+.ki-slot.empty { border-style: dashed; border-color: rgba(244,248,255,.35); }
+.ki-slot .ki-ic { display: flex; }
+.ki-slot .ki-t { display: flex; flex-direction: column; line-height: 1.1; }
+.ki-slot small { font-size: 11px; color: var(--muted); }
+.ki-slot b { font-size: 15px; color: var(--gold); }
+.ki-slot.empty b { color: var(--ink); }
+.partner-card #menu-keyitem { display: flex; width: max-content; }
+.kip-box { width: min(520px, 100%); }
+.kip-list { display: grid; gap: 8px; margin-top: 8px; max-height: 56vh; overflow-y: auto; }
+.kip-row { appearance: none; cursor: pointer; display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center; text-align: left; padding: 8px 12px; color: var(--ink); }
+.kip-row:hover { border-color: var(--edge); }
+.kip-row.on { border-color: var(--gold); background: rgba(255,210,63,.1); }
+.kip-row .ic { display: flex; justify-content: center; }
+.kip-row .txt { display: flex; flex-direction: column; }
+.kip-row small { font-size: 12px; color: var(--muted); }
+/* Lucky Pouch line on the level-up screen */
+.pouch-note { margin: 2px 0 8px; font-weight: 700; color: #8fe0a0; }
+.pouch-note.bad { color: #ff8a96; }

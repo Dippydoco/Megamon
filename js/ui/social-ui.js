@@ -88,7 +88,7 @@
     }
 
     // What an online friend is doing (G.Activity). Runs show how long they have been going.
-    const ACT = { menu: 'In the menu', gacha: 'Opening gacha packs', upgrades: 'Browsing upgrades', dex: 'Browsing the Pokédex',
+    const ACT = { menu: 'In the menu', gacha: 'Opening gacha packs', upgrades: 'Browsing upgrades', shop: 'Shopping',  dex: 'Browsing the Pokédex',
                   rank: 'Viewing rankings', goals: 'Viewing goals', lobby: 'In a lobby', run: 'In a run', group: 'In a group run', arceus: 'Facing Arceus' };
     const isRun = f => f.act === 'run' || f.act === 'group' || f.act === 'arceus';
     const runClock = f => G.U.mmss(Math.max(0, (G.Social.now() - f.since) / 1000));

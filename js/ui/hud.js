@@ -70,9 +70,11 @@ G.HUD = (() => {
     ctx.save();
     ctx.scale(HUD_SCALE, HUD_SCALE);
     // Your card: like the teammates' (your Pokémon's icon, name, health), with the level.
+    // (24-10-2026) Its look comes from your Arceus Shop card theme (data/keyitems.js G.Themes; Classic by default).
+    const myTh = G.Themes.card(G.Themes.cardId());
     drawCard(ctx, px, py, {
-      key: 'me', pl, name: pl.mon.name, nameCol: '#eaf2ff', color: '#ffcb3d', tag: 'Lv. ' + pl.level,
-      hp: pl.hp, maxHp: pl.maxHp, dead: pl.dead, barCol: '#ff5f6d'
+      key: 'me', pl, name: pl.mon.name, nameCol: myTh.name_, color: myTh.ring, tag: 'Lv. ' + pl.level,
+      hp: pl.hp, maxHp: pl.maxHp, dead: pl.dead, barCol: myTh.bar, theme: myTh
     });
 
     // Active buffs and altar power: pills with an icon + text. If they don't fit in
@@ -751,11 +753,60 @@ G.HUD = (() => {
     ctx.restore();
   }
 
-  /** c = { key, pl, name, nameCol, color, tag?, hp, maxHp, dead, barCol } */
+  /** The card's background and frame, from a card theme (Arceus Shop). Classic: the plain dark box. */
+  function cardBack(ctx, x, y, th, t) {
+    roundRect(ctx, x, y, CARD_W, CARD_H, 8);
+    if (!th || !th.id) { ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill(); return; }
+    const g = ctx.createLinearGradient(x, y, x + CARD_W, y + CARD_H);
+    g.addColorStop(0, th.bg[0]); g.addColorStop(1, th.bg[1]);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.save();
+    roundRect(ctx, x, y, CARD_W, CARD_H, 8); ctx.clip();
+    if (th.stars) {                                      // Cosmic: slow twinkling specks
+      for (let i = 0; i < 14; i++) {
+        const sx = x + ((i * 53.7) % CARD_W), sy = y + ((i * 19.3) % CARD_H);
+        const a = 0.25 + 0.75 * Math.max(0, Math.sin(t * 2.2 + i * 1.7));
+        ctx.fillStyle = `rgba(255,255,255,${a.toFixed(2)})`;
+        ctx.fillRect(Math.round(sx), Math.round(sy), 1.2, 1.2);
+      }
+    }
+    if (th.fx === 'shine') {                             // Gilded: a light sweep every few seconds
+      const k = (t % 3.2) / 3.2, bx = x - 60 + k * (CARD_W + 120);
+      const sg = ctx.createLinearGradient(bx - 30, y, bx + 30, y + CARD_H);
+      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,248,200,.35)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sg; ctx.fillRect(x, y, CARD_W, CARD_H);
+    }
+    ctx.restore();
+    roundRect(ctx, x + 0.75, y + 0.75, CARD_W - 1.5, CARD_H - 1.5, 7.5);
+    ctx.lineWidth = 1.5;
+    if (th.fx === 'rainbow') {                           // Cosmic: a border that cycles through the colours
+      const rg = ctx.createLinearGradient(x, y, x + CARD_W, y);
+      for (let i = 0; i <= 4; i++) rg.addColorStop(i / 4, `hsl(${Math.round((t * 60 + i * 90) % 360)},90%,70%)`);
+      ctx.strokeStyle = rg;
+    } else ctx.strokeStyle = th.border;
+    ctx.stroke();
+  }
+
+  /** Shop preview: a card with theme `id`, for Pokémon `dex` (redraw it every frame to animate). */
+  let pvT = performance.now();
+  function cardPreview(cv, id, dex, shiny, name) {
+    const ctx = cv.getContext('2d'), th = G.Themes.card(id);
+    const now = performance.now();
+    portraitDt = Math.min(0.1, (now - pvT) / 1000); pvT = now;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const k = Math.min(cv.width / (CARD_W + 4), cv.height / (CARD_H + 4));
+    ctx.imageSmoothingEnabled = false;
+    ctx.scale(k, k);
+    ctx.textBaseline = 'alphabetic';
+    drawCard(ctx, 2, 2, { key: 'pv:' + (id || 'classic'), pl: { dex, shiny: !!shiny }, name, nameCol: th.name_, color: th.ring,
+                          tag: 'Lv. 12', hp: 74, maxHp: 100, dead: false, barCol: th.bar, theme: th });
+  }
+
+  /** c = { key, pl, name, nameCol, color, tag?, hp, maxHp, dead, barCol, theme? } */
   function drawCard(ctx, x, y, c) {
     const o = c.pl, t = performance.now() / 1000;
-    roundRect(ctx, x, y, CARD_W, CARD_H, 8);
-    ctx.fillStyle = 'rgba(0,0,0,.42)'; ctx.fill();
+    cardBack(ctx, x, y, c.theme, t);
     // The Pokémon's icon (facing front, in a rounded box)
     const ix = x + 3, iy = y + (CARD_H - CARD_IC) / 2;
     roundRect(ctx, ix, iy, CARD_IC, CARD_IC, 7);
@@ -819,8 +870,9 @@ G.HUD = (() => {
     for (const m of G.Coop.mates) {
       if (!m.connected) continue;
       const o = m.pl;
+      // Teammates' cards wear their own card theme (their name keeps the team colour and the bar stays green).
       drawCard(ctx, px, y, { key: m.uid, pl: o, name: m.name, nameCol: m.color, color: m.color,
-                             hp: o.hp, maxHp: o.maxHp, dead: o.dead, barCol: '#5fe08a' });
+                             hp: o.hp, maxHp: o.maxHp, dead: o.dead, barCol: '#5fe08a', theme: G.Themes.card(o.net && o.net.ct) });
       y += CARD_H + CARD_GAP;
     }
     ctx.restore();
@@ -916,5 +968,5 @@ G.HUD = (() => {
     if (pl && G.Game.state === 'playing' && pl.swapSlots(a, b)) G.FX.dmgText(pl.x, pl.y - pl.bodyH - 8, 'Slots swapped', '#c8d4ea');
   });
 
-  return { draw, roundRect, bar, portraitBox };
+  return { draw, roundRect, bar, portraitBox, cardPreview };
 })();

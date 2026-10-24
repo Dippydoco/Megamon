@@ -146,7 +146,8 @@ G.Spawner = (() => {
 
   function spawnBoss(pl, t, b) {
     const [x, y] = ringPoint(pl, Math.random() * 6.2832);
-    const e = new G.Enemy(b, x, y, scaled(G.Enemies.bossScale(t), G.Coop.scaleHp(players.length) * (players.length > 4 ? 1.55 : players.length > 1 ? 1.4 : 1)), true);
+    const e = new G.Enemy(b, x, y, scaled(G.Enemies.bossScale(t), G.Coop.scaleHp(players.length) * (players.length > 4 ? 1.55 : players.length > 1 ? 1.4 : 1)
+                                         * G.KeyItems.bossHp()), true);       // Wishing Star: +25%
     if (rollShiny(b.dex)) e.makeShiny();
     G.EnemyMgr.add(e);
     say('A wild ' + (e.shiny ? 'shiny ' : '') + e.name + ' appeared!', 3.2);
@@ -161,6 +162,7 @@ G.Spawner = (() => {
     // More players, more room on the field (20-10-2026): a flat 64 split across a whole team left each
     // player a third of the enemies, so group runs got ~1/3 of solo's kills (and levels) in the same time.
     CAP = 64 + 32 * Math.min(3, Math.max(0, players.length - 1)) + (players.length > 4 ? 12 : 0);
+    CAP = Math.round(CAP * G.KeyItems.capMul());          // Black / White Flute: a fuller or emptier field
     if (announceT > 0) announceT -= dt;
     // In the rift arena nothing else spawns (and the boss clock waits).
     // In Arceus's Judgment, only its legendaries (systems/judgment.js).
@@ -180,7 +182,7 @@ G.Spawner = (() => {
 
     // --- goteo normal ---
     if (G.EnemyMgr.count < CAP) {
-      acc += rate(t) * G.Coop.scaleRate(players.length) * (bossFight ? 0.25 : 1) * dt;
+      acc += rate(t) * G.Coop.scaleRate(players.length) * (bossFight ? 0.25 : 1) * G.KeyItems.spawnRate() * dt;
       let n = Math.floor(acc);
       acc -= n;
       while (n-- > 0 && G.EnemyMgr.count < CAP) spawnOne(anchor(), t);
