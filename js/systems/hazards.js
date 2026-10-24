@@ -8,24 +8,35 @@
  * Each computer draws the hazards and checks only ITS Pokémon. In
  * co-op the host creates them and sends them with 'hz'.
  *
+ * Bosses' hazards carry their owner (`own`, the enemy id). If the boss dies before they go off, they fade
+ * away harmlessly (cancelOwner, called from Enemy.die on every computer). Other enemies' warnings still go off.
+ *
  * Arceus's ones (systems/judgment.js) take a % of health (pct) regardless of
  * types or defence (pure), and the Judgment falls as a pillar of light (vis).
  */
 G.Hazards = (() => {
   let list = [];
 
-  /** h: { kind, x, y, r | angle, len, w, delay, dmg, type, color, pct?, pure?, vis? } */
+  const FADE = 0.25;          // seconds a cancelled warning takes to fade out
+
+  /** h: { kind, x, y, r | angle, len, w, delay, dmg, type, color, pct?, pure?, vis?, own? } */
   function add(h, fromNet = false) {
     const o = Object.assign({ t: 0, hit: false, end: 0.3 }, h);
     list.push(o);
     if (!fromNet && G.Coop.isHost) {
       G.Coop.broadcast(['hz', { kind: o.kind, x: Math.round(o.x), y: Math.round(o.y), r: o.r, angle: o.angle, len: o.len, w: o.w,
-                                delay: o.delay, dmg: Math.round(o.dmg), type: o.type, color: o.color, pct: o.pct, pure: o.pure, vis: o.vis, sd: o.sd }]);
+                                delay: o.delay, dmg: Math.round(o.dmg), type: o.type, color: o.color, pct: o.pct, pure: o.pure, vis: o.vis, sd: o.sd, own: o.own }]);
     }
     return o;
   }
 
   function clear() { list = []; }
+
+  /** The boss `id` has fallen: its warnings that haven't gone off yet fade away without hitting. */
+  function cancelOwner(id) {
+    if (!id) return;
+    for (const h of list) if (h.own === id && !h.hit && !h.cancel) { h.cancel = true; h.ct = 0; }
+  }
 
   function inside(h, x, y, r) {
     if (h.kind === 'zone') return G.U.dist2(x, y, h.x, h.y) < (h.r + r * 0.6) ** 2;
@@ -40,6 +51,7 @@ G.Hazards = (() => {
     const pl = G.Game.player;
     for (let i = list.length - 1; i >= 0; i--) {
       const h = list[i];
+      if (h.cancel) { h.ct += dt; if (h.ct >= FADE) list.splice(i, 1); continue; }
       h.t += dt;
       if (!h.hit && h.t >= h.delay) {
         h.hit = true;
@@ -77,26 +89,27 @@ G.Hazards = (() => {
     for (const h of list) {
       if (h.hit) continue;
       const k = Math.min(1, h.t / h.delay);
+      const a = h.cancel ? Math.max(0, 1 - h.ct / FADE) : 1;      // a cancelled warning fades out
       ctx.save();
       if (h.kind === 'zone') {
-        ctx.globalAlpha = 0.16;
+        ctx.globalAlpha = (0.16) * a;
         ctx.fillStyle = h.color;
         ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r, h.r * 0.75, 0, 0, 6.2832); ctx.fill();
-        ctx.globalAlpha = 0.32;
+        ctx.globalAlpha = (0.32) * a;
         ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r * k, h.r * 0.75 * k, 0, 0, 6.2832); ctx.fill();
-        ctx.globalAlpha = k > 0.75 && blink ? 0.95 : 0.6;
+        ctx.globalAlpha = (k > 0.75 && blink && !h.cancel ? 0.95 : 0.6) * a;
         ctx.strokeStyle = h.color; ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath(); ctx.ellipse(h.x, h.y, h.r, h.r * 0.75, 0, 0, 6.2832); ctx.stroke();
       } else {
         ctx.translate(h.x, h.y);
         ctx.rotate(h.angle);
-        ctx.globalAlpha = 0.14;
+        ctx.globalAlpha = (0.14) * a;
         ctx.fillStyle = h.color;
         ctx.fillRect(0, -h.w / 2, h.len, h.w);
-        ctx.globalAlpha = 0.34;
+        ctx.globalAlpha = (0.34) * a;
         ctx.fillRect(0, -h.w / 2 * k, h.len, h.w * k);
-        ctx.globalAlpha = k > 0.75 && blink ? 0.95 : 0.55;
+        ctx.globalAlpha = (k > 0.75 && blink && !h.cancel ? 0.95 : 0.55) * a;
         ctx.strokeStyle = h.color; ctx.lineWidth = 2;
         ctx.setLineDash([6, 4]);
         ctx.strokeRect(0, -h.w / 2, h.len, h.w);
@@ -105,5 +118,5 @@ G.Hazards = (() => {
     }
   }
 
-  return { add, clear, update, draw, inside, get all() { return list; }, get count() { return list.length; } };
+  return { add, clear, cancelOwner, update, draw, inside, get all() { return list; }, get count() { return list.length; } };
 })();

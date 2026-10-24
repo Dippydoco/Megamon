@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T08:17Z', title: 'Fallen bosses\' attacks fizzle out', fix: [
+    'When a boss or rift legendary is defeated, any attacks it was still warning on the ground now fade away instead of hitting you after it has already fallen.'
+  ] },
   { d: '2026-10-23', at: '2026-10-23T17:54Z', title: 'Gacha Battle rolling animation', new: [
     'In Gacha Battles each card now spins and flashes through the rarity colours before it turns over, and 4★, 5★ and shiny pulls burst onto the table. Battles take a little longer as a result.'
   ] },
