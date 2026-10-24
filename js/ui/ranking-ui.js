@@ -10,6 +10,15 @@ G.RankingUI = (() => {
   const eff = () => mode + (metric === 'k' ? 'k' : '');
   const gs = () => (mode === 'g' ? size : null);
   let token = 0;
+  // The view is remembered between visits (24-10-2026).
+  const VIEW = 'ps.rk.view';
+  try {
+    const v = JSON.parse(localStorage.getItem(VIEW) || 'null');
+    if (v) { mode = v.mode === 'g' ? 'g' : 's'; metric = v.metric === 'k' ? 'k' : 't'; period = ['d', 'w', 'm', 'a'].includes(v.period) ? v.period : 'w';
+             scope = v.scope === 'friends' ? 'friends' : 'all'; size = [2, 3, 4, 5].includes(v.size) ? v.size : 2; }
+  } catch (e) { /* nothing */ }
+  const remember = () => { try { localStorage.setItem(VIEW, JSON.stringify({ mode, metric, period, scope, size })); } catch (e) { /* nothing */ } };
+  const PERIOD_LABEL = { d: 'Today', w: 'This week', m: 'This month', a: 'All time' };
 
   function init() {
     const dl = $('rk-dl');
@@ -43,33 +52,35 @@ G.RankingUI = (() => {
   }
 
   function tabs() {
-    const mk = (box, items, cur, set, cls) => {
+    const mk = (box, items, cur, set) => {
       box.innerHTML = '';
-      for (const [k, label] of items) {
+      for (const [k, label, tip] of items) {
         const b = document.createElement('button');
-        b.className = cls + (k === cur ? ' on' : '');
+        b.className = k === cur ? 'on' : '';
         b.innerHTML = label;
-        b.onclick = () => { set(k); tabs(); load(); };
+        if (tip) b.title = tip;
+        b.dataset.sfx = 'click';
+        b.onclick = () => { if (k === cur) return; set(k); remember(); tabs(); load(); };
         box.appendChild(b);
       }
     };
-    mk($('rk-mode'), [['s', `<b>${G.Icons.html('user', 16)} Solo</b>`], ['g', `<b>${G.Icons.html('friends', 16)} Group</b>`]],
-       mode, k => { mode = k; }, 'gen-tab');
-    mk($('rk-metric'), [['t', 'Longest time survived'], ['k', 'Most kills']], metric, k => {
-      metric = k;
-      if (k === 'k' && dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); }
-    }, 'chip');
+    const dropDex = () => { if (dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); } };
+    mk($('rk-metric'), [['t', `${G.Icons.html('clock', 18)} Time survived`, 'The longest runs'], ['k', `${G.Icons.html('fist', 18)} Most kills`, 'The most Pokémon defeated in one run']],
+       metric, k => { metric = k; if (k === 'k') dropDex(); });
+    mk($('rk-mode'), [['s', `${G.Icons.html('user', 14)} Solo`], ['g', `${G.Icons.html('friends', 14)} Group`]], mode, k => { mode = k; });
     // Group: a separate leaderboard for each team size.
-    const sz = $('rk-size');
-    sz.classList.toggle('hidden', mode !== 'g');
-    mk(sz, G.Ranking.SIZES.map(n => [n, n + ' players']), size, k => { size = k; }, 'chip');
-    $('rk-sub').textContent = metric === 'k' ? '· most kills' : '· survival time';
-    $('rk-poke').classList.toggle('hidden', metric === 'k');
-    mk($('rk-period'), G.Ranking.PERIODS, period, k => {
-      period = k;
-      if (k !== 'a' && dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); }
-    }, 'chip');
-    mk($('rk-scope'), [['all', 'All'], ['friends', 'Friends only']], scope, k => { scope = k; }, 'chip');
+    $('rk-size').classList.toggle('hidden', mode !== 'g');
+    $('rk-size-lab').classList.toggle('hidden', mode !== 'g');
+    mk($('rk-size'), G.Ranking.SIZES.map(n => [n, String(n), 'Teams of ' + n + ' players']), size, k => { size = k; });
+    mk($('rk-period'), G.Ranking.PERIODS.map(([k]) => [k, PERIOD_LABEL[k]]), period, k => { period = k; if (k !== 'a') dropDex(); });
+    mk($('rk-scope'), [['all', 'Everyone'], ['friends', 'Friends']], scope, k => { scope = k; });
+    // The Pokémon filter only exists for time survived (every period: picking one switches to All time).
+    $('rk-poke-wrap').classList.toggle('hidden', metric === 'k');
+    $('rk-poke').placeholder = period === 'a' ? 'Filter by Pokémon' : 'Pokémon (All time)';
+    // What you're looking at, in words.
+    $('rk-title').innerHTML = (metric === 'k' ? 'Most kills' : 'Longest time survived') + ' · '
+      + (mode === 's' ? 'Solo' : 'Groups of ' + size) + ' · ' + PERIOD_LABEL[period]
+      + (dex ? ' · ' + esc(G.DEX_BY[dex].name) + ' only' : '') + (scope === 'friends' ? ' · <span class="gold">friends only</span>' : '');
   }
 
   const fmtK = n => (n || 0).toLocaleString('en-GB') + ' kills';
@@ -105,9 +116,9 @@ G.RankingUI = (() => {
     const mon = dex ? G.DEX_BY[dex].name : '';
     const where = (mode === 's' ? 'solo' : 'in groups of ' + size) + (dex ? ' with ' + mon : '');
     $('rk-me').innerHTML = !G.Social.me ? 'Choose a nickname (in Friends) to appear on the leaderboard.'
-      : me && me.out ? `You're not in the top 50 ${where} ${pn} yet. Your exact rank is in All-time.`
-      : me ? `Your best ${where} rank ${pn}: <b class="gold">#${me.pos}</b> · ${val(me.t)}`
-      : `You don't have a ${where} record ${pn} yet.`;
+      : me && me.out ? `<b>You:</b> not in the top 50 ${where} ${pn} yet. Your exact rank is in All time.`
+      : me ? `<b>You:</b> <b class="gold">#${me.pos}</b> ${where} ${pn} · ${val(me.t)}`
+      : `<b>You:</b> no ${where} record ${pn} yet.`;
   }
 
   function rowEl(r, pos, mine, b, done) {

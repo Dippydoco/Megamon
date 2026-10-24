@@ -1669,3 +1669,39 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 #fr-me { display: flex; align-items: center; gap: 10px; }
 #fr-me > span { flex: 1; min-width: 0; }
 #fr-me .fr-copy { flex: 0 0 auto; margin-left: auto; padding: 2px 9px; font-size: 12px; }
+
+/* Public profile: "Copy name" is a small translucent chip in the banner's top-right corner (24-10-2026),
+   so it doesn't sit between the name and the title. */
+.prof-head { padding-right: 96px; }
+.prof-head > .prof-copy {
+  position: absolute; top: 6px; right: 6px; z-index: 3;
+  appearance: none; cursor: pointer; font: inherit; font-size: 11px; line-height: 1; color: var(--ink);
+  padding: 3px 8px; border-radius: 7px; background: rgba(0,0,0,.32); border: 1px solid rgba(244,248,255,.35);
+  text-shadow: none; opacity: .75; transition: opacity .1s, background .1s;
+}
+.prof-head > .prof-copy:hover, .prof-head > .prof-copy:focus-visible { opacity: 1; background: rgba(0,0,0,.5); outline: none; }
+.loan-note { display: inline-block; margin-top: 4px; font-size: 12px; color: #ffe27a; border: 1px solid rgba(255,226,122,.5); border-radius: 7px; padding: 1px 8px; }
+
+/* Leaderboard controls (24-10-2026): a big category switch, then labelled rows of joined buttons. */
+.rk-seg { display: inline-flex; border: 2px solid rgba(244,248,255,.3); border-radius: 9px; overflow: hidden; flex: 0 0 auto; }
+.rk-seg button { appearance: none; cursor: pointer; border: 0; border-left: 1px solid rgba(244,248,255,.15); background: rgba(0,0,0,.22);
+  color: var(--ink); font: inherit; font-size: 14px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; text-shadow: 2px 2px 0 var(--shadow); }
+.rk-seg button:first-child { border-left: 0; }
+.rk-seg button:hover { background: rgba(255,255,255,.08); }
+.rk-seg button.on { background: rgba(255,210,63,.2); color: var(--gold); }
+.rk-cat { display: flex; width: 100%; margin: 8px 0 10px; }
+.rk-cat button { flex: 1; justify-content: center; font-size: 17px; font-weight: 700; padding: 9px 10px; }
+.rk-controls { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.18); }
+.rk-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rk-lab { width: 54px; flex: 0 0 auto; font-size: 13px; color: var(--muted); }
+.rk-sublab { width: auto; margin-left: 8px; }
+.rk-poke-wrap { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.rk-poke-wrap .field { width: 210px; padding: 4px 8px; font-size: 14px; }
+.rk-title { margin: 12px 0 4px; font-size: 18px; }
+#scr-rank .rk-me { margin: 0 0 8px; padding: 6px 10px; border-radius: 8px; background: rgba(255,210,63,.08); border: 1px solid rgba(255,210,63,.3); }
+@media (max-width: 640px) {
+  .rk-cat button { font-size: 15px; padding: 7px 6px; }
+  .rk-seg button { font-size: 13px; padding: 4px 8px; }
+  .rk-poke-wrap { margin-left: 0; width: 100%; }
+  .rk-poke-wrap .field { flex: 1; width: auto; }
+}

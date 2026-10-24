@@ -423,7 +423,7 @@
       const b = d.best || {};
       const body = $('prof-body');
       body.innerHTML = `
-        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.name ? '<button class="btn small" id="prof-copy" type="button">Copy name</button>' : ''}${d.title ? `<span class="prof-title">${esc(G.AchDefs.titleOf(d.title))}</span>` : ''}</div>
+        <div class="prof-head" id="prof-head"><h2 translate="no">${esc(d.name || '???')}</h2>${d.title ? `<span class="prof-title">${esc(G.AchDefs.titleOf(d.title))}</span>` : ''}${d.name ? '<button class="prof-copy" id="prof-copy" type="button" title="Copy this nickname (paste it in Friends to add them)">Copy name</button>' : ''}</div>
         <div class="fav-slots view" id="prof-favs"></div>
         <div class="prof-marks">
           <div><span>Best time</span><b>${fmt(b.solo || 0)}</b></div>

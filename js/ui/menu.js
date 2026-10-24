@@ -104,13 +104,13 @@ G.MenuUI = (() => {
     const s = G.DB.save;
     box.classList.remove('hidden');
     box.innerHTML = `<div class="ft-h">Today's featured <b>+${Math.round((G.Featured.BONUS - 1) * 100)}% PokéCoins</b></div><div class="ft-row"></div>` +
-      `<div class="ft-note">They have every upgrade for the day (except Ban, for now)</div>`;
+      `<div class="ft-note">Everyone can play them today, with every upgrade (except Ban)</div>`;
     const row = box.querySelector('.ft-row');
     for (const d of list) {
-      const p = G.DEX_BY[d], own = !!s.owned[d];
+      const p = G.DEX_BY[d], own = G.DB.canUse(d);       // featured: on loan to everyone today
       const b = document.createElement('button');
       b.className = 'ft-mon' + (own ? '' : ' locked') + (d === s.partner ? ' on' : '');
-      b.title = own ? (d === s.partner ? p.name + ' is your partner' : 'Make ' + p.name + ' your partner') : 'You don\'t have ' + p.name + ' yet';
+      b.title = d === s.partner ? p.name + ' is your partner' : 'Make ' + p.name + ' your partner' + (G.DB.onLoan(d) ? ' (on loan for today)' : '');
       b.appendChild(G.UI.spriteCanvas(d, 52, 46, { scale: 1, silhouette: !own }));
       b.insertAdjacentHTML('beforeend', `<small>${own ? p.name : '???'}</small>`);
       b.onclick = () => {
@@ -126,6 +126,16 @@ G.MenuUI = (() => {
 
   function open() {
     const s = G.DB.save;
+    // A featured Pokémon on loan was your partner and its day is over: back to your last own partner.
+    if (s.partner != null && !G.DB.canUse(s.partner)) {
+      const gone = (G.DEX_BY[s.partner] || {}).name;
+      const back = [s.partnerBack, s.starter].find(d => d != null && G.DB.owns(d))
+        ?? Object.keys(s.owned).map(Number).find(d => G.DEX_BY[d]);
+      if (back != null) {
+        s.partner = back; s.partnerShiny = false; G.DB.commit();
+        if (gone) G.UI.toast(gone + '\'s featured day is over: ' + G.DEX_BY[back].name + ' is your partner again', 4200);
+      }
+    } else if (G.DB.owns(s.partner) && s.partnerBack !== s.partner) s.partnerBack = s.partner;   // remembered for the above
     const mon = G.DEX_BY[s.partner];
     const shiny = !!s.partnerShiny && G.DB.ownsShiny(mon.dex);
     G.Themes.applyMenu();            // your Arceus Shop menu theme
@@ -317,11 +327,11 @@ G.MenuUI = (() => {
     let shown = 0, more = 0;
     for (const p of G.DEX) {
       if (query) {
-        const known = !!s.owned[p.dex];
+        const known = G.DB.canUse(p.dex);
         const hit = (known && fold(p.name).includes(query)) || (numQ && (String(p.dex) === String(numQ) || String(p.dex).startsWith(String(numQ))));
         if (!hit) continue;
       } else if (dexGen && p.gen !== dexGen && dexFilter !== 'new' && dexFilter !== 'fav') continue;      // these filters show every generation
-      const own = !!s.owned[p.dex], sh = !!(s.shiny && s.shiny[p.dex]);
+      const own = G.DB.canUse(p.dex), sh = !!(s.shiny && s.shiny[p.dex]);     // (featured ones are on loan today)
       const fav = own && isFav(p.dex);
       if (dexFilter === 'fav' && !fav) continue;
       if (dexFilter === 'own' && !own) continue;
@@ -366,7 +376,7 @@ G.MenuUI = (() => {
   function showDetail(dex) {
     const s = G.DB.save;
     const p = G.DEX_BY[dex];
-    const own = !!s.owned[dex];
+    const own = G.DB.canUse(dex), loan = G.DB.onLoan(dex);
     const hasSh = G.DB.ownsShiny(dex);
     const isPartner = dex === s.partner;
     if (!hasSh) viewShiny = false;
@@ -390,6 +400,7 @@ G.MenuUI = (() => {
         <div style="color:var(--muted);font-size:13px">Nº ${String(p.dex).padStart(3, '0')} · ${GEN_NAMES[p.gen - 1]}</div>
         <h3>${own ? p.name : '???'}${own && reachedArceus(p.dex) ? ' ' + arcStar(20, p.dex) : ''}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
         <div style="color:${G.Gacha.RARITY_COLOR[p.rarity]}">${G.UI.stars(p.rarity, 24)} ${G.Gacha.RARITY_NAME[p.rarity]}</div>
+        ${loan ? '<div class="loan-note">Featured today: on loan until the day ends</div>' : ''}
         <div style="margin:6px 0">${own ? G.UI.typeChips(p.types) : ''}</div>
         ${own && G.abilityOf(dex) ? `<div class="ab-line">Ability <span class="ab-chip" data-ab="${G.abilityOf(dex).id}" style="--ac:${AB_COL[G.abilityOf(dex).c]}">${G.abilityOf(dex).n}</span></div>` : ''}
       </div>
@@ -521,11 +532,11 @@ G.MenuUI = (() => {
   function openUpgrades() {
     G.UI.show('scr-upgrades', true);
     const s = G.DB.save;
-    if (!upgDex || !s.owned[upgDex]) upgDex = s.partner;
+    if (!upgDex || !G.DB.canUse(upgDex)) upgDex = s.partner;
     // Picker with your Pokémon: the partner first, then those that already have upgrades.
     const sel = $('upg-mon');
     const lv = d => Object.values(s.pupg[d] || {}).reduce((a, b) => a + b, 0);
-    const mons = Object.keys(s.owned).map(Number).filter(d => G.DEX_BY[d])
+    const mons = [...new Set([...Object.keys(s.owned).map(Number), ...G.Featured.today().filter(d => G.DB.canUse(d))])].filter(d => G.DEX_BY[d])
       .sort((a, b) => (b === s.partner) - (a === s.partner) || lv(b) - lv(a) || a - b);
     sel.innerHTML = mons.map(d => `<option value="${d}">${G.DEX_BY[d].name}${d === s.partner ? ' (partner)' : ''}${lv(d) ? ' · ' + lv(d) + (lv(d) === 1 ? ' level' : ' levels') : ''}</option>`).join('');
     sel.value = upgDex;

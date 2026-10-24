@@ -9,6 +9,15 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T19:30Z', title: 'Featured Pokémon for everyone', new: [
+    'Today\'s featured Pokémon are now on loan to every player for their day: pick them as your partner from the main menu or the Pokémon tab, even if you don\'t own them. When the day ends you go back to your own partner. Loans don\'t count towards your collection or Shiny Charms.'
+  ] },
+  { d: '2026-10-24', at: '2026-10-24T19:30Z', title: 'Clearer leaderboard', chg: [
+    'The leaderboard is easier to read and switch: a big Time survived / Most kills switch at the top, labelled rows for mode, period and who to show, a title saying exactly which board you are looking at, and your own rank above the list. It also remembers the board you last viewed.'
+  ] },
+  { d: '2026-10-24', at: '2026-10-24T19:30Z', title: 'Neater profiles', chg: [
+    'The Copy name button on player profiles is now a small button in the corner of the banner, out of the way of the name and title.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T19:06Z', title: 'Less damage on mobile', chg: [
     'Playing with touch controls on a phone or tablet, you now take 25% less damage from everything, to make up for the harder controls.'
   ] },

@@ -373,7 +373,7 @@ G.DB = (() => {
     for (const k in older.stats || {}) r.stats[k] = Math.max(r.stats[k] || 0, older.stats[k] || 0);
     if (r.starter == null) r.starter = older.starter;
     if (r.personality == null) r.personality = older.personality;
-    if (r.partner == null || !r.owned[r.partner]) { r.partner = older.partner; r.partnerShiny = older.partnerShiny; }
+    if (r.partner == null || !(r.owned[r.partner] || (G.Featured && G.Featured.is(r.partner)))) { r.partner = older.partner; r.partnerShiny = older.partnerShiny; }
     r.created = Math.min(a.created || Date.now(), b.created || Date.now());
     r.updated = Math.max(a.updated || 0, b.updated || 0);
     return r;
@@ -932,6 +932,10 @@ G.DB = (() => {
   // ---------------- save helpers ----------------
 
   function owns(dex) { return !!(save && save.owned[dex]); }
+  /** Today's featured Pokémon are on loan to everyone for their day (24-10-2026): playable, but never written into
+   *  `owned` (so they don't count towards the Pokédex, Shiny Charms or "new" pulls, and can't leak into the cloud save). */
+  function onLoan(dex) { return !owns(dex) && !!(G.Featured && G.Featured.is(dex)); }
+  function canUse(dex) { return owns(dex) || onLoan(dex); }
 
   function grant(dex, from) {
     if (!save.owned[dex]) save.owned[dex] = { at: Date.now(), from };
@@ -966,7 +970,7 @@ G.DB = (() => {
       commit();
       return true;
     },
-    owns, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, cleanHistory, HISTORY_MAX,
+    owns, onLoan, canUse, grant, ownsShiny, grantShiny, merge, setName, upgradesOf, addHistory, cleanHistory, HISTORY_MAX,
     onSync(fn) { listeners.add(fn); },
     onLeave(fn) { leaveHooks.push(fn); },
     /** Low-level access for the network modules (cloud mode only). */
