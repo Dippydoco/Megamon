@@ -1170,6 +1170,10 @@
                      m: { dmg: 1.8, count: 2, pierce: 2, size: 1.3, spread: 1.1, fx: { fell: 1 } } } };
   const evoMods = m => EVO_OWN[m.id] || EVO_MODS[m.kind];
 
+  // Evolved moves keep their name with a "+" (24-10-2026): "Ember+" instead of "Fire Blast". That leaves every real move
+  // name free for moves of their own. The names written in EVO above are no longer shown anywhere.
+  for (const id in EVO) if (BY_ID[id]) EVO[id][0] = BY_ID[id].name + '+';
+
   /** Can it evolve yet? → { name, needs, needName, text, ready } or null */
   function evoInfo(m, statsTaken) {
     const e = EVO[m.id];
@@ -1179,7 +1183,7 @@
              ready: !!(statsTaken && statsTaken[needs]) };
   }
 
-  /** Evolves an instance (changes name and power; it stays the same type). */
+  /** Evolves an instance (more power and a "+" after its name; it stays the same type). */
   function evolve(m) {
     const e = EVO[m.id];
     if (!e || m.evolved) return false;

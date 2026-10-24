@@ -9,14 +9,15 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-24', at: '2026-10-24T14:28Z', title: 'Evolved moves keep their name', chg: [
+    'An evolved move now keeps its name with a + after it (Ember+ instead of Fire Blast). It works exactly as before; only the name changed.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T14:22Z', title: '42 new moves and 10 new move styles', new: [
     'Every type now has physical and special moves for both close range and range. 27 new moves, including Pyro Ball, Razor Shell, Fusion Bolt, Leaf Blade, Focus Punch, Boomburst, Curse, Make It Rain and Attack Order.',
     'New move styles: Combo (a 3-hit string with a heavy finisher), Thrust (pierces a line), Pulse (rings burst out from you), Vortex, Wave (travels along the ground), Eruption (the ground blows up under foes), Mark (a curse that jumps when a foe falls), Tether (a draining link), Focus (charges up for one huge hit) and Companion (bees that fight beside you).',
     'A Burst move for every type that lacked one: Blast Burn, Water Spout, Bloom Doom, Glaciate, Meteor Assault, Acid Downpour, Magnitude, Tailwind, Psycho Boost, Megahorn, Tar Shot, Infernal Parade, Dark Void, Iron Defense and Misty Explosion.',
     'Two new statuses on foes: Confused (they wander and hit other foes) and Soaked (they take +25% from Electric and Ice moves).',
     'Abilities that boost punching, biting, slicing, sound and similar moves also work with the new moves.'
-  ], chg: [
-    'Play Rough now evolves into Fairy Lock and Infestation into Skitter Smack (their old evolved names are new moves of their own).'
   ] },
   { d: '2026-10-24', at: '2026-10-24T09:16Z', title: 'Abilities are live!', new: [
     'Every Pokémon\'s ability now works in runs: all 236 of them, from Intimidate and Levitate to Drizzle, Sturdy and Wonder Guard. Check your partner\'s in the Pokémon tab, or pause during a run to read it.',
