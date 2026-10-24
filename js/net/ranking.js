@@ -703,7 +703,12 @@ G.Ranking = (() => {
     const errs = [], report = {};
     const better = await store(boards, id, entry, errs, report);
     for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
-    return { boards: boards.length, better, missing, errs, report };
+    // The limits before 24-10-2026 (20 defeated a second for the whole team, level 10 + t/4): if the server still
+    // refuses a run that breaks only those, the published firestore.rules are older than the repository's.
+    const oldOver = entry.kills > 100 + entry.t * 20 ? entry.kills + ' defeated (old limit ' + (100 + entry.t * 20) + ')'
+      : entry.lv > 10 + entry.t / 4 ? 'level ' + entry.lv + ' (old limit ' + Math.floor(10 + entry.t / 4) + ')' : '';
+    return { boards: boards.length, better, missing, errs, report, oldOver,
+             numbers: entry.t + ' s, ' + entry.kills + ' defeated, level ' + entry.lv + ', team of ' + entry.uids.length };
   }
 
   /** Admin: bans or unbans an account from the leaderboard (banned = can't upload records). */

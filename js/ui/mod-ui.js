@@ -130,7 +130,10 @@ G.ModUI = (() => {
                 if (by.added.length) parts.push('Added to ' + by.added.length + ' (' + by.added.map(short).join(', ') + ')');
                 if (by.better.length) parts.push('already a better record in ' + by.better.length + ' (' + by.better.map(short).join(', ') + ')');
                 if (by.outside.length) parts.push('not in the top 50 of ' + by.outside.length + ' (' + by.outside.map(short).join(', ') + ')');
-                if (by.err.length) parts.push('refused by ' + by.err.length + ': ' + by.err.join('; '));
+                if (by.err.length) {
+                  parts.push('refused by ' + by.err.length + ': ' + by.err.join('; ') + ' [run: ' + res.numbers + ']');
+                  if (res.oldOver) parts.push('This run breaks the OLD server limits (' + res.oldOver + '): publish the latest firestore.rules in the Firebase console (Firestore > Rules), then try again');
+                }
                 if (res.missing.length) parts.push('teammates not found: ' + res.missing.join(', '));
                 G.UI.toast(parts.join(' · ') || 'Nothing to add', 9000);
                 b.textContent = by.err.length ? (by.added.length ? 'Partly added' : 'Refused') : by.added.length ? 'Added' : 'Nothing new';
