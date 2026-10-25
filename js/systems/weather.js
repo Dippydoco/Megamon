@@ -94,7 +94,7 @@ G.Weather = (() => {
     if (cur) {
       cur.t += dt;
       if (cur.t >= cur.dur) cur = null;
-    } else if (authority() && time > FROM && !G.Rift.inArena && !G.Judgment.active) {
+    } else if (authority() && time > FROM && !G.Rift.inArena && !G.Judgment.active && !G.Tower.active) {
       checkT -= dt;
       if (checkT <= 0) {
         checkT = CHECK;

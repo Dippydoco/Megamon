@@ -292,6 +292,7 @@ G.Coop = (() => {
     if (waiting.has(u)) picked(u);
     if (holds.has(u)) holdOff(u);
     if (api.mateLeft) api.mateLeft(m);
+    G.Tower.mateLeft(u);                 // Battle Tower: don't wait for their Badge pick
   }
 
   // --- on the host ---
@@ -359,6 +360,7 @@ G.Coop = (() => {
         case 're': G.Rift.enterRequest(); break;
         case 'rz': G.Rift.startZygarde(ev[1], ev[2], ev[3], ev[4]); break;
         case 'bye': mateGone(from); break;
+        case 'tw': G.Tower.onClient(from, ev); break;           // Battle Tower: a guest picked their Badge
         case 'sym': healTeam(ev[1], { x: ev[2], y: ev[3] }, from); break;       // a guest's Symbiosis
       }
     }
@@ -476,6 +478,7 @@ G.Coop = (() => {
       case 'ov': { const cb = api.over; const d = ev[1]; end(); cb(d); break; }
       case 'rift': case 'riftx': case 'arena': case 'zm': case 'aw': case 'al': G.Rift.onEvent(ev); break;
       case 'jd': case 'jk': G.Judgment.onEvent(ev); break;
+      case 'tw': G.Tower.onEvent(ev); break;                     // Battle Tower (systems/tower.js)
       case 'wx': G.Weather.onEvent(ev); break;
       case 'ev': G.Events.onNet(ev); break;
       case 'hz': G.Hazards.add(ev[1], true); break;

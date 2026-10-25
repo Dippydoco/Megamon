@@ -51,7 +51,7 @@ G.Events = (() => {
       else if (cur.id === 'volt' && authority() && (cur.wave -= dt) <= 0) { cur.wave = VOLT_WAVE; voltWave(players, time); }
     }
     if (lost) lostTick(dt, players);
-    if (!authority() || G.Rift.inArena || G.Judgment.active) return;
+    if (!authority() || G.Rift.inArena || G.Judgment.active || G.Tower.active) return;
 
     if (thieves < 2) {
       thiefT -= dt;

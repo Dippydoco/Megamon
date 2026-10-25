@@ -68,7 +68,7 @@ G.Abil = (() => {
   }
   /** A weather the ability brings: 60 s at the start, then 30 s every 4 minutes (host / solo starts it, everyone sees it). */
   function bringWeather(S, kind, dt) {
-    if (!authority() || G.Rift.inArena || G.Judgment.active) return;
+    if (!authority() || G.Rift.inArena || G.Judgment.active || G.Tower.active) return;
     S.wxT = (S.wxT == null ? 0 : S.wxT - dt);
     if (S.wxT > 0) return;
     const first = !S.wxDone;
@@ -389,7 +389,7 @@ G.Abil = (() => {
     'orichalcum-pulse': { tick: (pl, S, dt) => bringWeather(S, 'sun', dt), stat: (pl, S, o) => { if (wx('sun')) o.atk *= 1.25; } },
     'sand-stream': merge(noWx, { tick: (pl, S, dt) => bringWeather(S, 'sand', dt) }),
     'snow-warning': merge(noWx, { tick: (pl, S, dt) => bringWeather(S, 'snow', dt) }),
-    'sand-spit': merge(noWx, { hurt: (pl, S) => { if (authority() && !G.Weather.current && !G.Rift.inArena && !G.Judgment.active && now() - (S.spitAt == null ? -99 : S.spitAt) > 30) { S.spitAt = now(); G.Weather.debugStart('sand', 6); } } }),
+    'sand-spit': merge(noWx, { hurt: (pl, S) => { if (authority() && !G.Weather.current && !G.Rift.inArena && !G.Judgment.active && !G.Tower.active && now() - (S.spitAt == null ? -99 : S.spitAt) > 30) { S.spitAt = now(); G.Weather.debugStart('sand', 6); } } }),
     'forecast': { types: () => (wx('sun') ? ['fire'] : wx('rain') ? ['water'] : wx('snow') ? ['ice'] : null),
                   move: (pl, S, m) => ((wx('sun') && m.type === 'fire') || (wx('rain') && m.type === 'water') || (wx('snow') && m.type === 'ice') ? 1.2 : 1), noWxOut: true },
 

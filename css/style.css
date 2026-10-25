@@ -292,6 +292,10 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .menu-item.tile.play .mi-ico img { width: 44px; height: 44px; }
 .menu-item.tile.play small { font-size: 14px; }
 .menu-item.tile.wide { grid-column: span 3; min-height: 70px; }
+/* Play and the Battle Tower share the top row (the two main modes). */
+.menu-item.tile.play.half { grid-column: span 3; font-size: 24px; padding: 12px 14px; column-gap: 10px; }
+@media (max-height: 780px) { .menu-item.tile.play.half { font-size: 21px; } }
+.menu-item.tile.play.tower { background: rgba(201,162,74,.10); border-color: rgba(201,162,74,.6); }
 .menu-item.tile.wide .mi-ico img { width: 30px; height: 30px; }
 /* Red dot: rewards to claim, friend requests, new messages. */
 .menu-item.tile.alert::after {
@@ -1704,4 +1708,35 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   .rk-seg button { font-size: 13px; padding: 4px 8px; }
   .rk-poke-wrap { margin-left: 0; width: 100%; }
   .rk-poke-wrap .field { flex: 1; width: auto; }
+}
+
+/* ====== Battle Tower (ui/tower-ui.js) ====== */
+.tower-box { width: min(860px, 100%); }
+.tw-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 10px; }
+.tw-partner { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.tw-partner canvas { width: 120px; height: 96px; image-rendering: pixelated; }
+.tw-partner div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.tw-partner b { font-size: 20px; }
+.tw-partner small, .tw-start small { color: var(--muted); font-size: 12px; }
+.tw-start { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; }
+.tw-start .btn.gold { font-size: 18px; }
+.tw-seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.tw-seg button { appearance: none; cursor: pointer; padding: 5px 12px; border-radius: 8px; color: var(--ink);
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.22); font: inherit; font-size: 15px; }
+.tw-seg button.on { border-color: var(--gold); background: rgba(255,210,63,.16); color: var(--gold); }
+.tw-records { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.tw-records b { color: var(--ink); }
+.tw-map { display: flex; flex-direction: column; gap: 6px; }
+.tw-row { display: grid; grid-template-columns: 220px 1fr; gap: 10px; align-items: center; }
+.tw-sec { display: flex; flex-direction: column; line-height: 1.2; }
+.tw-sec small { color: var(--muted); font-size: 11px; }
+.tw-chips { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.tw-chips i { font-style: normal; text-align: center; font-size: 12px; padding: 4px 0; border-radius: 6px;
+  background: rgba(0,0,0,.28); border: 1px solid rgba(244,248,255,.16); color: var(--muted); }
+.tw-chips i.big { border-color: rgba(255,120,90,.6); color: #ffc0b0; font-weight: 700; }
+.tw-chips i.gate, .tw-chips i.final { border-color: rgba(201,162,74,.8); color: #ffe27a; }
+.tw-chips i.done { background: rgba(255,210,63,.22); color: var(--gold); }
+@media (max-width: 640px) {
+  .tw-top { grid-template-columns: 1fr; }
+  .tw-row { grid-template-columns: 1fr; gap: 4px; }
 }

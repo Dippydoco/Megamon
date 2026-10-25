@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T14:32Z', title: 'The Battle Tower', new: [
+    'A new main mode, the Battle Tower (the tile next to Play): climb 50 floors of closed arenas. Most floors are hordes (defeat a set number of Pokémon), every 5th floor is a boss and every 10th a legendary gatekeeper, with Rayquaza waiting at the summit. Each cleared floor gives a level, a small heal and Battle Points.',
+    'Climb on your own: beating a gatekeeper (10F, 20F, 30F, 40F) saves that checkpoint for good. Fall, and you can start again from your checkpoint with any partner, with free levels as a head start.',
+    'Expeditions: in a friends room, the host can pick Battle Tower as the mode. The same floors as one run from the start (or any checkpoint the host has saved), with co-op floors: Seal Plates (every plate held at once) and Twin Bond (Plusle and Minun must fall together). Expeditions never move checkpoints, but everyone earns Battle Points.',
+    'Badges: after every boss, pick 1 of 3 Badges that last for the rest of the run. Four are free; eight more are unlocked in the tower\'s BP Shop, which also sells Battle Tower menu and card themes and swaps Battle Points for PokéCoins or tickets. The first clear of a boss floor also gives ×10 tickets.',
+    'Bosses with their own tricks: Slaking loafs between attacks (hit it then), Gengar hides among shadowless clones and puts out the lights, and Rayquaza fights in three phases with Dragon Ascent, Hurricane gusts and Delta Stream.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T08:40Z', title: 'Status abilities reworked', chg: [
     'Abilities that only worked while you were burned, poisoned or slowed now do something in every run. Guts: each hit you take gives +8% Attack for 6 s (up to +40%). Marvel Scale: +30% damage reduction for 3 s after a hit. Quick Feet: can\'t be slowed, +30% speed when 5 or more foes are close. Flare Boost: up to +50% Sp. Atk the lower your HP. Poison Heal: poison hits deal half and you heal from poisoned foes nearby. Shed Skin: every 15 s a fresh skin blocks a hit. Natural Cure: switching moves heals 4% of your HP. Hydration: +2 HP/s and +10% speed in Rain or water. Healer: you and nearby teammates regenerate. Synchronize: any foe that hits you is burned, poisoned or slowed back.',
     'Abilities that say you can\'t be burned or poisoned (Water Veil, Immunity, Comatose, Misty Surge and others) now make Fire or Poison hits deal 20% less.'

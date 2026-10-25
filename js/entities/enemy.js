@@ -152,7 +152,8 @@
         this.ky += ny * knock;
       }
       if (G.Coop.isHost) G.Coop.hurtShown(this, d, color);
-      if (this.hp <= 0) this.die();
+      // Battle Tower scripts can refuse a knockout (Twin Bond: a twin gets back up while its partner stands).
+      if (this.hp <= 0 && !(this.onLethal && this.onLethal())) this.die();
     }
 
     /** What's SEEN when taking a hit. */
@@ -228,7 +229,7 @@
         return;
       }
       // (The legendaries of Arceus's Judgment only give experience.)
-      if (this.boss && !this.judge) {
+      if (this.boss && !this.judge && this.behavior !== 'clone') {
         G.Camera.kick(0.9);
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-40, 40), this.y + G.U.rand(-30, 30), 5);
         // Bosses always drop a held item.
@@ -547,7 +548,9 @@
     bossMove(dt, pl, dist, dx, dy, spd) {
       if (!this.ai) this.bossInit();
       const ai = this.ai;
-      if (!ai.fury && this.hp < this.maxHp * 0.5) this.enrage();
+      // Battle Tower bosses with their own script (systems/towerbosses.js) act first; null = use the shared kit below.
+      if (this.script) { const r = G.TowerBosses.move(this, dt, pl, dist, dx, dy, spd); if (r) return r; }
+      if (!ai.fury && !this.noEnrage && this.hp < this.maxHp * 0.5) this.enrage();
       const k = ai.fury ? 1.25 : 1;
       if (ai.cast) return this.bossCast(dt, pl);
       ai.modeT -= dt; ai.cd -= dt * k;
@@ -858,7 +861,7 @@
 
       ctx.save();
       ctx.globalAlpha = alpha;
-      G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
+      if (this.behavior !== 'clone') G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);     // (Gengar's clones cast none: the tell)
       // Floaters are already in the air in their sprite: they just bob a little.
       // (And the leapers, in an arc.)
       const lift = (this.flying && !this.boss ? 1 + Math.sin(this.bob) * 1.5 : 0) + (this.jumpLift || 0);
@@ -1142,7 +1145,7 @@
         }
         if (e.dead) {
           pl.kills++;
-          if (e.boss && !e.judge) pl.bosses++;
+          if (e.boss && !e.judge && e.behavior !== 'clone') pl.bosses++;
           G.Progress.kill(e);
           corpses.push(e);
           list.splice(i, 1);
@@ -1161,7 +1164,7 @@
           if (G.Coop.isHost) G.Coop.enemyGone(e, false);
           continue;
         }
-        if (e.boss || e.shiny || G.Rift.inArena) continue;
+        if (e.boss || e.shiny || G.Rift.inArena || G.Tower.active) continue;      // (arenas are closed: nothing to catch up)
         // Stragglers: those that fall behind while you run and have been
         // OUT OF VIEW (of everyone) for a while reappear ahead of you. That way
         // you can't simply run away, and one you're looking at never disappears.

@@ -54,7 +54,7 @@ G.MenuUI = (() => {
   document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
-    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop' };
+    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
       b.insertAdjacentHTML('afterbegin', `<span class="mi-ico">${G.Icons.html(ICON[b.dataset.go], 26)}</span>`);
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
@@ -67,6 +67,11 @@ G.MenuUI = (() => {
             playing = true;
             G.Updater.gate().then(ok => { playing = false; if (ok) G.Flow.play(); }, () => { playing = false; });
           }
+        }
+        else if (go === 'tower') {
+          // In a room the tower is played as an Expedition, chosen as the room's mode.
+          if (G.Social.room) { G.LobbyUI.open(); G.UI.toast('In a room: the host picks Battle Tower as the mode to start an Expedition', 3200); }
+          else G.TowerUI.open();
         }
         else if (go === 'dex') openDex();
         else if (go === 'codex') G.CodexUI.open();
@@ -182,6 +187,11 @@ G.MenuUI = (() => {
     $('menu-shop-sub').textContent = stars ? stars + (stars === 1 ? ' Star to spend' : ' Stars to spend')
       : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Key Items and themes';
     $('menu-shop-sub').classList.toggle('gold', stars > 0 || canKey > 0);
+
+    // Battle Tower tile: your checkpoint and Battle Points.
+    const T = s.tower || {};
+    $('menu-tower-sub').textContent = T.best ? 'Best ' + T.best + 'F · ' + (T.bp || 0) + ' BP' : 'Climb 50 floors';
+    $('menu-tower-sub').classList.toggle('gold', (T.bp || 0) >= 40);
 
     // Your record, in a small line under the partner (it used to be a box under the menu).
     const st = s.stats;

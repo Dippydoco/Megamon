@@ -107,6 +107,10 @@ G.DB = (() => {
       keyItems: {},           // id -> date: Key Items bought in Klefki's stall (data/keyitems.js)
       keyItem: '',            // the Key Item taken into runs ('' = none)
       themes: {},             // 'm:id' / 'c:id' -> date: Arceus Shop themes bought (menu / player card)
+      // Battle Tower (systems/tower.js): bp = Battle Points (a ledger currency like coins, see CUR), cp = highest checkpoint
+      // floor saved by Climbs (10, 20...), best / bestX = highest floor reached in a Climb / an Expedition,
+      // firsts = floor -> date of its first clear, badges = Badge id -> date unlocked with BP, runs = tower runs played.
+      tower: { bp: 0, cp: 0, best: 0, bestX: 0, firsts: {}, badges: {}, runs: 0 },
       menuTheme: '',          // worn menu theme ('' = Classic Blue)
       cardTheme: '',          // worn player card theme ('' = Classic)
       profile: { favs: [], title: '' },   // public profile: 3 favourites and title
@@ -183,6 +187,8 @@ G.DB = (() => {
       s.startV2 = true;
     }
     s.tickets = Object.assign({ t1: 0, t10: 0 }, s.tickets);
+    s.tower = Object.assign({}, base.tower, isObj(s.tower) ? s.tower : {});
+    for (const k of ['firsts', 'badges']) if (!isObj(s.tower[k])) s.tower[k] = {};
     s.history = cleanHistory(s.history);
     // Arceus stars per Pokémon (19-10-2026): count the runs in the history that reached Arceus with each one,
     // so stars earned before per-Pokémon counts aren't stuck at 1. Never lowers a count (older runs may be off the list).
@@ -210,6 +216,9 @@ G.DB = (() => {
     s.coins = n(s.coins);
     s.tickets.t1 = n(s.tickets.t1);
     s.tickets.t10 = n(s.tickets.t10);
+    if (!isObj(s.tower)) s.tower = { bp: 0, cp: 0, best: 0, bestX: 0, firsts: {}, badges: {}, runs: 0 };
+    for (const k of ['bp', 'best', 'bestX', 'runs']) s.tower[k] = n(s.tower[k]);
+    s.tower.cp = Math.min(40, Math.floor(n(s.tower.cp) / 10) * 10);    // checkpoints: 10, 20, 30, 40 (50F has none)
     if (isObj(s.led)) {
       for (const dev of Object.keys(s.led)) {
         const e = s.led[dev];
@@ -281,7 +290,8 @@ G.DB = (() => {
   const CUR = {
     c: [s => s.coins, (s, v) => { s.coins = v; }],
     t1: [s => s.tickets.t1, (s, v) => { s.tickets.t1 = v; }],
-    t10: [s => s.tickets.t10, (s, v) => { s.tickets.t10 = v; }]
+    t10: [s => s.tickets.t10, (s, v) => { s.tickets.t10 = v; }],
+    bp: [s => (s.tower && s.tower.bp) || 0, (s, v) => { s.tower = s.tower || {}; s.tower.bp = v; }]      // Battle Tower points
   };
   // This device (browser): a random name that stays saved.
   const DEV = (() => {
@@ -353,6 +363,13 @@ G.DB = (() => {
     for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach', 'keyItems', 'themes']) {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
+    }
+    // Battle Tower: checkpoints and records only go up; first clears and unlocked Badges are kept from both.
+    const tr = r.tower = Object.assign({ firsts: {}, badges: {} }, r.tower), to = older.tower || {};
+    for (const k of ['cp', 'best', 'bestX', 'runs']) tr[k] = Math.max(tr[k] || 0, to[k] || 0);
+    for (const coll of ['firsts', 'badges']) {
+      tr[coll] = tr[coll] || {};
+      for (const k in to[coll] || {}) if (!tr[coll][k]) tr[coll][k] = to[coll][k];
     }
     r.arceusN = r.arceusN || {};
     for (const k in older.arceusN || {}) r.arceusN[k] = Math.max(r.arceusN[k] || 0, older.arceusN[k] || 0);

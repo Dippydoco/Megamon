@@ -1714,6 +1714,7 @@ G.Combat = (() => {
     const crit = c.crit || isCrit(pl, m.fx);
     dmg *= k * (crit ? CRIT_MUL * G.Abil.critMul(pl) : 1) * execMul(m.fx, e) * c.mul;
     if (m.kind === 'melee' && (e.boss || e.legend || e.judge)) dmg *= 1.25;      // melee has to stand in the boss's fire: +25% against bosses and legendaries
+    if (pl.bossMul && (e.boss || e.legend || e.judge)) dmg *= pl.bossMul;        // Battle Tower: Giant Badge
     const lethal = e.hp <= dmg;
     e._abPierce = c.pierce;                // Infiltrator & co.: shields don't absorb it (Enemy.hurt)
     e.hurt(dmg, col, dx, dy, knock, crit ? 'crit' : G.Types.label(G.Types.mult(c.type, e.types)));

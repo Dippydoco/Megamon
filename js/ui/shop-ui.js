@@ -585,7 +585,11 @@ G.ShopUI = (() => {
 
   function themeButton(kind, th, own, on, stars, el, i) {
     const b = document.createElement('button');
-    if (!own) {
+    if (!own && th.bp) {
+      // Battle Tower themes are bought with Battle Points in the tower (ui/tower-ui.js).
+      b.className = 'btn small'; b.disabled = true;
+      b.innerHTML = `${G.Icons.html('bp', 14)} ${th.bp} · Battle Tower`;
+    } else if (!own) {
       b.className = 'btn small gold'; b.dataset.sfx = 'none';
       b.innerHTML = `${G.Icons.html('star', 14)} ${th.price}`;
       b.disabled = stars < th.price;

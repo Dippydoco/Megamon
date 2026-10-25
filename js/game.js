@@ -84,8 +84,12 @@ G.Game = (() => {
 
   // ---------------- run ----------------
 
-  /** @param coop  { seed, host, members } for a group run */
-  function startRun(coop = null) {
+  /**
+   * @param coop   { seed, host, members } for a group run (a Battle Tower Expedition also carries `tower`)
+   * @param tower  { mode: 'climb' | 'exp', start } for a Battle Tower run (systems/tower.js)
+   */
+  function startRun(coop = null, tower = null) {
+    if (coop && coop.tower) tower = coop.tower;
     holdBy = []; awayBy = null;
     openItem = null; laterItems.length = 0;      // nothing left over from the last run's choice screens
     const save = G.DB.save;
@@ -104,6 +108,7 @@ G.Game = (() => {
     G.Spawner.reset();
     G.Rift.reset();
     G.Judgment.reset();
+    G.Tower.reset();
     G.Events.reset();
     G.Weather.reset();
     G.Path.clear();
@@ -155,11 +160,26 @@ G.Game = (() => {
     // Local sprite sheets: the partner and the first enemies.
     G.Sprites.preload([mon.dex], 8000, pl.shiny);
     G.Audio.music(G.BIOME_MUSIC[0]);
-    // For the leaderboard: the server records when the run starts (anti-cheat).
-    if (!coop || G.Coop.isHost) G.Ranking.runStarted(coop ? 'g' : 's');
+    // For the leaderboard: the server records when the run starts (anti-cheat). (The Battle Tower has no leaderboard yet.)
+    if (!tower && (!coop || G.Coop.isHost)) G.Ranking.runStarted(coop ? 'g' : 's');
     deathT = 0;
 
     state = 'playing';
+    // Battle Tower: off to the first floor (head-start levels included).
+    if (tower) G.Tower.start(tower);
+  }
+
+  /** Battle Tower: `n` free levels right now (host / solo; in a group everyone picks their cards together). */
+  function grantLevels(n) {
+    if (!pl) return;
+    for (let i = 0; i < n; i++) pendingLevels += pl.gainXp(Math.max(0.01, pl.xpNext - pl.xp) / (pl.xpMul || 1) + 0.01);
+  }
+
+  /** Battle Tower: Rayquaza is down and the run is won (host / solo; the host ends it for everyone). */
+  function towerEnd() {
+    if (!pl || state === 'over' || state === 'ui') return;
+    if (G.Coop.isHost) G.Coop.over(Object.assign(summary(), { why: 'tower' }));
+    endRun(false);
   }
 
   function quitRun() {
@@ -271,7 +291,7 @@ G.Game = (() => {
       if (d) Object.assign(pl, { kills: d.ki, bosses: d.bo, coins: d.co, level: Math.max(pl.level, d.lv || 1), t1: d.t1 || pl.t1, t10: d.t10 || pl.t10 });
       if (d && d.t) time = d.t;
       if (d && d.why === 'host') G.UI.toast('The host has ended the game', 3200);
-      endRun(!(d && d.why === 'host'));
+      endRun(!(d && (d.why === 'host' || d.why === 'tower')));        // ('tower': the Battle Tower was conquered)
     },
     lost(msg) { G.UI.toast(msg, 3600); endRun(false); },
     item(id) { offerItem(id); },
@@ -346,8 +366,10 @@ G.Game = (() => {
     G.Audio.sfx(dead ? 'gameover' : 'back');
     const save = G.DB.save;
     const mul = pl.coinMul;
+    // Battle Tower: its own records (systems/tower.js); no survival time, records, history or leaderboard.
+    const tower = G.Tower.active ? G.Tower.finish() : null;
     const parts = {
-      time: Math.floor(time / 5),
+      time: tower ? 0 : Math.floor(time / 5),
       defeated: Math.floor(pl.kills * 0.25),
       bosses: pl.bosses * 80,
       collected: pl.coins
@@ -355,22 +377,24 @@ G.Game = (() => {
     // Daily featured Pokémon (systems/featured.js): +50% PokéCoins.
     const feat = G.Featured && G.Featured.is(pl.dex) ? G.Featured.BONUS : 1;
     const coins = Math.round((parts.time + parts.defeated + parts.bosses + parts.collected) * mul * feat);
-    const record = time > save.stats.bestTime;
+    const record = !tower && time > save.stats.bestTime;
 
     save.coins += coins;
     bankTickets(false);
-    save.stats.runs++;
     save.stats.totalKills += pl.kills;
-    save.stats.bestTime = Math.max(save.stats.bestTime, Math.floor(time));
-    if (coop) save.stats.bestGroupTime = Math.max(save.stats.bestGroupTime || 0, Math.floor(time));
-    save.stats.bestLevel = Math.max(save.stats.bestLevel, pl.level);
     save.stats.coinsEarned += coins;
+    if (!tower) {
+      save.stats.runs++;
+      save.stats.bestTime = Math.max(save.stats.bestTime, Math.floor(time));
+      if (coop) save.stats.bestGroupTime = Math.max(save.stats.bestGroupTime || 0, Math.floor(time));
+      save.stats.bestLevel = Math.max(save.stats.bestLevel, pl.level);
+    }
     const judge = G.Judgment.summary();
     // Match history (last 100 runs): see core/db.js, cleanHistory.
     // Runs that were left (quit, or the group ended under you) aren't recorded, so they don't take up slots
     // (20-10-2026). Runs that reached Arceus are always kept (their star count comes from the history).
     const runLog = G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 });
-    if (dead || portalLost || judge) G.DB.addHistory({
+    if (!tower && (dead || portalLost || judge)) G.DB.addHistory({
       id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
       dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', ki: pl.keyItem || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
       mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
@@ -381,7 +405,7 @@ G.Game = (() => {
     portalLost = false;
     if (judge) G.Progress.event('judgeEnd', judge);
     G.Judgment.reset();
-    G.Progress.event('runEnd', { time, level: pl.level, coins: pl.coins, types: pl.mon.types, group: coop });
+    if (!tower) G.Progress.event('runEnd', { time, level: pl.level, coins: pl.coins, types: pl.mon.types, group: coop });
     G.Progress.checkAch();
     // To the cloud at the end of the run (at most every 30 min); if the record gets
     // into a top (today, week or month), straight away (below, after uploading it to the leaderboard).
@@ -394,14 +418,14 @@ G.Game = (() => {
     // Leaderboard: in solo each player their own; in a group the host uploads it.
     const mark = { t: Math.floor(time), lv: pl.level, kills: pl.kills };
     // If the run has been tampered with (see clean()), it isn't uploaded to the leaderboard (silently); everything else is.
-    const ok = clean();
+    const ok = !tower && clean();
     const sent = ok && !coop ? G.Ranking.submitSolo(Object.assign(mark, { dex: pl.dex, shiny: pl.shiny }))
                : ok && wasHost ? G.Ranking.submitGroup(Object.assign(mark, { members: team })) : null;
     if (sent) sent.then(b => { if (b && b.some(p => p !== 'a')) G.DB.commit(true); }).catch(() => {});
 
     G.RunUI.showOver({
       dead, killer: dead && pl.killer ? pl.killer : null, recent: dead && pl.hits ? pl.hits.slice(-4) : [],
-      time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge,
+      time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge, tower,
       moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
                  (mul > 1 ? ` · ×${mul.toFixed(2)} Fortune` : '') + (feat > 1 ? ` · ×${feat} Featured Pokémon` : '')
@@ -890,7 +914,7 @@ G.Game = (() => {
     G.RunLog.tick(pl, time);
 
     const b = Math.floor(time / 240);
-    if (b !== biome && !G.Rift.inArena && !G.Judgment.active) {
+    if (b !== biome && !G.Rift.inArena && !G.Judgment.active && !G.Tower.active) {
       biome = b;
       G.World.setBiome(b);
       G.Audio.sfx('biome');
@@ -922,13 +946,14 @@ G.Game = (() => {
     G.Pickups.update(dt, all, onCollect);
     G.Hazards.update(dt);
     G.Interact.update(dt, pl);
-    G.Rift.update(dt, pl, time);
-    G.Judgment.update(dt, pl, time);
-    G.Events.update(dt, all, time);
+    if (G.Tower.active) G.Tower.update(dt);              // Battle Tower: its floors instead of rifts, Arceus and events
+    else G.Rift.update(dt, pl, time);
+    G.Judgment.update(dt, pl, time);                     // (only measures damage in the tower: see judgment.js)
+    if (!G.Tower.active) G.Events.update(dt, all, time);
     G.Weather.update(dt, time, pl);
     G.FX.update(dt);
 
-    G.Audio.music(G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);
+    G.Audio.music(G.Tower.active ? G.Tower.music() : G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);
     if (!coop || G.Coop.isHost) maybeLevelUp();
     if (pl.bonds > 0) offerBond(true);
     if (G.Coop.isHost) checkAllDown(dt);
@@ -986,6 +1011,7 @@ G.Game = (() => {
     G.World.drawGround(ctx, cam);
     G.World.drawLiquid(ctx, cam, t);
     G.Hazards.draw(ctx);
+    G.Tower.drawGround(ctx);                 // Battle Tower: Seal Plates
     G.Combat.drawGroundFields(ctx);
     G.Pickups.draw(ctx);
 
@@ -1033,6 +1059,7 @@ G.Game = (() => {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
     }
+    G.TowerBosses.drawOverlay(ctx, w, h);     // Battle Tower: Gengar's lights out
     if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);
     G.Judgment.drawOverlay(ctx, w, h);
     G.Touch.draw(ctx);
@@ -1552,7 +1579,8 @@ G.Game = (() => {
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
     armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
     tutor() { if (pl) offerItem({ tutor: tutorMoves(pl) }); },             // Spiritomb: each player gets their own 3 moves
-    init, startRun, everyone, levelXp, flash, offerBond,
+    init, startRun, everyone, levelXp, flash, offerBond, grantLevels, towerEnd,
+    get pendingLevels() { return pendingLevels; },
     /** For testing: skips the run's clock. */
     debugTime(t) { tampered = true; time = t; },
     /**
@@ -1602,7 +1630,7 @@ G.Game = (() => {
 G.Flow = {
   boot() {
     G.UI.initChrome();
-    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init(); G.ShopUI.init(); G.KeyItemUI.init();
+    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init(); G.ShopUI.init(); G.KeyItemUI.init(); G.TowerUI.init();
     G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.CodexUI.init(); G.MiniUI.init(); G.Updater.init();
     // Your name at the top right opens your profile.
     document.getElementById('user-pill').onclick = () => G.GoalsUI.open('profile');
@@ -1660,6 +1688,8 @@ G.Flow = {
     } else this.goMenu();
   },
   play() { if (G.Game.state === 'ui') G.Game.startRun(); },     // (a second Play click mustn't restart the run)
+  /** Battle Tower Climb (solo) from floor `start` (1 or the floor after a saved checkpoint). */
+  playTower(start) { if (G.Game.state === 'ui') G.Game.startRun(null, { mode: 'climb', start }); },
   /** Starts the group run (the host sends it to everyone). */
   startCoop(cfg) {
     if (G.Game.state !== 'ui' || !G.Social.room) return;

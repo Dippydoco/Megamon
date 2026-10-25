@@ -181,7 +181,8 @@
        Settings lives on the gear in the top bar. -->
   <div class="menu-right">
     <div class="box menu-grid">
-      <button class="menu-item tile play" data-go="play">Play<small>Enter the dungeon</small></button>
+      <button class="menu-item tile play half" data-go="play">Play<small>Enter the dungeon</small></button>
+      <button class="menu-item tile play half tower" data-go="tower">Battle Tower<small id="menu-tower-sub">Climb 50 floors</small></button>
       <button class="menu-item tile" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
       <button class="menu-item tile" data-go="gacha">Gacha<small id="menu-gacha-sub">Pokémon and shinies</small></button>
       <button class="menu-item tile" data-go="upgrades">Upgrades<small id="menu-upg-sub">Stronger every run</small></button>
@@ -414,6 +415,8 @@
     <div id="lobby-members" class="lobby-members"></div>
     <h3 id="lobby-inv-title" style="margin:14px 0 6px">Invite friends</h3>
     <div id="lobby-invite" class="fr-list"></div>
+    <h3 style="margin:14px 0 6px">Mode</h3>
+    <div id="lobby-mode"></div>
     <h3 style="margin:14px 0 6px">Mini-games</h3>
     <div id="lobby-mini"></div>
     <h3 style="margin:14px 0 6px">Room chat</h3>
@@ -557,6 +560,20 @@
 
 <!-- ====== Upgrades ====== -->
 <!-- ====== Shop: Klefki's Key Items and Sableye's Star Shop (js/ui/shop-ui.js) ====== -->
+<!-- ====== Battle Tower (ui/tower-ui.js) ====== -->
+<section id="scr-tower" class="scr dim hidden">
+  <div class="box wide tower-box">
+    <div class="row between">
+      <div class="shop-tabs" id="tower-tabs">
+        <button class="shop-tab" data-tab="climb" data-sfx="click"><span><b>Climb</b><small>50 floors · solo</small></span></button>
+        <button class="shop-tab" data-tab="shop" data-sfx="click"><span><b>BP Shop</b><small>Badges, themes, exchange</small></span></button>
+      </div>
+      <div class="row" style="gap:8px"><span class="shop-wallet" id="tower-wallet"></span><button class="btn small ghost" data-back>Back</button></div>
+    </div>
+    <div id="tower-body"></div>
+  </div>
+</section>
+
 <section id="scr-shop" class="scr dim hidden">
   <div class="box wide shop-box">
     <div class="shop-stall" id="shop-stall">
@@ -664,6 +681,15 @@
   </div>
 </section>
 
+<!-- ====== Battle Tower: pick a Badge after a boss (ui/tower-ui.js) ====== -->
+<section id="scr-tbadge" class="scr dim hidden">
+  <div class="box center">
+    <h2>Choose a Badge</h2>
+    <p class="sub">It lasts for the rest of this run · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></p>
+    <div id="tbadge-cards" class="cards"></div>
+  </div>
+</section>
+
 <section id="scr-item" class="scr dim hidden">
   <div class="box center">
     <h2 id="item-title">An item!</h2>
@@ -736,6 +762,7 @@
 <script defer src="js/data/achievements.js"></script>
 <script defer src="js/data/funding.js"></script>
 <script defer src="js/data/changelog.js"></script>
+<script defer src="js/data/tower.js"></script>
 <!-- world -->
 <script defer src="js/world/tiles.js"></script>
 <script defer src="js/world/world.js"></script>
@@ -765,6 +792,8 @@
 <script defer src="js/systems/redeem.js"></script>
 <script defer src="js/systems/hazards.js"></script>
 <script defer src="js/systems/abilrun.js"></script>
+<script defer src="js/systems/towerbosses.js"></script>
+<script defer src="js/systems/tower.js"></script>
 <!-- network: friends, rooms, co-op and leaderboard -->
 <script defer src="js/net/social.js"></script>
 <script defer src="js/net/activity.js"></script>
@@ -782,6 +811,7 @@
 <script defer src="js/ui/minigames.js"></script>
 <script defer src="js/ui/slots.js"></script>
 <script defer src="js/ui/shop-ui.js"></script>
+<script defer src="js/ui/tower-ui.js"></script>
 <script defer src="js/ui/gacha-ui.js"></script>
 <script defer src="js/ui/run-ui.js"></script>
 <script defer src="js/ui/social-ui.js"></script>

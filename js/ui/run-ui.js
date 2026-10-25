@@ -247,8 +247,15 @@ G.RunUI = (() => {
     };
     document.querySelectorAll('#over-tabs .tab').forEach(el => { el.onclick = () => setTab(el.dataset.tab); });
     setTab('sum');
-    $('over-title').textContent = r.dead ? 'You fell…' : 'Run over';
-    $('over-stats').innerHTML = `
+    const tw = r.tower;          // Battle Tower run (systems/tower.js finish())
+    $('over-title').textContent = tw && tw.won ? 'Battle Tower conquered!' : tw && r.dead ? 'You fell on ' + tw.floor + 'F…' : r.dead ? 'You fell…' : 'Run over';
+    $('over-stats').innerHTML = (tw ? `
+      <div><span>${tw.mode === 'exp' ? 'Expedition' : 'Climb'}</span><b class="gold">${tw.won ? '50F · the summit' : 'Reached ' + tw.floor + 'F'}</b></div>
+      <div><span>Started at</span><b>${tw.start}F</b></div>
+      <div style="grid-column:1/-1"><span>Battle Points earned</span><b class="gold">${G.Icons.html('bp', 22)} +${tw.bp}</b>
+        ${tw.t10 ? `<div style="font-size:12px;color:var(--muted)">First clears: ${G.Icons.html('ticket10', 16)} +${tw.t10} ×10</div>` : ''}</div>
+      ${tw.cp ? `<div style="grid-column:1/-1;text-align:center" class="gold">Checkpoint saved: you can start from ${tw.cp + 1}F now</div>` : ''}
+      ${tw.badges.length ? `<div style="grid-column:1/-1"><span>Badges</span><b style="font-size:15px">${tw.badges.map(id => { const b = G.TowerData.BADGE_BY[id]; return b ? G.Icons.html(b.icon, 16) + ' ' + b.name : ''; }).join(' · ')}</b></div>` : ''}` : '') + `
       <div><span>Time</span><b>${G.U.mmss(r.time)}</b></div>
       <div><span>Level</span><b>${r.level}</b></div>
       <div><span>Defeated</span><b>${r.kills}</b></div>

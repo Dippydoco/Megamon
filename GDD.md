@@ -52,6 +52,19 @@ Main menu  (the world in the background, with wild Pokémon wandering)
   team's experience is divided by (1 + 0.6·(n−1)).
 - Pausing doesn't stop the game; if the host leaves, the run ends for everyone.
 
+### 2.5 Battle Tower (second main mode)
+- **50 floors** in 5 sections of 10, each a closed arena (the rift arena machinery). Horde floors: defeat a quota.
+  Every 5th floor a boss, every 10th a legendary gatekeeper, **Rayquaza** at 50F. Difficulty follows a "floor clock":
+  floor n plays like second (n − 1) × 36 of a survival run.
+- **Climb** (solo): beating a gatekeeper saves that checkpoint for good; runs start at 1F or after any saved
+  checkpoint, with free levels as a head start. **Expedition** (co-op, the room's mode): same floors, never moves
+  checkpoints; with 2+ players the 3rd and 8th floor of each section are co-op events (Seal Plates, Twin Bond).
+- Each cleared floor: a level, a heal and **Battle Points** (BP, a ledger currency like coins). After every boss:
+  pick 1 of 3 **Badges** (run-long passives; 4 free, 8 unlocked with BP). The BP Shop also sells Battle Tower
+  themes and exchanges BP for coins and tickets. First clears of boss floors give ×10 tickets.
+- Scripted bosses (systems/towerbosses.js): Slaking (Truant), Gengar (shadow clones, lights out), Rayquaza (3 phases),
+  Plusle and Minun (Twin Bond). No survival time, records, history or leaderboard from tower runs.
+
 ### 2.4 Leaderboard
 - Time survived. **Solo / Group** tabs; **daily, weekly, monthly, yearly and
   all-time** periods (Spanish time); **everyone or friends only**;

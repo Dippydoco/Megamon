@@ -176,7 +176,10 @@ G.Themes = (() => {
     { id: 'phantom', name: 'Phantom', price: 1, vars: { box1: '#5a3596', box2: '#2a1552', edgeIn: '#9b74e0', pill: 'rgba(30,12,56,.88)', tile: 'rgba(200,160,255,.06)', accent: '#d7a6ff' } },
     { id: 'sakura', name: 'Sakura', price: 1, vars: { box1: '#a8467a', box2: '#5a1c40', edgeIn: '#e88ab8', pill: 'rgba(56,14,36,.88)', tile: 'rgba(255,180,220,.06)', accent: '#ffc2e2' } },
     { id: 'obsidian', name: 'Obsidian', price: 2, vars: { box1: '#33363f', box2: '#121318', edgeIn: '#6a6f7e', pill: 'rgba(12,12,16,.9)', tile: 'rgba(255,255,255,.035)', accent: '#e6e9f2' } },
-    { id: 'arceus', name: 'Arceus Gold', price: 3, vars: { box1: '#7a5c16', box2: '#3a2a06', edgeIn: '#e8c45a', pill: 'rgba(40,28,4,.9)', tile: 'rgba(255,220,120,.07)', accent: '#ffe27a' }, premium: true }
+    { id: 'arceus', name: 'Arceus Gold', price: 3, vars: { box1: '#7a5c16', box2: '#3a2a06', edgeIn: '#e8c45a', pill: 'rgba(40,28,4,.9)', tile: 'rgba(255,220,120,.07)', accent: '#ffe27a' }, premium: true },
+    // Battle Tower themes: bought with Battle Points in the tower (ui/tower-ui.js), not with Arceus Stars (`bp` instead of `price`).
+    { id: 'tower', name: 'Battle Tower', bp: 120, vars: { box1: '#4a5568', box2: '#1f2633', edgeIn: '#c9a24a', pill: 'rgba(20,24,34,.9)', tile: 'rgba(255,220,140,.05)', accent: '#ffcf6b' } },
+    { id: 'skypillar', name: 'Sky Pillar', bp: 300, vars: { box1: '#1f6b4f', box2: '#0b2a22', edgeIn: '#7fffb0', pill: 'rgba(6,30,22,.9)', tile: 'rgba(140,255,190,.05)', accent: '#b8ffd0' } }
   ];
   // Card themes for your player card in runs. bg: two gradient colours, border, ring (portrait frame),
   // name and bar colours. fx: 'shine' (a light sweep), 'stars' (twinkles), 'rainbow' (cycling border).
@@ -188,7 +191,9 @@ G.Themes = (() => {
     { id: 'phantom', name: 'Phantom', price: 2, bg: ['rgba(70,30,120,.82)', 'rgba(22,8,46,.82)'], border: '#b07bff', ring: '#d7a6ff', name_: '#f0e4ff', bar: '#c47bff' },
     { id: 'frost', name: 'Frost', price: 2, bg: ['rgba(150,200,230,.55)', 'rgba(30,60,90,.82)'], border: '#dff6ff', ring: '#ffffff', name_: '#ffffff', bar: '#9ae6ff' },
     { id: 'gilded', name: 'Gilded', price: 4, bg: ['rgba(110,80,14,.88)', 'rgba(40,26,2,.88)'], border: '#ffd23f', ring: '#ffe27a', name_: '#fff3c4', bar: '#ffd23f', fx: 'shine', premium: true },
-    { id: 'cosmic', name: 'Cosmic', price: 5, bg: ['rgba(20,10,60,.9)', 'rgba(4,2,20,.9)'], border: '#ffffff', ring: '#ffffff', name_: '#ffffff', bar: '#a98bff', fx: 'rainbow', stars: true, premium: true }
+    { id: 'cosmic', name: 'Cosmic', price: 5, bg: ['rgba(20,10,60,.9)', 'rgba(4,2,20,.9)'], border: '#ffffff', ring: '#ffffff', name_: '#ffffff', bar: '#a98bff', fx: 'rainbow', stars: true, premium: true },
+    { id: 'tower', name: 'Battle Tower', bp: 150, bg: ['rgba(70,78,96,.85)', 'rgba(24,28,38,.85)'], border: '#c9a24a', ring: '#ffcf6b', name_: '#fff1cf', bar: '#ffcf6b' },
+    { id: 'skypillar', name: 'Sky Pillar', bp: 400, bg: ['rgba(20,90,60,.85)', 'rgba(4,30,20,.85)'], border: '#7fffb0', ring: '#b8ffd0', name_: '#eafff2', bar: '#5fe08a', fx: 'shine' }
   ];
   const MBY = {}, CBY = {};
   for (const t of MENU) MBY[t.id] = t;
@@ -218,6 +223,7 @@ G.Themes = (() => {
     if (!s || !t || !id) return 'Unknown theme';
     s.themes = s.themes || {};
     if (s.themes[key(kind, id)]) return 'You already have it';
+    if (t.bp) return 'Unlocked with Battle Points in the Battle Tower';
     if (G.DB.stars() < t.price) return 'Not enough Arceus Stars';
     if (!G.DB.spendStars(t.price)) return 'Not enough Arceus Stars';
     s.themes[key(kind, id)] = Date.now();
@@ -234,5 +240,19 @@ G.Themes = (() => {
     return true;
   }
 
-  return { MENU, CARD, MBY, CBY, owns, menuId, cardId, card, applyMenu, buy, wear };
+  /** Battle Tower themes: paid with Battle Points (save.tower.bp). Returns '' if it worked, or why not. */
+  function buyBp(kind, id) {
+    const s = G.DB.save, t = (kind === 'm' ? MBY : CBY)[id];
+    if (!s || !t || !t.bp || !s.tower) return 'Unknown theme';
+    s.themes = s.themes || {};
+    if (s.themes[key(kind, id)]) return 'You already have it';
+    if ((s.tower.bp || 0) < t.bp) return 'Not enough Battle Points';
+    s.tower.bp -= t.bp;
+    s.themes[key(kind, id)] = Date.now();
+    wear(kind, id);
+    G.DB.commit(true);
+    return '';
+  }
+
+  return { MENU, CARD, MBY, CBY, owns, menuId, cardId, card, applyMenu, buy, buyBp, wear };
 })();

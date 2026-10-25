@@ -216,7 +216,7 @@ G.Judgment = (() => {
   function update(dt, pl, time) {
     if (!phase) {
       sampleDps(dt);                        // (for the first legendary's health)
-      if (authority() && time >= AT && !G.Rift.inArena) start();
+      if (authority() && time >= AT && !G.Rift.inArena && !G.Tower.active) start();      // (the Battle Tower has no Judgment)
       return;
     }
     if (phase !== 'fight') return;

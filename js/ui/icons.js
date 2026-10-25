@@ -216,6 +216,13 @@ G.Icons = (() => {
     friends: { pal: { b: '#4fb4ff', d: '#2a6fb0', g: '#5fe08a', h: '#2f9a52' }, rows: [
       '............', '..kkk..kkk..', '.kbbbkkgggk.', '.kbbbkkgggk.', '..kkk..kkk..', '............',
       '.kkkkkkkkkk.', 'kbbbbkkggggk', 'kbbbbkkggggk', 'kddddkkhhhhk', 'kkkkkkkkkkkk', '............'] },
+    // Battle Tower (menu tile) and its Battle Points.
+    tower: { pal: { g: '#b8c4d8', d: '#7a869c', w: '#ffffff', y: '#ffd23f' }, rows: [
+      '.....kk.....', '....kyyk....', '...kkkkkk...', '...kgwggk...', '...kgkkdk...', '..kkkkkkkk..',
+      '..kgwgggdk..', '..kggkkgdk..', '.kkkkkkkkkk.', '.kgwggggddk.', '.kggkkkkgdk.', 'kkkkkkkkkkkk'] },
+    bp: { pal: { p: '#ffb84d', w: '#fff0c0', d: '#c07a1a' }, rows: [
+      '....kkkk....', '..kkppppkk..', '.kpwkkkppdk.', '.kpwkppkpdk.', 'kppwkkkpppdk', 'kppwkpppppdk',
+      'kpppkpppppdk', 'kpppkpppppdk', '.kppppppppk.', '.kdpppppddk.', '..kkddddkk..', '....kkkk....'] },
     ball: { pal: { r: '#ff4d4d', w: '#f4f4f4', s: '#c23a3a' }, rows: [
       '....kkkk....', '..kkrrrrkk..', '.krwrrrrrrk.', '.krwrrrrrsk.', 'krrrrkkrrssk', 'kkkkkwwkkkkk',
       'kwwwkwwkwwwk', 'kwwwwkkwwwwk', '.kwwwwwwwwk.', '.kwwwwwwwwk.', '..kkwwwwkk..', '....kkkk....'] }

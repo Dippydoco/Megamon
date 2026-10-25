@@ -80,6 +80,22 @@ G.Spawner = (() => {
     return Math.random() < SHINY_RATE * G.Charms.mult(dex);      // Shiny Charm: ×2 for completed regions
   }
 
+  /**
+   * A wild enemy with the stats of second `t` for `n` players (not added yet). Also used by the Battle Tower
+   * (systems/tower.js), whose floors spawn inside their arena on a "floor clock" instead of the run's.
+   */
+  function make(def, x, y, t, n) {
+    const shiny = rollShiny(def.dex);
+    // (G.KeyItems.enemyHp: Black Flute, a flat +25% that doesn't grow with the run.)
+    const e = new G.Enemy(def, x, y, scaled(G.Enemies.scale(t), G.Coop.scaleHp(n) * hpK(t) * G.KeyItems.enemyHp()));
+    e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
+    const rp = G.Enemies.ramp(def, t);
+    if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
+    if (shiny) e.makeShiny();
+    if (G.Events.golden) e.makeGolden();
+    return e;
+  }
+
   // Supports never gang up: at most this many of each alive at once (on the whole map, so in co-op it's for the
   // whole team: only the host spawns enemies). Their minions are ordinary enemies and don't count.
   const SUPPORT_MAX = { healer: 3, shielder: 3, summoner: 3 };
@@ -94,14 +110,8 @@ G.Spawner = (() => {
     const def = G.U.pick(open);
     const pt = freePoint(pl, angle == null ? Math.random() * 6.2832 : angle, isFlyer(def));
     if (!pt) return null;
-    const shiny = rollShiny(def.dex);
-    // (G.KeyItems.enemyHp: Black Flute, a flat +25% that doesn't grow with the run.)
-    const e = new G.Enemy(def, pt[0], pt[1], scaled(G.Enemies.scale(t), G.Coop.scaleHp(players.length) * hpK(t) * G.KeyItems.enemyHp()));
-    e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
-    const rp = G.Enemies.ramp(def, t);
-    if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
-    if (shiny) e.makeShiny();
-    if (G.Events.golden) e.makeGolden();
+    const e = make(def, pt[0], pt[1], t, players.length);
+    const shiny = e.shiny;
     G.EnemyMgr.add(e);
     if (shiny) {
       say('A shiny ' + e.name + ' is nearby!', 3.4);
@@ -167,7 +177,7 @@ G.Spawner = (() => {
     if (announceT > 0) announceT -= dt;
     // In the rift arena nothing else spawns (and the boss clock waits).
     // In Arceus's Judgment, only its legendaries (systems/judgment.js).
-    if (G.Rift.inArena || G.Judgment.active) return;
+    if (G.Rift.inArena || G.Judgment.active || G.Tower.active) return;
 
     // Preloads what will appear in the next minute.
     preloadT -= dt;
@@ -247,6 +257,6 @@ G.Spawner = (() => {
   /** Co-op guest: only the notice's timer runs. */
   function tickBanner(dt) { if (announceT > 0) announceT -= dt; }
 
-  return { reset, update, ahead, burst, ring, tickBanner, banner, say, rate, SHINY_RATE, CAP,
+  return { reset, update, ahead, burst, ring, tickBanner, banner, say, rate, make, rollShiny, SHINY_RATE, CAP,
            debugForceShiny(n = 1) { forceShiny = n; } };
 })();

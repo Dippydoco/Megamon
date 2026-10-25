@@ -284,7 +284,7 @@
         const room = G.Social.room;
         // A link came up: the host sends the list, a guest repeats its own answer (it may have been lost).
         if (room && (mode === 'direct' || mode === 'relay')) {
-          if (room.isHost) sendReadyList();
+          if (room.isHost) { sendReadyList(); G.TowerUI.sendLobbyMode(); }
           else if (u === room.host) G.Net.toHost({ k: 'rdy', v: myReady ? 1 : 0 });
         }
         if (G.UI.isOpen('scr-lobby')) render();
@@ -392,6 +392,7 @@
         $('lobby-status-hint').textContent = gl.hint;
       }
       G.MiniUI.lobbyTools($('lobby-mini'));
+      G.TowerUI.lobbyTools($('lobby-mode'));          // Survival or a Battle Tower Expedition (ui/tower-ui.js)
       const btn = $('lobby-start');
       btn.classList.toggle('hidden', !room.isHost);
       const connecting = ms.some(m => m.uid !== room.host && G.Net.mode(m.uid) === 'connecting');
@@ -446,6 +447,9 @@
           : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny })
       };
       if (drafted) for (const m of cfg.members) { const d = G.MiniUI.draftedFor(m.uid); if (d) { m.dex = d; m.shiny = false; } }
+      // Battle Tower Expedition (ui/tower-ui.js): the same start message, with the tower's config (not for Draft Night).
+      const tower = drafted ? null : G.TowerUI.lobbyCfg();
+      if (tower) cfg.tower = tower;
       if (drafted) G.Social.setGame(null);          // the draft is used up by this run
       G.Social.setOpen(false);
       resetReady();                                        // back in the room after the run: ready up again

@@ -115,10 +115,18 @@ G.HUD = (() => {
     ctx.textAlign = 'center';
     ctx.font = F(800, 26);
     ctx.fillStyle = 'rgba(255,255,255,.95)';
-    ctx.fillText(G.U.mmss(st.time), w / 2, 42);
+    // Battle Tower (systems/tower.js): the floor instead of the clock, and the floor's goal.
+    const twr = G.Tower.active ? G.Tower.hud() : null;
+    ctx.fillText(twr ? twr.big : G.U.mmss(st.time), w / 2, 42);
     // Stage · defeated · coins: bigger, bold, outlined and colour-coded so it reads over any ground (24-10-2026; was 10px grey).
     {
-      const parts = [
+      const parts = twr ? [
+        ['BATTLE TOWER · ' + twr.mode, '#ffd27a'],
+        ['  ·  ', 'rgba(255,255,255,.6)'],
+        [twr.place, '#8fe3ff'],
+        ['  ·  ', 'rgba(255,255,255,.6)'],
+        [twr.bp + ' BP', '#ffe27a']
+      ] : [
         [G.World.biomeName().toUpperCase(), '#8fe3ff'],
         ['  ·  ', 'rgba(255,255,255,.6)'],
         [Math.floor(pl.kills || 0).toLocaleString('en') + ' DEFEATED', '#ffffff'],
@@ -139,6 +147,12 @@ G.HUD = (() => {
         ctx.fillText(txt, x, 61);
         x += ctx.measureText(txt).width;
       }
+      if (twr && twr.goal) {
+        ctx.font = F(800, 12);
+        const gw = ctx.measureText(twr.goal).width;
+        ctx.strokeText(twr.goal, w / 2 - gw / 2, 78);
+        ctx.fillStyle = twr.col; ctx.fillText(twr.goal, w / 2 - gw / 2, 78);
+      }
       ctx.restore();
       ctx.textAlign = 'center';
     }
@@ -149,7 +163,7 @@ G.HUD = (() => {
     if (wx) {
       ctx.font = F(800, 11);
       ctx.textAlign = 'left';
-      const txt = wx.name.toUpperCase() + ' · ' + Math.ceil(wx.left) + 's';
+      const txt = wx.name.toUpperCase() + (wx.left > 999 ? '' : ' · ' + Math.ceil(wx.left) + 's');      // (an arena's own weather has no end)
       const tw = ctx.measureText(txt).width + 40;
       const x0 = w - tw - 16 - (touch ? 56 : 0), y0 = 14;
       wxBox = { x: x0, y: y0, w: tw, h: 26 };
@@ -161,9 +175,10 @@ G.HUD = (() => {
     }
 
     // ---------- boss bar (top centre): icon, big name and health ----------
-    const boss = G.EnemyMgr.all().find(e => e.boss && !e.dead);
+    // (Gengar's clones in the Battle Tower are bosses too, but the bar shows the real one.)
+    const boss = G.EnemyMgr.all().find(e => e.boss && !e.dead && e.behavior !== 'clone');
     if (boss) {
-      const bw = Math.min(480, w - 190), bx0 = (w - bw) / 2, IS = 48, by = 64;
+      const bw = Math.min(480, w - 190), bx0 = (w - bw) / 2, IS = 48, by = twr ? 86 : 64;
       const pulseB = 0.5 + 0.5 * Math.sin(performance.now() / 300);
       // Boss icon
       roundRect(ctx, bx0 - IS - 10, by, IS, IS, 9);
