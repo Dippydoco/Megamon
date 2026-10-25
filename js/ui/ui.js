@@ -38,6 +38,7 @@ G.UI = (() => {
     const t = (s && s.tickets) || { t1: 0, t10: 0 };
     $('tickets-pill').innerHTML = `${G.Icons.html('ticket', 18)} ${t.t1} &nbsp;${G.Icons.html('ticket10', 18)} ${t.t10}`;
     $('stars-pill').innerHTML = `${G.Icons.html('star', 18)} ${G.DB.stars ? G.DB.stars() : 0}`;
+    $('bp-pill').innerHTML = `${G.Icons.html('bp', 18)} ${(s && s.tower && s.tower.bp) || 0}`;      // Battle Tower points
     // Sync dot: green = saved in the cloud, yellow = saving,
     // red = offline (saved locally and uploaded when back).
     const st = G.DB.guest ? 'guest' : G.DB.syncState;

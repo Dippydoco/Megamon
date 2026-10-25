@@ -33,6 +33,7 @@ G.TowerUI = (() => {
   function render() {
     document.querySelectorAll('#tower-tabs .shop-tab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     $('tower-wallet').innerHTML = `${G.Icons.html('bp', 18)} <b>${T().bp || 0}</b> BP`;
+    G.UI.refreshCoins();               // the top bar's BP (and coins / tickets after an exchange)
     const box = $('tower-body');
     box.innerHTML = '';
     if (tab === 'shop') renderShop(box); else renderClimb(box);

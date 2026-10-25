@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T16:20Z', title: 'Battle Points in the top bar', chg: [
+    'Your Battle Points now show in the top bar on the main menu, next to your Arceus Stars.'
+  ], fix: [
+    'The Battle Tower screen no longer slides under the top bar.',
+    'On narrower windows the top bar is more compact (What\'s new and Support become icons), so nothing runs off the edge.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T15:42Z', title: 'New Battle Tower floors', new: [
     'Choose your stairs: after each Battle Tower floor, two stairways appear, each labelled with the kind of floor it leads to. Walk into the one you want. Boss floors, gatekeepers and co-op event floors still come when they come.',
     'Objective floors: Survival (last 75 seconds while the spawns ramp up; a storm closes in at the end), Bounty (defeat the three marked Pokémon), Relic Hunt (collect five shards, each one calls a wave), Hold the Ground (stand in a zone that moves every 10 seconds) and Escort (lead a lost Pokémon to the exit; enemies near it hurt it).',
