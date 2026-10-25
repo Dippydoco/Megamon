@@ -62,6 +62,8 @@ Main menu  (the world in the background, with wild Pokémon wandering)
 - Each cleared floor: a level, a heal and **Battle Points** (BP, a ledger currency like coins). After every boss:
   pick 1 of 3 **Badges** (run-long passives; 4 free, 8 unlocked with BP). The BP Shop also sells Battle Tower
   themes and exchanges BP for coins and tickets. First clears of boss floors give ×10 tickets.
+- **Entrance hall** (systems/towerhub.js): every tower run starts in a castle hall with a Climb door and an
+  Expedition door (the other mode's is locked) and a statue for every boss floor you have cleared.
 - Scripted bosses (systems/towerbosses.js): Slaking (Truant), Gengar (shadow clones, lights out), Rayquaza (3 phases),
   Plusle and Minun (Twin Bond). No survival time, records, history or leaderboard from tower runs.
 

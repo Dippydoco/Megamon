@@ -103,6 +103,10 @@ G.Tiles = (() => {
     fairy:    { name: 'Enchanted Forest', floor: '#4f7f5a', wall: '#7a5a8a', liquid: 'water', liq: '#8fd8ff', foam: '#ffe0f4', prop: 'tree',
                 leaf: '#e08ad0', trunk: '#6b4a5a', flowers: ['#ff8ad8', '#ffffff', '#c9a6ff'], grass: '#c48ad8', rock: '#9a8aa8',
                 pools: 0.16, pillars: 0, props: { tree: 0.05, grass: 0.1 }, weather: null },
+    // Battle Tower entrance hall (systems/towerhub.js): castle stone, open floor, no props (statues and doors are drawn).
+    tower:    { name: 'Battle Tower Hall', floor: '#5c566a', wall: '#2e2a38', liquid: 'water', liq: '#4f8fd0', prop: 'crystal',
+                leaf: '#c9a24a', trunk: '#4a4058', flowers: ['#8a8298', '#6e6880', '#c9a24a'], grass: '#6a647a', rock: '#7a7488',
+                pools: 0, pillars: 0, props: {}, weather: null },
     // Arceus's arena at minute 30 (systems/judgment.js): ash, ruins and
     // dead trees, with a clearing where it lands (clear). It isn't from any rift.
     judgment: { name: 'Ruins of Judgment', floor: '#4a4240', wall: '#2e2829', liquid: 'lava', liq: '#e8a82a', foam: '#fff1b8', prop: 'dead',

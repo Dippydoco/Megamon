@@ -55,7 +55,7 @@ G.TowerUI = (() => {
           <b>Start from</b>
           <div class="seg tw-seg" id="tw-starts">${starts.map(f => `<button data-f="${f}" class="${f === startFloor ? 'on' : ''}">${f}F</button>`).join('')}</div>
           <small>${head ? 'Head start: ' + head + ' free levels' : t.cp ? 'From the bottom, no head start' : 'Beat 10F to unlock a checkpoint'}</small>
-          <button id="tw-go" class="btn gold" data-sfx="confirm">Start the climb</button>
+          <button id="tw-go" class="btn gold" data-sfx="confirm">Enter the tower</button>
         </div>
       </div>
       <div class="tw-records">
@@ -63,6 +63,7 @@ G.TowerUI = (() => {
         <span>Best expedition <b>${t.bestX ? t.bestX + 'F' : '—'}</b></span>
         <span>Checkpoint <b>${t.cp ? t.cp + 'F' : '—'}</b></span>
         <span>Runs <b>${t.runs || 0}</b></span>
+        <span>Statues <b>${Object.keys(t.firsts || {}).filter(n => n % 5 === 0).length} / 10</b></span>
       </div>
       <h3 class="shop-h">${G.Icons.html('tower', 18)} The tower <small>Gold: cleared at least once</small></h3>
       <div class="tw-map" id="tw-map"></div>`);

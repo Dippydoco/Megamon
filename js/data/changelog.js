@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T15:08Z', title: 'Battle Tower entrance hall', new: [
+    'Every Battle Tower run now starts in an entrance hall: a castle room with two doors at the far end, Climb on the left and Expedition on the right. Walk through the open door to start; the other mode\'s door is locked (Climb when playing in a friends room, Expedition when on your own).',
+    'Statues of the bosses you have beaten line the hall: 5th-floor bosses on the left, gatekeepers on the right, higher floors closer to the doors. Bosses still to beat leave an empty pedestal.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T14:32Z', title: 'The Battle Tower', new: [
     'A new main mode, the Battle Tower (the tile next to Play): climb 50 floors of closed arenas. Most floors are hordes (defeat a set number of Pokémon), every 5th floor is a boss and every 10th a legendary gatekeeper, with Rayquaza waiting at the summit. Each cleared floor gives a level, a small heal and Battle Points.',
     'Climb on your own: beating a gatekeeper (10F, 20F, 30F, 40F) saves that checkpoint for good. Fall, and you can start again from your checkpoint with any partner, with free levels as a head start.',

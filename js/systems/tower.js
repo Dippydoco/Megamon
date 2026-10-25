@@ -46,11 +46,19 @@ G.Tower = (() => {
     if (authority()) {
       const head = D().headStart(start);
       if (head > 0) G.Game.grantLevels(head);
-      nextFloor();
+      openHub();     // every run starts in the entrance hall (systems/towerhub.js)
     }
   }
 
   // ---------------- floors ----------------
+
+  /** Host / solo: the entrance hall, the room every tower run starts in. */
+  function openHub() {
+    const cfg = { n: run.start - 1, kind: 'hub', arena: 'tower', r: G.TowerHub.R, tx: 6000, ty: 5600, t: 0, section: 0,
+                  np: G.Game.everyone().length };
+    if (G.Coop.isHost) G.Coop.broadcast(['tw', 'fl', cfg]);
+    beginFloor(cfg);
+  }
 
   /** Host / solo: plans the next floor and sends it to everyone. */
   function nextFloor() {
@@ -74,7 +82,7 @@ G.Tower = (() => {
   function beginFloor(cfg) {
     if (!run) return;
     run.floor = cfg.n;
-    fl = { cfg, phase: 'intro', t: 0, k0: 0, kills: 0, spawnT: 0, bossIds: [], enraged: false, prog: 0, mask: 0, done: {} };
+    fl = { cfg, phase: cfg.kind === 'hub' ? 'hub' : 'intro', t: 0, k0: 0, kills: 0, spawnT: 0, bossIds: [], enraged: false, prog: 0, mask: 0, done: {} };
     lastKills = -1;
     G.TowerBosses.reset();                           // no wind or darkness carried over
     G.TowerUI.closeBadges();                         // (a guest still picking when the host moved on)
@@ -92,8 +100,9 @@ G.Tower = (() => {
     fl.x = cfg.tx * ts + ts / 2; fl.y = cfg.ty * ts + ts / 2;
     // Everyone in a row at the south of the arena; bosses appear to the north.
     const ps = G.Game.everyone();
-    ps.forEach((p, i) => { p.x = fl.x + (i - (ps.length - 1) / 2) * 34; p.y = fl.y + ts * 3; });
-    pl.x = fl.x + (ps.indexOf(pl) - (ps.length - 1) / 2) * 34; pl.y = fl.y + ts * 3;
+    const sy = cfg.kind === 'hub' ? G.TowerHub.spawnY(fl) : fl.y + ts * 3;
+    ps.forEach((p, i) => { p.x = fl.x + (i - (ps.length - 1) / 2) * 34; p.y = sy; });
+    pl.x = fl.x + (ps.indexOf(pl) - (ps.length - 1) / 2) * 34; pl.y = sy;
     if (pl.dead) pl.revive(0.5);                     // a fallen teammate gets up on the next floor
     pl.invuln = Math.max(pl.invuln || 0, 2);
     G.Camera.x = pl.x; G.Camera.y = pl.y;
@@ -103,6 +112,7 @@ G.Tower = (() => {
     if (cfg.dex) G.Sprites.preload([cfg.dex], 8000);
     if (cfg.kind === 'twins') G.Sprites.preload([311, 312], 8000);
     G.Sprites.preload(G.Enemies.upcomingDex(cfg.t, 30));
+    if (cfg.kind === 'hub') { G.TowerHub.preload(); G.Spawner.say('Battle Tower', 2.4, true); return; }
     const sec = D().SECTIONS[cfg.section];
     G.Spawner.say(cfg.n + 'F · ' + (cfg.kind === 'final' ? 'The Summit' : sec.name), 2.4, true);
   }
@@ -215,7 +225,7 @@ G.Tower = (() => {
     if (!run || !fl) return;
     fl.t += dt;
     G.TowerBosses.tick(dt);                          // every computer: the wind pushes your own Pokémon
-    if (!authority()) return;
+    if (!authority()) { if (fl.phase === 'hub') G.TowerHub.tick(fl, dt, false); return; }
     const cfg = fl.cfg, pl = G.Game.player;
     // Co-op: the floor (and whether it's cleared) every 2 s, for a guest who missed a message or started late.
     if (G.Coop.isHost && (syncT -= dt) <= 0) {
@@ -223,6 +233,9 @@ G.Tower = (() => {
       G.Coop.broadcast(['tw', 'fl', cfg, ['clear', 'cards', 'badges', 'next', 'won', 'over'].includes(fl.phase) ? 1 : 0]);
     }
     switch (fl.phase) {
+      case 'hub':
+        if (G.TowerHub.tick(fl, dt, true)) { G.Spawner.say('Up the stairs…', 1.6); nextFloor(); }
+        break;
       case 'intro':
         if (fl.t >= INTRO) fight();
         break;
@@ -426,6 +439,7 @@ G.Tower = (() => {
 
   /** On the ground, under everyone: the Seal Plates. */
   function drawGround(ctx) {
+    if (fl && fl.cfg.kind === 'hub') { G.TowerHub.drawGround(ctx, fl); return; }
     if (!fl || fl.cfg.kind !== 'plates' || !fl.cfg.plates) return;
     const now = performance.now() / 1000;
     fl.cfg.plates.forEach((_, i) => {
@@ -447,6 +461,7 @@ G.Tower = (() => {
   /** What the HUD shows instead of the survival clock. */
   function hud() {
     if (!run || !fl) return null;
+    if (fl.cfg.kind === 'hub') return G.TowerHub.hud(run);
     const cfg = fl.cfg, sec = D().SECTIONS[cfg.section];
     let goal = '', col = '#ffffff';
     if (fl.phase === 'intro') goal = cfg.kind === 'horde' ? 'DEFEAT ' + cfg.quota + ' POKÉMON' : cfg.kind === 'plates' ? 'SEAL PLATES: HOLD EVERY PLATE AT ONCE' : cfg.kind === 'twins' ? 'TWIN BOND: DEFEAT BOTH TOGETHER' : 'BOSS FLOOR';
@@ -469,6 +484,7 @@ G.Tower = (() => {
   function music() {
     if (!fl) return null;
     const k = fl.cfg.kind;
+    if (k === 'hub') return 'village';
     if (k === 'gate' || k === 'final') return 'rift';
     if (k === 'boss' || k === 'twins') return 'boss';
     return G.BIOME_MUSIC[fl.cfg.section % G.BIOME_MUSIC.length];
@@ -476,6 +492,8 @@ G.Tower = (() => {
 
   return {
     reset, start, update, finish, onEvent, onClient, mateLeft, drawGround, hud, music,
+    /** Things drawn sorted by Y with everyone (the hall's statues and doors). */
+    drawables() { return fl && fl.cfg.kind === 'hub' ? G.TowerHub.drawables(fl) : []; },
     get active() { return !!run; },
     get run() { return run; },
     get floor() { return fl; },
