@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T08:40Z', title: 'Status abilities reworked', chg: [
+    'Abilities that only worked while you were burned, poisoned or slowed now do something in every run. Guts: each hit you take gives +8% Attack for 6 s (up to +40%). Marvel Scale: +30% damage reduction for 3 s after a hit. Quick Feet: can\'t be slowed, +30% speed when 5 or more foes are close. Flare Boost: up to +50% Sp. Atk the lower your HP. Poison Heal: poison hits deal half and you heal from poisoned foes nearby. Shed Skin: every 15 s a fresh skin blocks a hit. Natural Cure: switching moves heals 4% of your HP. Hydration: +2 HP/s and +10% speed in Rain or water. Healer: you and nearby teammates regenerate. Synchronize: any foe that hits you is burned, poisoned or slowed back.',
+    'Abilities that say you can\'t be burned or poisoned (Water Veil, Immunity, Comatose, Misty Surge and others) now make Fire or Poison hits deal 20% less.'
+  ] },
   { d: '2026-10-24', at: '2026-10-24T20:27Z', title: 'Protect cooldown fix', fix: [
     'Protect\'s cooldown now really waits for the shield: it stays full while you are protected and only starts counting down once the shield ends. Before, the timer ran from the moment you cast it, and firing it with Space / F started the full cooldown straight away.'
   ] },

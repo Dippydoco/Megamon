@@ -118,7 +118,7 @@ G.ABILITIES = {
 "comatose": {
 "n": "Comatose",
 "c": "Defense",
-"d": "Cannot be burned, poisoned, slowed or frozen."
+"d": "Cannot be slowed; Fire and Poison hits deal 20% less."
 },
 "commander": {
 "n": "Commander",
@@ -273,7 +273,7 @@ G.ABILITIES = {
 "flare-boost": {
 "n": "Flare Boost",
 "c": "Offense",
-"d": "While burned: +50% Sp. Atk."
+"d": "The lower your HP, the stronger your special moves: up to +50% Sp. Atk near 0 HP."
 },
 "flash-fire": {
 "n": "Flash Fire",
@@ -318,7 +318,7 @@ G.ABILITIES = {
 "good-as-gold": {
 "n": "Good As Gold",
 "c": "Defense",
-"d": "Immune to all status (burn, poison, slow, freeze) and to boss debuffs."
+"d": "Cannot be slowed; Fire and Poison hits deal 20% less; immune to boss debuffs."
 },
 "grass-pelt": {
 "n": "Grass Pelt",
@@ -338,7 +338,7 @@ G.ABILITIES = {
 "guts": {
 "n": "Guts",
 "c": "Offense",
-"d": "While burned, poisoned or slowed: +40% Attack, and burn does not lower your damage."
+"d": "Every hit you take: +8% Attack for 6 s (stacks up to 5, for +40%)."
 },
 "harvest": {
 "n": "Harvest",
@@ -348,7 +348,7 @@ G.ABILITIES = {
 "healer": {
 "n": "Healer",
 "c": "Team",
-"d": "Every 4 s, 30% chance to cure the status of you or a nearby teammate; revive teammates 30% faster."
+"d": "You and nearby teammates regenerate 0.6 HP/s; you revive teammates 30% faster."
 },
 "honey-gather": {
 "n": "Honey Gather",
@@ -378,7 +378,7 @@ G.ABILITIES = {
 "hydration": {
 "n": "Hydration",
 "c": "Sustain",
-"d": "Burn, poison and slow wear off twice as fast; in Rain or water they are removed at once."
+"d": "In Rain or standing in water: +2 HP/s and +10% speed."
 },
 "ice-body": {
 "n": "Ice Body",
@@ -403,7 +403,7 @@ G.ABILITIES = {
 "immunity": {
 "n": "Immunity",
 "c": "Defense",
-"d": "Cannot be poisoned; +5% damage reduction."
+"d": "Poison hits deal 20% less; +5% damage reduction."
 },
 "imposter": {
 "n": "Imposter",
@@ -463,7 +463,7 @@ G.ABILITIES = {
 "leaf-guard": {
 "n": "Leaf Guard",
 "c": "Defense",
-"d": "In the Forest biome or Harsh sunlight you cannot be burned, poisoned or slowed."
+"d": "In the Forest biome or Harsh sunlight: cannot be slowed, and Fire and Poison hits deal 20% less."
 },
 "levitate": {
 "n": "Levitate",
@@ -533,7 +533,7 @@ G.ABILITIES = {
 "marvel-scale": {
 "n": "Marvel Scale",
 "c": "Defense",
-"d": "While burned, poisoned or slowed: +30% damage reduction."
+"d": "After you take a hit: +30% damage reduction for 3 s."
 },
 "mega-launcher": {
 "n": "Mega Launcher",
@@ -553,7 +553,7 @@ G.ABILITIES = {
 "misty-surge": {
 "n": "Misty Surge",
 "c": "Team",
-"d": "Creates Misty Terrain at the start of the run and every 4 min: you and teammates cannot get any status for 30 s."
+"d": "Creates Misty Terrain at the start of the run and every 4 min: for 30 s you and teammates cannot be slowed, and Fire and Poison hits deal 20% less."
 },
 "mold-breaker": {
 "n": "Mold Breaker",
@@ -593,7 +593,7 @@ G.ABILITIES = {
 "natural-cure": {
 "n": "Natural Cure",
 "c": "Sustain",
-"d": "Status wears off 50% faster; picking up a heal also cures all status."
+"d": "Switching your active move heals 4% of your max HP (at most once every 6 s)."
 },
 "neutralizing-gas": {
 "n": "Neutralizing Gas",
@@ -648,7 +648,7 @@ G.ABILITIES = {
 "poison-heal": {
 "n": "Poison Heal",
 "c": "Sustain",
-"d": "Poison heals you instead (2 HP/s), and you are immune to poison damage."
+"d": "Poison hits deal 50% less, poison traps do nothing, and you heal 0.5 HP/s for each poisoned foe near you (up to 3 HP/s)."
 },
 "poison-point": {
 "n": "Poison Point",
@@ -713,7 +713,7 @@ G.ABILITIES = {
 "purifying-salt": {
 "n": "Purifying Salt",
 "c": "Defense",
-"d": "Immune to burn, poison and slow; take 30% less Ghost damage."
+"d": "Cannot be slowed; Fire and Poison hits deal 20% less; take 30% less Ghost damage."
 },
 "quark-drive": {
 "n": "Quark Drive",
@@ -728,7 +728,7 @@ G.ABILITIES = {
 "quick-feet": {
 "n": "Quick Feet",
 "c": "Mobility",
-"d": "While burned, poisoned or slowed: +40% speed (and slows do not apply)."
+"d": "You cannot be slowed; with 5 or more foes close to you, +30% speed."
 },
 "rain-dish": {
 "n": "Rain Dish",
@@ -838,7 +838,7 @@ G.ABILITIES = {
 "shed-skin": {
 "n": "Shed Skin",
 "c": "Sustain",
-"d": "Every 4 s, 35% chance to shed any burn, poison or slow."
+"d": "Every 15 s you grow a fresh skin that completely blocks the next hit."
 },
 "sheer-force": {
 "n": "Sheer Force",
@@ -853,7 +853,7 @@ G.ABILITIES = {
 "shield-dust": {
 "n": "Shield Dust",
 "c": "Defense",
-"d": "Immune to burn, poison and slow; take 10% less from area attacks."
+"d": "Cannot be slowed; Fire and Poison hits deal 20% less; take 10% less from area attacks."
 },
 "shields-down": {
 "n": "Shields Down",
@@ -1008,7 +1008,7 @@ G.ABILITIES = {
 "synchronize": {
 "n": "Synchronize",
 "c": "Status",
-"d": "When a foe burns, poisons or slows you, it gets the same status."
+"d": "Foes that hit you share it: Fire hits burn them back, Poison hits poison them, any other hit slows them for 2 s."
 },
 "technician": {
 "n": "Technician",
@@ -1033,7 +1033,7 @@ G.ABILITIES = {
 "thermal-exchange": {
 "n": "Thermal Exchange",
 "c": "Defense",
-"d": "Immune to burn; Fire hits give +15% Attack for 6 s (stacks 3)."
+"d": "Fire hits deal 20% less and give +15% Attack for 6 s (stacks 3)."
 },
 "thick-fat": {
 "n": "Thick Fat",
@@ -1138,7 +1138,7 @@ G.ABILITIES = {
 "water-bubble": {
 "n": "Water Bubble",
 "c": "Offense",
-"d": "Immune to burn; take 40% less Fire damage; Water moves +30% damage."
+"d": "Take 40% less Fire damage; Water moves +30% damage."
 },
 "water-compaction": {
 "n": "Water Compaction",
@@ -1148,7 +1148,7 @@ G.ABILITIES = {
 "water-veil": {
 "n": "Water Veil",
 "c": "Defense",
-"d": "Cannot be burned; immune to lava."
+"d": "Fire hits deal 20% less; immune to lava."
 },
 "well-baked-body": {
 "n": "Well-Baked Body",

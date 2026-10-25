@@ -250,7 +250,7 @@ G.CodexUI = (() => {
       })()],
       ['Abilities', [
         ['Always on', 'Every Pokémon has one ability (Abilities tab), active for the whole run. Pause the game to read yours.'],
-        ['Burned or poisoned', 'Players don\'t carry statuses: for abilities, you count as burned or poisoned for 4 s after a Fire or Poison hit, and as slowed while a trap, Hyper Beam or water slows you.'],   // abilrun.js
+        ['Burned or poisoned', 'Players are never burned or poisoned. Abilities that say you can\'t be burned or poisoned make Fire or Poison hits deal 20% less instead. You count as slowed while a trap, Hyper Beam or water slows you.'],   // abilrun.js
         ['Debuffs', 'Defiant, Competitive and the like trigger when you get slowed or hit by a boss\'s or legendary\'s attack.'],
         ['Weather and terrain', 'Drizzle, Drought, Sand Stream and Snow Warning bring their weather for 60 s at the start and 30 s every 4 minutes. Surge abilities do the same with their terrain.'],
         ['Teammates', 'Team abilities (Battery, Power Spot, Telepathy...) help teammates within a short distance of you.']

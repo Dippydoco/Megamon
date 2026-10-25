@@ -17,8 +17,10 @@
  *   team(me, mate, o)     a nearby teammate with this ability changes YOUR numbers o (and o.move(m) for moves)
  *
  * Where the game has no matching mechanic, the closest real one is used:
- *   - Players don't get burned or poisoned. "Burned" / "poisoned" means hit by a Fire / Poison attack in the last
- *     4 s (S.burnT / S.poisonT); "slowed" means a trap, Hyper Beam's recharge or slowing water/snow.
+ *   - Players don't get burned or poisoned. (25-10-2026) The abilities that only worked while you were "burned" or
+ *     "poisoned" (Guts, Marvel Scale, Quick Feet, Flare Boost, Poison Heal, Shed Skin, Natural Cure, Hydration, Healer,
+ *     Synchronize) were reworked into effects that always come up in a run. "Can't be burned / poisoned" means Fire /
+ *     Poison hits deal 20% less (see incoming). "Slowed" means a trap, Hyper Beam's recharge or slowing water/snow.
  *   - "Debuffed" (Defiant, Competitive) = getting slowed, or hit by a boss's or legendary's attack.
  *   - "Contact" = enemies touching you (and melee / dash moves on your side).
  * Weather and terrain bringers start their weather on the host (or solo); everyone sees it.
@@ -56,9 +58,14 @@ G.Abil = (() => {
   function add(S, k, amt, secs, max = 1) { const b = S.b[k] || (S.b[k] = { n: 0, t: 0, amt }); b.amt = amt; b.n = Math.min(max, b.n + 1); b.t = secs; }
   const val = (S, k) => { const b = S.b[k]; return b && b.n > 0 ? b.n * b.amt : 0; };
   const on = (S, k) => val(S, k) > 0;
-  const burned = S => S.burnT > 0, poisoned = S => S.poisonT > 0;
-  const slowed = pl => pl.slowT > 0;
-  const anyStatus = (pl, S) => burned(S) || poisoned(S) || slowed(pl);
+  /** Foes within r of you (counted at most 4 times a second): n, and how many of them are poisoned. */
+  function crowd(pl, S, dt, r) {
+    if ((S.crowdT = (S.crowdT || 0) - dt) > 0) return S.crowd || { n: 0, psn: 0 };
+    S.crowdT = 0.25;
+    let n = 0, psn = 0;
+    for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, r)) { if (e.dead) continue; n++; if (e.poison > 0) psn++; }
+    return (S.crowd = { n, psn });
+  }
   /** A weather the ability brings: 60 s at the start, then 30 s every 4 minutes (host / solo starts it, everyone sees it). */
   function bringWeather(S, kind, dt) {
     if (!authority() || G.Rift.inArena || G.Judgment.active) return;
@@ -134,9 +141,10 @@ G.Abil = (() => {
                   stat: (pl, S, o) => { if (on(S, 'dl')) o[S.dlStat] *= 1.2; } },
     'dragons-maw': typeUp('dragon', 1.4),
     'electromorphosis': { hurt: (pl, S) => { S.charged = true; }, cast: (pl, S, m) => { if (S.charged && m.type === 'electric') { S.castMul = 2; S.charged = false; say(pl, 'Charged!', '#ffe14d'); } } },
-    'flare-boost': { stat: (pl, S, o) => { if (burned(S)) o.spa *= 1.5; } },
+    // (25-10-2026 reworks: these used to need you burned / poisoned, which players never are.)
+    'flare-boost': { stat: (pl, S, o) => { o.spa *= 1 + 0.5 * (1 - hp(pl)); } },
     'grim-neigh': { stat: (pl, S, o) => { o.spa *= 1 + stackKills(S, pl); } },
-    'guts': { stat: (pl, S, o) => { if (anyStatus(pl, S)) o.atk *= 1.4; } },
+    'guts': { hurt: (pl, S) => { add(S, 'guts', 0.08, 6, 5); }, stat: (pl, S, o) => { o.atk *= 1 + val(S, 'guts'); } },
     'huge-power': { stat: (pl, S, o) => { o.atk *= 1.35; } },
     'hunger-switch': { move: (pl, S, m) => { const full = Math.floor(now() / 10) % 2 === 0; return (full ? m.type === 'electric' : m.type === 'dark') ? 1.15 : 1; } },
     'hustle': { stat: (pl, S, o) => { o.atk *= 1.25; }, hit: (pl, S, e, c, m) => { if (m && m.cat === 'physical' && Math.random() < 0.1) { c.mul = 0; c.miss = true; } } },
@@ -200,7 +208,7 @@ G.Abil = (() => {
     'transistor': typeUp('electric', 1.3),
     'truant': { cd: () => 2, move: () => 2.2 },
     'unseen-fist': { stat: (pl, S, o) => { o.atk *= 1.1; }, hit: (pl, S, e, c, m) => { if (m && contact(m)) c.pierce = true; } },
-    'water-bubble': merge(noBurn, typeUp('water', 1.3), { inc: (pl, S, h) => { if (h.type === 'fire') h.amount *= 0.6; } }),
+    'water-bubble': merge(typeUp('water', 1.3), { inc: (pl, S, h) => { if (h.type === 'fire') h.amount *= 0.6; } }),
     'wind-power': { hurt: (pl, S, h) => { if (h.type === 'flying') S.charged = true; },
                     cast: (pl, S, m) => { if (S.charged && m.type === 'electric') { S.castMul = 2; S.charged = false; say(pl, 'Charged!', '#ffe14d'); } } },
     'zen-mode': { types: pl => (hp(pl) < 0.5 ? ['psychic'] : null), stat: (pl, S, o) => { if (hp(pl) < 0.5) o.spa *= 1.3; },
@@ -251,7 +259,7 @@ G.Abil = (() => {
     'magic-bounce': merge(noSlow, { debuff: (pl, S, src) => { if (src && src.e) src.e.applySlow(0.3, 2); } }),
     'magic-guard': { noWx: true, noLava: true, inc: (pl, S, h) => { if (h.src && (h.src.k === 'liquid' || h.src.k === 'trap')) h.block = 'Magic Guard'; } },
     'magma-armor': merge(noSlow, noLava, noWx),
-    'marvel-scale': { stat: (pl, S, o) => { if (anyStatus(pl, S)) o.dr += 0.3; } },
+    'marvel-scale': { hurt: (pl, S) => { add(S, 'marvel', 0.3, 3); }, stat: (pl, S, o) => { o.dr += val(S, 'marvel'); } },
     'mirror-armor': merge(noSlow, dr(0.08), { debuff: (pl, S, src) => { if (src && src.e) src.e.applySlow(0.3, 2); } }),
     'multiscale': { inc: (pl, S, h) => { if (pl.hp >= pl.maxHp - 0.5 && !h.pure) h.amount *= 0.5; } },
     'shadow-shield': { inc: (pl, S, h) => { if (pl.hp >= pl.maxHp - 0.5) h.amount *= 0.5; } },
@@ -314,7 +322,7 @@ G.Abil = (() => {
     'serene-grace': { hit: (pl, S, e, c) => { c.fxK = 2; }, stat: (pl, S, o) => { o.critFx = 2; } },
     'shadow-tag': { aura: (p, es) => { for (const e of es) { e.applySlow(0.2, 0.4); if (e.behavior === 'thief') e.applySlow(0.4, 0.4); } } },
     'static': merge(touch((pl, S, e) => e.freeze(0.8, true)), typeUp('electric', 1.05)),
-    'synchronize': { hurt: (pl, S, h) => { const e = h.e; if (!e || e.dead) return; if (h.type === 'fire') e.applyBurn(2); else if (h.type === 'poison') e.applyPoison(2); } ,
+    'synchronize': { hurt: (pl, S, h) => { const e = h.e; if (!e || e.dead) return; if (h.type === 'fire') e.applyBurn(2); else if (h.type === 'poison') e.applyPoison(2); else e.applySlow(0.3, 2); } ,
                      debuff: (pl, S, src) => { if (src && src.e) src.e.applySlow(0.3, 2); } },
     'toxic-chain': { hit: (pl, S, e) => { if (Math.random() < 0.3) e.applyPoison(3); } },
     'toxic-debris': { hurt: (pl, S) => { S.spikes = { x: pl.x, y: pl.y, t: 8, tick: 0 }; },
@@ -335,15 +343,23 @@ G.Abil = (() => {
     'earth-eater': healAbsorb('ground'),
     'gluttony': { stat: (pl, S, o) => { o.heal *= 1.3; o.healReach *= 1.5; } },
     'harvest': { tick: (pl, S, dt) => { S.harv = (S.harv || 0) + dt * (wx('sun') ? 2 : 1); if (S.harv >= 45) { S.harv = 0; pl.healItem(0.15, true); say(pl, 'Harvest!', '#5fe0b0'); G.FX.sp('heart', 'grass', pl.x, pl.y - 10, { vy: -30, life: 0.6 }); } } },
-    'hydration': { slowK: 2, tick: (pl, S) => { if (wx('rain') || pl.inLiquid) { S.burnT = S.poisonT = 0; if (pl.slowT > 0) pl.slowT = 0; } } },
+    'hydration': { stat: (pl, S, o) => { if (wx('rain') || pl.inLiquid) { o.regen += 2; o.spd *= 1.1; } } },
     'ice-body': merge(noWx, { stat: (pl, S, o) => { o.regen += wx('snow') || cave() ? 2 : 0.5; } }),
-    'natural-cure': { slowK: 1.5, onHeal: (pl, S) => { S.burnT = S.poisonT = 0; pl.slowT = 0; } },
-    'poison-heal': merge(noPoison, { tick: (pl, S, dt) => { if (S.poisonT2 > 0) { S.poisonT2 -= dt; pl.hp = Math.min(pl.maxHp, pl.hp + 2 * dt); } },
-                                     inc: (pl, S, h) => { if (h.type === 'poison' && !h.pure) { S.poisonT2 = 4; h.amount *= 0.5; } if (h.src && h.src.a === 'Poison trap') h.block = 'Poison Heal'; } }),
+    'natural-cure': { tick: (pl, S, dt) => {
+                        if (S.cureT > 0) S.cureT -= dt;
+                        if (S.cureSlot !== undefined && S.cureSlot !== pl.active && !(S.cureT > 0) && pl.hp < pl.maxHp) {
+                          S.cureT = 6; pl.hp = Math.min(pl.maxHp, pl.hp + pl.maxHp * 0.04); say(pl, 'Natural Cure', '#5fe0b0');
+                        }
+                        S.cureSlot = pl.active;
+                      } },
+    'poison-heal': { tick: (pl, S, dt) => { crowd(pl, S, dt, 220); },
+                     stat: (pl, S, o) => { o.regen += Math.min(3, 0.5 * ((S.crowd && S.crowd.psn) || 0)); },
+                     inc: (pl, S, h) => { if (h.type === 'poison' && !h.pure) h.amount *= 0.5; if (h.src && h.src.a === 'Poison trap') h.block = 'Poison Heal'; } },
     'rain-dish': { stat: (pl, S, o) => { o.regen += wx('rain') ? 2 : 0.5; } },
     'regenerator': { hurt: (pl, S) => { S.regenAt = now(); }, stat: (pl, S, o) => { if (now() - (S.regenAt == null ? -9 : S.regenAt) >= 3) o.regen += 1.2; } },
     'ripen': { stat: (pl, S, o) => { o.heal *= 2; } },
-    'shed-skin': { tick: (pl, S, dt) => { if ((S.shed = (S.shed || 0) + dt) >= 4) { S.shed = 0; if (anyStatus(pl, S) && Math.random() < 0.35) { S.burnT = S.poisonT = 0; pl.slowT = 0; say(pl, 'Shed Skin', '#5fe0b0'); } } } },
+    'shed-skin': { tick: (pl, S, dt) => { if (S.skinT > 0 && (S.skinT -= dt) <= 0) say(pl, 'New skin', '#5fe0b0'); },
+                   inc: (pl, S, h) => { if (!(S.skinT > 0) && !h.pure) { S.skinT = 15; h.block = 'Shed Skin'; } } },
     'triage': { drainK: 1.5, stat: (pl, S, o) => { o.heal *= 1.5; } },
     'volt-absorb': healAbsorb('electric'),
     'water-absorb': merge(healAbsorb('water'), { tick: (pl, S, dt) => { if (pl.inLiquid && G.World.liquidKind() !== 'lava') pl.hp = Math.min(pl.maxHp, pl.hp + dt); } }),
@@ -354,7 +370,7 @@ G.Abil = (() => {
     'wimp-out': { tick: (pl, S) => lowEscape(pl, S), stat: (pl, S, o) => { if (on(S, 'esc')) o.spd *= 1.5; } },
     'gale-wings': { cd: (pl, S, m) => (m.type === 'flying' && pl.hp >= pl.maxHp - 0.5 ? 0.7 : 1), stat: (pl, S, o) => { if (pl.hp >= pl.maxHp - 0.5) o.spd *= 1.15; } },
     'motor-drive': merge(buffAbsorb('electric', 'motor', 0.15), { stat: (pl, S, o) => { o.spd *= 1 + val(S, 'motor'); } }),
-    'quick-feet': { noSlowIf: (pl, S) => anyStatus(pl, S), stat: (pl, S, o) => { if (anyStatus(pl, S)) o.spd *= 1.4; } },
+    'quick-feet': merge(noSlow, { tick: (pl, S, dt) => { crowd(pl, S, dt, 140); }, stat: (pl, S, o) => { if (S.crowd && S.crowd.n >= 5) o.spd *= 1.3; } }),
     'rattled': { hurt: (pl, S, h) => { if (['bug', 'ghost', 'dark'].includes(h.type)) add(S, 'rat', 0.2, 5); }, stat: (pl, S, o) => { o.spd *= 1 + val(S, 'rat'); } },
     'sand-rush': merge(noWx, { stat: (pl, S, o) => { o.spd *= wx('sand') ? 1.3 : volcano() ? 1.1 : 1; } }),
     'slush-rush': merge(noWx, { stat: (pl, S, o) => { if (wx('snow')) o.spd *= 1.3; } }),
@@ -391,8 +407,7 @@ G.Abil = (() => {
                      teamAll: (me, mate, o) => { if (terrainOn()) o.noStatus = true; } },
     'flower-gift': { stat: (pl, S, o) => { if (forest() || wx('sun')) { o.atk *= 1.15; o.spa *= 1.15; } },
                      team: (me, mate, o) => { if (forest() || wx('sun')) { o.atkTeam *= 1.15; o.spaTeam *= 1.15; } } },
-    'healer': { tick: (pl, S, dt) => { if ((S.heal = (S.heal || 0) + dt) >= 4) { S.heal = 0; if (anyStatus(pl, S) && Math.random() < 0.3) { S.burnT = S.poisonT = 0; pl.slowT = 0; say(pl, 'Healer', '#5fe0b0'); } } },
-                reviveK: 1.3, team: (me, mate, o) => { o.cureChance = true; } },
+    'healer': { reviveK: 1.3, stat: (pl, S, o) => { o.regen += 0.6; }, team: (me, mate, o) => { o.regen += 0.6; } },
     'hospitality': { reviveHeal: 0.25, team: (me, mate, o) => { o.regen += 0.5; } },
     'receiver': { tick: (pl, S) => {
                     if (!G.Coop.active) return;
@@ -468,7 +483,7 @@ G.Abil = (() => {
   /** The run starts: your ability is set up. */
   function start(pl) {
     pl.ab = G.MON_ABILITY[pl.dex] || null;
-    pl.abS = { b: {}, kills0: pl.kills || 0, burnT: 0, poisonT: 0 };
+    pl.abS = { b: {}, kills0: pl.kills || 0 };
     pl.abO = blank();
     const s = spec(pl);
     if (s && s.start) s.start(pl, pl.abS);
@@ -509,9 +524,7 @@ G.Abil = (() => {
     const S = pl.abS;
     if (!S || pl.dead) return;
     for (const k in S.b) { const b = S.b[k]; if (b.n > 0 && (b.t -= dt) <= 0) b.n = 0; }
-    if (S.burnT > 0) S.burnT -= dt;
-    if (S.poisonT > 0) S.poisonT -= dt;
-    // Status shortening (Early Bird, Hydration, Natural Cure): slows wear off faster.
+    // Status shortening (Early Bird): slows wear off faster.
     const s = spec(pl);
     if (s && s.slowK && pl.slowT > 0) pl.slowT -= dt * (s.slowK - 1);
     // Getting slowed counts as a debuff (Defiant, Competitive, Magic Bounce...), once per slow.
@@ -628,6 +641,9 @@ G.Abil = (() => {
     if (!S) return amount;
     const h = { amount, type, pure, src, e: src && src.e || null, k: k || 1, block: null, absorb: false };
     if (s && s.inc) s.inc(pl, S, h);
+    // "Can't be burned / poisoned" (Water Veil, Immunity, Comatose, Misty Terrain...): players never get those
+    // statuses, so instead their Fire / Poison hits deal 20% less (25-10-2026).
+    if (!h.pure && ((type === 'fire' && burnImmune(pl)) || (type === 'poison' && poisonImmune(pl)))) h.amount *= 0.8;
     if (h.e && boss(h.e)) h.amount *= O(pl).bossDr;
     if (h.e && h.e.abWeakT > 0) h.amount *= 0.8;                // Wandering Spirit (on the host's copies)
     if (h.block) {
@@ -650,9 +666,6 @@ G.Abil = (() => {
     if (!S) return;
     const h = S.lastInc || { type, src, e: src && src.e || null };
     S.lastInc = null;
-    // "Burned" / "poisoned" for abilities: a Fire / Poison hit in the last 4 s.
-    if (type === 'fire' && !burnImmune(pl)) S.burnT = 4;
-    if (type === 'poison' && !poisonImmune(pl)) S.poisonT = 4;
     if (h.e && boss(h.e)) debuff(pl, h);
     if (s && s.hurt) s.hurt(pl, S, h, d);
   }
