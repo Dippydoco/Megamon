@@ -600,17 +600,7 @@ G.TowerFloors = (() => {
       const cam = G.Camera, ps = alive();
       ctx.save();
       // Pitch black outside each player's light (25-10-2026: it used to be only darker), with a soft edge.
-      const lights = ps.map(p => [(p.x - cam.left()) * cam.scale, (p.y - 20 - cam.top()) * cam.scale, 230 * cam.scale]);
-      ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.rect(0, 0, w, h);
-      for (const [sx, sy, r] of lights) { ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, 0, 6.2832, true); }
-      ctx.fill('evenodd');
-      for (const [sx, sy, r] of lights) {
-        const g = ctx.createRadialGradient(sx, sy, r * 0.62, sx, sy, r + 1);
-        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(sx, sy, r + 1, 0, 6.2832); ctx.fill();
-      }
+      darkness(ctx, w, h, ps.map(p => [(p.x - cam.left()) * cam.scale, (p.y - 20 - cam.top()) * cam.scale, 230 * cam.scale]), '#000');
       const pl = G.Game.player;
       if (pl && fl.t > 45) {
         const [x, y] = dungeon.stairs(fl);
@@ -627,6 +617,33 @@ G.TowerFloors = (() => {
   };
 
   // ---------------- shared drawing ----------------
+
+  /**
+   * A dark layer over the screen with a soft circle of light around each [x, y, r] (screen pixels). Drawn on its own
+   * canvas, where each light ERASES the dark: overlapping lights just light up more. (A single path with the circles
+   * cut out by 'evenodd' filled the overlap of two lights again, so two players standing together saw nothing.)
+   * Also Gengar's lights-out (towerbosses.js).
+   */
+  let darkCv = null;
+  function darkness(ctx, w, h, lights, color) {
+    if (!darkCv) darkCv = document.createElement('canvas');
+    const W = Math.ceil(w), H = Math.ceil(h);
+    if (darkCv.width !== W || darkCv.height !== H) { darkCv.width = W; darkCv.height = H; }
+    const c = darkCv.getContext('2d');
+    c.globalCompositeOperation = 'source-over';
+    c.clearRect(0, 0, W, H);
+    c.fillStyle = color;
+    c.fillRect(0, 0, W, H);
+    c.globalCompositeOperation = 'destination-out';
+    for (const [x, y, r] of lights) {
+      const g = c.createRadialGradient(x, y, r * 0.62, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = g;
+      c.beginPath(); c.arc(x, y, r, 0, 6.2832); c.fill();
+    }
+    c.globalCompositeOperation = 'source-over';
+    ctx.drawImage(darkCv, 0, 0, w, h);
+  }
 
   function drawStairsIcon(ctx, x, y, col) {
     ctx.save();
@@ -669,5 +686,5 @@ G.TowerFloors = (() => {
   const bitsOf = m => { let c = 0; while (m) { c += m & 1; m >>= 1; } return c; };
   const KINDS = { survival, bounty, relic, hold, escort, lights, sequence, gauntlet, dungeon };
 
-  return { get: k => KINDS[k] || null, stairsDrawables, rng, genDungeon };
+  return { get: k => KINDS[k] || null, stairsDrawables, darkness, rng, genDungeon };
 })();

@@ -372,17 +372,8 @@ G.TowerBosses = (() => {
   function drawOverlay(ctx, w, h) {
     if (!dark || !G.Tower.active) return;
     const cam = G.Camera, ps = G.Game.everyone().filter(p => !p.dead);
-    ctx.save();
-    ctx.fillStyle = 'rgba(6,2,16,.86)';
-    ctx.beginPath();
-    ctx.rect(0, 0, w, h);
-    for (const p of ps) {
-      const sx = (p.x - cam.left()) * cam.scale, sy = (p.y - 20 - cam.top()) * cam.scale, r = 175 * cam.scale;
-      ctx.moveTo(sx + r, sy);
-      ctx.arc(sx, sy, r, 0, 6.2832, true);
-    }
-    ctx.fill('evenodd');
-    ctx.restore();
+    // (Shared with the Mystery Dungeon: overlapping lights add up instead of cancelling out.)
+    G.TowerFloors.darkness(ctx, w, h, ps.map(p => [(p.x - cam.left()) * cam.scale, (p.y - 20 - cam.top()) * cam.scale, 190 * cam.scale]), 'rgba(6,2,16,.86)');
   }
 
   return { reset, setup, move, pairTwins, tick, onNet, drawOverlay, get dark() { return dark; } };

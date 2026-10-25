@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T16:50Z', title: 'Dungeon lights in a group', fix: [
+    'In a group, standing close to a teammate in a Mystery Dungeon (or during Gengar\'s lights-out) no longer blacks out the place where your lights overlap: lights now add up, so standing together lights up more.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T16:36Z', title: 'Darker Mystery Dungeons', chg: [
     'In Battle Tower Mystery Dungeon floors, everything outside the light around you (and your teammates) is now pitch black instead of just darker, with a soft edge to the light.'
   ] },
