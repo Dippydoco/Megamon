@@ -1222,6 +1222,9 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 #mv-tip .mt-head b { font-size: 15px; }
 #mv-tip .mt-type { font-size: 11px; padding: 1px 6px; border-radius: 5px; color: #10131a; font-weight: 400; }
 #mv-tip .mt-kind { font-size: 11px; color: #ffd23f; font-weight: 400; }
+#mv-tip .mt-cat { font-size: 11px; padding: 1px 6px; border-radius: 5px; font-weight: 400; color: #10131a; }
+#mv-tip .mt-cat.phys { background: #ff8a5c; }
+#mv-tip .mt-cat.spec { background: #7fb8ff; }
 #mv-tip .mt-desc { color: #d6e0f2; font-weight: 400; }
 
 /* ============ Codex (js/ui/codex-ui.js) ============ */

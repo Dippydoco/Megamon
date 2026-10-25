@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T17:26Z', title: 'Physical or Special on move tooltips', chg: [
+    'Hovering a move in the menus (the Pokémon tab, Starting Moves and Veto pickers) now also shows whether it is Physical or Special, so you can match it to your Pokémon\'s better attacking stat.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T17:18Z', title: 'Battle Tower levels, Highest level leaderboard', chg: [
     'The Battle Tower no longer has experience: Pokémon drop no XP there. Instead every floor you clear gives a set number of level-ups: 1 for most floors, 2 for bosses and gatekeepers. Starting from a checkpoint gives exactly the levels the floors below would have (12 per wing).',
     'In the Battle Tower the Learning level-up card and the Lucky Egg no longer come up, and the Scholar Badge now gives one more level-up from every boss and gatekeeper floor instead of more experience.'

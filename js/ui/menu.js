@@ -16,8 +16,10 @@ G.MenuUI = (() => {
     if (!m) return;
     const T = G.T || (s => s), col = G.U.TYPE_COLOR[m.type] || '#9fb1c9', el = moveTip();
     el.style.borderColor = col;
+    // Physical or Special (which attacking stat it uses); boosters and status moves have neither.
+    const cat = m.cat === 'physical' ? '<span class="mt-cat phys">Physical</span>' : m.cat === 'special' ? '<span class="mt-cat spec">Special</span>' : '';
     el.innerHTML = `<div class="mt-head"><b>${T(m.name)}</b> <span class="mt-type" style="background:${col}">${T(G.U.TYPE_NAME[m.type] || m.type)}</span>
-      <span class="mt-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div><div class="mt-desc">${T(m.desc || '')}</div>`;
+      ${cat} <span class="mt-kind">${G.Icons.KIND_NAME[m.kind] || m.kind}</span></div><div class="mt-desc">${T(m.desc || '')}</div>`;
     el.style.display = 'block';
     const w = el.offsetWidth, h = el.offsetHeight;
     el.style.left = Math.max(6, Math.min(innerWidth - w - 6, ev.clientX + 14)) + 'px';
