@@ -76,7 +76,7 @@ G.Progress = (() => {
       m.prog = def.mode === 'max' ? Math.max(m.prog, v) : m.prog + v;
       if (done(m) && !m.told) {
         m.told = true;
-        notify('Mission complete: ' + text(m), 'Claim your reward in Missions');
+        notify('Mission complete: ' + text(m), 'Claim your reward in Profile > Missions');
       }
     }
   }

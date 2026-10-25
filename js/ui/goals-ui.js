@@ -1,8 +1,10 @@
-/* ============ goals-ui.js — missions, achievements and profile ============
- * One screen with three tabs:
+/* ============ goals-ui.js — the Profile screen ============
+ * One screen (the "Profile" tile on the menu; it used to be called Missions) with five tabs:
+ *   Profile       your 3 favourites and your title; preview of the public profile
+ *   History       your last runs
  *   Missions      3 daily + 2 weekly, with a bar, reward and collect button
  *   Achievements  medals by category; legendaries one by one with their sprite
- *   Profile       your 3 favourites and your title; preview of the public profile
+ *   Badges        one per generation, for owning every Pokémon of it (25-10-2026)
  * and the public profile window for any player (G.ProfileUI.show).
  */
 (() => {
@@ -13,7 +15,7 @@
   // ======================= SCREEN =======================
 
   G.GoalsUI = (() => {
-    let tab = 'missions', cat = 'collection';
+    let tab = 'profile', cat = 'collection';
 
     function init() {
       document.querySelectorAll('#goals-tabs .tab').forEach(t => {
@@ -36,6 +38,7 @@
       if (tab === 'missions') missions(box);
       else if (tab === 'ach') achievements(box);
       else if (tab === 'history') history(box);
+      else if (tab === 'badges') badges(box);
       else profile(box);
     }
 
@@ -130,6 +133,44 @@
         more.onclick = () => { st.shown += 20; rerender(); };
         box.appendChild(more);
       }
+    }
+
+    // ---------------- badges (25-10-2026) ----------------
+    // One per generation: own every Pokémon of it. The same thing earns that region's Shiny Charm
+    // (systems/charms.js), so a badge also shows the charm. save.charms[gen] is when it was first earned.
+    const BADGE_MON = { 1: 150, 2: 249, 3: 384, 4: 483, 5: 643, 6: 716, 7: 791, 8: 888, 9: 1007 };
+
+    function badges(box) {
+      const s = G.DB.save, all = {}, have = {};
+      for (const p of G.DEX) {
+        all[p.gen] = (all[p.gen] || 0) + 1;
+        if (s.owned && s.owned[p.dex]) have[p.gen] = (have[p.gen] || 0) + 1;
+      }
+      const gens = Object.keys(all).map(Number).sort((a, b) => a - b);
+      const earned = gens.filter(g => have[g] === all[g]);
+      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Badges ${earned.length} / ${gens.length}</h3></div>
+        <p class="sub">Own every Pokémon from a generation to earn its badge. Each badge also brings that region's Shiny Charm: shiny odds ×${G.Charms.MULT} for its Pokémon.</p>`);
+      const grid = document.createElement('div');
+      grid.className = 'badge-grid';
+      for (const g of gens) {
+        const n = have[g] || 0, ok = n === all[g], region = G.Charms.regionName(g);
+        const col = ((G.Gacha.BANNERS[g - 1] || {}).color) || ['#3a4a6e', '#2a3a5e', '#1a2a4e'];
+        const el = document.createElement('div');
+        el.className = 'badge-card' + (ok ? ' ok' : '');
+        el.style.setProperty('--b1', col[0]); el.style.setProperty('--b2', col[1]); el.style.setProperty('--b3', col[2]);
+        const em = document.createElement('div');
+        em.className = 'badge-em';
+        const mon = BADGE_MON[g];
+        if (mon && G.DEX_BY[mon]) em.appendChild(G.UI.spriteCanvas(mon, 64, 56, { scale: 1, silhouette: !ok }));
+        el.appendChild(em);
+        const when = ok && s.charms && s.charms[g] ? new Date(s.charms[g]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        el.insertAdjacentHTML('beforeend', `<div class="badge-txt"><b>${esc(region)} Badge</b>
+          <small>Generation ${g} · own all ${all[g]} Pokémon</small>
+          ${ok ? `<div class="badge-got">${G.Icons.html('shiny', 12)} Earned${when ? ' ' + when : ''} · Shiny Charm</div>`
+               : `<div class="bar"><i style="width:${(n / all[g] * 100).toFixed(1)}%"></i></div><small>${n} / ${all[g]}</small>`}</div>`);
+        grid.appendChild(el);
+      }
+      box.appendChild(grid);
     }
 
     // ---------------- missions ----------------

@@ -9,6 +9,14 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T17:57Z', title: 'Try themes in the Star Shop', new: [
+    'Sableye\'s Star Shop has a Try button on every theme you don\'t own yet. Trying a menu theme recolours the whole page while you stay in the shop (Stop, or leaving the shop, puts yours back). Trying a card theme shows your own card with it, health bar and all.'
+  ] },
+  { d: '2026-10-25', at: '2026-10-25T17:57Z', title: 'Profile screen and Badges', chg: [
+    'The Missions tile on the main menu is now called Profile. Its tabs are Profile, History, Missions, Achievements and Badges, and it opens on your profile (or straight on Missions when a reward is waiting).'
+  ], new: [
+    'Badges: a new tab in Profile with one badge per generation, from Kanto to Paldea. Own every Pokémon of a generation to earn its badge (it comes with that region\'s Shiny Charm); the ones still to earn show how many you have.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T17:50Z', title: 'Health no longer shows 1 over max', fix: [
     'After being healed, your health could read 1 higher than your max (like 105 / 104), solo and in groups. Health on the HUD and in the pause menu now never shows above your max.'
   ] },

@@ -391,6 +391,7 @@ G.Stall = class Stall {
 
 G.ShopUI = (() => {
   const $ = G.UI.$;
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let tab = 'keys';            // 'keys' (Klefki) | 'arceus' (Sableye)
   let raf = 0, lastT = 0, stall = null;
   const stalls = {};
@@ -457,14 +458,57 @@ G.ShopUI = (() => {
 
   function loop(now) {
     raf = 0;
-    if (!G.UI.isOpen('scr-shop')) return;
+    if (!G.UI.isOpen('scr-shop')) { stopTry(); closeCardTry(); return; }
     const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
     if (stall) { stall.update(dt); stall.draw(); }
     for (const cv of document.querySelectorAll('#shop-body canvas.card-pv')) G.HUD.cardPreview(cv, cv.dataset.id, cv.dataset.dex, cv.dataset.sh === '1', cv.dataset.nm);
+    const tcv = document.querySelector('#card-try canvas');
+    if (tcv) {
+      // The Try window: health drops and refills, so you see the bar colour at every level.
+      const ph = (now / 1000 % 6) / 6, hp = ph < 0.5 ? 100 - ph * 2 * 85 : 15 + (ph - 0.5) * 2 * 85;
+      G.HUD.cardPreview(tcv, tcv.dataset.id, tcv.dataset.dex, tcv.dataset.sh === '1', tcv.dataset.nm, Math.round(hp));
+    }
     raf = requestAnimationFrame(loop);
   }
 
+  // ---------------- Try (25-10-2026) ----------------
+  // Menu themes: Try puts the theme on the whole page while you stay in the Star Shop; leaving the shop, switching to
+  // Klefki's tab or pressing Stop puts yours back. Nothing is saved. Card themes: Try opens a big preview of your
+  // own card with its health going down and up.
+  let trying = null;           // the menu theme id being tried, or null
+
+  function tryMenu(id) {
+    if (trying === id) { stopTry(); render(); return; }
+    trying = id;
+    G.Themes.applyMenu(id);
+    stall.say('Kehehe… it suits you!');
+    render();
+  }
+  function stopTry() {
+    if (trying === null) return;
+    trying = null;
+    G.Themes.applyMenu();
+  }
+
+  function closeCardTry() { const p = $('card-try'); if (p) p.remove(); }
+  function tryCard(th, mon, shiny) {
+    closeCardTry();
+    const pop = document.createElement('div');
+    pop.id = 'card-try';
+    pop.className = 'card-try';
+    pop.innerHTML = `<div class="box card-try-box">
+        <h3>Trying ${esc(th.name)}</h3>
+        <p class="sub">Your card in runs (top left). Teammates see it too.</p>
+        <div class="card-try-scene"><canvas width="660" height="108" data-id="${th.id}" data-dex="${mon.dex}" data-sh="${shiny ? 1 : 0}" data-nm="${esc(mon.name)}"></canvas></div>
+        <div class="row end"><button class="btn small ghost" type="button">Close</button></div></div>`;
+    pop.querySelector('button').onclick = closeCardTry;
+    pop.onclick = e => { if (e.target === pop) closeCardTry(); };
+    document.body.appendChild(pop);
+    stall.say('Kehehe… shiny, shiny!');
+  }
+
   function render() {
+    if (tab !== 'arceus') stopTry();
     document.querySelectorAll('#shop-tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     const host = $('shop-stall');
     host.dataset.shop = tab;
@@ -583,7 +627,32 @@ G.ShopUI = (() => {
     box.appendChild(g2);
   }
 
+  /** The buy / wear button, plus a Try button for themes you don't own yet. */
   function themeButton(kind, th, own, on, stars, el, i) {
+    const b = buyButton(kind, th, own, on, stars, el, i);
+    if (own) return b;
+    const wrap = document.createElement('span');
+    wrap.className = 'try-wrap';
+    const t = document.createElement('button');
+    t.type = 'button'; t.dataset.sfx = 'click';
+    if (kind === 'm') {
+      const now = trying === th.id;
+      t.className = 'btn small' + (now ? ' gold' : ' ghost');
+      t.textContent = now ? 'Stop' : 'Try';
+      t.title = now ? 'Put your own menu theme back' : 'See this theme on the page while you are in the shop';
+      t.onclick = () => tryMenu(th.id);
+      if (now) el.classList.add('trying');
+    } else {
+      const s = G.DB.save, mon = G.DEX_BY[s.partner] || G.DEX[0];
+      t.className = 'btn small ghost'; t.textContent = 'Try';
+      t.title = 'See your card with this theme';
+      t.onclick = () => tryCard(th, mon, !!s.partnerShiny && G.DB.ownsShiny(mon.dex));
+    }
+    wrap.append(t, b);
+    return wrap;
+  }
+
+  function buyButton(kind, th, own, on, stars, el, i) {
     const b = document.createElement('button');
     if (!own && th.bp) {
       // Battle Tower themes are bought with Battle Points in the tower (ui/tower-ui.js).
@@ -596,6 +665,8 @@ G.ShopUI = (() => {
       b.onclick = () => {
         const err = G.Themes.buy(kind, th.id);
         if (err) { stall.poor(); G.UI.toast(err); return; }
+        if (kind === 'm') trying = null;           // bought while trying it: it's yours now
+        else closeCardTry();
         G.UI.refreshCoins();
         G.UI.toast(th.name + (kind === 'm' ? ' menu theme' : ' card theme') + ' is yours, and you\'re wearing it!');
         render();

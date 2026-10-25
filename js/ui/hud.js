@@ -804,7 +804,8 @@ G.HUD = (() => {
 
   /** Shop preview: a card with theme `id`, for Pokémon `dex` (redraw it every frame to animate). */
   let pvT = performance.now();
-  function cardPreview(cv, id, dex, shiny, name) {
+  /** `hp` (optional, out of 100): the health to show (the shop's Try window animates it). */
+  function cardPreview(cv, id, dex, shiny, name, hp = 74) {
     const ctx = cv.getContext('2d'), th = G.Themes.card(id);
     const now = performance.now();
     portraitDt = Math.min(0.1, (now - pvT) / 1000); pvT = now;
@@ -815,7 +816,7 @@ G.HUD = (() => {
     ctx.scale(k, k);
     ctx.textBaseline = 'alphabetic';
     drawCard(ctx, 2, 2, { key: 'pv:' + (id || 'classic'), pl: { dex, shiny: !!shiny }, name, nameCol: th.name_, color: th.ring,
-                          tag: 'Lv. 12', hp: 74, maxHp: 100, dead: false, barCol: th.bar, theme: th });
+                          tag: 'Lv. 12', hp, maxHp: 100, dead: false, barCol: th.bar, theme: th });
   }
 
   /** c = { key, pl, name, nameCol, color, tag?, hp, maxHp, dead, barCol, theme? } */

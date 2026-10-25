@@ -81,7 +81,7 @@ G.MenuUI = (() => {
         else if (go === 'upgrades') openUpgrades();
         else if (go === 'shop') G.ShopUI.open();
         else if (go === 'gacha') G.GachaUI.open();
-        else if (go === 'goals') G.GoalsUI.open();
+        else if (go === 'goals') G.GoalsUI.open(G.Progress.pending() ? 'missions' : 'profile');   // rewards waiting: straight to Missions
         else if (go === 'friends') G.FriendsUI.open();
         else if (go === 'rank') G.RankingUI.open();
         else if (go === 'settings') G.SettingsUI.open();
@@ -205,7 +205,7 @@ G.MenuUI = (() => {
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Achievements and profile';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, badges and history';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
     tileAlert('goals', pend > 0);
     // With a cloud account: friends online, invitations and (once) the nickname.
