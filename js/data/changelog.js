@@ -9,6 +9,14 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T15:42Z', title: 'New Battle Tower floors', new: [
+    'Choose your stairs: after each Battle Tower floor, two stairways appear, each labelled with the kind of floor it leads to. Walk into the one you want. Boss floors, gatekeepers and co-op event floors still come when they come.',
+    'Objective floors: Survival (last 75 seconds while the spawns ramp up; a storm closes in at the end), Bounty (defeat the three marked Pokémon), Relic Hunt (collect five shards, each one calls a wave), Hold the Ground (stand in a zone that moves every 10 seconds) and Escort (lead a lost Pokémon to the exit; enemies near it hurt it).',
+    'Puzzle floors, in Climbs only: Lights Out (stepping on a tile flips it and its neighbours; light all nine) and Unown Sequence (watch the plates light up, then step on them in the same order). Few enemies until a 90-second timer runs out.',
+    'Dungeon floors: the Gauntlet (a corridor of rolling boulders and flame jets to a door, with a bonus for beating the par time) and the Mystery Dungeon (dark rooms and corridors, sleeping Pokémon, hidden traps, and stairs to find; in a group everyone has to reach them). They get more common higher up; 4F is always a Gauntlet and 9F a Mystery Dungeon, to learn them.'
+  ], chg: [
+    'Healers and shielders now turn up on Battle Tower floors whatever the wing\'s theme.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T15:24Z', title: 'Themed Battle Tower floors', chg: [
     'Wild Pokémon in the Battle Tower now fit the wing and the arena you are in: Meadow Wing brings Normal, Grass, Bug and Fairy types, Shadow Wing Ghost, Dark, Poison and Psychic, Stone Wing Rock, Fighting and Ground, Iron Wing Steel, Electric, Ground and Fire, and Sky Wing Dragon, Flying and Ice. Most of each floor\'s Pokémon share its arena\'s type.',
     'Some horde floors moved to arenas that suit their wing: Shadow Wing\'s second half is now the Dark Alley, Stone Wing\'s the Ancient Dojo and Iron Wing\'s the Volt Plant.'

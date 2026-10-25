@@ -10,7 +10,9 @@
  *               players the 3rd and 8th floor of each section are co-op event floors (Seal Plates, Twin Bond).
  *
  * A floor:  intro (1.4 s) -> fight -> clear (rewards, pickups pulled) -> cards (a level for everyone)
- *           -> badges (after bosses: pick 1 of 3) -> next (2.5 s) -> the next floor.
+ *           -> badges (after bosses: pick 1 of 3) -> next (one or two stairways appear; walk into one) -> the next floor.
+ * Floor kinds other than horde, bosses and the co-op events live in systems/towerfloors.js (objective, puzzle and
+ * dungeon floors); the stairways offer them (TowerData.choices).
  * Rewards land in the save as soon as a floor is cleared (Battle Points, first-clear tickets, checkpoints), so a
  * tab closed mid-run loses nothing already earned.
  *
@@ -26,7 +28,7 @@ G.Tower = (() => {
   const D = () => G.TowerData;
   const authority = () => !G.Coop.active || G.Coop.isHost;
   const TS = () => G.Tiles.T * G.Sprites.PX;
-  const INTRO = 1.4, NEXT = 2.5, BADGE_WAIT = 40;
+  const INTRO = 1.4, BADGE_WAIT = 40;
 
   let run = null;        // { mode, start, floor, bp, t10, firsts, cp, won, badges:[], best }
   let fl = null;         // the floor being played: { cfg, phase, t, k0, kills, spawnT, bossIds, enraged, prog, mask, ... }
@@ -60,12 +62,15 @@ G.Tower = (() => {
     beginFloor(cfg);
   }
 
-  /** Host / solo: plans the next floor and sends it to everyone. */
-  function nextFloor() {
+  const coopFloors = () => (G.Coop.active && G.Game.everyone().length > 1 && run.mode === 'exp') || forceEvents;
+  const kindOf = cfg => G.TowerFloors.get(cfg.kind);
+
+  /** Host / solo: plans the next floor (of the kind on the stairway taken) and sends it to everyone. */
+  function nextFloor(kind) {
     const n = run.floor + 1;
     const players = G.Game.everyone();
-    const coop = (G.Coop.active && players.length > 1 && run.mode === 'exp') || forceEvents;
-    const plan = D().floor(n, coop);
+    const coop = coopFloors();
+    const plan = D().floor(n, coop, kind);
     // A fresh patch of the far map for every floor (World.setArena forgets whatever was generated there).
     const cfg = Object.assign({}, plan, { tx: 6000 + n * 70, ty: 6000 + (n % 5) * 70, np: players.length });
     if (plan.kind === 'plates') {
@@ -74,6 +79,8 @@ G.Tower = (() => {
       for (let i = 0; i < k; i++) cfg.plates.push([Math.cos(a0 + i * 6.2832 / k) * 0.58, Math.sin(a0 + i * 6.2832 / k) * 0.58]);
     }
     if (plan.kind === 'horde' || plan.kind === 'plates') cfg.quota = Math.round((plan.quota || 0) * (1 + 0.6 * (players.length - 1)));
+    const K = kindOf(cfg);
+    if (K && K.plan) K.plan(cfg);
     if (G.Coop.isHost) G.Coop.broadcast(['tw', 'fl', cfg]);
     beginFloor(cfg);
   }
@@ -92,7 +99,8 @@ G.Tower = (() => {
     G.Projectiles.clear();
     G.Combat.clearFields();
     G.Hazards.clear();
-    G.World.setArena({ tx: cfg.tx, ty: cfg.ty, r: cfg.r, type: cfg.arena });
+    const K = kindOf(cfg), map = K && K.map ? K.map(cfg) : null;      // dungeon floors: a built map instead of a circle
+    G.World.setArena({ tx: cfg.tx, ty: cfg.ty, r: map ? 1 : cfg.r, type: cfg.arena, map });
     G.World.setBiome(G.Tiles.arenaBiome(cfg.arena), true);
     const th = G.Tiles.ARENA_THEMES[cfg.arena];
     G.Weather.clear();
@@ -100,9 +108,9 @@ G.Tower = (() => {
     fl.x = cfg.tx * ts + ts / 2; fl.y = cfg.ty * ts + ts / 2;
     // Everyone in a row at the south of the arena; bosses appear to the north.
     const ps = G.Game.everyone();
-    const sy = cfg.kind === 'hub' ? G.TowerHub.spawnY(fl) : fl.y + ts * 3;
-    ps.forEach((p, i) => { p.x = fl.x + (i - (ps.length - 1) / 2) * 34; p.y = sy; });
-    pl.x = fl.x + (ps.indexOf(pl) - (ps.length - 1) / 2) * 34; pl.y = sy;
+    const [sx, sy] = cfg.kind === 'hub' ? [fl.x, G.TowerHub.spawnY(fl)] : K && K.spawn ? K.spawn(fl) : [fl.x, fl.y + ts * 3];
+    ps.forEach((p, i) => { p.x = sx + (i - (ps.length - 1) / 2) * 34; p.y = sy; });
+    pl.x = sx + (ps.indexOf(pl) - (ps.length - 1) / 2) * 34; pl.y = sy;
     if (pl.dead) pl.revive(0.5);                     // a fallen teammate gets up on the next floor
     pl.invuln = Math.max(pl.invuln || 0, 2);
     G.Camera.x = pl.x; G.Camera.y = pl.y;
@@ -121,6 +129,8 @@ G.Tower = (() => {
   function fight() {
     const cfg = fl.cfg, pl = G.Game.player;
     fl.phase = 'fight'; fl.t = 0; fl.k0 = pl.kills;
+    const K = kindOf(cfg);
+    if (K) { K.start(fl); return; }
     if (cfg.kind === 'horde' || cfg.kind === 'plates') {
       fl.bag = themedBag(cfg);
       G.Sprites.preload(fl.bag.map(d => d.dex), 8000);
@@ -146,21 +156,38 @@ G.Tower = (() => {
     const S = D().SECTIONS[cfg.section], bag = [];
     for (const d of G.Enemies.hordeDefs(cfg.arena, cfg.t)) bag.push(d, d, d);
     for (const ty of G.U.pickN((S.wild || []).filter(x => x !== cfg.arena), 2)) for (const d of G.Enemies.hordeDefs(ty, cfg.t).slice(0, 2)) bag.push(d);
-    return bag.length >= 6 ? bag : bag.concat(G.Enemies.bagAt(cfg.t));
+    const out = bag.length >= 6 ? bag : bag.concat(G.Enemies.bagAt(cfg.t));
+    // Healers and shielders come whatever the theme: the run's own (its cast at this tier), once each.
+    const seen = new Set(), kinds = new Set();
+    for (const d of G.Enemies.bagAt(cfg.t)) if (SUPPORT[d.behavior] && !seen.has(d.dex)) { seen.add(d.dex); kinds.add(d.behavior); out.push(d); }
+    // (and if the run's cast has none of one kind at this tier, one from the whole tier)
+    for (const d of G.Enemies.supportDefs(cfg.t)) if (!kinds.has(d.behavior)) out.push(d);
+    return out;
   }
+  const SUPPORT = { healer: 2, shielder: 2 };       // at most this many of each alive at once (tower floors)
 
-  /** A wild Pokémon somewhere inside the arena, away from everyone. */
-  function spawnWild() {
+  /**
+   * A wild Pokémon somewhere inside the arena, away from everyone (or at `at`; dungeon floors pick their own spots).
+   * noSupport: never a healer or shielder (Bounty marks).
+   */
+  function spawnWild(noSupport = false, at = null) {
     const cfg = fl.cfg, ts = TS(), ps = G.Game.everyone();
     const bag = fl.bag && fl.bag.length ? fl.bag : G.Enemies.bagAt(cfg.t);
     if (!bag.length) return null;
-    const def = G.U.pick(bag);
+    const count = {};
+    for (const e of G.EnemyMgr.all()) if (!e.dead && SUPPORT[e.behavior]) count[e.behavior] = (count[e.behavior] || 0) + 1;
+    const ok = bag.filter(d => !SUPPORT[d.behavior] || (!noSupport && (count[d.behavior] || 0) < SUPPORT[d.behavior]));
+    if (!ok.length) return null;
+    const def = G.U.pick(ok);
     const flyer = G.Sprites.hovers(def.dex);
+    const K = kindOf(cfg);
     for (let i = 0; i < 14; i++) {
-      const a = Math.random() * 6.2832, d = G.U.rand(0.25, 0.86) * (cfg.r - 2) * ts;
-      const x = fl.x + Math.cos(a) * d, y = fl.y + Math.sin(a) * d;
+      let x, y;
+      if (at) [x, y] = i ? [at[0] + G.U.rand(-40, 40), at[1] + G.U.rand(-40, 40)] : at;
+      else if (K && K.spawnPoint) { const p = K.spawnPoint(fl); if (!p) continue; [x, y] = p; }
+      else { const a = Math.random() * 6.2832, d = G.U.rand(0.25, 0.86) * (cfg.r - 2) * ts; x = fl.x + Math.cos(a) * d; y = fl.y + Math.sin(a) * d; }
       if (!flyer && !G.World.isFree(x, y, 14)) continue;
-      if (ps.some(p => !p.dead && G.U.dist2(p.x, p.y, x, y) < 230 * 230)) continue;
+      if (!at && ps.some(p => !p.dead && G.U.dist2(p.x, p.y, x, y) < 230 * 230)) continue;
       const e = G.Spawner.make(def, x, y, cfg.t, ps.length);
       G.EnemyMgr.add(e);
       G.FX.ring(x, y, 4, 34, '#d9c2ff', 0.35, 3);
@@ -242,23 +269,33 @@ G.Tower = (() => {
     if (!run || !fl) return;
     fl.t += dt;
     G.TowerBosses.tick(dt);                          // every computer: the wind pushes your own Pokémon
-    if (!authority()) { if (fl.phase === 'hub') G.TowerHub.tick(fl, dt, false); return; }
+    const K = kindOf(fl.cfg);
+    if (K && K.local && fl.phase === 'fight') K.local(fl, dt);       // storms, traps: your own Pokémon
+    if (!authority()) {
+      if (fl.phase === 'hub') G.TowerHub.tick(fl, dt, false);
+      if (fl.phase === 'intro' && fl.t >= INTRO) { fl.phase = 'fight'; fl.t = 0; }    // (the host started it about now)
+      return;
+    }
     const cfg = fl.cfg, pl = G.Game.player;
     // Co-op: the floor (and whether it's cleared) every 2 s, for a guest who missed a message or started late.
     if (G.Coop.isHost && (syncT -= dt) <= 0) {
       syncT = 2;
       G.Coop.broadcast(['tw', 'fl', cfg, ['clear', 'cards', 'badges', 'next', 'won', 'over'].includes(fl.phase) ? 1 : 0]);
+      if (fl.choices) G.Coop.broadcast(['tw', 'ch', fl.choices]);
     }
     switch (fl.phase) {
       case 'hub':
-        if (G.TowerHub.tick(fl, dt, true)) { G.Spawner.say('Up the stairs…', 1.6); nextFloor(); }
+        if (G.TowerHub.tick(fl, dt, true)) { G.Spawner.say('Up the stairs…', 1.6); nextFloor(D().choices(run.floor + 1, coopFloors(), run.mode, true)[0]); }
         break;
       case 'intro':
         if (fl.t >= INTRO) fight();
         break;
       case 'fight': {
-        keepInside();
-        if (cfg.kind === 'horde' || cfg.kind === 'plates') {
+        if (!(K && K.map)) keepInside();
+        if (K) {
+          if (G.Coop.isHost && K.state && (netT -= dt) <= 0) { netT = 0.25; G.Coop.broadcast(['tw', 'st', K.state(fl)]); }
+          if (K.tick(fl, dt)) clear();
+        } else if (cfg.kind === 'horde' || cfg.kind === 'plates') {
           const k = pl.kills - fl.k0;
           if (k !== fl.kills || fl.lastKillT == null) fl.lastKillT = fl.t;
           fl.kills = k;
@@ -304,19 +341,44 @@ G.Tower = (() => {
             badgeWait = new Set(G.Game.everyone().filter(p => p !== pl && p.uid).map(p => p.uid));
             if (G.Coop.isHost) G.Coop.broadcast(['tw', 'bdg']);
             openBadges(() => { fl && (fl.done.me = 1); });
-          } else { fl.phase = 'next'; fl.t = 0; }
+          } else toStairs();
         }
         break;
       case 'badges':
-        if ((fl.done.me && (!badgeWait || !badgeWait.size)) || fl.t > BADGE_WAIT) { fl.phase = 'next'; fl.t = 0; G.TowerUI.closeBadges(); }
+        if ((fl.done.me && (!badgeWait || !badgeWait.size)) || fl.t > BADGE_WAIT) { toStairs(); G.TowerUI.closeBadges(); }
         break;
-      case 'next':
-        if (fl.t >= NEXT) nextFloor();
+      case 'next': {
+        if (fl.t < 0.8) break;                       // (a moment, so nobody steps on one by accident)
+        const s = (fl.choices || []).find(c => G.Game.everyone().some(p => !p.dead && G.U.dist2(p.x, p.y, c.x, c.y - 10) < 30 * 30));
+        if (s) { G.Spawner.say(G.TowerData.KINDS[s.kind] ? G.TowerData.KINDS[s.kind].name + '!' : 'Up the stairs…', 1.6); nextFloor(s.kind); }
         break;
+      }
       case 'won':
         if (fl.t >= 4.5) { fl.phase = 'over'; G.Game.towerEnd(); }
         break;
     }
+  }
+
+  /**
+   * Host / solo: the landing. One or two stairways appear just ahead of the player (two = a choice of floor kind,
+   * TowerData.choices); walking into one goes up to that floor.
+   */
+  function toStairs() {
+    fl.phase = 'next'; fl.t = 0;
+    const n = run.floor + 1, kinds = D().choices(n, coopFloors(), run.mode);
+    const pl = G.Game.player, c = pl.dead ? (G.Game.everyone().find(p => !p.dead) || pl) : pl;
+    const offs = kinds.length > 1 ? [[-90, -110], [90, -110]] : [[0, -110]];
+    const tries = [[0, 0], [0, 220], [0, 110], [-120, 0], [120, 0], [0, -60]];
+    fl.choices = kinds.map((kind, i) => {
+      for (const [ax, ay] of tries) {
+        const x = c.x + offs[i][0] + ax, y = c.y + offs[i][1] + ay;
+        if (G.World.isFree(x, y, 24)) return { kind, x: Math.round(x), y: Math.round(y) };
+      }
+      return { kind, x: Math.round(c.x + offs[i][0]), y: Math.round(c.y) };
+    });
+    if (G.Coop.isHost) G.Coop.broadcast(['tw', 'ch', fl.choices]);
+    G.Audio.sfx('confirm');
+    G.Spawner.say(kinds.length > 1 ? 'Choose your stairs' : 'The stairs are open', 2, true);
   }
 
   /** Nothing leaves the arena's circle (a strong knock-back, a leap). */
@@ -362,7 +424,8 @@ G.Tower = (() => {
     G.Pickups.pullAll();
     G.Audio.sfx(cfg.kind === 'horde' || cfg.kind === 'plates' ? 'levelup' : 'legend');
     // Battle Points (+1 with the Bounty Badge).
-    let bp = (D_.BP[cfg.kind] || 0) + (pl.towerBp || 0);
+    const K = kindOf(cfg);
+    let bp = (D_.BP[cfg.kind] || 0) + (pl.towerBp || 0) + (K && K.bonus ? K.bonus(fl) : 0);
     let t10 = 0, notes = [];
     if (s && s.tower) {
       const T = s.tower;
@@ -443,6 +506,8 @@ G.Tower = (() => {
       case 'clr': onClear(ev[2]); break;
       case 'bdg': openBadges(() => G.Coop.toHost(['tw', 'bd'])); break;
       case 'sc': G.TowerBosses.onNet(ev); break;
+      case 'st': { const K = fl && kindOf(fl.cfg); if (K && K.apply) K.apply(fl, ev[2]); break; }      // a floor kind's state
+      case 'ch': if (fl) fl.choices = ev[2]; break;                                                       // the landing's stairways
     }
   }
   /** Host: events from a guest. */
@@ -457,6 +522,8 @@ G.Tower = (() => {
   /** On the ground, under everyone: the Seal Plates. */
   function drawGround(ctx) {
     if (fl && fl.cfg.kind === 'hub') { G.TowerHub.drawGround(ctx, fl); return; }
+    const K = fl && kindOf(fl.cfg);
+    if (K) { if (K.drawGround) K.drawGround(ctx, fl); return; }
     if (!fl || fl.cfg.kind !== 'plates' || !fl.cfg.plates) return;
     const now = performance.now() / 1000;
     fl.cfg.plates.forEach((_, i) => {
@@ -479,9 +546,10 @@ G.Tower = (() => {
   function hud() {
     if (!run || !fl) return null;
     if (fl.cfg.kind === 'hub') return G.TowerHub.hud(run);
-    const cfg = fl.cfg, sec = D().SECTIONS[cfg.section];
+    const cfg = fl.cfg, sec = D().SECTIONS[cfg.section], K = kindOf(cfg);
     let goal = '', col = '#ffffff';
-    if (fl.phase === 'intro') goal = cfg.kind === 'horde' ? 'DEFEAT ' + cfg.quota + ' POKÉMON' : cfg.kind === 'plates' ? 'SEAL PLATES: HOLD EVERY PLATE AT ONCE' : cfg.kind === 'twins' ? 'TWIN BOND: DEFEAT BOTH TOGETHER' : 'BOSS FLOOR';
+    if (K && (fl.phase === 'intro' || fl.phase === 'fight')) ({ goal, col } = K.hud(fl));
+    else if (fl.phase === 'intro') goal = cfg.kind === 'horde' ? 'DEFEAT ' + cfg.quota + ' POKÉMON' : cfg.kind === 'plates' ? 'SEAL PLATES: HOLD EVERY PLATE AT ONCE' : cfg.kind === 'twins' ? 'TWIN BOND: DEFEAT BOTH TOGETHER' : 'BOSS FLOOR';
     else if (fl.phase === 'fight') {
       if (cfg.kind === 'horde') goal = 'DEFEATED ' + Math.min(cfg.quota, fl.kills) + ' / ' + cfg.quota;
       else if (cfg.kind === 'plates') { goal = 'SEAL ' + Math.round(fl.prog * 100) + '% · PLATES ' + bits(fl.mask) + ' / ' + cfg.plates.length; col = '#ffe27a'; }
@@ -491,7 +559,7 @@ G.Tower = (() => {
       }
     } else if (fl.phase === 'clear' || fl.phase === 'cards') { goal = 'FLOOR CLEARED'; col = '#8fffb0'; }
     else if (fl.phase === 'badges') { goal = 'PICKING BADGES'; col = '#ffe27a'; }
-    else if (fl.phase === 'next') { goal = 'NEXT FLOOR IN ' + Math.ceil(NEXT - fl.t); col = '#8fe3ff'; }
+    if (fl.choices && fl.phase !== 'fight') { goal = fl.choices.length > 1 ? 'CHOOSE YOUR STAIRS' : 'TAKE THE STAIRS'; col = '#8fe3ff'; }
     else if (fl.phase === 'won' || fl.phase === 'over') { goal = 'THE BATTLE TOWER IS YOURS'; col = '#ffe27a'; }
     return { big: cfg.n + 'F', place: (cfg.kind === 'final' ? 'THE SUMMIT' : sec.name.toUpperCase()), mode: run.mode === 'exp' ? 'EXPEDITION' : 'CLIMB', goal, col, bp: run.bp };
   }
@@ -509,13 +577,21 @@ G.Tower = (() => {
 
   return {
     reset, start, update, finish, onEvent, onClient, mateLeft, drawGround, hud, music,
-    /** Things drawn sorted by Y with everyone (the hall's statues and doors). */
-    drawables() { return fl && fl.cfg.kind === 'hub' ? G.TowerHub.drawables(fl) : []; },
+    /** Things drawn sorted by Y with everyone (the hall's statues and doors, a floor's objects, the stairways). */
+    drawables() {
+      if (!fl) return [];
+      if (fl.cfg.kind === 'hub') return G.TowerHub.drawables(fl);
+      const K = kindOf(fl.cfg), out = K && K.drawables ? K.drawables(fl) : [];
+      return fl.choices ? out.concat(G.TowerFloors.stairsDrawables(fl.choices)) : out;
+    },
+    /** Screen space, over the scene (the Mystery Dungeon's darkness). */
+    drawOverlay(ctx, w, h) { const K = fl && kindOf(fl.cfg); if (K && K.drawOverlay && fl.phase !== 'hub') K.drawOverlay(ctx, w, h, fl); },
+    spawnWild, regroup, themedBag,
     get active() { return !!run; },
     get run() { return run; },
     get floor() { return fl; },
     /** Tests (?dev): jump to floor n of this run (the host / solo). */
-    debugFloor(n) { if (!run || !authority()) return; run.floor = Math.max(0, Math.min(D().FLOORS, n) - 1); wipe(); nextFloor(); },
+    debugFloor(n, kind) { if (!run || !authority()) return; run.floor = Math.max(0, Math.min(D().FLOORS, n) - 1); wipe(); nextFloor(kind); },
     /** Tests: event floors (Seal Plates, Twin Bond) even on your own. */
     debugEvents(on = true) { forceEvents = !!on; },
     /** Tests: clear the current floor now. */

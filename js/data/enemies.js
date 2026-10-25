@@ -214,6 +214,16 @@ G.Enemies = (() => {
     return G.U.pickN(pool, 4).map(p => defFor(p, TIERS[ti], ti));
   }
 
+  /** One healer and one shielder with the stats of second `t`'s tier (Battle Tower floors: they come whatever the theme). */
+  function supportDefs(t) {
+    const ti = tierAt(t), pool = candidates(TIERS[ti]), out = [];
+    for (const b of ['healer', 'shielder']) {
+      const c = pool.filter(p => behaviorOf(p) === b);
+      if (c.length) out.push(defFor(G.U.pick(c), TIERS[ti], ti));
+    }
+    return out;
+  }
+
   /**
    * Voltorb swarm (events.js): Voltorb and Electrode as bombers with the CURRENT tier's stats, so the swarm
    * stays a threat at any minute. Frailer and quicker than a normal bomber (they come in numbers), and each
@@ -266,7 +276,7 @@ G.Enemies = (() => {
   }
 
   return {
-    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, ramp, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs, voltDefs,
+    TIERS, BOSS_SLOTS, rollRun, scale, bossScale, ramp, bagAt, upcomingDex, candidates, hordeTypes, hordeDefs, supportDefs, voltDefs,
     get BOSSES() { if (!bosses) rollRun(); return bosses; },
     get cast() { if (!cast) rollRun(); return cast; }
   };

@@ -1735,6 +1735,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
   background: rgba(0,0,0,.28); border: 1px solid rgba(244,248,255,.16); color: var(--muted); }
 .tw-chips i.big { border-color: rgba(255,120,90,.6); color: #ffc0b0; font-weight: 700; }
 .tw-chips i.gate, .tw-chips i.final { border-color: rgba(201,162,74,.8); color: #ffe27a; }
+.tw-chips i.gauntlet, .tw-chips i.dungeon { border-color: rgba(143,227,255,.6); color: #bfefff; }
 .tw-chips i.done { background: rgba(255,210,63,.22); color: var(--gold); }
 @media (max-width: 640px) {
   .tw-top { grid-template-columns: 1fr; }

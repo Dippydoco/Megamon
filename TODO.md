@@ -16,7 +16,11 @@ Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor
   Groudon) still use the shared kit; the design doc has ideas (Tyranitar's boulders as cover, Garchomp's Dig...).
 - **Active arenas.** Arena mechanics on a timer (rising lava, spreading ice, turrets, wind) are not in yet.
 - **Leaderboard.** Highest floor and fastest section clear, solo and group (needs new Firestore rules).
-- **Landing choices.** Between floors there is only the card pick; the design also had heal / shop / risk choices.
+- **Landing choices.** Stairways now offer a choice of floor kind; the design also had heal / shop / risk choices.
+- **Ice Slide puzzle.** Scrapped for now (2026-10-25); the plan is in the design doc.
+- **Puzzles in Expeditions.** Lights Out and Unown Sequence are Climb-only (`KINDS[...].climb` in `js/data/tower.js`).
+- **New floor kinds: co-op check.** Survival, Bounty, Relic Hunt, Hold, Escort, Gauntlet and Mystery Dungeon sync
+  their state to guests (`'st'` messages) but have only been tested solo (`G.Tower.debugFloor(n, 'gauntlet')` in `?dev`).
 - **Sounds and music.** The tower reuses rift, boss and biome music and the generic boss sounds.
 
 ## Zygarde Portal (added 2026-10-18)

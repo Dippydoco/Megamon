@@ -84,9 +84,10 @@ G.TowerUI = (() => {
       for (let i = 1; i <= D().SECTION; i++) {
         const n = sec * D().SECTION + i, f = D().floor(n);
         const done = !!(t.firsts && t.firsts[n]);
-        const big = f.kind !== 'horde';
-        const title = f.kind === 'horde' ? 'Horde' : (G.DEX_BY[f.dex] || {}).name;
-        chips.push(`<i class="${done ? 'done' : ''} ${big ? 'big' : ''} ${f.kind}" title="${n}F · ${esc(title)}">${n}</i>`);
+        const fixed = D().fixedKind(n, false), big = !!fixed && !D().KINDS[fixed];
+        // Fixed floors show what they are; the rest are the player's choice of stairway at the landing before.
+        const title = !fixed ? 'Your choice of floor' : D().KINDS[fixed] ? D().KINDS[fixed].name : (G.DEX_BY[f.dex] || {}).name;
+        chips.push(`<i class="${done ? 'done' : ''} ${big ? 'big' : ''} ${fixed || 'free'}" title="${n}F · ${esc(title)}">${n}</i>`);
       }
       const boss = G.DEX_BY[S.boss], gate = G.DEX_BY[sec === D().SECTIONS.length - 1 ? 384 : S.gate];
       row.innerHTML = `<div class="tw-sec"><b>${esc(S.name)}</b><small>5F ${esc(boss.name)} · ${sec === D().SECTIONS.length - 1 ? 'Summit' : 'Gate'} ${esc(gate.name)}</small></div>

@@ -359,6 +359,11 @@
         if (this.poisonT <= 0) this.poison = 0;
       }
       if (this.dead) return;
+      // Asleep (Battle Tower Mystery Dungeon rooms): still until a player comes close or it's hit.
+      if (this.asleep) {
+        if (G.U.dist2(this.x, this.y, pl.x, pl.y) < 250 * 250 || this.hp < this.maxHp) { this.asleep = false; G.FX.dmgText(this.x, this.y - this.bodyH - 6, '!', '#ffd23f', true); }
+        else { this.anim.loop('Idle', 0.4); if (seen && Math.random() < dt * 0.8) G.FX.dmgText(this.x, this.y - this.bodyH - 6, 'z', '#cfe0ff'); return; }
+      }
       if (this.freezeT > 0) {
         this.freezeT -= dt;
         this.kx *= Math.pow(0.001, dt); this.ky *= Math.pow(0.001, dt);

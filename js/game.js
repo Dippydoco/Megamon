@@ -1061,6 +1061,7 @@ G.Game = (() => {
       ctx.fillRect(0, 0, w, h);
     }
     G.TowerBosses.drawOverlay(ctx, w, h);     // Battle Tower: Gengar's lights out
+    G.Tower.drawOverlay(ctx, w, h);           // Battle Tower: the Mystery Dungeon's darkness
     if (!G.Judgment.cinematic) G.HUD.draw(ctx, w, h, pl, st);
     G.Judgment.drawOverlay(ctx, w, h);
     G.Touch.draw(ctx);

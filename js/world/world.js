@@ -81,7 +81,26 @@ G.World = (() => {
     return false;
   }
 
+  /**
+   * Battle Tower dungeon floors (systems/towerfloors.js): an arena can carry a hand-built or generated map instead
+   * of the round shape: { x0, y0, w, h, rows } in tiles, rows of '#' wall, '.' floor, '~' liquid. Everything up to
+   * MAP_PAD tiles around it is wall. Returns null outside that area.
+   */
+  const MAP_PAD = 10;
+  function inMap(tx, ty, pad = MAP_PAD) {
+    const m = arena && arena.map;
+    return !!m && tx >= m.x0 - pad && ty >= m.y0 - pad && tx < m.x0 + m.w + pad && ty < m.y0 + m.h + pad;
+  }
+  function mapTile(tx, ty) {
+    if (!inMap(tx, ty)) return null;
+    const m = arena.map, lx = tx - m.x0, ly = ty - m.y0;
+    if (lx < 0 || ly < 0 || lx >= m.w || ly >= m.h) return WALL;
+    const c = m.rows[ly][lx];
+    return c === '.' ? FLOOR : c === '~' ? LIQUID : WALL;
+  }
+
   function terrainRaw(tx, ty) {
+    if (arena && arena.map) { const mt = mapTile(tx, ty); if (mt != null) return mt; }
     const ad = arenaDist(tx, ty);
     if (ad < arena_outer()) {
       if (ad >= arena.r) return WALL;
@@ -157,6 +176,7 @@ G.World = (() => {
       const tx = c.cx * N + i, ty = c.cy * N + j;
       if (Math.hypot(tx, ty) < 7) continue;
       if (broken.has(tx + ',' + ty)) continue;
+      if (inMap(tx, ty)) continue;                 // a dungeon floor's map: no trees, chests or traps of the open world
 
       // Needs ground around it so it isn't stuck against walls / water.
       let open = true;
@@ -704,8 +724,8 @@ G.World = (() => {
       arena = a;
       if (!a) return;
       a.th = G.Tiles.ARENA_THEMES[a.type] || G.Tiles.ARENA_THEMES.normal;
-      // Forgets that area's chunks (if they'd been generated before).
-      const R = a.r + 9;
+      // Forgets that area's chunks (if they'd been generated before). (A map: its whole rectangle.)
+      const R = a.map ? Math.max(a.map.w, a.map.h) / 2 + MAP_PAD + 4 : a.r + 9;
       for (const k of [...data.keys(), ...images.keys()]) {
         const [cx, cy] = k.split(',').map(Number);
         if (Math.abs(cx * N + N / 2 - a.tx) < R + N && Math.abs(cy * N + N / 2 - a.ty) < R + N) { data.delete(k); images.delete(k); }
