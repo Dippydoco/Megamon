@@ -648,7 +648,12 @@ G.Social = (() => {
       banner: G.Cosmetics.pack(prof),     // banner id, plus the background colour and wallpaper (cosmetics.js)
       frame: prof.frame || '',
       best: { solo: st.bestTime | 0, group: st.bestGroupTime | 0, level: st.bestLevel | 0, bosses: st.bossesTotal | 0,
-              legends: Object.keys(s.legends || {}).length, kills: st.totalKills | 0, medals: unlocked.length },
+              legends: Object.keys(s.legends || {}).length, kills: st.totalKills | 0, medals: unlocked.length,
+              // Featured achievements (fa) and badges (fb), and how many badges (25-10-2026). Inside `best` because
+              // the profiles rule only allows a fixed set of top-level fields and checks nothing inside `best`.
+              fa: (prof.featAch || []).filter(id => s.ach && s.ach[id]).slice(0, 6),
+              fb: (prof.featBadges || []).filter(g => G.Charms.has(g, s)).slice(0, 9),
+              badges: G.Charms.list(s).length },
       medals
     };
   }

@@ -12,6 +12,30 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = t => (t >= 3600 ? Math.floor(t / 3600) + ':' + G.U.mmss(t % 3600).padStart(5, '0') : G.U.mmss(t));
 
+  // ======================= BADGES (shared) =======================
+  // One per generation: own every Pokémon of it (the same thing earns the region's Shiny Charm, systems/charms.js).
+  const BADGE_MON = { 1: 150, 2: 249, 3: 384, 4: 483, 5: 643, 6: 716, 7: 791, 8: 888, 9: 1007 };
+  /** { gens: [1..9], all: gen -> count, have: gen -> owned, earned: [gens] } for a save. */
+  function badgeInfo(s) {
+    const all = {}, have = {};
+    for (const p of G.DEX) {
+      all[p.gen] = (all[p.gen] || 0) + 1;
+      if (s && s.owned && s.owned[p.dex]) have[p.gen] = (have[p.gen] || 0) + 1;
+    }
+    const gens = Object.keys(all).map(Number).sort((a, b) => a - b);
+    return { gens, all, have, earned: gens.filter(g => have[g] === all[g]) };
+  }
+  /** The hexagon emblem with the region's legendary (a silhouette while not earned). */
+  function badgeEmblem(gen, ok, size = 64) {
+    const em = document.createElement('div');
+    em.className = 'badge-em' + (ok ? ' ok' : '');
+    em.style.width = em.style.height = size + 'px'; em.style.flexBasis = size + 'px';
+    const mon = BADGE_MON[gen];
+    if (mon && G.DEX_BY[mon]) em.appendChild(G.UI.spriteCanvas(mon, size, Math.round(size * 0.875), { scale: 1, silhouette: !ok }));
+    return em;
+  }
+  const FEAT_ACH = 6;          // featured achievements on the public profile (save.profile.featAch)
+
   // ======================= SCREEN =======================
 
   G.GoalsUI = (() => {
@@ -138,16 +162,8 @@
     // ---------------- badges (25-10-2026) ----------------
     // One per generation: own every Pokémon of it. The same thing earns that region's Shiny Charm
     // (systems/charms.js), so a badge also shows the charm. save.charms[gen] is when it was first earned.
-    const BADGE_MON = { 1: 150, 2: 249, 3: 384, 4: 483, 5: 643, 6: 716, 7: 791, 8: 888, 9: 1007 };
-
     function badges(box) {
-      const s = G.DB.save, all = {}, have = {};
-      for (const p of G.DEX) {
-        all[p.gen] = (all[p.gen] || 0) + 1;
-        if (s.owned && s.owned[p.dex]) have[p.gen] = (have[p.gen] || 0) + 1;
-      }
-      const gens = Object.keys(all).map(Number).sort((a, b) => a - b);
-      const earned = gens.filter(g => have[g] === all[g]);
+      const s = G.DB.save, { gens, all, have, earned } = badgeInfo(s);
       box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Badges ${earned.length} / ${gens.length}</h3></div>
         <p class="sub">Own every Pokémon from a generation to earn its badge. Each badge also brings that region's Shiny Charm: shiny odds ×${G.Charms.MULT} for its Pokémon.</p>`);
       const grid = document.createElement('div');
@@ -158,11 +174,7 @@
         const el = document.createElement('div');
         el.className = 'badge-card' + (ok ? ' ok' : '');
         el.style.setProperty('--b1', col[0]); el.style.setProperty('--b2', col[1]); el.style.setProperty('--b3', col[2]);
-        const em = document.createElement('div');
-        em.className = 'badge-em';
-        const mon = BADGE_MON[g];
-        if (mon && G.DEX_BY[mon]) em.appendChild(G.UI.spriteCanvas(mon, 64, 56, { scale: 1, silhouette: !ok }));
-        el.appendChild(em);
+        el.appendChild(badgeEmblem(g, ok));
         const when = ok && s.charms && s.charms[g] ? new Date(s.charms[g]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
         el.insertAdjacentHTML('beforeend', `<div class="badge-txt"><b>${esc(region)} Badge</b>
           <small>Generation ${g} · own all ${all[g]} Pokémon</small>
@@ -317,6 +329,7 @@
       sel.onchange = () => { P.title = sel.value; save(); };
       box.appendChild(sel);
       if (!titles.length) box.insertAdjacentHTML('beforeend', '<p class="note">Earn achievements to unlock titles.</p>');
+      featured(box, s, P);
 
       // Banner, border and chat name colour.
       const C = G.Cosmetics;
@@ -387,6 +400,73 @@
       box.appendChild(prev);
     }
 
+    // ---------------- featured achievements and badges (25-10-2026) ----------------
+    // Shown in their own "Featured" section on your public profile. P.featAch: achievement ids (up to 6),
+    // P.featBadges: generations (any of the badges you've earned).
+    function featured(box, s, P) {
+      box.insertAdjacentHTML('beforeend', `<h3 style="margin-top:14px">Featured on your profile</h3>
+        <p class="sub" style="margin:0 0 6px">Pick the achievements and badges other players see first on your profile.</p>`);
+      // Achievements: the chosen ones as small cards, and a Choose button.
+      const ach = (P.featAch || []).filter(id => G.AchDefs.BY[id] && s.ach && s.ach[id]);
+      const row = document.createElement('div');
+      row.className = 'feat-row';
+      for (const id of ach) row.appendChild(achChip(G.AchDefs.BY[id]));
+      const ch = document.createElement('button');
+      ch.type = 'button'; ch.className = 'btn small ghost';
+      ch.textContent = ach.length ? 'Change achievements (' + ach.length + '/' + FEAT_ACH + ')' : 'Choose achievements (up to ' + FEAT_ACH + ')';
+      ch.onclick = pickAch;
+      row.appendChild(ch);
+      box.appendChild(row);
+      // Badges: every earned one as a toggle.
+      const { earned } = badgeInfo(s);
+      const br = document.createElement('div');
+      br.className = 'feat-row';
+      if (!earned.length) br.innerHTML = '<p class="note" style="margin:0">Earn a badge (own every Pokémon of a generation) to feature it.</p>';
+      const on = new Set((P.featBadges || []).filter(g => earned.includes(g)));
+      for (const g of earned) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'feat-badge' + (on.has(g) ? ' on' : '');
+        b.title = G.Charms.regionName(g) + ' Badge' + (on.has(g) ? ' (featured)' : '');
+        b.appendChild(badgeEmblem(g, true, 40));
+        b.insertAdjacentHTML('beforeend', `<small>${esc(G.Charms.regionName(g))}</small>`);
+        b.onclick = () => {
+          if (on.has(g)) on.delete(g); else on.add(g);
+          P.featBadges = [...on].sort((a, c) => a - c); save(); render();
+        };
+        br.appendChild(b);
+      }
+      box.appendChild(br);
+    }
+
+    function pickAch() {
+      const s = G.DB.save, P = s.profile;
+      const box = $('goals-body');
+      const sel = (P.featAch || []).filter(id => G.AchDefs.BY[id] && s.ach && s.ach[id]);
+      box.innerHTML = `<div class="row between"><h3>Featured achievements <span class="sub">${sel.length} / ${FEAT_ACH}</span></h3>
+        <button class="btn small gold" id="feat-done">Done</button></div>
+        <p class="sub">Tap to add or remove. They show on your profile in the order you pick them.</p>`;
+      $('feat-done').onclick = () => { tab = 'profile'; render(); };
+      const unlocked = G.AchDefs.LIST.filter(a => s.ach && s.ach[a.id]).sort((a, b) => (b.tier || 0) - (a.tier || 0));
+      if (!unlocked.length) { box.insertAdjacentHTML('beforeend', '<p class="sub">No achievements unlocked yet.</p>'); return; }
+      const grid = document.createElement('div');
+      grid.className = 'feat-pick';
+      for (const a of unlocked) {
+        const i = sel.indexOf(a.id);
+        const c = achChip(a, true);
+        c.classList.toggle('on', i >= 0);
+        if (i >= 0) c.insertAdjacentHTML('beforeend', `<em class="feat-n">${i + 1}</em>`);
+        c.onclick = () => {
+          if (i >= 0) sel.splice(i, 1);
+          else if (sel.length >= FEAT_ACH) { G.UI.toast('You can feature up to ' + FEAT_ACH + ': remove one first'); G.Audio.sfx('error'); return; }
+          else sel.push(a.id);
+          P.featAch = sel.slice(); save(); pickAch();
+        };
+        grid.appendChild(c);
+      }
+      box.appendChild(grid);
+    }
+
     function pickFav(i) {
       const s = G.DB.save;
       const box = $('goals-body');
@@ -440,6 +520,21 @@
     return { init, open, render, runList };
   })();
 
+  /** A small achievement card: medal (or the legendary's sprite), name and what it was for. */
+  function achChip(a, button) {
+    const c = document.createElement(button ? 'button' : 'div');
+    if (button) c.type = 'button';
+    c.className = 'feat-ach';
+    c.title = a.desc;
+    const ic = document.createElement('span');
+    ic.className = 'feat-ic';
+    if (a.dex && G.DEX_BY[a.dex]) ic.appendChild(G.UI.spriteCanvas(a.dex, 36, 32, { scale: 1 }));
+    else ic.innerHTML = G.Icons.html('medal' + a.tier, 30);
+    c.appendChild(ic);
+    c.insertAdjacentHTML('beforeend', `<span class="feat-txt"><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span>`);
+    return c;
+  }
+
   // ======================= PUBLIC PROFILE =======================
 
   G.ProfileUI = (() => {
@@ -474,7 +569,8 @@
           <div><span>Legendaries</span><b>${b.legends || 0}</b></div>
           <div><span>Defeated</span><b>${(b.kills || 0).toLocaleString('en')}</b></div>
         </div>
-        <h3>Medals <span class="sub">${b.medals || 0}</span></h3>
+        <div id="prof-feat" class="prof-feat hidden"><h3>Featured</h3><div class="prof-feat-badges" id="prof-feat-b"></div><div class="prof-feat-ach" id="prof-feat-a"></div></div>
+        <h3>Medals <span class="sub">${b.medals || 0}</span>${b.badges ? ` · Badges <span class="sub">${b.badges} / 9</span>` : ''}</h3>
         <div class="prof-medals" id="prof-medals"></div>
         ${uid ? '<div style="margin-top:10px"><button class="btn small" id="prof-hist-btn">Run history</button></div><div id="prof-hist" style="margin-top:8px"></div>' : ''}`;
       if ($('prof-copy')) $('prof-copy').onclick = () => G.UI.copyText(d.name, 'Name copied: paste it in Friends to add them');
@@ -507,6 +603,21 @@
         favs.appendChild(slot);
       }
       if (!favs.children.length) favs.innerHTML = '<p class="sub">No favourites yet.</p>';
+      // Featured achievements and badges (kept in `best` so the published profiles rules accept them).
+      const fa = (Array.isArray(b.fa) ? b.fa : []).filter(id => G.AchDefs.BY[id]).slice(0, FEAT_ACH);
+      const fbg = (Array.isArray(b.fb) ? b.fb : []).map(Number).filter(g => BADGE_MON[g]).slice(0, 9);
+      if (fa.length || fbg.length) {
+        $('prof-feat').classList.remove('hidden');
+        for (const g of fbg) {
+          const w = document.createElement('div');
+          w.className = 'pf-badge';
+          w.title = G.Charms.regionName(g) + ' Badge: every Pokémon of generation ' + g;
+          w.appendChild(badgeEmblem(g, true, 48));
+          w.insertAdjacentHTML('beforeend', `<small>${esc(G.Charms.regionName(g))}</small>`);
+          $('prof-feat-b').appendChild(w);
+        }
+        for (const id of fa) $('prof-feat-a').appendChild(achChip(G.AchDefs.BY[id]));
+      }
       const med = $('prof-medals');
       for (const id of d.medals || []) {
         const a = G.AchDefs.BY[id];

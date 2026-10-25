@@ -633,7 +633,11 @@ input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 
 .rk-row.mod-row { grid-template-columns: 54px 1fr auto; }
 .rk-row.mod-row.rep { grid-template-columns: 54px auto 1fr auto auto; }
 .mod-warn { color: #ff8a96 !important; }
-.mod-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.mod-acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 440px; }
+/* Moderation buttons: compact, so a row's actions don't swamp it (25-10-2026) */
+.mod-acts .btn.small { padding: 3px 8px; font-size: 12px; border-width: 2px; border-radius: 6px; text-shadow: none;
+  box-shadow: 0 0 0 1px var(--edge-out), 0 2px 0 var(--edge-out); }
+.mod-acts .btn.small:active { box-shadow: 0 0 0 1px var(--edge-out); }
 .rk-me { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(0,0,0,.25); font-size: 15px; min-height: 20px; }
 
 .cards.done .card { pointer-events: none; opacity: .45; }
@@ -1771,11 +1775,36 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .badge-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px;
   background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.14); }
 .badge-card.ok { border-color: var(--b2); background: linear-gradient(135deg, color-mix(in srgb, var(--b1) 55%, transparent), rgba(0,0,0,.25)); }
-.badge-em { flex: 0 0 64px; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+.badge-em { flex: 0 0 64px; width: 64px; height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: #3a4256; }
-.badge-card.ok .badge-em { background: radial-gradient(circle at 50% 40%, #fff3c4, #ffd23f 45%, #b8741a); }
+.badge-em.ok, .badge-card.ok .badge-em { background: radial-gradient(circle at 50% 40%, #fff3c4, #ffd23f 45%, #b8741a); }
 .badge-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .badge-txt b { font-size: 16px; }
 .badge-txt small { color: var(--muted); font-size: 12px; }
 .badge-card:not(.ok) .badge-txt b { color: var(--muted); }
 .badge-got { font-size: 12px; color: var(--gold); }
+
+/* ============ Featured achievements and badges (profile editor and public profile) ============ */
+.feat-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.feat-ach { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; text-align: left; color: inherit; font: inherit;
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.14); max-width: 260px; position: relative; }
+button.feat-ach { cursor: pointer; }
+button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1); }
+.feat-ic { flex: 0 0 36px; display: flex; align-items: center; justify-content: center; }
+.feat-txt { display: flex; flex-direction: column; min-width: 0; }
+.feat-txt b { font-size: 14px; }
+.feat-txt small { font-size: 11px; color: var(--muted); }
+.feat-n { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--gold); color: #3a2300;
+  font-style: normal; font-size: 12px; display: flex; align-items: center; justify-content: center; text-shadow: none; }
+.feat-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 56vh; overflow-y: auto; padding: 6px 4px; }
+.feat-pick .feat-ach { max-width: none; }
+.feat-badge { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; border-radius: 8px; cursor: pointer; color: inherit; font: inherit;
+  background: rgba(0,0,0,.2); border: 2px solid transparent; opacity: .55; }
+.feat-badge.on { opacity: 1; border-color: var(--gold); background: rgba(255,210,63,.1); }
+.feat-badge small { font-size: 10px; color: var(--muted); }
+.prof-feat { margin-bottom: 10px; }
+.prof-feat-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.pf-badge { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pf-badge small { font-size: 10px; color: var(--muted); }
+.prof-feat-ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+.prof-feat-ach .feat-ach { max-width: none; }

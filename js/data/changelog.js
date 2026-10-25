@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T18:01Z', title: 'Featured achievements and badges', new: [
+    'Profile has a new "Featured on your profile" section: choose up to 6 of your achievements and any of your badges, and they show in a Featured section at the top of your public profile, in the order you picked them. Public profiles also show how many badges a player has.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T17:57Z', title: 'Try themes in the Star Shop', new: [
     'Sableye\'s Star Shop has a Try button on every theme you don\'t own yet. Trying a menu theme recolours the whole page while you stay in the shop (Stop, or leaving the shop, puts yours back). Trying a card theme shows your own card with it, health bar and all.'
   ] },

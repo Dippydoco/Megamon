@@ -140,13 +140,15 @@ G.ModUI = (() => {
                 if (by.err.length && !by.added.length) b.disabled = false;
               } catch (err) { G.UI.toast('Failed: ' + (err.code || err.message), 6000); b.disabled = false; b.textContent = label; }
             });
+            b.title = 'Add this run to the ' + CAT[which] + ' leaderboard';
             return b;
           };
-          const kb = addBtn('kills', 'Add to Most kills', (r.k || 0).toLocaleString('en-GB') + ' defeated');
+          // Short labels ("+ Most kills"); the tooltip and the confirmation say it in full.
+          const kb = addBtn('kills', '+ Most kills', (r.k || 0).toLocaleString('en-GB') + ' defeated');
           if (!(r.k > 0)) { kb.disabled = true; kb.title = 'No kills in this run'; }
-          const lb = addBtn('level', 'Add to Highest level', 'Lv. ' + (r.lv || 1));
+          const lb = addBtn('level', '+ Highest level', 'Lv. ' + (r.lv || 1));
           if (!(r.lv > 1)) { lb.disabled = true; lb.title = 'Level 1 runs are not on Highest level'; }
-          acts.append(addBtn('time', 'Add to Time survived', fmt(r.t)), kb, lb);
+          acts.append(addBtn('time', '+ Time survived', fmt(r.t)), kb, lb);
           row.appendChild(acts);
           out.appendChild(row);
         }
@@ -199,17 +201,18 @@ G.ModUI = (() => {
       const dexes = info ? info.dex : [];
       // Removing from one category leaves the row so the other can still be removed (or the report dismissed).
       const removeBtn = which => {
-        const b = btn('Remove from ' + CAT[which], 'ghost', () => {
+        const b = btn('− ' + CAT[which], 'ghost', () => {
           if (!confirm('Remove ' + g.names.join(', ') + "'s record from all current " + CAT[which] + ' tables?')) return;
           busy(async () => {
             await G.Ranking.removeEverywhere(g.e, mode, dexes, g.board, which);
             if (which === kind) await G.Ranking.dismiss(g.ids);
           }, 'Removed from ' + CAT[which], () => {
-            b.dataset.done = '1'; b.textContent = 'Removed from ' + CAT[which];
+            b.dataset.done = '1'; b.textContent = '✓ Removed: ' + CAT[which];
             acts.querySelectorAll('button').forEach(x => { x.disabled = !!x.dataset.done; });
             row.classList.add('mod-done');
           });
         });
+        b.title = 'Remove this record from every current ' + CAT[which] + ' table';
         return b;
       };
       acts.append(
