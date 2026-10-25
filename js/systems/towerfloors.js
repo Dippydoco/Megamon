@@ -599,13 +599,18 @@ G.TowerFloors = (() => {
     drawOverlay(ctx, w, h, fl) {
       const cam = G.Camera, ps = alive();
       ctx.save();
-      ctx.fillStyle = 'rgba(6,4,14,.82)';
+      // Pitch black outside each player's light (25-10-2026: it used to be only darker), with a soft edge.
+      const lights = ps.map(p => [(p.x - cam.left()) * cam.scale, (p.y - 20 - cam.top()) * cam.scale, 230 * cam.scale]);
+      ctx.fillStyle = '#000';
       ctx.beginPath(); ctx.rect(0, 0, w, h);
-      for (const p of ps) {
-        const sx = (p.x - cam.left()) * cam.scale, sy = (p.y - 20 - cam.top()) * cam.scale, r = 230 * cam.scale;
-        ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, 0, 6.2832, true);
-      }
+      for (const [sx, sy, r] of lights) { ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, 0, 6.2832, true); }
       ctx.fill('evenodd');
+      for (const [sx, sy, r] of lights) {
+        const g = ctx.createRadialGradient(sx, sy, r * 0.62, sx, sy, r + 1);
+        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(sx, sy, r + 1, 0, 6.2832); ctx.fill();
+      }
       const pl = G.Game.player;
       if (pl && fl.t > 45) {
         const [x, y] = dungeon.stairs(fl);

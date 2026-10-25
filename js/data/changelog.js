@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T16:36Z', title: 'Darker Mystery Dungeons', chg: [
+    'In Battle Tower Mystery Dungeon floors, everything outside the light around you (and your teammates) is now pitch black instead of just darker, with a soft edge to the light.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T16:31Z', title: 'Battle Tower floor tweaks', chg: [
     'Hold the Ground: the zone is bigger, and instead of jumping somewhere new every 10 seconds it slowly drifts while you stand in it, so you move with it. Progress drains more slowly when you step out.',
     'Lights Out is easier: it now takes 2 steps to solve in the first two wings and 3 higher up.',
