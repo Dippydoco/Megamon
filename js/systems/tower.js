@@ -226,8 +226,8 @@ G.Tower = (() => {
     if (cfg.kind === 'gate' || cfg.kind === 'final') {
       // Like a rift legendary of that minute (rift.js spawnLegend); the final one much tougher.
       const fin = cfg.kind === 'final';
-      let hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (fin ? 2.5 : 1.2));
-      if (fin) hp = Math.max(hp, Math.round(G.Judgment.singleDps() * 45));     // strong teams can't melt the summit
+      // (25-10-2026: much tougher, ×3 for gatekeepers and ×4.5 for Rayquaza over a rift legendary.)
+      const hp = Math.round((3200 + t * 9) * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) * (fin ? 4.5 : 3));
       def = { dex, name: mon.name, hp,
               spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105) * (fin ? 1.1 : 1)),
               dmg: Math.round((36 + t / 20) * (fin ? 1.3 : 1)), xp: Math.round((500 + t * 1.2) * (fin ? 2 : 1)),
@@ -237,13 +237,19 @@ G.Tower = (() => {
       // Like a survival boss of that section (enemies.js BOSS_SLOTS), on the floor clock.
       const slot = G.Enemies.BOSS_SLOTS[Math.min(G.Enemies.BOSS_SLOTS.length - 1, cfg.section)];
       const bs = (mon.spd - 78) / 0.42;
-      def = { dex, name: mon.name, hp: Math.round(slot.hp * 1.35 * (cfg.kind === 'twins' ? 0.6 : 1)),
+      // (25-10-2026: ×2.5 for 5th-floor bosses, ×1.5 for each twin.)
+      def = { dex, name: mon.name, hp: Math.round(slot.hp * 1.35 * (cfg.kind === 'twins' ? 1.5 : 2.5)),
               spd: Math.round(G.U.clamp(40 + bs * 0.5, 40, 100)), dmg: Math.round(slot.dmg * 1.2), xp: slot.xp,
               behavior: ranged ? 'ranged' : (bs > 90 ? 'charger' : 'chase'), shotDmg: Math.round(slot.dmg * 0.55), shotCd: 1.1, range: 260 };
       const bsc = G.Enemies.bossScale(t);
       sc = Object.assign({}, bsc, { hp: bsc.hp * G.Coop.scaleHp(n) * (n > 1 ? 1.4 : 1) });
     }
     const e = new G.Enemy(def, fl.x + side * ts * 3, fl.y - ts * 3.5, sc, true);
+    // A floor under the team's real damage too: health worth at least this many seconds of their best single-target
+    // damage per second (the measurement Arceus and the Zygarde Portal use), so a strong build can't melt a boss.
+    const secs = { boss: 30, twins: 18, gate: 40, final: 70 }[cfg.kind] || 0;
+    const floorHp = Math.round(G.Judgment.singleDps() * secs);
+    if (floorHp > e.maxHp) e.maxHp = e.hp = floorHp;
     e.flying = false;                 // collides with the arena's walls and columns, like rift legendaries
     e.tower = cfg.kind;
     if (G.Spawner.rollShiny(dex)) e.makeShiny();

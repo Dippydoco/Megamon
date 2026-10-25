@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T16:26Z', title: 'Tougher Battle Tower bosses', chg: [
+    'Battle Tower bosses have much more health: 5th-floor bosses ×2.5, gatekeepers ×2.5 and Rayquaza almost twice as much as before. A boss also never has less health than a set number of seconds of your best single-target damage, so strong builds can\'t melt them.'
+  ], new: [
+    'Every Battle Tower boss learns two new attacks from a new set: Ring (blasts all around it: hug it or stay far away), Cross (a + of beams, then an x), Barrage (four blasts that follow you) and Spiral (rings of shots that turn as they fire).',
+    'Gatekeepers have signature attacks. Entei: Eruption Line and Fire Spin. Suicune: Aurora Sweep and Tidal Wave. Raikou: Thunder Cage and Volt Dash. Groudon: Precipice Blades and Eruption Field. Rayquaza now also rains Draco Meteor fields from its second phase.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T16:20Z', title: 'Battle Points in the top bar', chg: [
     'Your Battle Points now show in the top bar on the main menu, next to your Arceus Stars.'
   ], fix: [

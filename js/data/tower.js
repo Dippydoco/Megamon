@@ -26,13 +26,13 @@ G.TowerData = (() => {
   // and `wild`: the types its wild Pokémon come from (systems/tower.js themedBag). A horde floor spawns mostly
   // Pokémon of its arena's type, with a few from the rest of the section's list.
   const SECTIONS = [
-    { name: 'Meadow Wing', boss: 289, bossArena: 'normal', script: 'slaking', gate: 244, gateArena: 'fire',     horde: ['normal', 'grass'],
+    { name: 'Meadow Wing', boss: 289, bossArena: 'normal', script: 'slaking', gate: 244, gateScript: 'entei', gateArena: 'fire',     horde: ['normal', 'grass'],
       wild: ['normal', 'grass', 'bug', 'fairy'] },
-    { name: 'Shadow Wing', boss: 94,  bossArena: 'ghost',  script: 'gengar',  gate: 245, gateArena: 'water',    horde: ['ghost', 'dark'],
+    { name: 'Shadow Wing', boss: 94,  bossArena: 'ghost',  script: 'gengar',  gate: 245, gateScript: 'suicune', gateArena: 'water',    horde: ['ghost', 'dark'],
       wild: ['ghost', 'dark', 'poison', 'psychic'] },
-    { name: 'Stone Wing',  boss: 248, bossArena: 'rock',   script: '',        gate: 243, gateArena: 'electric', horde: ['rock', 'fighting'],
+    { name: 'Stone Wing',  boss: 248, bossArena: 'rock',   script: '',        gate: 243, gateScript: 'raikou', gateArena: 'electric', horde: ['rock', 'fighting'],
       wild: ['rock', 'fighting', 'ground'] },
-    { name: 'Iron Wing',   boss: 376, bossArena: 'steel',  script: '',        gate: 383, gateArena: 'ground',   horde: ['steel', 'electric'],
+    { name: 'Iron Wing',   boss: 376, bossArena: 'steel',  script: '',        gate: 383, gateScript: 'groudon', gateArena: 'ground',   horde: ['steel', 'electric'],
       wild: ['steel', 'electric', 'ground', 'fire'] },
     { name: 'Sky Wing',    boss: 445, bossArena: 'dragon', script: '',        gate: 384, gateArena: 'flying',   horde: ['dragon', 'flying'],
       wild: ['dragon', 'flying', 'ice'] }
@@ -91,7 +91,7 @@ G.TowerData = (() => {
     const base = { n, section: sectionOf(n), t: dTime(n) };
     kind = fixedKind(n, coop) || kind || 'horde';
     if (kind === 'final') return Object.assign(base, { kind, dex: 384, arena: 'flying', r: 15, script: 'rayquaza', limit: 240 });
-    if (kind === 'gate') return Object.assign(base, { kind, dex: S.gate, arena: S.gateArena, r: 13, limit: 180 });
+    if (kind === 'gate') return Object.assign(base, { kind, dex: S.gate, arena: S.gateArena, r: 13, limit: 180, script: S.gateScript || '' });
     if (kind === 'boss') return Object.assign(base, { kind, dex: S.boss, arena: S.bossArena, r: 12, script: S.script, limit: 150 });
     const arena = S.horde[i < 5 ? 0 : 1];
     if (kind === 'plates') return Object.assign(base, { kind, arena, r: 15, quota: 0 });

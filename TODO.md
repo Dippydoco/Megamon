@@ -12,8 +12,9 @@ Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor
   Try a real Expedition with 2+ players: floor changes, the Badge pick wait, Gengar's darkness and Rayquaza's wind.
 - **Balance pass.** Every number is a placeholder: horde quotas, boss HP on the floor clock, BP rewards, Badge costs,
   head-start levels (`TowerData.headStart`), enrage timers.
-- **Scripts for the other bosses.** Tyranitar, Metagross, Garchomp and the gatekeepers (Entei, Suicune, Raikou,
-  Groudon) still use the shared kit; the design doc has ideas (Tyranitar's boulders as cover, Garchomp's Dig...).
+- **Scripts for the other 5th-floor bosses.** Tyranitar, Metagross and Garchomp use the shared kit plus the tower's
+  generic attacks (ring, cross, barrage, spiral); the gatekeepers have signature attacks (towerbosses.js SIG). The
+  design doc has mechanic ideas (Tyranitar's boulders as cover, Garchomp's Dig...).
 - **Active arenas.** Arena mechanics on a timer (rising lava, spreading ice, turrets, wind) are not in yet.
 - **Leaderboard.** Highest floor and fastest section clear, solo and group (needs new Firestore rules).
 - **Landing choices.** Stairways now offer a choice of floor kind; the design also had heal / shop / risk choices.

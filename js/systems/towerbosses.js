@@ -13,6 +13,16 @@
  *             gusts that push everyone; at 1/3 Delta Stream (spinning cross beams) and Draco Meteor.
  *   twins     Plusle and Minun (Expedition event): when one falls it gets back up unless its partner falls
  *             within 6 s.
+ *   Gatekeepers: the shared kit plus two signature attacks each, one every 7-10 s, taking turns (SIG):
+ *     entei     Eruption Line (blasts racing along the ground towards you) · Fire Spin (a ring of fire around
+ *               you with one gap, then the middle goes up)
+ *     suicune   Aurora Sweep (a fan of beams firing one after another, a sweep to outrun) · Tidal Wave (rows of
+ *               water rolling across the arena, each with a gap)
+ *     raikou    Thunder Cage (strikes at four corners around you, then where you stand) · Volt Dash (three
+ *               charges in a row, each leaving a shocking trail)
+ *     groudon   Precipice Blades (six lines of blasts running outwards from it) · Eruption Field (blasts all over
+ *               the arena at once, one on you)
+ *   Rayquaza also rains Draco Meteor fields from phase 2.
  *
  * Only the host (or solo) runs the scripts. What every computer must see or feel (floating text, the wind,
  * the darkness) goes out as 'tw' 'sc' events (systems/tower.js -> onNet).
@@ -72,7 +82,8 @@ G.TowerBosses = (() => {
     e.tsc = { t: 0 };
     if (script === 'slaking') Object.assign(e.tsc, { mode: 'act', left: 5, slackCd: 0 });
     if (script === 'gengar') Object.assign(e.tsc, { teamT: 4, clones: [] });
-    if (script === 'rayquaza') { Object.assign(e.tsc, { phase: 1, ascentT: 6, gustT: 6, streamT: 4, chain: 0 }); e.noEnrage = true; }
+    if (script === 'rayquaza') { Object.assign(e.tsc, { phase: 1, ascentT: 6, gustT: 6, streamT: 4, chain: 0, meteorT: 5 }); e.noEnrage = true; }
+    if (SIG[script]) Object.assign(e.tsc, { sigT: 4, sigI: 0, chain: 0 });
   }
 
   function move(e, dt, pl, dist, dx, dy, spd) {
@@ -84,6 +95,7 @@ G.TowerBosses = (() => {
       case 'gengar': return gengar(e, S, dt, pl);
       case 'rayquaza': return rayquaza(e, S, dt, pl);
       case 'twins': return twins(e, S, dt);
+      case 'entei': case 'suicune': case 'raikou': case 'groudon': return signature(e, S, dt, pl);
     }
     return null;
   }
@@ -189,6 +201,12 @@ G.TowerBosses = (() => {
       net('wind', Math.round(Math.random() * 628) / 100, 2.4, S.phase === 3 ? 150 : 120);
       net('say', 'Hurricane!', 1.6);
     }
+    // Phase 2+: Draco Meteor fields.
+    if (S.phase >= 2 && (S.meteorT -= dt) <= 0 && !ai.cast) {
+      S.meteorT = S.phase === 3 ? 10 : 13;
+      eruptionField(e, pl, '#b48aff', 'dragon');
+      net('tx', e.id, 'Draco Meteor!', '#c9a6ff');
+    }
     // Phase 3: Delta Stream, a spinning cross of warned beams from where it stands.
     if (S.phase === 3 && (S.streamT -= dt) <= 0 && !ai.cast) {
       S.streamT = 6;
@@ -216,6 +234,100 @@ G.TowerBosses = (() => {
     G.Hazards.cancelOwner(e.id);
     net('say', text, 3);
     G.Audio.sfx('boss');
+  }
+
+  // ---------------- gatekeepers' signature attacks ----------------
+
+  const zone = (e, x, y, r, delay, k = 1.25, color, type) => G.Hazards.add({ sd: e.dex, own: e.hzOwner(), from: e, kind: 'zone', x, y, r, delay,
+    dmg: e.shotDmg() * k, type: type || e.atkType, color: color || G.U.TYPE_COLOR[e.atkType] || '#ff7a9e' });
+  const beam = (e, angle, len, w, delay, k = 1.2, color) => G.Hazards.add({ sd: e.dex, own: e.hzOwner(), from: e, kind: 'beam', x: e.x, y: e.y, angle, len, w, delay,
+    dmg: e.shotDmg() * k, type: e.atkType, color: color || G.U.TYPE_COLOR[e.atkType] || '#ff7a9e' });
+  /** The boss stands still while it casts (the shared kit's bossCast runs the pause). */
+  function hold(e, wind, after = 0.4, anim = 'Charge') { e.ai.cast = { id: 'sig', t: 0, wind, after, ang: 0 }; e.anim.play(anim, { speed: 1.2 }); }
+  const angTo = (e, pl) => Math.atan2(pl.y - e.y, pl.x - e.x);
+
+  function eruptionLine(e, pl) {
+    const a = angTo(e, pl), lines = e.ai.fury ? [-0.4, 0, 0.4] : [0];
+    for (const off of lines) for (let i = 1; i <= 8; i++) zone(e, e.x + Math.cos(a + off) * i * 70, e.y + Math.sin(a + off) * i * 70 * 0.85, 50, 0.8 + i * 0.12, 1.3, '#ff7a3d', 'fire');
+    hold(e, 0.8, 1.0);
+    net('tx', e.id, 'Eruption!', '#ffb36b');
+  }
+  function fireSpin(e, pl) {
+    const n = 12, gap = Math.floor(Math.random() * n), cx = pl.x, cy = pl.y;
+    for (let i = 0; i < n; i++) {
+      if (i === gap || i === (gap + 1) % n) continue;
+      const a = i / n * 6.2832;
+      zone(e, cx + Math.cos(a) * 125, cy + Math.sin(a) * 125 * 0.8, 42, 1.2, 1.2, '#ff5a2a', 'fire');
+    }
+    zone(e, cx, cy, 80, 2.0, 1.5, '#ff5a2a', 'fire');          // then the middle goes up: get out through the gap
+    hold(e, 0.7, 0.8);
+    net('tx', e.id, 'Fire Spin!', '#ffb36b');
+  }
+  function auroraSweep(e, pl) {
+    const a = angTo(e, pl), n = 9, dir = Math.random() < 0.5 ? -1 : 1;
+    for (let i = 0; i < n; i++) beam(e, a + dir * (i / (n - 1) - 0.5) * 2.4, 480, 30, 0.9 + i * 0.13, 1.25, '#9fe8ff');
+    hold(e, 0.9, 1.3);
+    net('tx', e.id, 'Aurora Beam!', '#bff3ff');
+  }
+  function tidalWave(e, pl) {
+    // Rows of water across the arena, rolling from Suicune's side through you, each with a 2-blast gap.
+    const a = angTo(e, pl), px = -Math.sin(a), py = Math.cos(a);
+    for (let row = 0; row < 5; row++) {
+      const d = 60 + row * 85, gap = Math.floor(Math.random() * 8);
+      for (let k = -4; k <= 4; k++) {
+        if (k + 4 === gap || k + 4 === gap + 1) continue;
+        const x = e.x + Math.cos(a) * d + px * k * 64, y = e.y + Math.sin(a) * d * 0.85 + py * k * 64 * 0.85;
+        zone(e, x, y, 38, 1.0 + row * 0.35, 1.15, '#4fb4ff', 'water');
+      }
+    }
+    hold(e, 1.0, 1.6);
+    net('tx', e.id, 'Tidal Wave!', '#9fdcff');
+  }
+  function thunderCage(e, pl) {
+    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) zone(e, pl.x + dx * 85, pl.y + dy * 70, 56, 1.0, 1.25, '#ffe14d', 'electric');
+    zone(e, pl.x, pl.y, 76, 1.7, 1.45, '#ffe14d', 'electric');
+    hold(e, 0.6, 1.0, 'Shoot');
+    net('tx', e.id, 'Thunder!', '#fff3a0');
+  }
+  function voltDash(e, pl) {
+    e.bossStart('dash', pl);
+    const c = e.ai.cast;
+    // A shocking trail along the charge, going off just after it passes.
+    for (let i = 1; i <= 6; i++) zone(e, e.x + Math.cos(c.ang) * i * 55, e.y + Math.sin(c.ang) * i * 55, 34, c.wind + c.dur + 0.25, 0.9, '#ffe14d', 'electric');
+  }
+  function precipice(e, pl) {
+    const a0 = angTo(e, pl);
+    for (let k = 0; k < 6; k++) {
+      const a = a0 + k * 1.0472;
+      for (let i = 1; i <= 4; i++) zone(e, e.x + Math.cos(a) * i * 80, e.y + Math.sin(a) * i * 80 * 0.85, 44, 0.9 + i * 0.18, 1.35, '#ff7a3d', 'ground');
+    }
+    hold(e, 0.9, 1.2);
+    net('tx', e.id, 'Precipice Blades!', '#ffb36b');
+  }
+  function eruptionField(e, pl, color = '#ff7a3d', type = 'fire') {
+    const f = G.Tower.floor, ts = G.Tiles.T * G.Sprites.PX;
+    const cx = f ? f.x : e.x, cy = f ? f.y : e.y, R = f ? (f.cfg.r - 2) * ts : 400;
+    zone(e, pl.x, pl.y, 66, 1.5, 1.4, color, type);
+    for (let i = 0; i < 12; i++) {
+      const a = Math.random() * 6.2832, d = Math.sqrt(Math.random()) * R;
+      zone(e, cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.85, 66, 1.5 + Math.random() * 0.4, 1.4, color, type);
+    }
+    hold(e, 0.8, 0.8, 'Shoot');
+  }
+  const SIG = { entei: [eruptionLine, fireSpin], suicune: [auroraSweep, tidalWave], raikou: [thunderCage, voltDash], groudon: [precipice, eruptionField] };
+
+  /** Gatekeepers: the shared kit, with a signature attack every 7-10 s (faster when enraged), taking turns. */
+  function signature(e, S, dt, pl) {
+    const ai = e.ai;
+    if (S.chain > 0 && !ai.cast && !e.jump) { S.chain--; voltDash(e, pl); return e.bossCast(dt, pl); }
+    S.sigT -= dt * (ai.fury ? 1.4 : 1);
+    if (S.sigT > 0 || ai.cast || e.jump) return null;
+    S.sigT = G.U.rand(7, 10);
+    const f = SIG[e.script][S.sigI++ % 2];
+    if (f === voltDash) { S.chain = 2; net('tx', e.id, 'Volt Dash!', '#fff3a0'); }
+    if (f === eruptionField) net('tx', e.id, 'Eruption!', '#ffb36b');
+    f(e, pl);
+    return e.bossCast(dt, pl);
   }
 
   // ---------------- Plusle & Minun: Twin Bond ----------------

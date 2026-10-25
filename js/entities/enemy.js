@@ -545,6 +545,15 @@
                  : has('fairy', 'ghost', 'water', 'flying') ? 'nova' : 'volley';
       const others = ['rain', 'beam', 'nova', 'volley'].filter(x => x !== pref);
       const ranged = [pref, others[Math.floor(G.U.hash(this.dex, 5, 9) * 3) % 3]];
+      // Battle Tower bosses (not Gengar's clones) learn two more from the tower's set (2026-10-25):
+      //   ring     a ring of blasts around itself: hug it or stay well away
+      //   cross    a + of beams from where it stands, then an x
+      //   barrage  four blasts that follow you, one every 0.4 s
+      //   spiral   rings of shots that turn a little each time, for 1.6 s
+      if (this.tower && this.behavior !== 'clone') {
+        const extra = ['ring', 'cross', 'barrage', 'spiral'], k = Math.floor(G.U.hash(this.dex, 11, 13) * 4) % 4;
+        ranged.push(extra[k], extra[(k + 1 + Math.floor(G.U.hash(this.dex, 17, 19) * 3)) % 4]);
+      }
       const far = this.behavior === 'ranged';
       this.ai = { melee, ranged, farLike: far ? 0.65 : 0.35, mode: far ? 'far' : 'close', modeT: G.U.rand(6, 8),
                   cd: 1.6, cast: null, fury: false, side: Math.random() < 0.5 ? -1 : 1 };
@@ -636,6 +645,36 @@
           c.wind = 1.0; c.after = 0.25; this.anim.play('Charge', { speed: 1.1 });
           break;
         }
+        case 'ring': {     // Battle Tower: a ring of blasts around itself (safe close in, or far out)
+          c.wind = 0.9 * f; c.after = 0.4;
+          const n = ai.fury ? 12 : 10, rr = 150 + this.r;
+          for (let i = 0; i < n; i++) {
+            const a = i / n * 6.2832;
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: this.x + Math.cos(a) * rr, y: this.y + Math.sin(a) * rr * 0.8, r: 46,
+                            delay: c.wind + 0.15, dmg: this.shotDmg() * 1.25, type, color: col });
+          }
+          this.anim.play('Charge', { speed: 1.2 });
+          break;
+        }
+        case 'cross': {    // Battle Tower: a + of beams, then an x
+          c.wind = 1.0 * f; c.after = 0.9;
+          const a0 = Math.round(ang / 1.5708) * 1.5708;
+          for (let k = 0; k < 8; k++) {
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'beam', x: this.x, y: this.y, angle: a0 + k * 0.7854, len: 460, w: 32,
+                            delay: (k % 2 ? 1.7 : 1.0) * f, dmg: this.shotDmg() * 1.2, type, color: col });
+          }
+          this.anim.play('Charge', { speed: 1.1 });
+          break;
+        }
+        case 'barrage':    // Battle Tower: blasts that follow you (placed in bossCast)
+          c.wind = 0.5; c.after = 1.7; c.next = 0; c.k = 0;
+          this.anim.play('Shoot');
+          break;
+        case 'spiral':     // Battle Tower: turning rings of shots (fired in bossCast)
+          c.wind = 0.6 * f; c.after = 1.6; c.next = 0; c.k = 0;
+          this.anim.play('Charge', { speed: 1.3 });
+          G.FX.ring(this.x, this.y, this.r, this.r * 2.4, col, c.wind, 2);
+          break;
         case 'volley':     // fan of shots
         case 'nova':       // ring of shots
           c.wind = (id === 'nova' ? 0.7 : 0.5) * f;
@@ -653,6 +692,22 @@
         if (c.t >= c.wind + c.dur) return this.bossEnd();
         const sp = c.len / c.dur;
         return [Math.cos(c.ang) * sp, Math.sin(c.ang) * sp, 'Walk'];
+      }
+      // Battle Tower: the two attacks that keep going after the wind-up.
+      if ((c.id === 'barrage' || c.id === 'spiral') && c.t >= c.wind) {
+        if ((c.next -= dt) <= 0) {
+          if (c.id === 'barrage' && c.k < 4) {
+            c.next = 0.4; c.k++;
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x, y: pl.y, r: 58, delay: 0.8, dmg: this.shotDmg() * 1.2,
+                            type: this.atkType, color: G.U.TYPE_COLOR[this.atkType] || '#ff7a9e' });
+          } else if (c.id === 'spiral') {
+            c.next = 0.27; c.k++;
+            const n = ai.fury ? 10 : 8, a = c.k * 0.21;
+            this.shoot(Math.cos(a), Math.sin(a), 6.2832 * (n - 1) / n, n, 0.6);
+          }
+        }
+        if (c.t >= c.wind + c.after) return this.bossEnd();
+        return [0, 0, 'Idle'];
       }
       if (c.t >= c.wind && !c.fired) {
         c.fired = true;
