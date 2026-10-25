@@ -59,7 +59,9 @@ Main menu  (the world in the background, with wild Pokémon wandering)
 - **Climb** (solo): beating a gatekeeper saves that checkpoint for good; runs start at 1F or after any saved
   checkpoint, with free levels as a head start. **Expedition** (co-op, the room's mode): same floors, never moves
   checkpoints; with 2+ players the 3rd and 8th floor of each section are co-op events (Seal Plates, Twin Bond).
-- Each cleared floor: a level, a heal and **Battle Points** (BP, a ledger currency like coins). After every boss:
+- **No experience in the tower** (25-10-2026): every cleared floor gives flat level-ups (1, or 2 for bosses and
+  gatekeepers; checkpoint head starts give the same, 12 per wing). No Learning card or Lucky Egg there.
+- Each cleared floor: level-ups, a heal and **Battle Points** (BP, a ledger currency like coins). After every boss:
   pick 1 of 3 **Badges** (run-long passives; 4 free, 8 unlocked with BP). The BP Shop also sells Battle Tower
   themes and exchanges BP for coins and tickets. First clears of boss floors give ×10 tickets.
 - **Floor kinds** (systems/towerfloors.js): after each floor two stairways offer the next floor's kind (bosses,
@@ -73,7 +75,7 @@ Main menu  (the world in the background, with wild Pokémon wandering)
   Plusle and Minun (Twin Bond). No survival time, records, history or leaderboard from tower runs.
 
 ### 2.4 Leaderboard
-- Time survived. **Solo / Group** tabs; **daily, weekly, monthly, yearly and
+- Time survived, Most kills and Highest level (25-10-2026). **Solo / Group** tabs; **daily, weekly, monthly, yearly and
   all-time** periods (Spanish time); **everyone or friends only**;
   **filter by Pokémon**; your rank at the bottom even if you're not in the top 50.
 - One entry per player (or team) and table, only if it improves. In a group the

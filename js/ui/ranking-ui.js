@@ -6,15 +6,16 @@
 G.RankingUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let mode = 's', period = 'w', scope = 'all', dex = null, metric = 't', size = 2;      // size: group size (2-5)      // metric: 't' time survived · 'k' most kills
-  const eff = () => mode + (metric === 'k' ? 'k' : '');
+  // metric: 't' time survived · 'k' most kills · 'l' highest level (25-10-2026)
+  let mode = 's', period = 'w', scope = 'all', dex = null, metric = 't', size = 2;      // size: group size (2-5)
+  const eff = () => mode + (metric === 'k' ? 'k' : metric === 'l' ? 'l' : '');
   const gs = () => (mode === 'g' ? size : null);
   let token = 0;
   // The view is remembered between visits (24-10-2026).
   const VIEW = 'ps.rk.view';
   try {
     const v = JSON.parse(localStorage.getItem(VIEW) || 'null');
-    if (v) { mode = v.mode === 'g' ? 'g' : 's'; metric = v.metric === 'k' ? 'k' : 't'; period = ['d', 'w', 'm', 'a'].includes(v.period) ? v.period : 'w';
+    if (v) { mode = v.mode === 'g' ? 'g' : 's'; metric = ['k', 'l'].includes(v.metric) ? v.metric : 't'; period = ['d', 'w', 'm', 'a'].includes(v.period) ? v.period : 'w';
              scope = v.scope === 'friends' ? 'friends' : 'all'; size = [2, 3, 4, 5].includes(v.size) ? v.size : 2; }
   } catch (e) { /* nothing */ }
   const remember = () => { try { localStorage.setItem(VIEW, JSON.stringify({ mode, metric, period, scope, size })); } catch (e) { /* nothing */ } };
@@ -65,8 +66,9 @@ G.RankingUI = (() => {
       }
     };
     const dropDex = () => { if (dex) { dex = null; $('rk-poke').value = ''; $('rk-clear').classList.add('hidden'); } };
-    mk($('rk-metric'), [['t', `${G.Icons.html('clock', 18)} Time survived`, 'The longest runs'], ['k', `${G.Icons.html('fist', 18)} Most kills`, 'The most Pokémon defeated in one run']],
-       metric, k => { metric = k; if (k === 'k') dropDex(); });
+    mk($('rk-metric'), [['t', `${G.Icons.html('clock', 18)} Time survived`, 'The longest runs'], ['k', `${G.Icons.html('fist', 18)} Most kills`, 'The most Pokémon defeated in one run'],
+                        ['l', `${G.Icons.html('up', 18)} Highest level`, 'The highest level your Pokémon reached in one run']],
+       metric, k => { metric = k; if (k !== 't') dropDex(); });
     mk($('rk-mode'), [['s', `${G.Icons.html('user', 14)} Solo`], ['g', `${G.Icons.html('friends', 14)} Group`]], mode, k => { mode = k; });
     // Group: a separate leaderboard for each team size.
     $('rk-size').classList.toggle('hidden', mode !== 'g');
@@ -75,15 +77,16 @@ G.RankingUI = (() => {
     mk($('rk-period'), G.Ranking.PERIODS.map(([k]) => [k, PERIOD_LABEL[k]]), period, k => { period = k; if (k !== 'a') dropDex(); });
     mk($('rk-scope'), [['all', 'Everyone'], ['friends', 'Friends']], scope, k => { scope = k; });
     // The Pokémon filter only exists for time survived (every period: picking one switches to All time).
-    $('rk-poke-wrap').classList.toggle('hidden', metric === 'k');
+    $('rk-poke-wrap').classList.toggle('hidden', metric !== 't');
     $('rk-poke').placeholder = period === 'a' ? 'Filter by Pokémon' : 'Pokémon (All time)';
     // What you're looking at, in words.
-    $('rk-title').innerHTML = (metric === 'k' ? 'Most kills' : 'Longest time survived') + ' · '
+    $('rk-title').innerHTML = (metric === 'k' ? 'Most kills' : metric === 'l' ? 'Highest level' : 'Longest time survived') + ' · '
       + (mode === 's' ? 'Solo' : 'Groups of ' + size) + ' · ' + PERIOD_LABEL[period]
       + (dex ? ' · ' + esc(G.DEX_BY[dex].name) + ' only' : '') + (scope === 'friends' ? ' · <span class="gold">friends only</span>' : '');
   }
 
   const fmtK = n => (n || 0).toLocaleString('en-GB') + ' kills';
+  const fmtL = n => 'Lv. ' + (n || 1);
   const fmt = t => t >= 3600 ? Math.floor(t / 3600) + ':' + G.U.mmss(t % 3600).padStart(5, '0') : G.U.mmss(t);
 
   async function load() {
@@ -110,7 +113,7 @@ G.RankingUI = (() => {
     const uid = G.Social.uid;
     const b = G.Ranking.board(eff(), period, dex, gs()), done = G.Ranking.reported();
     rows.forEach((r, i) => list.appendChild(rowEl(r, i + 1, r.uids.includes(uid), b, done)));
-    const val = metric === 'k' ? fmtK : fmt;
+    const val = metric === 'k' ? fmtK : metric === 'l' ? fmtL : fmt;
 
     const pn = { d: 'today', w: 'this week', m: 'this month', y: 'this year', a: 'of all time' }[period];
     const mon = dex ? G.DEX_BY[dex].name : '';
@@ -122,7 +125,7 @@ G.RankingUI = (() => {
   }
 
   function rowEl(r, pos, mine, b, done) {
-    const kills = metric === 'k';
+    const kills = metric === 'k', level = metric === 'l';
     const el = document.createElement('div');
     el.className = 'rk-row' + (mine ? ' mine' : '') + (pos <= 3 ? ' top' + pos : '');
     el.insertAdjacentHTML('beforeend', `<span class="pos">${pos <= 3 ? G.Icons.html('trophy', 20) : ''}${pos}</span>`);
@@ -131,8 +134,8 @@ G.RankingUI = (() => {
     r.dex.forEach((d, i) => { if (G.DEX_BY[d]) mons.appendChild(G.UI.spriteCanvas(d, 44, 40, { scale: 1, shiny: !!r.shiny[i] })); });
     el.appendChild(mons);
     el.insertAdjacentHTML('beforeend',
-      `<span class="who"><b translate="no">${r.names.map((n, i) => `<a href="#" class="plink" data-u="${esc(r.uids[i] || '')}">${esc(n)}</a>`).join(' · ')}</b><small>Lv. ${r.lv || 1} · ${kills ? fmt(r.t) + ' survived' : (r.kills || 0).toLocaleString('en') + ' defeated'}${period === 'a' && r.at ? ' · <span translate="no">' + new Date(r.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span>' : ''}</small></span>
-       <span class="time">${kills ? (r.kills || 0).toLocaleString('en-GB') : fmt(r.t)}</span>`);
+      `<span class="who"><b translate="no">${r.names.map((n, i) => `<a href="#" class="plink" data-u="${esc(r.uids[i] || '')}">${esc(n)}</a>`).join(' · ')}</b><small>${level ? fmt(r.t) + ' survived · ' + (r.kills || 0).toLocaleString('en') + ' defeated' : 'Lv. ' + (r.lv || 1) + ' · ' + (kills ? fmt(r.t) + ' survived' : (r.kills || 0).toLocaleString('en') + ' defeated')}${period === 'a' && r.at ? ' · <span translate="no">' + new Date(r.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + '</span>' : ''}</small></span>
+       <span class="time">${kills ? (r.kills || 0).toLocaleString('en-GB') : level ? 'Lv. ' + (r.lv || 1) : fmt(r.t)}</span>`);
     el.querySelectorAll('.plink').forEach(a => { a.onclick = e => { e.preventDefault(); G.ProfileUI.show(a.dataset.u); }; });
     // Report a suspicious record (not your own). The admin reviews it (mod-ui.js).
     if (!mine && G.Social.me) {
@@ -150,14 +153,15 @@ G.RankingUI = (() => {
       };
       el.appendChild(rep);
     } else el.appendChild(document.createElement('span'));
-    // Moderation: remove this record from the category being viewed (Time survived or Most kills) only.
+    // Moderation: remove this record from the category being viewed (Time survived, Most kills or Highest level) only.
     if (G.Ranking.isAdmin()) {
       el.classList.add('admin');
       const rm = document.createElement('button');
       rm.className = 'rk-rep rk-del';
-      rm.title = 'Moderation: remove from ' + (kills ? 'Most kills' : 'Time survived');
+      const cat = kills ? 'kills' : level ? 'level' : 'time';
+      rm.title = 'Moderation: remove from ' + { kills: 'Most kills', level: 'Highest level', time: 'Time survived' }[cat];
       rm.textContent = '✕';
-      rm.onclick = () => G.ModUI.removeRow(r, r.src || b, kills ? 'kills' : 'time', () => { el.style.opacity = '.35'; rm.disabled = true; });
+      rm.onclick = () => G.ModUI.removeRow(r, r.src || b, cat, () => { el.style.opacity = '.35'; rm.disabled = true; });
       el.appendChild(rm);
     }
     return el;

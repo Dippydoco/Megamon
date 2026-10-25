@@ -54,8 +54,8 @@ G.HUD = (() => {
     G.Touch.clearButtons();
     const touch = G.Touch.active;
 
-    // ---------- experience bar (top edge) ----------
-    const xpF = pl.xp / pl.xpNext;
+    // ---------- experience bar (top edge; empty in the Battle Tower, which has no experience) ----------
+    const xpF = G.Tower.active ? 0 : pl.xp / pl.xpNext;
     ctx.fillStyle = 'rgba(0,0,0,.5)';
     ctx.fillRect(0, 0, w, 7);
     const g = ctx.createLinearGradient(0, 0, w, 0);

@@ -164,8 +164,9 @@ G.Ranking = (() => {
 
   // ---------------- guardar ----------------
 
-  // Kills tables ('sk_' solo, 'gk_' group) rank by `kills`; the time tables by `t`.
-  const vkOf = b => /^[sg]k_/.test(b) ? 'kills' : 't';
+  // Kills tables ('sk_' solo, 'gk_' group) rank by `kills`; highest-level tables ('sl_' / 'gl_', 25-10-2026) by `lv`;
+  // the time tables by `t`.
+  const vkOf = b => /^[sg]k_/.test(b) ? 'kills' : /^[sg]l_/.test(b) ? 'lv' : 't';
   // `at` = when the record was set (ms). Top-50 rows store it as a number; entry docs have a Timestamp.
   const atMs = a => (a && a.toMillis ? a.toMillis() : typeof a === 'number' ? a : 0);
   const rowOf = (id, v) => ({ id, t: v.t, uids: v.uids || [], names: v.names || [], dex: v.dex || [], shiny: v.shiny || [], lv: v.lv, kills: v.kills, at: atMs(v.at) });
@@ -308,6 +309,7 @@ G.Ranking = (() => {
     const boards = PERIODS.map(([p]) => ['s_' + ids[p], p]);
     boards.push(['s_' + ALL + '_p' + r.dex, 'p']);
     if (r.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);       // most-kills tables
+    if (r.lv > 1) for (const [p] of PERIODS) boards.push(['sl_' + ids[p], p]);          // highest-level tables
     const better = await store(boards, fb.uid, entry);
     announce(better);
     return better;
@@ -328,6 +330,7 @@ G.Ranking = (() => {
     const boards = PERIODS.map(([p]) => ['g_' + ids[p] + n, p]);
     for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d + n, 'p']);
     if (r.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p] + n, p]);       // most-kills tables
+    if (r.lv > 1) for (const [p] of PERIODS) boards.push(['gl_' + ids[p] + n, p]);          // highest-level tables
     const better = await store(boards, id, entry);
     announce(better);
     return better;
@@ -586,8 +589,8 @@ G.Ranking = (() => {
     cacheSet('s:' + b, undefined);
   }
 
-  /** A table's category: 'kills' (sk_ / gk_, most kills) or 'time' (time survived). */
-  const kindOf = b => (vkOf(b) === 'kills' ? 'kills' : 'time');
+  /** A table's category: 'kills' (sk_ / gk_, most kills), 'level' (sl_ / gl_, highest level) or 'time' (time survived). */
+  const kindOf = b => (vkOf(b) === 'kills' ? 'kills' : vkOf(b) === 'lv' ? 'level' : 'time');
   /** A table's mode: 's' solo or 'g' group (also for the kills tables sk_ / gk_). */
   const modeOf = b => (b[0] === 'g' ? 'g' : 's');
 
@@ -599,11 +602,12 @@ G.Ranking = (() => {
   async function removeEverywhere(e, mode, dexes = [], also = null, which = 'both') {
     mode = mode[0] === 'g' ? 'g' : 's';
     const ids = boardIds();
-    const time = which !== 'kills', kills = which !== 'time';
+    const time = which === 'time' || which === 'both', kills = which === 'kills' || which === 'both', level = which === 'level' || which === 'both';
     const boards = new Set();
     for (const [p] of PERIODS) {
       if (time) boards.add(mode + '_' + ids[p]);
       if (kills) boards.add(mode + 'k_' + ids[p]);
+      if (level) boards.add(mode + 'l_' + ids[p]);
     }
     if (time) for (const d of dexes) boards.add(mode + '_' + ALL + '_p' + d);
     if (mode === 'g') for (const b of [...boards]) for (const n of SIZES) boards.add(b + '_n' + n);
@@ -682,10 +686,12 @@ G.Ranking = (() => {
       for (const [p] of PERIODS) boards.push(['g_' + ids[p] + n, p]);
       for (const d of new Set(entry.dex)) boards.push(['g_' + ALL + '_p' + d + n, 'p']);
       if (entry.kills > 0) for (const [p] of PERIODS) boards.push(['gk_' + ids[p] + n, p]);
+      if (entry.lv > 1) for (const [p] of PERIODS) boards.push(['gl_' + ids[p] + n, p]);
     } else {
       for (const [p] of PERIODS) boards.push(['s_' + ids[p], p]);
       boards.push(['s_' + ALL + '_p' + run.d, 'p']);
       if (entry.kills > 0) for (const [p] of PERIODS) boards.push(['sk_' + ids[p], p]);
+      if (entry.lv > 1) for (const [p] of PERIODS) boards.push(['sl_' + ids[p], p]);
     }
     const pick = boards.filter(([b]) => which === 'both' || kindOf(b) === which);
     boards.length = 0; boards.push(...pick);

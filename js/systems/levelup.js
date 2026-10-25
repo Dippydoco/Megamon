@@ -103,7 +103,9 @@ G.LevelUp = (() => {
     // piled up endlessly (speed, cooldown and experience through the roof) and the
     // game ended up freezing. Those an evolution needs always come up.
     const room = s => !s.max || (pl.statsTaken[s.id] || 0) < s.max;
-    const pickStats = G.U.pickN(STATS.filter(s => !waiting[s.id] && room(s)), 5).concat(STATS.filter(s => waiting[s.id]));
+    // (Battle Tower: no experience there, so no Learning card.)
+    const useful = s => !(s.id === 'xp' && G.Tower && G.Tower.active);
+    const pickStats = G.U.pickN(STATS.filter(s => !waiting[s.id] && room(s) && useful(s)), 5).concat(STATS.filter(s => waiting[s.id] && useful(s)));
     for (const s of pickStats) {
       const evoFor = waiting[s.id];
       out.push({

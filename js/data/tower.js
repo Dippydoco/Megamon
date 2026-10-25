@@ -107,8 +107,16 @@ G.TowerData = (() => {
     for (let c = SECTION; c <= Math.min(cp, FLOORS - SECTION); c += SECTION) out.push(c + 1);
     return out;
   }
-  /** Free card picks for starting above 1F: catches a run up with one that climbed there. */
-  const headStart = startFloor => Math.round((startFloor - 1) * 0.8);
+  // ---- levels (25-10-2026): the tower has no experience at all; every cleared floor gives a flat number of level-ups,
+  // so a run's level only depends on how high it got (easier to balance). Bosses and gatekeepers give 2, the rest 1.
+  const LEVELS = { boss: 2, gate: 2, final: 0 };
+  const levelsFor = kind => (kind in LEVELS ? LEVELS[kind] : 1);
+  /** Free level-ups for starting above 1F: exactly what the floors below would have given (12 per wing). */
+  function headStart(startFloor) {
+    let n = 0;
+    for (let f = 1; f < startFloor; f++) n += levelsFor(fixedKind(f, false) || 'horde');
+    return n;
+  }
 
   // ---- Battle Points ----
   const BP = { horde: 2, plates: 4, twins: 5, boss: 5, gate: 10, final: 30,
@@ -125,7 +133,8 @@ G.TowerData = (() => {
     { id: 'harvest', name: 'Harvest Badge',   icon: 'sprout', cost: 0,  desc: '+1.5 HP regenerated per second.', apply: p => { p.regenFlat += 1.5; } },
     { id: 'focus',   name: 'Focus Badge',     icon: 'focus',  cost: 40, desc: '+8% critical-hit chance.', apply: p => { p.critChance += 0.08; } },
     { id: 'reach',   name: 'Reach Badge',     icon: 'reach',  cost: 40, desc: '+15% size of every area attack.', apply: p => { p.areaMul *= 1.15; } },
-    { id: 'scholar', name: 'Scholar Badge',   icon: 'book',   cost: 50, desc: '+20% experience gained.', apply: p => { p.xpMul *= 1.2; } },
+    // (25-10-2026: no experience in the tower any more; it was +20% experience.) In a group the host's Badge counts.
+    { id: 'scholar', name: 'Scholar Badge',   icon: 'book',   cost: 50, desc: '+1 more level-up from every boss and gatekeeper floor.', apply: p => { p.towerLv = (p.towerLv || 0) + 1; } },
     { id: 'iron',    name: 'Iron Badge',      icon: 'shield', cost: 60, desc: '+8% damage reduction.', apply: p => { p.dmgReduce = Math.min(0.7, p.dmgReduce + 0.08); } },
     { id: 'giant',   name: 'Giant Badge',     icon: 'star',   cost: 70, desc: '+20% damage to bosses and legendaries.', apply: p => { p.bossMul = (p.bossMul || 1) * 1.2; } },
     { id: 'medic',   name: 'Medic Badge',     icon: 'berry',  cost: 50, desc: 'Clearing a floor heals 40% instead of 15%.', apply: p => { p.towerHeal = 0.4; } },
@@ -142,6 +151,6 @@ G.TowerData = (() => {
     { id: 't10',   name: '1 ×10 ticket', icon: 'ticket10', cost: 250, give: s => { s.tickets.t10 += 1; } }
   ];
 
-  return { FLOORS, SECTION, SECTIONS, FLOOR_SECS, sectionOf, dTime, floor, fixedKind, choices, KINDS, isCheckpoint, starts, headStart,
+  return { FLOORS, SECTION, SECTIONS, FLOOR_SECS, sectionOf, dTime, floor, fixedKind, choices, KINDS, isCheckpoint, starts, headStart, levelsFor,
            BP, FIRST, BADGES, BADGE_BY, EXCHANGE };
 })();

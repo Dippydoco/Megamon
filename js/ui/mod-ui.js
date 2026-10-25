@@ -152,7 +152,7 @@ G.ModUI = (() => {
     };
   }
 
-  const CAT = { time: 'Time survived', kills: 'Most kills', both: 'Time survived and Most kills' };
+  const CAT = { time: 'Time survived', kills: 'Most kills', level: 'Highest level', both: 'Time survived, Most kills and Highest level' };
 
   /** "s_w2026-42" -> "Solo · Time survived · Week", "gk_m202610j_n3" -> "Group of 3 · Most kills · Month" */
   function boardName(b) {
@@ -252,7 +252,7 @@ G.ModUI = (() => {
   async function removeRow(r, b, which, done) {
     if (!G.Ranking.isAdmin()) return;
     if (!confirm('Remove ' + r.names.join(', ') + "'s record from all current " + CAT[which] + ' tables? Their ' +
-      (which === 'time' ? 'Most kills' : 'Time survived') + ' record stays.')) return;
+      'other categories\' records stay.')) return;
     try {
       await G.Ranking.removeEverywhere(r.id, G.Ranking.modeOf(b), r.dex || [], b, which);
       G.UI.toast('Removed from ' + CAT[which]);

@@ -72,9 +72,12 @@ G.Pickups = (() => {
 
   /** @param plain  experience only (the legendaries of Arceus's Judgment) */
   function dropXp(x, y, value, boss = false, legend = false, plain = false) {
+    // Battle Tower (25-10-2026): no experience at all, levels come flat from cleared floors (systems/tower.js).
+    // The other drops (berries, tickets, a boss's rewards) still fall.
+    const noXp = G.Tower && G.Tower.active;
     if (boss) {
       // Bosses burst into a pile of big orbs + rewards.
-      for (let i = 0; i < 14; i++) {
+      if (!noXp) for (let i = 0; i < 14; i++) {
         const a = Math.random() * 6.2832, d = G.U.rand(10, 70);
         push(orb('xpBig', x + Math.cos(a) * d, y + Math.sin(a) * d, Math.ceil(value / 14)));
       }
@@ -87,7 +90,7 @@ G.Pickups = (() => {
       if (Math.random() < (legend ? LEGEND_T10 : BOSS_T10)) push(orb('ticket10', x, y - 20, 1));
       return;
     }
-    push(orb(value >= 20 ? 'xpBig' : 'xp', x, y, value));
+    if (!noXp) push(orb(value >= 20 ? 'xpBig' : 'xp', x, y, value));
     if (Math.random() < TICKET_RATE * G.Abil.ticketK()) push(orb('ticket', x + G.U.rand(-6, 6), y, 1));      // (Ball Fetch: +15%)
     if (Math.random() < G.Abil.berryDrop()) push(orb('heal', x + G.U.rand(-8, 8), y, 0));                      // (Pickup: berries)
 

@@ -4,6 +4,10 @@ Things deliberately left for later. Cross them off when done.
 
 ## Battle Tower (added 2026-10-25)
 
+- **Publish firestore.rules (Highest level leaderboard).** The new `sl_` / `gl_` tables need the updated rules
+  (`better()` / `notMore()` and the `sl_` solo match). Until they are published in the Firebase console, those writes
+  are refused (a console warning); time and kills tables are unaffected.
+
 Design doc: the "Megamon Tower Mode: Design Premise" doc (the "Battle Tower v1" section is what was built).
 Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor loop), `js/systems/towerbosses.js`
 (scripted bosses), `js/ui/tower-ui.js` (screens, lobby mode).

@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T17:18Z', title: 'Battle Tower levels, Highest level leaderboard', chg: [
+    'The Battle Tower no longer has experience: Pokémon drop no XP there. Instead every floor you clear gives a set number of level-ups: 1 for most floors, 2 for bosses and gatekeepers. Starting from a checkpoint gives exactly the levels the floors below would have (12 per wing).',
+    'In the Battle Tower the Learning level-up card and the Lucky Egg no longer come up, and the Scholar Badge now gives one more level-up from every boss and gatekeeper floor instead of more experience.'
+  ], new: [
+    'A new leaderboard category, Highest level: the highest level your Pokémon reached in one run, solo or in groups, for every period.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T16:50Z', title: 'Dungeon lights in a group', fix: [
     'In a group, standing close to a teammate in a Mystery Dungeon (or during Gengar\'s lights-out) no longer blacks out the place where your lights overlap: lights now add up, so standing together lights up more.'
   ] },

@@ -336,7 +336,10 @@ G.Tower = (() => {
         if (fl.t >= 1.6) {
           wipe();
           if (cfg.kind === 'final') { fl.phase = 'won'; fl.t = 0; break; }
-          G.Game.grantLevels(1);                    // a level for everyone (co-op: the cards wait for the whole team)
+          // Flat level-ups for the floor (no experience in the tower): 1, or 2 for bosses and gatekeepers (+1 with
+          // the Scholar Badge). In a group everyone picks together (the cards wait for the whole team).
+          const boss = cfg.kind === 'boss' || cfg.kind === 'gate';
+          G.Game.grantLevels(D().levelsFor(cfg.kind) + (boss && pl.towerLv ? pl.towerLv : 0));
           fl.phase = 'cards'; fl.t = 0;
         }
         break;
