@@ -44,6 +44,17 @@ G.U = {
     return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   },
 
+  /**
+   * "87 / 104" for a health bar. Max HP can be fractional (Life Orb, Wonder Guard, School Form...), so both numbers
+   * use the same rounding and current HP never reads above max (it used to show "105 / 104" after a heal).
+   * Any HP left above 0 still shows as at least 1.
+   */
+  hpText(hp, maxHp) {
+    const mx = Math.max(1, Math.round(maxHp));
+    const h = hp > 0 ? Math.max(1, Math.min(mx, Math.round(hp))) : 0;
+    return h + ' / ' + mx;
+  },
+
   /** Pokémon type colours (for projectiles, tags and effects). */
   TYPE_COLOR: {
     normal: '#b0a99f', fire: '#ff7b3d', water: '#4b9bff', grass: '#5fcb6a',

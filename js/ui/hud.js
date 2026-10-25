@@ -869,7 +869,7 @@ G.HUD = (() => {
     } else {
       ctx.font = F(700, 9);
       ctx.fillStyle = 'rgba(255,255,255,.75)';
-      ctx.fillText(Math.ceil(c.hp) + ' / ' + Math.round(c.maxHp), x + CARD_W - 8, y + 14);
+      ctx.fillText(G.U.hpText(c.hp, c.maxHp), x + CARD_W - 8, y + 14);
     }
     bar(ctx, tx, y + 19, CARD_W - (tx - x) - 8, 9, c.dead ? 0 : c.hp / c.maxHp, c.barCol);
     ctx.textAlign = 'left';

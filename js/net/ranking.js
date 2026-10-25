@@ -657,7 +657,8 @@ G.Ranking = (() => {
    * it was played, all-time, its Pokémon's all-time table and the kills tables, like a normal record.
    * @param run    a history entry ({ id: end time ms, d, sh, t, lv, k, g, mt: [[name, dex, shiny]] })
    * @param owner  { uid, name } of the player whose history it is
-   * @param which  'time' (time-survived tables, with its Pokémon's), 'kills' (most-kills tables) or 'both'
+   * @param which  'time' (time-survived tables, with its Pokémon's), 'kills' (most-kills tables),
+   *               'level' (highest-level tables) or 'both' (all three)
    * → { boards: tables written, better: tables where it improved, missing: teammates not found }
    */
   async function adminAdd(run, owner, which = 'both') {
@@ -695,7 +696,7 @@ G.Ranking = (() => {
     }
     const pick = boards.filter(([b]) => which === 'both' || kindOf(b) === which);
     boards.length = 0; boards.push(...pick);
-    if (!boards.length) throw new Error(which === 'kills' ? 'this run has no kills to add' : 'nothing to add');
+    if (!boards.length) throw new Error(which === 'kills' ? 'this run has no kills to add' : which === 'level' ? 'level 1 runs are not on Highest level' : 'nothing to add');
     const over = overLimits(entry);
     if (over) throw new Error('the server\'s limits refuse this run (' + over + '). Publish the latest firestore.rules if they are older.');
     // Fresh numbers for the admin's browser: no remembered thresholds or bests decide what gets written.

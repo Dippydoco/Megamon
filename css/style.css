@@ -1186,7 +1186,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .lobby-status.bad { border-color: rgba(255,107,122,.6); }
 .lobby-status.bad .dot { background: #ff6b7a; }
 .lob-card .conn.bad { color: #ff8a96; }
-.lob-card .rdy { font-size: 12px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-top: 2px; }
+.lob-card .rdy { font-size: 12px; font-weight: 800; padding: 1px 8px; border-radius: 999px; margin-top: 2px; text-shadow: none; }
 .lob-card .rdy.on { color: #0d1a12; background: var(--green); }
 .lob-card .rdy.off { color: var(--muted); border: 1px solid rgba(244,248,255,.22); }
 @keyframes lobby-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.8); } }

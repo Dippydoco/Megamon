@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T17:50Z', title: 'Health no longer shows 1 over max', fix: [
+    'After being healed, your health could read 1 higher than your max (like 105 / 104), solo and in groups. Health on the HUD and in the pause menu now never shows above your max.'
+  ] },
+  { d: '2026-10-25', at: '2026-10-25T17:50Z', title: 'Clearer Ready tag in group rooms', fix: [
+    'The "Ready" tag on a player\'s card in a group room no longer looks doubled: its text had a dark shadow drawn right behind it.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T17:26Z', title: 'Physical or Special on move tooltips', chg: [
     'Hovering a move in the menus (the Pokémon tab, Starting Moves and Veto pickers) now also shows whether it is Physical or Special, so you can match it to your Pokémon\'s better attacking stat.'
   ] },

@@ -22,7 +22,7 @@ G.RunUI = (() => {
     const taken = p.defMul * (1 - p.reduction);
     const crit = p.critChance + (p.hasItem('scopelens') ? 0.2 : 0);
     const rows = [
-      row('HP', mon.hp, Math.ceil(p.hp) + ' / ' + Math.round(p.maxHp), 'st' + up(mon.hp, p.maxHp)),
+      row('HP', mon.hp, G.U.hpText(p.hp, p.maxHp), 'st' + up(mon.hp, p.maxHp)),
       row('Attack', x(p.baseAtk), x(p.atk), 'st' + up(p.baseAtk, p.atk), 'Multiplies physical moves'),
       row('Sp. Atk', x(p.baseSpa), x(p.spa), 'st' + up(p.baseSpa, p.spa), 'Multiplies special moves'),
       row('Defense', p.baseDef, 'DMG Reduced - ' + pct(Math.max(0, 1 - taken)), 'st' + up(taken, 1), 'Defense plus damage reduction from cards, items and buffs'),

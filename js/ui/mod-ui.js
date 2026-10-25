@@ -8,7 +8,7 @@
  *                     tables (separately), ban (they can't upload records again, and their record
  *                     is deleted from all current tables) or dismiss the report.
  *   Banned            the accounts banned from the leaderboard; they can be unbanned.
- *   Add record        put a verified run from a player's history on Time survived and/or Most kills.
+ *   Add record        put a verified run from a player's history on Time survived, Most kills and/or Highest level.
  * The leaderboard itself also shows the admin a remove button on each row (ranking-ui.js), for the
  * category being viewed.
  */
@@ -88,7 +88,7 @@ G.ModUI = (() => {
    */
   function renderAdd(list) {
     list.innerHTML = `<p class="sub">Put a verified run from a player's run history on the leaderboard (for runs the server refused at the time).
-      Time survived and Most kills are added separately. Only runs they share on their profile can be found.</p>
+      Time survived, Most kills and Highest level are added separately. Only runs they share on their profile can be found.</p>
       <form class="row" id="mod-add-form" autocomplete="off" style="gap:6px;margin:6px 0">
         <input id="mod-add-name" class="field grow" placeholder="Player nickname" spellcheck="false">
         <button class="btn small gold" type="submit">Find runs</button></form><div id="mod-add-runs"></div>`;
@@ -125,7 +125,7 @@ G.ModUI = (() => {
                 // What happened in each table (24-10-2026): it used to say "Added" even when every table skipped it.
                 const rep = res.report || {}, by = { added: [], better: [], outside: [], err: [] };
                 for (const [tb, what] of Object.entries(rep)) (by[what] || by.err).push(what in by ? tb : tb + ': ' + what);
-                const short = tb => tb.replace(/^(s|g|sk|gk)_/, '').replace(/_n\d$/, '');
+                const short = tb => tb.replace(/^(s|g|sk|gk|sl|gl)_/, '').replace(/_n\d$/, '');
                 const parts = [];
                 if (by.added.length) parts.push('Added to ' + by.added.length + ' (' + by.added.map(short).join(', ') + ')');
                 if (by.better.length) parts.push('already a better record in ' + by.better.length + ' (' + by.better.map(short).join(', ') + ')');
@@ -144,7 +144,9 @@ G.ModUI = (() => {
           };
           const kb = addBtn('kills', 'Add to Most kills', (r.k || 0).toLocaleString('en-GB') + ' defeated');
           if (!(r.k > 0)) { kb.disabled = true; kb.title = 'No kills in this run'; }
-          acts.append(addBtn('time', 'Add to Time survived', fmt(r.t)), kb);
+          const lb = addBtn('level', 'Add to Highest level', 'Lv. ' + (r.lv || 1));
+          if (!(r.lv > 1)) { lb.disabled = true; lb.title = 'Level 1 runs are not on Highest level'; }
+          acts.append(addBtn('time', 'Add to Time survived', fmt(r.t)), kb, lb);
           row.appendChild(acts);
           out.appendChild(row);
         }
@@ -213,6 +215,7 @@ G.ModUI = (() => {
       acts.append(
         removeBtn('time'),
         removeBtn('kills'),
+        removeBtn('level'),
         btn('Ban', 'danger', () => {
           if (!confirm('Ban ' + g.names.join(', ') + '? They will no longer be able to appear on the leaderboard, and their entry is deleted.')) return;
           busy(async () => {
