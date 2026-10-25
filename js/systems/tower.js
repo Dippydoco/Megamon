@@ -121,7 +121,12 @@ G.Tower = (() => {
   function fight() {
     const cfg = fl.cfg, pl = G.Game.player;
     fl.phase = 'fight'; fl.t = 0; fl.k0 = pl.kills;
-    if (cfg.kind === 'horde' || cfg.kind === 'plates') { for (let i = 0; i < 4 + 2 * cfg.np; i++) spawnWild(); return; }
+    if (cfg.kind === 'horde' || cfg.kind === 'plates') {
+      fl.bag = themedBag(cfg);
+      G.Sprites.preload(fl.bag.map(d => d.dex), 8000);
+      for (let i = 0; i < 4 + 2 * cfg.np; i++) spawnWild();
+      return;
+    }
     if (cfg.kind === 'twins') {
       const a = spawnBoss(311, cfg, -1), b = spawnBoss(312, cfg, 1);
       G.TowerBosses.pairTwins(a, b);
@@ -132,10 +137,22 @@ G.Tower = (() => {
     G.Spawner.say((e.shiny ? 'A shiny ' : '') + e.name + (cfg.kind === 'final' ? ' rules the summit!' : cfg.kind === 'gate' ? ' guards the way up!' : ' blocks the stairs!'), 3.2);
   }
 
+  /**
+   * The floor's wild Pokémon, fitting its section and arena (Shadow Wing: Ghost, Dark, Poison, Psychic...):
+   * up to 4 of the arena's type, 3 times as likely, plus 2 from two other types of the section, all with the floor
+   * clock's tier stats. Falls back to the run's usual mix if a tier has too few of those types.
+   */
+  function themedBag(cfg) {
+    const S = D().SECTIONS[cfg.section], bag = [];
+    for (const d of G.Enemies.hordeDefs(cfg.arena, cfg.t)) bag.push(d, d, d);
+    for (const ty of G.U.pickN((S.wild || []).filter(x => x !== cfg.arena), 2)) for (const d of G.Enemies.hordeDefs(ty, cfg.t).slice(0, 2)) bag.push(d);
+    return bag.length >= 6 ? bag : bag.concat(G.Enemies.bagAt(cfg.t));
+  }
+
   /** A wild Pokémon somewhere inside the arena, away from everyone. */
   function spawnWild() {
     const cfg = fl.cfg, ts = TS(), ps = G.Game.everyone();
-    const bag = G.Enemies.bagAt(cfg.t);
+    const bag = fl.bag && fl.bag.length ? fl.bag : G.Enemies.bagAt(cfg.t);
     if (!bag.length) return null;
     const def = G.U.pick(bag);
     const flyer = G.Sprites.hovers(def.dex);

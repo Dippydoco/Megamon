@@ -16,13 +16,20 @@ G.TowerData = (() => {
   const FLOORS = 50, SECTION = 10;
   const FLOOR_SECS = 36;                  // survival seconds of difficulty per floor
 
-  // Each section: its 5th-floor boss, its gatekeeper and the two arenas its horde floors use.
+  // Each section: its 5th-floor boss, its gatekeeper, the two arenas its horde floors use (floors 1-4, then 6-9)
+  // and `wild`: the types its wild Pokémon come from (systems/tower.js themedBag). A horde floor spawns mostly
+  // Pokémon of its arena's type, with a few from the rest of the section's list.
   const SECTIONS = [
-    { name: 'Meadow Wing',   boss: 289, bossArena: 'normal',  script: 'slaking', gate: 244, gateArena: 'fire',     horde: ['normal', 'grass'] },
-    { name: 'Shadow Wing',   boss: 94,  bossArena: 'ghost',   script: 'gengar',  gate: 245, gateArena: 'water',    horde: ['ghost', 'water'] },
-    { name: 'Stone Wing',    boss: 248, bossArena: 'rock',    script: '',        gate: 243, gateArena: 'electric', horde: ['rock', 'electric'] },
-    { name: 'Iron Wing',     boss: 376, bossArena: 'steel',   script: '',        gate: 383, gateArena: 'ground',   horde: ['steel', 'ground'] },
-    { name: 'Sky Wing',      boss: 445, bossArena: 'dragon',  script: '',        gate: 384, gateArena: 'flying',   horde: ['dragon', 'flying'] }
+    { name: 'Meadow Wing', boss: 289, bossArena: 'normal', script: 'slaking', gate: 244, gateArena: 'fire',     horde: ['normal', 'grass'],
+      wild: ['normal', 'grass', 'bug', 'fairy'] },
+    { name: 'Shadow Wing', boss: 94,  bossArena: 'ghost',  script: 'gengar',  gate: 245, gateArena: 'water',    horde: ['ghost', 'dark'],
+      wild: ['ghost', 'dark', 'poison', 'psychic'] },
+    { name: 'Stone Wing',  boss: 248, bossArena: 'rock',   script: '',        gate: 243, gateArena: 'electric', horde: ['rock', 'fighting'],
+      wild: ['rock', 'fighting', 'ground'] },
+    { name: 'Iron Wing',   boss: 376, bossArena: 'steel',  script: '',        gate: 383, gateArena: 'ground',   horde: ['steel', 'electric'],
+      wild: ['steel', 'electric', 'ground', 'fire'] },
+    { name: 'Sky Wing',    boss: 445, bossArena: 'dragon', script: '',        gate: 384, gateArena: 'flying',   horde: ['dragon', 'flying'],
+      wild: ['dragon', 'flying', 'ice'] }
   ];
 
   const sectionOf = n => Math.min(SECTIONS.length - 1, Math.floor((n - 1) / SECTION));

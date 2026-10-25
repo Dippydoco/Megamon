@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T15:24Z', title: 'Themed Battle Tower floors', chg: [
+    'Wild Pokémon in the Battle Tower now fit the wing and the arena you are in: Meadow Wing brings Normal, Grass, Bug and Fairy types, Shadow Wing Ghost, Dark, Poison and Psychic, Stone Wing Rock, Fighting and Ground, Iron Wing Steel, Electric, Ground and Fire, and Sky Wing Dragon, Flying and Ice. Most of each floor\'s Pokémon share its arena\'s type.',
+    'Some horde floors moved to arenas that suit their wing: Shadow Wing\'s second half is now the Dark Alley, Stone Wing\'s the Ancient Dojo and Iron Wing\'s the Volt Plant.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T15:08Z', title: 'Battle Tower entrance hall', new: [
     'Every Battle Tower run now starts in an entrance hall: a castle room with two doors at the far end, Climb on the left and Expedition on the right. Walk through the open door to start; the other mode\'s door is locked (Climb when playing in a friends room, Expedition when on your own).',
     'Statues of the bosses you have beaten line the hall: 5th-floor bosses on the left, gatekeepers on the right, higher floors closer to the doors. Bosses still to beat leave an empty pedestal.'
