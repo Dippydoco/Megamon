@@ -236,7 +236,7 @@
         G.Pickups.drop('item', this.x - 26, this.y - 10, G.Items.roll());
         G.KeyItems.bossDown(this);          // Wishing Star: sometimes 2 tickets
       }
-      G.Pickups.dropXp(this.x, this.y, this.xp, this.boss, !!this.legend, !!this.judge);
+      if (!this.noXp) G.Pickups.dropXp(this.x, this.y, this.xp, this.boss, !!this.legend, !!this.judge);   // (Battle Tower puzzles: late arrivals give none)
       if (this.golden && Math.random() < 0.35) G.Pickups.drop('coin', this.x + 6, this.y - 4, 3);
       // Treasure goblin: Meowth drops coins; Gholdengo, a ×10 ticket.
       if (this.behavior === 'thief') {

@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-25', at: '2026-10-25T16:31Z', title: 'Battle Tower floor tweaks', chg: [
+    'Hold the Ground: the zone is bigger, and instead of jumping somewhere new every 10 seconds it slowly drifts while you stand in it, so you move with it. Progress drains more slowly when you step out.',
+    'Lights Out is easier: it now takes 2 steps to solve in the first two wings and 3 higher up.',
+    'Puzzle floors are not for farming: once their timer runs out, the Pokémon that come give no experience, and neither do the ones a wrong step calls on Unown Sequence.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T16:26Z', title: 'Tougher Battle Tower bosses', chg: [
     'Battle Tower bosses have much more health: 5th-floor bosses ×2.5, gatekeepers ×2.5 and Rayquaza almost twice as much as before. A boss also never has less health than a set number of seconds of your best single-target damage, so strong builds can\'t melt them.'
   ], new: [

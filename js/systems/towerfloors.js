@@ -40,10 +40,10 @@ G.TowerFloors = (() => {
   const at = (fl, f) => [fl.x + f[0] * fl.cfg.r * TS(), fl.y + f[1] * fl.cfg.r * TS() * 0.85];
   function randFrac(min, max) { const a = Math.random() * 6.2832, d = G.U.rand(min, max); return [Math.round(Math.cos(a) * d * 100) / 100, Math.round(Math.sin(a) * d * 100) / 100]; }
 
-  /** Host: keeps up to `cap` enemies, one every `every` seconds. */
-  function trickle(fl, dt, cap, every) {
+  /** Host: keeps up to `cap` enemies, one every `every` seconds. noXp: they give no experience. */
+  function trickle(fl, dt, cap, every, noXp = false) {
     fl.spawnT = (fl.spawnT || 0) - dt;
-    if (fl.spawnT <= 0 && enemies() < cap) { fl.spawnT = every; T().spawnWild(); }
+    if (fl.spawnT <= 0 && enemies() < cap) { fl.spawnT = every; const e = T().spawnWild(); if (e && noXp) e.noXp = true; }
   }
   function useBag(fl) { fl.bag = T().themedBag(fl.cfg); G.Sprites.preload(fl.bag.map(d => d.dex), 8000); }
 
@@ -179,27 +179,38 @@ G.TowerFloors = (() => {
   };
   const cfg2 = fl => 2 * fl.cfg.np;
 
+  // Hold the Ground: one zone (80 px). While someone stands in it, it drifts slowly along a route of waypoints, so
+  // you have to move with it; empty, it stays put. Progress fills in 30 s inside and drains over 90 s outside.
+  // (25-10-2026: bigger zone, drifts instead of jumping every 10 s, slower drain.)
+  const HOLD_R = 80, DRIFT = 38;
   const hold = {
-    plan(cfg) { cfg.zones = []; for (let i = 0; i < 6; i++) cfg.zones.push(randFrac(0.15, 0.65)); },
-    start(fl) { useBag(fl); fl.prog = 0; for (let i = 0; i < 3 + cfg2(fl); i++) T().spawnWild(); },
-    zone: fl => Math.floor(fl.t / 10) % fl.cfg.zones.length,
+    plan(cfg) { cfg.zones = []; for (let i = 0; i < 6; i++) cfg.zones.push(randFrac(0.15, 0.62)); },
+    start(fl) {
+      useBag(fl); fl.prog = 0; fl.zi = 1;
+      [fl.zx, fl.zy] = at(fl, fl.cfg.zones[0]);
+      for (let i = 0; i < 3 + cfg2(fl); i++) T().spawnWild();
+    },
     tick(fl, dt) {
       trickle(fl, dt, capFor(fl, 0.8), 0.6);
-      const [x, y] = at(fl, fl.cfg.zones[hold.zone(fl)]);
-      fl.inZone = anyNear(x, y, 60);
-      fl.prog = G.U.clamp(fl.prog + (fl.inZone ? dt / 30 : -dt / 60), 0, 1);
+      fl.inZone = anyNear(fl.zx, fl.zy, HOLD_R);
+      if (fl.inZone) {
+        const [tx, ty] = at(fl, fl.cfg.zones[fl.zi % fl.cfg.zones.length]), d = Math.hypot(tx - fl.zx, ty - fl.zy);
+        if (d < 4) fl.zi++;
+        else { const k = Math.min(1, DRIFT * dt / d); fl.zx += (tx - fl.zx) * k; fl.zy += (ty - fl.zy) * k; }
+      }
+      fl.prog = G.U.clamp(fl.prog + (fl.inZone ? dt / 30 : -dt / 90), 0, 1);
       return fl.prog >= 1;
     },
-    state: fl => [Math.round(fl.prog * 100) / 100, Math.round(fl.t * 10) / 10, fl.inZone ? 1 : 0],
-    apply(fl, st) { fl.prog = st[0]; fl.t = st[1]; fl.inZone = !!st[2]; },
-    hud: fl => ({ goal: 'HOLD THE GROUND ' + Math.round((fl.prog || 0) * 100) + '% · THE ZONE MOVES IN ' + Math.ceil(10 - fl.t % 10) + 's', col: fl.inZone ? '#8fffb0' : '#ffe27a' }),
+    state: fl => [Math.round(fl.prog * 100) / 100, Math.round(fl.zx), Math.round(fl.zy), fl.inZone ? 1 : 0],
+    apply(fl, st) { fl.prog = st[0]; fl.zx = st[1]; fl.zy = st[2]; fl.inZone = !!st[3]; },
+    hud: fl => ({ goal: 'HOLD THE GROUND ' + Math.round((fl.prog || 0) * 100) + '% · STAY IN THE ZONE AS IT DRIFTS', col: fl.inZone ? '#8fffb0' : '#ffe27a' }),
     drawGround(ctx, fl) {
-      if (fl.phase !== 'fight') return;
-      const [x, y] = at(fl, fl.cfg.zones[hold.zone(fl)]);
-      disc(ctx, x, y, 60, fl.inZone ? '#8fffb0' : '#ffe27a', 0.25, fl.inZone ? '#d8ffe4' : '#fff3c8');
+      if (fl.phase !== 'fight' || fl.zx == null) return;
+      const x = fl.zx, y = fl.zy;
+      disc(ctx, x, y, HOLD_R, fl.inZone ? '#8fffb0' : '#ffe27a', 0.25, fl.inZone ? '#d8ffe4' : '#fff3c8');
       ctx.save();
       ctx.lineWidth = 6; ctx.strokeStyle = '#ffd23f';
-      ctx.beginPath(); ctx.ellipse(x, y, 70, 49, 0, -Math.PI / 2, -Math.PI / 2 + 6.2832 * (fl.prog || 0)); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(x, y, HOLD_R + 10, (HOLD_R + 10) * 0.7, 0, -Math.PI / 2, -Math.PI / 2 + 6.2832 * (fl.prog || 0)); ctx.stroke();
       ctx.restore();
     }
   };
@@ -288,8 +299,11 @@ G.TowerFloors = (() => {
   const NB = i => [i, i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter(j => j >= 0 && j < 9);
   const lights = {
     plan(cfg) {
+      // (25-10-2026: easier) Scrambled by 2 different presses in the first two wings, 3 above, so it always
+      // takes at most that many steps to solve.
+      const presses = G.U.pickN([0, 1, 2, 3, 4, 5, 6, 7, 8], cfg.section < 2 ? 2 : 3);
       let m = 511;
-      while (m === 511) { m = 511; for (let k = 0; k < 4 + Math.floor(Math.random() * 3); k++) for (const j of NB(Math.floor(Math.random() * 9))) m ^= 1 << j; }
+      for (const i of presses) for (const j of NB(i)) m ^= 1 << j;
       cfg.lit = m;
     },
     size: () => 1.8 * TS(),
@@ -304,7 +318,7 @@ G.TowerFloors = (() => {
       const idx = pl ? lights.tileAt(fl, pl.x, pl.y) : -1;
       if (idx >= 0 && idx !== fl.on) { for (const j of NB(idx)) fl.lit ^= 1 << j; G.Audio.sfx('select'); }
       fl.on = idx;
-      if (softLeft(fl) <= 0) trickle(fl, dt, 6, 2);
+      if (softLeft(fl) <= 0) trickle(fl, dt, 6, 2, true);      // (no XP: a puzzle room isn't for farming levels)
       return fl.lit === 511;
     },
     state: fl => [fl.lit],
@@ -336,7 +350,7 @@ G.TowerFloors = (() => {
     platePos: (fl, i) => at(fl, [Math.cos(i * 1.0472 - 1.5708) * 0.42, Math.sin(i * 1.0472 - 1.5708) * 0.42]),
     start(fl) { useBag(fl); fl.mode = 'show'; fl.showT = -1; fl.pos = 0; fl.on = -1; },
     tick(fl, dt) {
-      if (softLeft(fl) <= 0) trickle(fl, dt, 6, 2);
+      if (softLeft(fl) <= 0) trickle(fl, dt, 6, 2, true);      // (no XP: a puzzle room isn't for farming levels)
       if (fl.mode === 'show') {
         fl.showT += dt;
         if (fl.showT >= fl.cfg.seq.length) { fl.mode = 'input'; fl.pos = 0; G.Spawner.say('Your turn: step on them in order', 2); }
@@ -351,7 +365,7 @@ G.TowerFloors = (() => {
           fl.flash = { i: idx, ok: 0, t: 0.6 };
           G.Audio.sfx('back');
           G.Spawner.say('Wrong plate! Watch again…', 2);
-          for (let k = 0; k < 3; k++) T().spawnWild();
+          for (let k = 0; k < 3; k++) { const e = T().spawnWild(); if (e) e.noXp = true; }     // (no XP: wrong steps can't be farmed)
           fl.mode = 'show'; fl.showT = -1.4; fl.pos = 0;
         }
       }
