@@ -278,7 +278,9 @@ G.Abil = (() => {
     'stalwart': merge(noSlow, { hit: (pl, S, e, c) => { c.pierce = true; } }),
     'stamina': { hurt: (pl, S) => add(S, 'stam', 0.04, 8, 5), stat: (pl, S, o) => { o.dr += val(S, 'stam'); } },
     'stench': { aura: (p, es, dt) => { for (const e of es) if (Math.random() < 0.1 * dt * 4 && e.shotCd > 0) e.shotCd += 0.5; } },
-    'sturdy': { lethal: (pl, S, h, before) => { if (before > pl.maxHp * 0.5 && now() - (S.sturdyAt == null ? -99 : S.sturdyAt) > 45) { S.sturdyAt = now(); say(pl, 'Sturdy!', '#c8a070'); return true; } return false; } },
+    // Sturdy works exactly like a Focus Sash (25-10-2026): any hit that would knock you out leaves you at 1 HP, once every
+    // 60 s, whatever your health was. Its cooldown is separate from a held Focus Sash's (player.js hurt does the 1 HP + 1.2 s invuln).
+    'sturdy': { lethal: (pl, S) => { if (now() - (S.sturdyAt == null ? -999 : S.sturdyAt) > 60) { S.sturdyAt = now(); say(pl, 'Sturdy!', '#c8a070'); return true; } return false; } },
     'supersweet-syrup': { tick: (pl, S) => {
                             const b = G.EnemyMgr.bossAlive();
                             if (!S.syrup0 || (b && !S.syrupB)) { S.syrup0 = true; for (const e of G.EnemyMgr.queryCircle(pl.x, pl.y, 260)) if (!e.dead) e.applySlow(0.3, 4); say(pl, 'Supersweet Syrup', '#ffb0d8'); }

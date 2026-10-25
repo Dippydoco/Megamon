@@ -968,7 +968,7 @@ G.ABILITIES = {
 "sturdy": {
 "n": "Sturdy",
 "c": "Defense",
-"d": "A hit that would knock you out from above 50% HP leaves you at 1 HP (every 45 s)."
+"d": "Works like a Focus Sash: a hit that would knock you out leaves you at 1 HP (every 60 s)."
 },
 "super-luck": {
 "n": "Super Luck",

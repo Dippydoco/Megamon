@@ -26,7 +26,9 @@ G.DEX_OVERRIDES = {
   // 6:   { hp: 130, spa: 1.5 },               // tougher Charizard with stronger special moves
   // 25:  { spd: 130 },                        // faster Pikachu
   // 150: { spa: 1.8, hp: 140, rarity: 5 },    // Mewtwo
-  557: { hp: 120, spd: 108, atk: 1.35 },       // Dwebble (19-10-2026): sturdier, quicker and hits harder, with its signature move Beat
+  // Dwebble (19-10-2026, buffed again 25-10-2026): sturdier, quicker and hits harder, with its signature move Beat.
+  // Big Defense and Speed buffs (Defense 83 -> 140: about 17% less damage taken; Speed 108 -> 128), smaller to the rest.
+  557: { hp: 135, spd: 128, atk: 1.45, spa: 1.05, def: 140 },
 };
 
 // 3) Lower rarities are stronger, so common and unevolved Pokémon stay viable (19-10-2026):
