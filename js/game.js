@@ -544,8 +544,9 @@ G.Game = (() => {
     const own = new Set(G.Moves.poolFor(p.mon));
     const lean = p.mon.lean;
     const bursts = p.moves.filter(m => m.kind === 'burst').length, noBurst = bursts >= 2 || p.moves.length < 2;
+    const noBuff = p.moves.filter(m => m.kind === 'buff').length >= G.LevelUp.BUFF_MAX;      // same booster cap as the cards
     let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has(m.id))
-                                  && !(noBurst && m.kind === 'burst'));
+                                  && !(noBurst && m.kind === 'burst') && !(noBuff && m.kind === 'buff'));
     const out = [], types = new Set();
     while (out.length < 3 && cand.length) {
       const w = cand.map(m => (m.kind === 'buff' || m.kind === 'burst' ? 0.4 : 1) * (!m.cat || !lean || lean === 'mixed' ? 1 : m.cat === lean ? 1.6 : 0.5)

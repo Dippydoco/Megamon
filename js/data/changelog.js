@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T16:02Z', title: 'Three boosters, and Spiritomb shows evolutions', chg: [
+    'You can now hold up to 3 booster moves at once (it was 2), so Swords Dance, Agility and Harden can all be taken in the same run. Spiritomb follows the same limit.',
+    'Spiritomb\'s move offers now show which perk each move needs to evolve, and whether you have it.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T15:57Z', title: 'Quantity perk and evolution families', new: [
     'Quantity perk: +1 projectile, orb, ring, target, link or bee on every move that fires several things, including moves you learn later (up to 3 levels).'
   ], chg: [

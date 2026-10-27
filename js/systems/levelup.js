@@ -58,6 +58,8 @@ G.LevelUp = (() => {
   /** A move just learned: it gets the Quantity you already have (player.js addMove). */
   function newMove(pl, m) { if (qtyOn(m)) m.count += lvOf(pl, 'qty'); }
 
+  const BUFF_MAX = 3;          // booster moves (Swords Dance, Agility, Harden...) you can hold at once
+
   const BY = {};
   for (const s of STATS) BY[s.id] = s;
 
@@ -122,13 +124,13 @@ G.LevelUp = (() => {
 
     // --- new moves ---
     if (pl.slots.length < pl.maxMoves) {
-      // With 2 boosters no more are offered: buffs don't deal damage and
-      // filling the 4 slots with them leaves the run with no way out.
+      // With 3 boosters no more are offered (2 until 27-10-2026, so Agility, Swords Dance and Harden can all be
+      // taken): buffs don't deal damage, and filling all 4 slots with them would leave the run with no way out.
       const buffs = pl.moves.filter(m => m.kind === 'buff').length;
       // Burst moves: 2 at most (they don't attack on their own), and only once you have 2 moves to swap between.
       const bursts = pl.moves.filter(m => m.kind === 'burst').length;
       const pool = G.Moves.poolFor(pl.mon).filter(id =>
-        !pl.hasMove(id) && !(pl.banned && pl.banned.has(id)) && !(buffs >= 2 && G.Moves.BY_ID[id].kind === 'buff') &&
+        !pl.hasMove(id) && !(pl.banned && pl.banned.has(id)) && !(buffs >= BUFF_MAX && G.Moves.BY_ID[id].kind === 'buff') &&
         !(G.Moves.BY_ID[id].kind === 'burst' && (bursts >= 2 || pl.moves.length < 2)));
       for (const id of G.U.pickN(pool, 6)) {
         const d = G.Moves.BY_ID[id];
@@ -235,5 +237,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, BUFF_MAX, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
 })();

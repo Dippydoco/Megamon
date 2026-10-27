@@ -407,7 +407,7 @@ G.RunUI = (() => {
       const el = document.createElement('div');
       el.className = 'card';
       el.innerHTML = `<div class="ico" style="background:${col}33">${G.Icons.html('move:' + id, 36)}</div>
-        <div class="txt"><div class="nm">${m.name} <span class="tag-chip" style="background:${col}">${G.U.TYPE_NAME[m.type]}${cat}</span> ${G.Icons.kindTag(m.kind)}</div><div class="ds">${m.desc || ''}</div></div>
+        <div class="txt"><div class="nm">${m.name} <span class="tag-chip" style="background:${col}">${G.U.TYPE_NAME[m.type]}${cat}</span> ${G.Icons.kindTag(m.kind)}</div><div class="ds">${m.desc || ''}</div>${evoLine(G.LevelUp.evoPlan(pl, id))}</div>
         <div class="key">${i + 1}</div>`;
       el.onclick = () => { G.UI.hide('scr-item'); cb(id); };
       box.appendChild(el);
