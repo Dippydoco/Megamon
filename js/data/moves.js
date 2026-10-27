@@ -1068,7 +1068,29 @@
    * card appears. Boosters (buff) don't evolve.
    */
   const NEED_NAME = { hp: 'Vigor', atk: 'Power', spd: 'Sprint', cd: 'Reflexes', def: 'Armor',
-                      rgn: 'Synthesis', mag: 'Magnet', xp: 'Learning', area: 'Reach', crit: 'Focus' };
+                      rgn: 'Synthesis', mag: 'Magnet', xp: 'Learning', area: 'Reach', crit: 'Focus', qty: 'Quantity' };
+
+  /*
+   * Evolution families (27-10-2026, the Megabonk way: a weapon wants the stat it scales with). Which perk a move
+   * needs to evolve is decided by its family (kind), not move by move, so it's predictable: every shooter evolves
+   * with Quantity, every striker with Power... The second value in EVO below is no longer used (it is overwritten).
+   * Learning is never needed: it isn't offered in the Battle Tower, so those moves could never evolve there.
+   */
+  const FAMILIES = [
+    { id: 'shooters',  name: 'Shooters',      need: 'qty',  why: 'more of them',            kinds: ['projectile', 'boomerang', 'ricochet', 'chain', 'swarm', 'spin', 'companion'] },
+    { id: 'strikers',  name: 'Strikers',      need: 'atk',  why: 'harder hits up close',    kinds: ['melee', 'combo', 'thrust'] },
+    { id: 'sprays',    name: 'Sprays',        need: 'cd',   why: 'fire them more often',    kinds: ['nova', 'cone'] },
+    { id: 'blasts',    name: 'Blasts',        need: 'area', why: 'bigger blasts',           kinds: ['meteor', 'pulse', 'mine', 'cage', 'vortex', 'eruption', 'wave'] },
+    { id: 'rushers',   name: 'Rushers',       need: 'spd',  why: 'they move you',           kinds: ['dash', 'roll', 'burrow', 'trail'] },
+    { id: 'beams',     name: 'Beams',         need: 'crit', why: 'precise, heavy hits',     kinds: ['beam', 'charge'] },
+    { id: 'lingering', name: 'Lingering',     need: 'rgn',  why: 'stay close and outlast',  kinds: ['aura', 'tether', 'mark'] },
+    { id: 'guardians', name: 'Guardians',     need: 'def',  why: 'they protect you',        kinds: ['orbit', 'turret', 'wall', 'counter'] },
+    { id: 'heavy',     name: 'Heavy hitters', need: 'hp',   why: 'take a hit to land one',  kinds: ['focus', 'throw'] }
+  ];
+  const FAMILY_OF = {};
+  for (const f of FAMILIES) for (const k of f.kinds) FAMILY_OF[k] = f;
+  /** A move's (or kind's) evolution family, or null (boosters, bursts). */
+  const familyOf = m => FAMILY_OF[typeof m === 'string' ? ((BY_ID[m] || {}).kind || m) : m.kind] || null;
   const EVO = {
     'tackle': ['Take Down', 'hp'],             'quick-attack': ['Extreme Speed', 'spd'],
     'body-slam': ['Giga Impact', 'hp'],     'hyper-voice': ['Uproar', 'area'],
@@ -1200,6 +1222,8 @@
   // Evolved moves keep their name with a "+" (24-10-2026): "Ember+" instead of "Fire Blast". That leaves every real move
   // name free for moves of their own. The names written in EVO above are no longer shown anywhere.
   for (const id in EVO) if (BY_ID[id]) EVO[id][0] = BY_ID[id].name + '+';
+  // The perk each move needs comes from its family (above).
+  for (const id in EVO) { const f = BY_ID[id] && FAMILY_OF[BY_ID[id].kind]; if (f) EVO[id][1] = f.need; else delete EVO[id]; }
 
   /** Can it evolve yet? → { name, needs, needName, text, ready } or null */
   function evoInfo(m, statsTaken) {
@@ -1219,7 +1243,8 @@
     const inst = typeof m === 'string' ? null : m, id = inst ? inst.id : m;
     const e = EVO[id], probe = inst || { id, kind: (BY_ID[id] || {}).kind };
     if (!e || (inst && inst.evolved) || !evoMods(probe)) return null;
-    return { needs: e[1], needName: NEED_NAME[e[1]], name: e[0] };
+    const f = FAMILY_OF[probe.kind];
+    return { needs: e[1], needName: NEED_NAME[e[1]], name: e[0], family: f ? f.name : '' };
   }
 
   /** Evolves an instance (more power and a "+" after its name; it stays the same type). */
@@ -1234,5 +1259,5 @@
   }
 
   G.Moves = { ALL: RAW, BY_ID, POOL, poolFor, instance, levelUp, nextUpText, startFor,
-              EVO, NEED_NAME, evoInfo, evoNeed, evolve };
+              EVO, NEED_NAME, FAMILIES, familyOf, evoInfo, evoNeed, evolve };
 })();

@@ -30,8 +30,10 @@ G.LevelUp = (() => {
       apply: pl => pl.dmgReduce = Math.min(0.7, pl.dmgReduce + 0.05), max: 14 },
     { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+0.9 HP regenerated per second.',
       apply: pl => pl.regenFlat += 0.9, max: 15 },
-    { id: 'mag',  icon: 'magnet', title: 'Magnet',         desc: '+30% experience pickup radius.',
-      apply: pl => pl.magnet *= 1.30, max: 10 },
+    // Quantity (27-10-2026, replaces the Magnet perk: pickup range still comes from the Magnet upgrade, power-up and
+    // shrine). +1 to the count of every move that fires several things; moves learned later get it too (qtyOn).
+    { id: 'qty',  icon: 'ball3', title: 'Quantity', desc: '+1 projectile, orb, ring, target, link or bee on every move that fires several things.',
+      apply: pl => { for (const m of pl.moves) if (qtyOn(m)) m.count += 1; }, max: 3 },
     { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+12% experience gained.',
       apply: pl => pl.xpMul *= 1.12, max: 12 },
     { id: 'area', icon: 'reach', title: 'Reach',      desc: '+10% size of every area attack.',
@@ -51,6 +53,11 @@ G.LevelUp = (() => {
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.healItem(0.45), instant: true }
   ];
+  /** Moves Quantity adds to: those with a count (projectiles, orbs, rings, targets...), not boosters or bursts. */
+  const qtyOn = m => m && m.count != null && m.kind !== 'buff' && m.kind !== 'burst';
+  /** A move just learned: it gets the Quantity you already have (player.js addMove). */
+  function newMove(pl, m) { if (qtyOn(m)) m.count += lvOf(pl, 'qty'); }
+
   const BY = {};
   for (const s of STATS) BY[s.id] = s;
 
@@ -64,7 +71,7 @@ G.LevelUp = (() => {
     if (!e) return null;
     const d = BY[e.needs];
     const state = lvOf(pl, e.needs) > 0 ? 'have' : tomesOf(pl).length < maxTomes(pl) ? 'free' : 'blocked';
-    return { needs: e.needs, needName: d ? d.title : e.needName, icon: d ? d.icon : 'up', state };
+    return { needs: e.needs, needName: d ? d.title : e.needName, icon: d ? d.icon : 'up', state, family: e.family };
   }
   /** Your moves (not yet evolved) whose evolution needs perk `id`. */
   const neededBy = (pl, id) => ((pl && pl.moves) || []).filter(m => { const e = G.Moves.evoNeed(m); return e && e.needs === id; });
@@ -228,5 +235,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, tomesOf, evoPlan, neededBy, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
 })();

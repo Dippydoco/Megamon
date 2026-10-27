@@ -340,8 +340,8 @@ G.Coop = (() => {
           break;
         }
         case 'c':
-          G.Combat.ghostCast(m.pl, ev[1], ev[2], ev[3], ev[4], ev[5]);
-          emit(['c', from, ev[1], ev[2], ev[3], ev[4], ev[5]], from);
+          G.Combat.ghostCast(m.pl, ev[1], ev[2], ev[3], ev[4], ev[5], ev[6]);
+          emit(['c', from, ev[1], ev[2], ev[3], ev[4], ev[5], ev[6]], from);
           break;
         case 'sw': {
         const R = G.Camera.outerRadius();
@@ -450,7 +450,7 @@ G.Coop = (() => {
         break;
       case 'sh': G.Combat.netHurt(ev[1], ev[2]); break;            // a Substitute took a hit (hits left)
       case 'sb': G.Combat.netBreak(ev[1]); break;                  // a Substitute broke (the host decides)
-      case 'c': { const m = mates.get(ev[1]); if (m) G.Combat.ghostCast(m.pl, ev[2], ev[3], ev[4], ev[5], ev[6]); break; }
+      case 'c': { const m = mates.get(ev[1]); if (m) G.Combat.ghostCast(m.pl, ev[2], ev[3], ev[4], ev[5], ev[6], ev[7]); break; }
       case 'item': api.item(ev[1]); break;
       case 'pk': G.Pickups.addRemote(ev[1], ev[2], ev[3], ev[4], ev[5]); break;
       case 'pc': G.Pickups.removeId(ev[1]); break;
@@ -493,8 +493,9 @@ G.Coop = (() => {
   function cast(pl, m) {
     if (!active || pl !== local) return;
     const area = r2(pl.areaMul || 1);                   // Reach: the others draw the attack at its real size
-    if (host) emit(['c', me, m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area]);
-    else outEv.push(['c', m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area]);
+    const q = G.LevelUp.qtyOn(m) ? (pl.statsTaken.qty || 0) : 0;   // Quantity perk: the others draw the extra shots too
+    if (host) emit(['c', me, m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area, q]);
+    else outEv.push(['c', m.id, m.lvl, r2(pl.aim), m.evolved ? 1 : 0, area, q]);
   }
 
   // guest

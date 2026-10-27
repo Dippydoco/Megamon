@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T15:57Z', title: 'Quantity perk and evolution families', new: [
+    'Quantity perk: +1 projectile, orb, ring, target, link or bee on every move that fires several things, including moves you learn later (up to 3 levels).'
+  ], chg: [
+    'The perk a move needs to evolve now depends on its family, so it\'s easy to plan: Shooters evolve with Quantity, Strikers with Power, Sprays (novas and cones) with Reflexes, Blasts with Reach, Rushers with Sprint, Beams with Focus, Lingering moves (auras, tethers, marks) with Synthesis, Guardians with Armor and Heavy hitters with Vigor. The Codex has the full list, and cards, tooltips and the pause menu show each move\'s family.',
+    'The Magnet perk is gone (your pickup range still grows with the Magnet upgrade, the magnet power-up and shrine). Learning is no longer needed by any evolution, so every move can evolve in the Battle Tower too.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T15:14Z', title: 'Every damaging move evolves', new: [
     'The 28 damaging moves that had no evolution now have one (burst moves and boosters still don\'t evolve): Pyro Ball, Razor Shell, Fusion Bolt, Spike Cannon, Dual Wingbeat, Arm Thrust, Poison Tail, Magical Torque, Rock Tomb, Boomburst, Psywave, Clanging Scales, Water Pulse, Burn Up, Focus Punch, Sacred Sword, Leaf Blade, Fury Cutter, Mud Bomb, Make It Rain, Whirlwind, Curse, Attack Order, Ice Fang, Blaze Kick, Stone Axe and Leech Seed. Check the badge on the move or the pause menu to see which perk each one needs.'
   ], fix: [

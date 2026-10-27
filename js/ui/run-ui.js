@@ -44,7 +44,7 @@ G.RunUI = (() => {
   function evoLine(ev) {
     if (!ev) return '';
     const [cls, txt] = EVO_STATE[ev.state];
-    return `<div class="ev-need ${cls}">★ Evolves with ${G.Icons.html(ev.icon, 16)} <b>${esc(ev.needName)}</b> · ${txt}</div>`;
+    return `<div class="ev-need ${cls}">★ ${ev.family ? esc(ev.family) + ' evolve' : 'Evolves'} with ${G.Icons.html(ev.icon, 16)} <b>${esc(ev.needName)}</b> · ${txt}</div>`;
   }
   /** Pause menu: every move you have, its level and the perk its evolution needs. */
   function renderEvos(id) {
@@ -53,13 +53,14 @@ G.RunUI = (() => {
     const rows = p ? p.moves.filter(m => m.kind !== 'buff' && m.kind !== 'burst' || G.Moves.evoNeed(m) || m.evolved) : [];
     el.classList.toggle('hidden', !rows.length);
     if (!rows.length) { el.innerHTML = ''; return; }
-    el.innerHTML = '<div class="pm-head"><b>Evolutions</b><small>A move evolves at max level once you hold the perk it needs.</small></div>' +
+    el.innerHTML = '<div class="pm-head"><b>Evolutions</b><small>A move evolves at max level once you hold its family\'s perk (Shooters: Quantity, Strikers: Power...).</small></div>' +
       rows.map(m => {
         const ev = G.LevelUp.evoPlan(p, m);
         const right = m.evolved ? '<span class="ev-st ok">Evolved ★</span>'
           : !ev ? '<span class="ev-st">Doesn\'t evolve</span>'
           : `<span class="ev-st ${EVO_STATE[ev.state][0]}">${G.Icons.html(ev.icon, 16)} ${esc(ev.needName)}${ev.state === 'have' ? ' ✓' : ev.state === 'blocked' ? ' ✗' : ''}</span>`;
-        return `<div class="ev-row">${G.Icons.html('move:' + m.id, 16)}<b>${esc(m.name)}</b><small>Lv. ${m.lvl}/${m.def.maxLvl}</small>${right}</div>`;
+        const fam = G.Moves.familyOf(m);
+        return `<div class="ev-row">${G.Icons.html('move:' + m.id, 16)}<b>${esc(m.name)}</b><small>Lv. ${m.lvl}/${m.def.maxLvl}${fam ? ' · ' + esc(fam.name) : ''}</small>${right}</div>`;
       }).join('');
   }
 

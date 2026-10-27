@@ -1644,11 +1644,12 @@ G.Combat = (() => {
   }
 
   /** Replays a teammate's attack just to show it (no damage). */
-  function ghostCast(pl, id, lvl, aim, evolved, area) {
+  function ghostCast(pl, id, lvl, aim, evolved, area, qty) {
     const def = G.Moves.BY_ID[id];
     if (!def || def.kind === 'orbit') return;
     const m = G.Moves.instance(id, lvl);
     if (evolved) G.Moves.evolve(m);
+    if (qty > 0 && G.LevelUp.qtyOn(m)) m.count += qty;     // the teammate's Quantity perk
     pl.aim = aim;
     pl.areaMul = area || 1;           // the teammate's Reach, so their attack looks as big as it really is
     ghost = true;

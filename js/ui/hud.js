@@ -515,7 +515,7 @@ G.HUD = (() => {
       const evoTip = gm => {
         if (gm.evolved) return 'Evolved.';
         const ev = !sv && G.LevelUp.evoPlan(pl, gm);
-        return !ev ? '' : 'Evolves at Lv. ' + gm.def.maxLvl + ' with ' + ev.needName +
+        return !ev ? '' : (ev.family ? ev.family + ' evolve' : 'Evolves') + ' at Lv. ' + gm.def.maxLvl + ' with ' + ev.needName +
           (ev.state === 'have' ? ' (you have it).' : ev.state === 'free' ? ' (not taken yet).' : ' (your perk slots are full).');
       };
       tips.push({ x, y, w: S, h: S, title: fused ? m.name + ' +' + (g.length - 1) : m.name, col: fused ? BOND : col,

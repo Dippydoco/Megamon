@@ -250,6 +250,12 @@ G.CodexUI = (() => {
           ['Group runs', 'More players means more enemies, with more HP. Experience is shared, so each player levels a little slower.']
         ];
       })()],
+      // Evolution families (moves.js FAMILIES): which perk evolves which kind of move.
+      ['Evolution families', [
+        ['How evolving works', 'A move evolves once it reaches max level and you hold the perk of its family. Every move of a family needs the same perk. Burst moves and boosters don\'t evolve.'],
+        ...G.Moves.FAMILIES.map(f => [f.name + ' → ' + ((G.LevelUp.BY[f.need] || {}).title || f.need),
+          f.kinds.map(k => G.Icons.KIND_NAME[k] || k).join(', ') + ' (' + f.why + ').'])
+      ]],
       ['Abilities', [
         ['Always on', 'Every Pokémon has one ability (Abilities tab), active for the whole run. Pause the game to read yours.'],
         ['Burned or poisoned', 'Players are never burned or poisoned. Abilities that say you can\'t be burned or poisoned make Fire or Poison hits deal 20% less instead. You count as slowed while a trap, Hyper Beam or water slows you.'],   // abilrun.js

@@ -133,6 +133,7 @@ G.Player = class Player {
   addMove(id) {
     if (this.slots.length >= this.maxMoves || this.hasMove(id)) return false;
     const m = G.Moves.instance(id, 1);
+    if (!this.remote) G.LevelUp.newMove(this, m);       // the Quantity perk you already have
     this.moves.push(m);
     const group = [m];
     this.slots.push(group);
