@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T15:14Z', title: 'Every damaging move evolves', new: [
+    'The 28 damaging moves that had no evolution now have one (burst moves and boosters still don\'t evolve): Pyro Ball, Razor Shell, Fusion Bolt, Spike Cannon, Dual Wingbeat, Arm Thrust, Poison Tail, Magical Torque, Rock Tomb, Boomburst, Psywave, Clanging Scales, Water Pulse, Burn Up, Focus Punch, Sacred Sword, Leaf Blade, Fury Cutter, Mud Bomb, Make It Rain, Whirlwind, Curse, Attack Order, Ice Fang, Blaze Kick, Stone Axe and Leech Seed. Check the badge on the move or the pause menu to see which perk each one needs.'
+  ], fix: [
+    'Rollout can evolve again (into Rollout+, with Vigor): its evolution had been switched off by mistake.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T15:10Z', title: 'See which perk evolves each move', new: [
     'Every move on your move bar shows the perk its evolution needs as a small badge in its corner: lit once you hold that perk, dim while you don\'t. Hover a move to read it in full.',
     'Level-up cards for moves now say which perk evolves them and whether you have it, a free slot for it, or no room left. Perk cards say which of your moves they evolve.',

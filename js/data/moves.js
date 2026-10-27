@@ -1122,12 +1122,28 @@
     'solar-beam': ['Chloroblast', 'atk'],       'electro-ball': ['Electro Drift', 'spd'],
     'thunder-cage': ['Rising Voltage', 'area'], 'reflect': ['Mirror Coat', 'def'],
     'dig': ['Drill Run', 'spd'],                'sand-tomb': ['Sandsear Storm', 'area'],
-    'infestation': ['Skitter Smack', 'xp'],      // (was Attack Order, now its own move)      'rollout': ['Head Smash', 'hp'],
+    'infestation': ['Skitter Smack', 'xp'],     // (was Attack Order, now its own move)
+    'rollout': ['Head Smash', 'hp'],
     'power-gem': ['Meteor Beam', 'cd'],         'seismic-toss': ['Superpower', 'atk'],
     'gyro-ball': ['Heavy Slam', 'def'],         'mirror-shot': ['Doom Desire', 'xp'],
     'sucker-punch': ['Wicked Blow', 'atk'],     'fiery-wrath': ['Night Daze', 'cd'],
     'beat': ['Rock Wrecker', 'atk'],
-    'aqua-jet': ['Wave Crash', 'spd'],          'liquidation': ['Crabhammer', 'crit']
+    'aqua-jet': ['Wave Crash', 'spd'],          'liquidation': ['Crabhammer', 'crit'],
+    // 27-10-2026: every damaging move evolves now (burst moves and boosters still don't). Names are shown as "Move+".
+    'pyro-ball': ['Pyro Ball+', 'atk'],         'razor-shell': ['Razor Shell+', 'crit'],
+    'fusion-bolt': ['Fusion Bolt+', 'cd'],      'spike-cannon': ['Spike Cannon+', 'spd'],
+    'dual-wingbeat': ['Dual Wingbeat+', 'atk'], 'arm-thrust': ['Arm Thrust+', 'cd'],
+    'poison-tail': ['Poison Tail+', 'rgn'],     'magical-torque': ['Magical Torque+', 'area'],
+    'rock-tomb': ['Rock Tomb+', 'def'],         'boomburst': ['Boomburst+', 'area'],
+    'psywave': ['Psywave+', 'xp'],              'clanging-scales': ['Clanging Scales+', 'def'],
+    'water-pulse': ['Water Pulse+', 'rgn'],     'burn-up': ['Burn Up+', 'spd'],
+    'focus-punch': ['Focus Punch+', 'hp'],      'sacred-sword': ['Sacred Sword+', 'crit'],
+    'leaf-blade': ['Leaf Blade+', 'atk'],       'fury-cutter': ['Fury Cutter+', 'cd'],
+    'mud-bomb': ['Mud Bomb+', 'area'],          'make-it-rain': ['Make It Rain+', 'mag'],
+    'whirlwind': ['Whirlwind+', 'spd'],         'curse': ['Curse+', 'xp'],
+    'attack-order': ['Attack Order+', 'cd'],    'ice-fang': ['Ice Fang+', 'crit'],
+    'blaze-kick': ['Blaze Kick+', 'spd'],       'stone-axe': ['Stone Axe+', 'atk'],
+    'leech-seed': ['Leech Seed+', 'rgn']
   };
   // What it gains when evolving, depending on how it works.
   const EVO_MODS = {
@@ -1153,7 +1169,18 @@
     roll:       { t: '×1.8 damage, and you can build up much more momentum', m: { dmg: 1.8, max: 2.2 } },
     throw:      { t: '×1.8 damage and a 40% bigger landing blast', m: { dmg: 1.8, splash: 1.4 } },
     spin:       { t: '×1.8 damage and +1 ball', m: { dmg: 1.8, count: 1 } },
-    counter:    { t: '×1.7 damage and more reach', m: { dmg: 1.7, radius: 1.2 } }
+    counter:    { t: '×1.7 damage and more reach', m: { dmg: 1.7, radius: 1.2 } },
+    // The move families added on 24-10-2026 (27-10-2026).
+    thrust:     { t: '×1.8 damage, +1 thrust and 30% longer', m: { dmg: 1.8, count: 1, radius: 1.3 } },
+    wave:       { t: '×1.8 damage, 30% wider and 25% longer', m: { dmg: 1.8, width: 1.3, radius: 1.25 } },
+    pulse:      { t: '×1.7 damage, +1 ring and 20% more radius', m: { dmg: 1.7, count: 1, radius: 1.2 } },
+    focus:      { t: '×1.8 damage, charges 25% faster and a 25% bigger blast', m: { dmg: 1.8, cd: 0.75, radius: 1.25 } },
+    combo:      { t: '×1.8 damage, 20% more reach and a huge finisher', m: { dmg: 1.8, radius: 1.2, fin: 3.5, arc: 1.2 } },
+    eruption:   { t: '×1.8 damage, +2 targets and 25% bigger blasts', m: { dmg: 1.8, count: 2, radius: 1.25 } },
+    vortex:     { t: '×1.7 damage, 30% bigger and lasts 30% longer', m: { dmg: 1.7, radius: 1.3, dur: 1.3 } },
+    mark:       { t: '×1.5 damage, +2 targets and marks last 30% longer', m: { dmg: 1.5, count: 2, dur: 1.3 } },
+    tether:     { t: '×1.7 damage, +2 links and 20% more range', m: { dmg: 1.7, count: 2, range: 1.2 } },
+    companion:  { t: '×1.7 damage and +2 bees', m: { dmg: 1.7, count: 2 } }
   };
 
   // Moves whose evolution differs from the generic one of their kind.
