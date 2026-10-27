@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T16:35Z', title: 'Max HP grows with levels, stronger Synthesis', new: [
+    'Every Pokémon now gains 2% of its base HP as max HP each level in a run, with no cap (on top of the Vigor perk, which is unchanged).'
+  ], chg: [
+    'Synthesis is much stronger: each level now regenerates +1.5 HP and +0.3% of your max HP per second (it was +0.9 HP per second), so it keeps up as your health grows.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T16:19Z', title: 'Movesets, in-run Ban and damage growth per level', new: [
     'Moveset (new on the main menu): choose, per Pokémon, the 12 moves that can come up as new moves in its runs. Every Pokémon has exactly 12, so each has the same chance of finding the moves it wants. Until you set one up, it is filled in automatically (its own types\' attacking moves first), and any you leave empty are filled the same way. Starting moves and Spiritomb\'s moves are not limited by it.',
     'Ban now works during the run: on a level-up, press Ban (or B) and then a card. That move or perk won\'t be offered again this run, and a new card takes its place. Each level of the Ban upgrade is one ban per run (featured Pokémon get all 3). The old list of banned moves in Upgrades is gone: the moveset does that job now.',

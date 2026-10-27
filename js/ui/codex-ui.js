@@ -244,7 +244,7 @@ G.CodexUI = (() => {
           ['Moveset', 'New-move cards only offer the ' + G.Moveset.SIZE + ' moves in your Pokémon\'s moveset (Moveset on the main menu). Every Pokémon has ' + G.Moveset.SIZE + ', chosen by you or filled in automatically. Starting moves and Spiritomb\'s moves are not limited by it.'],   // moveset.js
           ['Ban', 'With the Ban upgrade, press Ban (or B) on a level-up and then a card: that move or perk never comes up again this run, and a new card takes its place. Evolutions can\'t be banned.'],   // run-ui.js banMode
           ['Roar', 'Each level: +10% wild Pokémon, +8% their health and +5% their damage, for +8% experience and +8% PokéCoins. In a group the whole team faces the team\'s average. Not offered in the Battle Tower.'],   // levelup.js teamFx
-          ['Growing with levels', 'Every Pokémon deals +' + Math.round((G.LEVEL_DMG || 0) * 1000) / 10 + '% damage per level in a run, with no cap. Lower rarities also grow a little more each level (below).'],   // player.js levelMul
+          ['Growing with levels', 'Every Pokémon deals +' + Math.round((G.LEVEL_DMG || 0) * 1000) / 10 + '% damage and gains ' + Math.round((G.LEVEL_HP || 0) * 1000) / 10 + '% of its base HP as max HP per level in a run, with no cap. Lower rarities also grow a little more each level (below).'],   // player.js levelMul, gainXp
           ...[1, 2, 3].map(r => [RN[r] + ' (' + r + '★)', tier(r)]),
           [RN[4] + ' and ' + RN[5], 'Highest base stats, no rarity bonus or growth.'],
           ['Enemies scale with time', 'Every minute, regular enemies gain about +63% of their starting HP and +14% damage, and get faster (up to +35%). Bosses gain about +10% HP and damage per minute.'],   // enemies.js scale/bossScale

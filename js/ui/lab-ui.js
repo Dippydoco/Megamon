@@ -117,7 +117,7 @@ G.LabUI = (() => {
   function prepPlayer(id, lvl, evo) {
     const pl = G.Game.player;
     if (pl.item) pl.equip('');
-    pl.atkMul = 1; pl.cdMul = 1; pl.critChance = 0; pl.areaMul = 1; pl.dmgReduce = 0; pl.regenFlat = 0;
+    pl.atkMul = 1; pl.cdMul = 1; pl.critChance = 0; pl.areaMul = 1; pl.dmgReduce = 0; pl.regenFlat = 0; pl.regenPct = 0;
     pl.statsTaken = {};
     for (const k in pl.buffs) pl.buffs[k].n = 0;
     pl.slowT = 0; pl.protectT = 0; pl.drainHeal = 0; pl.bellHeal = 0;

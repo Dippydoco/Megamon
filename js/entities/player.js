@@ -22,6 +22,7 @@ G.Player = class Player {
     this.cdMul = perks.cdMul || 1;
     this.dmgReduce = perks.dmgReduce || 0;
     this.regenFlat = perks.regen || 0;
+    this.regenPct = 0;         // Synthesis perk: share of max HP regenerated per second
     this.magnet = 78 * (perks.magnetMul || 1);
     this.xpMul = perks.xpMul || 1;
     this.coinMul = perks.coinMul || 1;
@@ -131,7 +132,8 @@ G.Player = class Player {
     const d = this.baseDef;
     return d >= 70 ? Math.max(0.65, 1 - (d - 70) * 0.0025) : Math.min(1.1, 1 + (70 - d) * 0.001);
   }
-  get regen() { return this.regenFlat + this.buffs.regen.n * this.buffs.regen.amount; }
+  /** HP per second: flat regeneration, a share of max HP (Synthesis perk) and buffs. */
+  get regen() { return this.regenFlat + (this.regenPct || 0) * this.maxHp + this.buffs.regen.n * this.buffs.regen.amount; }
 
   // ---------------- moves ----------------
   addMove(id) {
@@ -402,6 +404,7 @@ G.Player = class Player {
       this.level++;
       this.xpNext = Player.xpFor(this.level);
       if (this.growth && this.level <= (G.RARITY_GROWTH_CAP || 30)) this.addMaxHp(this.mon.hp * this.growth);   // low-rarity growth: max HP too
+      if (G.LEVEL_HP) this.addMaxHp(this.mon.hp * G.LEVEL_HP);          // every Pokémon: +2% of its base HP a level (overrides.js)
       leveled++;
     }
     return leveled;

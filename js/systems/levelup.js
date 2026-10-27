@@ -30,8 +30,9 @@ G.LevelUp = (() => {
       apply: pl => pl.cdMul *= 0.92, max: 13 },
     { id: 'def',  icon: 'shield', title: 'Armor',       desc: '+5% damage reduction.',
       apply: pl => pl.dmgReduce = Math.min(0.7, pl.dmgReduce + 0.05), max: 14 },
-    { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+0.9 HP regenerated per second.',
-      apply: pl => pl.regenFlat += 0.9, max: 15 },
+    // Synthesis (27-10-2026, much stronger: it was +0.9 HP/s): flat healing plus a share of max HP, so it keeps up late.
+    { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+1.5 HP and +0.3% of your max HP regenerated per second.',
+      apply: pl => { pl.regenFlat += 1.5; pl.regenPct = (pl.regenPct || 0) + 0.003; }, max: 15 },
     // Quantity (27-10-2026, replaces the Magnet perk: pickup range still comes from the Magnet upgrade, power-up and
     // shrine). +1 to the count of every move that fires several things; moves learned later get it too (qtyOn).
     { id: 'qty',  icon: 'ball3', title: 'Quantity', desc: '+1 projectile, orb, ring, target, link or bee on every move that fires several things.',

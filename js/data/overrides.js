@@ -42,6 +42,8 @@ G.RARITY_GROWTH_CAP = 30;   // it stops at this level (1★: +43.5% at most), so
 //    Every Pokémon (any rarity) also deals +1.5% damage per level in a run, with no cap (27-10-2026), so a perk slot spent
 //    on something other than Power doesn't leave you behind. On top of the rarity growth above.
 G.LEVEL_DMG = 0.015;
+//    ...and +2% of its base HP as max HP per level (27-10-2026, also no cap), on top of the rarity growth and the Vigor perk.
+G.LEVEL_HP = 0.02;
 
 // ---- Apply (nothing needs changing from here down) ----
 (() => {
