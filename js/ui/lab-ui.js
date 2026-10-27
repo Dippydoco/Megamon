@@ -126,7 +126,7 @@ G.LabUI = (() => {
     if (home) { pl.x = home.x; pl.y = home.y; }
     for (const s of UPS) {
       const st = G.LevelUp.STATS.find(x => x.id === s);
-      for (let i = 0; i < (cfg.ups[s] | 0); i++) st.apply(pl);
+      for (let i = 0; i < (cfg.ups[s] | 0); i++) st.apply(pl, i);
     }
     if (cfg.item) pl.equip(cfg.item);
     G.Projectiles.clear(); G.Combat.clearFields();

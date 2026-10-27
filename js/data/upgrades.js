@@ -17,7 +17,8 @@ G.Upgrades = (() => {
     { id: 'moves',  icon: 'cards', name: 'Starting Moves', unit: 'Choose your starting move (level 2: choose 2)', max: 2, base: 800, grow: 1.9 },
     { id: 'crit',   icon: 'star', name: 'Critical Hit',  unit: '+3% critical chance (x1.5 damage)', max: 10, base: 90, grow: 1.4 },
     { id: 'reroll', icon: 'up', name: 'Card reroll', unit: '+1 level-up card reroll per run', max: 5, base: 150, grow: 1.6 },
-    { id: 'ban',    icon: 'ban', name: 'Ban',           unit: 'Ban 1 move: it never shows up in your cards', max: 3, base: 300, grow: 1.9 },
+    // (27-10-2026: Ban is used in the run now. It was a pre-run list of moves; the moveset does that job.)
+    { id: 'ban',    icon: 'ban', name: 'Ban',           unit: '+1 ban per run: remove a level-up card (a move or perk) for the rest of the run', max: 3, base: 300, grow: 1.9 },
     { id: 'skip',   icon: 'skip', name: 'Skip',           unit: '+1 level-up skip per run (take nothing)', max: 3, base: 250, grow: 1.8 }
   ];
   const BY = {};
@@ -51,7 +52,7 @@ G.Upgrades = (() => {
   }
 
   // Upgrades a featured Pokémon does NOT get for free (it keeps the levels you bought).
-  const NOT_FEATURED = ['ban'];
+  const NOT_FEATURED = [];
 
   /** The levels a run actually uses. Today's featured Pokémon (systems/featured.js) get every
    *  upgrade at max except NOT_FEATURED. It's a fresh object worked out at the start of each run

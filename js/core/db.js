@@ -88,6 +88,7 @@ G.DB = (() => {
       upgrades: {},           // (old) account upgrades; now they're per Pokémon
       pupg: {},               // dex -> { id -> level }: each Pokémon's upgrades
       pstart: {},             // dex -> [move ids]: chosen starting moves (Starting Moves upgrade, up to 2)
+      pmoves: {},             // dex -> [move ids]: the moves chosen for its moveset (systems/moveset.js, up to 12)
       startV2: true,          // Repertoire owners already moved to Starting Moves level 2 (migrate)
       tickets: { t1: 0, t10: 0 },   // gacha tickets (x1 and x10)
       codes: {},              // code fingerprint -> date: redeemed codes (js/systems/redeem.js)
@@ -258,6 +259,14 @@ G.DB = (() => {
         s.pstart[d] = [...new Set(l.filter(id => typeof id === 'string' && (!G.Moves || G.Moves.BY_ID[id])))].slice(0, 2);
       }
     } else s.pstart = {};
+    // Movesets (27-10-2026): moves that exist, without repeats, at most 12 (G.Moveset.SIZE).
+    if (s.pmoves && typeof s.pmoves === 'object') {
+      for (const d of Object.keys(s.pmoves)) {
+        const l = Array.isArray(s.pmoves[d]) ? s.pmoves[d] : [];
+        s.pmoves[d] = [...new Set(l.filter(id => typeof id === 'string' && (!G.Moves || G.Moves.BY_ID[id])))].slice(0, 12);
+        if (!s.pmoves[d].length) delete s.pmoves[d];
+      }
+    } else s.pmoves = {};
     if (G.Upgrades) for (const d of Object.keys(s.pupg || {})) {
       const u = s.pupg[d];
       if (!u || typeof u !== 'object') { delete s.pupg[d]; continue; }

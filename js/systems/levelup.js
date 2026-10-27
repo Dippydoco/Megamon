@@ -20,8 +20,10 @@ G.LevelUp = (() => {
   const STATS = [
     { id: 'hp',   icon: 'heart', title: 'Vigor',        desc: '+20 max HP (and heals it).',
       apply: pl => pl.addMaxHp(20), max: 12 },
-    { id: 'atk',  icon: 'fist', title: 'Power',     desc: '+10% damage with every move.',
-      apply: pl => pl.atkMul *= 1.10, max: 50 },
+    // Power (27-10-2026): +5% a level, adding up (it was +10% multiplying, which compounded to ×45 at its cap). Every
+    // Pokémon now also gains +1.5% damage per level on its own (player.js levelMul), so Power is no longer a must.
+    { id: 'atk',  icon: 'fist', title: 'Power',     desc: '+5% damage with every move.',
+      apply: (pl, n = lvOf(pl, 'atk')) => pl.atkMul *= lin(0.05, n), max: 30 },
     { id: 'spd',  icon: 'boot', title: 'Sprint',      desc: '+7% movement speed.',
       apply: pl => pl.spdMul *= 1.07, max: 12 },
     { id: 'cd',   icon: 'clock', title: 'Reflexes',     desc: '-8% cooldown on every move.',
@@ -58,7 +60,12 @@ G.LevelUp = (() => {
   /** A move just learned: it gets the Quantity you already have (player.js addMove). */
   function newMove(pl, m) { if (qtyOn(m)) m.count += lvOf(pl, 'qty'); }
 
-  const BUFF_MAX = 3;          // booster moves (Swords Dance, Agility, Harden...) you can hold at once
+  const BUFF_MAX = 3;
+  /** Banned this run with the level-up Ban button ('mv:<move>' or 'pk:<perk>')? */
+  const banned = (pl, key) => !!(pl.banned && pl.banned.has(key));
+  /** What a card's ban removes: its move (new or upgrade) or its perk. Evolutions can't be banned. */
+  const banKey = c => (c.type === 'new' || c.type === 'up' ? 'mv:' + c.key.slice(c.key.indexOf(':') + 1)
+                     : c.type === 'stat' && c.key.startsWith('stat:') ? 'pk:' + c.key.slice(5) : null);          // booster moves (Swords Dance, Agility, Harden...) you can hold at once
 
   const BY = {};
   for (const s of STATS) BY[s.id] = s;
@@ -129,8 +136,9 @@ G.LevelUp = (() => {
       const buffs = pl.moves.filter(m => m.kind === 'buff').length;
       // Burst moves: 2 at most (they don't attack on their own), and only once you have 2 moves to swap between.
       const bursts = pl.moves.filter(m => m.kind === 'burst').length;
-      const pool = G.Moves.poolFor(pl.mon).filter(id =>
-        !pl.hasMove(id) && !(pl.banned && pl.banned.has(id)) && !(buffs >= BUFF_MAX && G.Moves.BY_ID[id].kind === 'buff') &&
+      // Only moves from this Pokémon's moveset (systems/moveset.js), minus those banned this run.
+      const pool = (pl.movePool ? [...pl.movePool] : G.Moves.poolFor(pl.mon)).filter(id =>
+        !pl.hasMove(id) && !banned(pl, 'mv:' + id) && !(buffs >= BUFF_MAX && G.Moves.BY_ID[id].kind === 'buff') &&
         !(G.Moves.BY_ID[id].kind === 'burst' && (bursts >= 2 || pl.moves.length < 2)));
       for (const id of G.U.pickN(pool, 6)) {
         const d = G.Moves.BY_ID[id];
@@ -174,7 +182,7 @@ G.LevelUp = (() => {
     const using = new Set((pl.slots[pl.active] || []).map(m => m.id));
     for (const m of pl.moves) {
       const txt = G.Moves.nextUpText(m);
-      if (!txt) continue;
+      if (!txt || banned(pl, 'mv:' + m.id)) continue;
       out.push({
         w: using.has(m.id) ? 16 : 8, type: 'up', key: 'up:' + m.id,
         icon: 'move:' + m.id, color: G.U.TYPE_COLOR[m.type],
@@ -192,7 +200,7 @@ G.LevelUp = (() => {
     const room = s => !s.max || (pl.statsTaken[s.id] || 0) < s.max;
     // Perk slots: a perk you don't hold yet only comes up while a slot is free (the berry never takes one).
     const held = tomesOf(pl), full = held.length >= maxTomes(pl);
-    const fits = s => s.instant || held.includes(s.id) || !full;
+    const fits = s => (s.instant || held.includes(s.id) || !full) && !banned(pl, 'pk:' + s.id);
     // (Battle Tower: no experience there, so no Learning card, and no Roar: the floors set their own difficulty.)
     const useful = s => !((s.id === 'xp' || s.id === 'roar') && inTower());
     const pickStats = G.U.pickN(STATS.filter(s => !waiting[s.id] && room(s) && fits(s) && useful(s)), 5)
@@ -237,5 +245,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, BUFF_MAX, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, BUFF_MAX, banKey, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
 })();

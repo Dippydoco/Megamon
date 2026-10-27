@@ -39,6 +39,9 @@ G.RARITY_DEF_BONUS = { 1: 0.60, 2: 0.38, 3: 0.16, 4: 0, 5: 0 };
 //    ...and more damage and max HP with every level in a run (on top of the cards), so they catch up later on.
 G.RARITY_GROWTH = { 1: 0.015, 2: 0.010, 3: 0.005, 4: 0, 5: 0 };
 G.RARITY_GROWTH_CAP = 30;   // it stops at this level (1★: +43.5% at most), so they don't outgrow everything in long runs
+//    Every Pokémon (any rarity) also deals +1.5% damage per level in a run, with no cap (27-10-2026), so a perk slot spent
+//    on something other than Power doesn't leave you behind. On top of the rarity growth above.
+G.LEVEL_DMG = 0.015;
 
 // ---- Apply (nothing needs changing from here down) ----
 (() => {

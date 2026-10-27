@@ -102,10 +102,11 @@ G.RunUI = (() => {
       pouch = '';
     }
     renderCards(list);
-    if (empty) { $('lvl-reroll').classList.add('hidden'); $('lvl-skip').classList.add('hidden'); }
+    if (empty) { $('lvl-reroll').classList.add('hidden'); $('lvl-skip').classList.add('hidden'); $('lvl-ban').classList.add('hidden'); }
     pouchNote(empty ? 'Lucky Pouch: empty this time…' : pouch === 'double' ? 'Lucky Pouch! You pick 2 cards this level' : '', empty);
     $('lvl-reroll').onclick = reroll;
     $('lvl-skip').onclick = skip;
+    $('lvl-ban').onclick = banMode;
     renderStats('lvl-stats', false);
     renderPerks('lvl-perks');
     G.UI.show('scr-levelup');
@@ -133,6 +134,7 @@ G.RunUI = (() => {
     pouch = ''; pouchNote('');
     p.skips = (p.skips || 0) + 1;
     offers = null; offerCb = null;
+    setBanning(false); $('lvl-ban').classList.add('hidden');
     $('lvl-reroll').classList.add('hidden');
     $('lvl-skip').classList.add('hidden');
     if (coopMode) $('cards').classList.add('done');
@@ -140,6 +142,38 @@ G.RunUI = (() => {
     G.UI.toast('Level-up skipped (' + skipsLeft() + ' left)');
     G.RunLog.skip();
     cb({ apply() {} });
+  }
+
+  // ---------------- Ban (27-10-2026): remove a card for the rest of the run ----------------
+  // Press Ban (or B), then the card: its move (new or upgrade) or perk never comes up again this run, and a fresh
+  // card takes its place. Bans per run come from the Ban upgrade. Evolutions can't be banned.
+  let banning = false;
+  function bansLeft() { const p = G.Game.player; return p ? Math.max(0, p.bansLeft || 0) : 0; }
+  function setBanning(v) {
+    banning = !!v;
+    $('cards').classList.toggle('banning', banning);
+    $('lvl-ban-note').classList.toggle('hidden', !banning);
+    $('lvl-ban').classList.toggle('gold', banning);
+  }
+  function banMode() {
+    if (!offers || bansLeft() <= 0 || pouch === 'empty') return;
+    setBanning(!banning);
+    G.Audio.sfx('select');
+  }
+  function banCard(i) {
+    const p = G.Game.player, c = offers[i], key = c && G.LevelUp.banKey(c);
+    if (!key) { G.UI.toast(c && c.type === 'evo' ? 'Evolutions can\'t be banned' : 'This card can\'t be banned'); G.Audio.sfx('error'); return; }
+    p.banned.add(key);
+    p.bansLeft = Math.max(0, (p.bansLeft || 0) - 1);
+    G.UI.toast(c.title + ' banned for this run');
+    G.Audio.sfx('back');
+    // A fresh card in its place: one that isn't on screen already (or nothing if there's none left).
+    const shown = new Set(offers.map(o => o.key));
+    const fresh = G.LevelUp.offer(p, 40).find(o => !shown.has(o.key));
+    const list = offers.slice();
+    if (fresh) list[i] = fresh; else list.splice(i, 1);
+    setBanning(false);
+    renderCards(list);
   }
 
   function reroll() {
@@ -152,6 +186,10 @@ G.RunUI = (() => {
 
   function renderCards(list) {
     offers = list;
+    setBanning(false);
+    const bl = bansLeft();
+    $('lvl-ban-n').textContent = bl;
+    $('lvl-ban').classList.toggle('hidden', bl <= 0 || !list.length || list[0].key === 'pouch:empty');
     G.RunLog.offer(list);              // run details: what was offered (a reroll calls this again)
     const left = rerollsLeft();
     $('lvl-rr-n').textContent = left;
@@ -193,6 +231,7 @@ G.RunUI = (() => {
 
   function pick(i) {
     if (!offers || !offers[i]) return;
+    if (banning) { banCard(i); return; }
     if (pouch === 'double') {
       // Lucky Pouch: this card is taken now and a fresh set comes up for the second pick (same screen, same turn).
       pouch = '';
@@ -210,6 +249,7 @@ G.RunUI = (() => {
     G.RunLog.pick(i);
     $('lvl-reroll').classList.add('hidden');
     $('lvl-skip').classList.add('hidden');
+    $('lvl-ban').classList.add('hidden');
     if (coopMode) {
       // The chosen card stays visible while the others choose.
       $('cards').querySelectorAll('.card').forEach((el, j) => el.classList.toggle('picked', j === i));
@@ -231,6 +271,7 @@ G.RunUI = (() => {
 
   function closeLevelUp() {
     offers = null; offerCb = null; pouch = '';
+    setBanning(false);
     $('cards').classList.remove('done');
     G.UI.hide('scr-levelup');
   }
@@ -590,5 +631,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, skip, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, skip, banMode, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

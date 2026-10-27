@@ -9,6 +9,13 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T16:19Z', title: 'Movesets, in-run Ban and damage growth per level', new: [
+    'Moveset (new on the main menu): choose, per Pokémon, the 12 moves that can come up as new moves in its runs. Every Pokémon has exactly 12, so each has the same chance of finding the moves it wants. Until you set one up, it is filled in automatically (its own types\' attacking moves first), and any you leave empty are filled the same way. Starting moves and Spiritomb\'s moves are not limited by it.',
+    'Ban now works during the run: on a level-up, press Ban (or B) and then a card. That move or perk won\'t be offered again this run, and a new card takes its place. Each level of the Ban upgrade is one ban per run (featured Pokémon get all 3). The old list of banned moves in Upgrades is gone: the moveset does that job now.',
+    'Every Pokémon now deals +1.5% damage per level in a run, with no cap.'
+  ], chg: [
+    'Power is weaker to make room for it: +5% damage a level, adding up, with a cap of 30 (it was +10% multiplying, up to 50).'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T16:02Z', title: 'Three boosters, and Spiritomb shows evolutions', chg: [
     'You can now hold up to 3 booster moves at once (it was 2), so Swords Dance, Agility and Harden can all be taken in the same run. Spiritomb follows the same limit.',
     'Spiritomb\'s move offers now show which perk each move needs to evolve, and whether you have it.'

@@ -69,7 +69,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/style.css?v=a9e344638c">
+<link rel="stylesheet" href="css/style.css?v=cdcfd8303d">
 </head>
 <body>
 
@@ -178,13 +178,15 @@
       <button class="menu-item tile play half tower" data-go="tower">Battle Tower<small id="menu-tower-sub">Climb 50 floors</small></button>
       <button class="menu-item tile" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
       <button class="menu-item tile" data-go="gacha">Gacha<small id="menu-gacha-sub">Pokémon and shinies</small></button>
-      <button class="menu-item tile" data-go="upgrades">Upgrades<small id="menu-upg-sub">Stronger every run</small></button>
       <button class="menu-item tile" data-go="shop">Shop<small id="menu-shop-sub">Key Items and themes</small></button>
       <button class="menu-item tile" data-go="friends">Friends<small id="menu-friends-sub">Play in a group, up to 5</small></button>
       <button class="menu-item tile" data-go="mini">Mini-Games<small>Battles and drafts</small></button>
       <button class="menu-item tile" data-go="rank">Leaderboard<small>Who survives longest</small></button>
-      <button class="menu-item tile" data-go="goals">Profile<small id="menu-goals-sub">Missions, badges and history</small></button>
-      <button class="menu-item tile" data-go="codex">Codex<small>Every rule, move and ability</small></button>
+      <!-- (27-10-2026: 10 screens, so the last four are wide tiles in two rows of two.) -->
+      <button class="menu-item tile wide" data-go="upgrades">Upgrades<small id="menu-upg-sub">Stronger every run</small></button>
+      <button class="menu-item tile wide" data-go="moveset">Moveset<small id="menu-ms-sub">Which moves show up in runs</small></button>
+      <button class="menu-item tile wide" data-go="goals">Profile<small id="menu-goals-sub">Missions, badges and history</small></button>
+      <button class="menu-item tile wide" data-go="codex">Codex<small>Every rule, move and ability</small></button>
     </div>
   </div>
 </section>
@@ -466,6 +468,26 @@
   </div>
 </section>
 
+<!-- ====== Moveset: the moves that can come up in runs, per Pokémon (js/ui/moveset-ui.js) ====== -->
+<section id="scr-moveset" class="scr dim hidden">
+  <div class="box wide">
+    <div class="row between"><h2>Moveset</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="upg-head">
+      <canvas id="ms-stage" class="stage" width="120" height="96"></canvas>
+      <div class="grow">
+        <p class="sub" style="margin:0">Choose the 12 moves that can come up as new moves in this Pokémon's runs. Every Pokémon has 12, so each has the same chance of finding the moves it wants. Your starting moves always come with you.</p>
+        <div class="row" style="margin-top:8px">
+          <label for="ms-mon" style="margin:0">Pokémon</label>
+          <select id="ms-mon" class="field" style="width:auto;min-width:220px"></select>
+        </div>
+      </div>
+    </div>
+    <div class="row between ms-bar"><span id="ms-count" class="sub" style="margin:0"></span>
+      <span class="row" style="gap:6px"><button id="ms-clear" class="btn small ghost" type="button">Start from scratch</button><button id="ms-reset" class="btn small ghost" type="button">Automatic</button></span></div>
+    <div id="ms-list" class="ms-list"></div>
+  </div>
+</section>
+
 <!-- ====== Profile: profile, history, missions, achievements and badges ====== -->
 <section id="scr-goals" class="scr dim hidden">
   <div class="box wide">
@@ -660,6 +682,8 @@
     <div id="cards" class="cards"></div>
     <button id="lvl-reroll" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px">Reroll (<span id="lvl-rr-n">1</span>) · <kbd>R</kbd></button>
     <button id="lvl-skip" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px;margin-left:8px">Skip (<span id="lvl-skip-n">1</span>) · <kbd>X</kbd></button>
+    <button id="lvl-ban" class="btn small ghost hidden" data-sfx="none" style="margin-top:10px;margin-left:8px">Ban (<span id="lvl-ban-n">1</span>) · <kbd>B</kbd></button>
+    <p id="lvl-ban-note" class="note ban-note hidden">Tap the card to ban: it won't be offered again this run.</p>
     <p id="lvl-wait" class="note hidden"></p>
     <div id="lvl-perks" class="perk-strip"></div>
     <div id="lvl-stats" class="run-stats compact"></div>
@@ -727,7 +751,7 @@
 </section>
 
 <!-- generated data -->
-<script>window.PS_BUILD={"v":"a9e344638c","at":"2026-10-27T16:02:48.729Z"};</script>
-<script defer src="js/app.min.js?v=a9e344638c"></script>
+<script>window.PS_BUILD={"v":"cdcfd8303d","at":"2026-10-27T16:20:09.017Z"};</script>
+<script defer src="js/app.min.js?v=cdcfd8303d"></script>
 </body>
 </html>

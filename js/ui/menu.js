@@ -56,7 +56,7 @@ G.MenuUI = (() => {
   document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
-    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
+    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', moveset: 'focus', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
       b.insertAdjacentHTML('afterbegin', `<span class="mi-ico">${G.Icons.html(ICON[b.dataset.go], 26)}</span>`);
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
@@ -79,6 +79,7 @@ G.MenuUI = (() => {
         else if (go === 'codex') G.CodexUI.open();
         else if (go === 'mini') G.MiniUI.open();
         else if (go === 'upgrades') openUpgrades();
+        else if (go === 'moveset') G.MovesetUI.open();
         else if (go === 'shop') G.ShopUI.open();
         else if (go === 'gacha') G.GachaUI.open();
         else if (go === 'goals') G.GoalsUI.open(G.Progress.pending() ? 'missions' : 'profile');   // rewards waiting: straight to Missions
@@ -111,7 +112,7 @@ G.MenuUI = (() => {
     const s = G.DB.save;
     box.classList.remove('hidden');
     box.innerHTML = `<div class="ft-h">Today's featured <b>+${Math.round((G.Featured.BONUS - 1) * 100)}% PokéCoins</b></div><div class="ft-row"></div>` +
-      `<div class="ft-note">Everyone can play them today, with every upgrade (except Ban)</div>`;
+      `<div class="ft-note">Everyone can play them today, with every upgrade</div>`;
     const row = box.querySelector('.ft-row');
     for (const d of list) {
       const p = G.DEX_BY[d], own = G.DB.canUse(d);       // featured: on loan to everyone today
@@ -183,6 +184,7 @@ G.MenuUI = (() => {
     // Upgrades tile: how many levels your partner has.
     const plv = Object.values(s.pupg && s.pupg[s.partner] || {}).reduce((a, b) => a + b, 0);
     $('menu-upg-sub').textContent = plv ? mon.name + ': ' + plv + (plv === 1 ? ' level' : ' levels') : 'Stronger every run';
+    $('menu-ms-sub').textContent = mon ? mon.name + ': ' + (G.Moveset.edited(mon.dex) ? 'your ' + G.Moveset.SIZE + ' moves' : 'automatic') : 'Which moves show up in runs';
     // Shop tile: what you can afford right now.
     const canKey = G.KeyItems.LIST.filter(k => !G.KeyItems.owns(k.id) && s.coins >= k.price).length;
     const stars = G.DB.stars();
@@ -563,14 +565,14 @@ G.MenuUI = (() => {
     const shiny = upgDex === s.partner && !!s.partnerShiny && G.DB.ownsShiny(upgDex);
     G.UI.sprite($('upg-stage'), upgDex, { lively: true, scale: 2, hero: true, shiny });
     $('upg-stage').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
-    // Featured today: runs use every upgrade at max (except Ban); what's bought here is kept for later.
+    // Featured today: runs use every upgrade at max; what's bought here is kept for later.
     const feat = G.Featured.is(upgDex);
     $('upg-feat').classList.toggle('hidden', !feat);
-    if (feat) $('upg-feat').innerHTML = `${G.Icons.html('star', 16)} <b>${mon.name} is featured today:</b> in runs it has every upgrade at max, except Ban. ` +
+    if (feat) $('upg-feat').innerHTML = `${G.Icons.html('star', 16)} <b>${mon.name} is featured today:</b> in runs it has every upgrade at max. ` +
       `What you buy here is yours to keep after today.`;
     const box = $('upg-list');
     box.innerHTML = '';
-    let banLvl = 0, startLvl = 0;
+    let startLvl = 0;
     for (const u of G.Upgrades.LIST) {
       const lvl = levels[u.id] || 0;
       const maxed = lvl >= u.max;
@@ -584,11 +586,9 @@ G.MenuUI = (() => {
           <div class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</div>
         </div>
         <div class="upg-btns">
-          ${u.id === 'ban' && lvl > 0 ? `<button class="btn small" data-ban>Choose (${banList().length}/${lvl})</button>` : ''}
           ${u.id === 'moves' && lvl > 0 ? `<button class="btn small" data-start>Choose (${startList().length}/${lvl})</button>` : ''}
           <button class="btn small ${maxed ? '' : 'gold'}" data-buy data-sfx="none" ${maxed || s.coins < cost ? 'disabled' : ''}>
           ${maxed ? 'Max.' : `<span class="coin"></span> ${cost}`}</button></div>`;
-      if (u.id === 'ban' && lvl > 0) el.querySelector('[data-ban]').onclick = () => { banOpen = !banOpen; banScroll = banOpen; renderUpgrades(); };
       if (u.id === 'moves' && lvl > 0) el.querySelector('[data-start]').onclick = () => { startOpen = !startOpen; startScroll = startOpen; renderUpgrades(); };
       el.querySelector('[data-buy]').onclick = () => {
         // Everything is read again on pressing (the save may have changed since it was drawn).
@@ -605,19 +605,12 @@ G.MenuUI = (() => {
         renderUpgrades();
       };
       box.appendChild(el);
-      if (u.id === 'ban') banLvl = lvl;
       if (u.id === 'moves') startLvl = lvl;
     }
     if (startLvl > 0 && startOpen) {
       const pk = startPicker(startLvl);
       box.appendChild(pk);
       if (startScroll) { startScroll = false; setTimeout(() => pk.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); }
-    }
-    // The ban picker goes AFTER the whole list (it used to sit between Ban and Skip, which pushed Skip off the screen).
-    if (banLvl > 0 && banOpen) {
-      const pk = banPicker(banLvl);
-      box.appendChild(pk);
-      if (banScroll) { banScroll = false; setTimeout(() => pk.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 30); }
     }
     box.appendChild(bindPanel());
   }
@@ -686,39 +679,6 @@ G.MenuUI = (() => {
           if (max === 1) l.splice(0, 1, id);                  // one pick: tapping another swaps it
           else { G.UI.toast('You already have ' + max + ' chosen: remove one first'); return; }
         } else l.push(id);
-        G.DB.commit();
-        G.Audio.sfx('select');
-        renderUpgrades();
-      };
-    });
-    return el;
-  }
-
-  // ---------------- veto: blocked moves ----------------
-  // List per Pokémon in save.pban[dex]; with N levels of Veto, N moves.
-  let banOpen = false, banScroll = false;
-  function banList() {
-    const s = G.DB.save;
-    s.pban = s.pban || {};
-    return s.pban[upgDex] || (s.pban[upgDex] = []);
-  }
-  function banPicker(max) {
-    const mon = G.DEX_BY[upgDex];
-    const start = G.startMoveOf(upgDex);
-    const ids = G.Moves.poolFor(mon).filter(id => id !== start)
-      .sort((a, b) => G.Moves.BY_ID[a].name.localeCompare(G.Moves.BY_ID[b].name, 'en'));
-    const list = banList();
-    const el = document.createElement('div');
-    el.className = 'panel ban-picker';
-    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Tap the moves you don't want in your cards (${list.length}/${max}). The starting move can't be banned.</p>
-      <div class="ban-moves">${ids.map(id => { const d = G.Moves.BY_ID[id]; const on = list.includes(id);
-        return `<button class="chip ${on ? 'on ban' : ''}" data-id="${id}" data-mv="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${on ? ' ' + G.Icons.html('ban', 14) : ''}</button>`; }).join('')}</div>`;
-    el.querySelectorAll('[data-id]').forEach(b => {
-      b.onclick = () => {
-        const l = banList(), id = b.dataset.id, i = l.indexOf(id);
-        if (i >= 0) l.splice(i, 1);
-        else if (l.length >= max) { G.UI.toast('You already have ' + max + ' banned: remove one first'); return; }
-        else l.push(id);
         G.DB.commit();
         G.Audio.sfx('select');
         renderUpgrades();

@@ -133,13 +133,14 @@ G.Game = (() => {
     const chosen = picks ? (save.pstart && save.pstart[mon.dex] || []).filter(id => startOk.includes(id)).slice(0, picks) : [];
     for (const id of chosen) pl.addMove(id);
     if (!pl.moves.length) pl.addMove(G.startMoveOf(mon.dex));
-    // "Veto" upgrade: moves you don't want to come up.
-    pl.banned = new Set((save.pban && save.pban[mon.dex] || []).slice(0, perks.bans));
+    // Moveset (systems/moveset.js): only these moves come up as new-move cards. Bans are used during the run now
+    // (level-up screen), so pl.banned starts empty (save.pban, the old pre-run Veto lists, is no longer read).
+    pl.movePool = new Set(G.Moveset.of(mon.dex));
     if (picks >= 2 && pl.moves.length < 2) {
       const def = G.startMoveOf(mon.dex);
       if (!pl.hasMove(def)) pl.addMove(def);
       else {
-        const pool = G.Moves.poolFor(mon).filter(id => !pl.hasMove(id) && !pl.banned.has(id) && G.Moves.BY_ID[id].kind !== 'buff');
+        const pool = [...pl.movePool].filter(id => !pl.hasMove(id) && G.Moves.BY_ID[id].kind !== 'buff' && G.Moves.BY_ID[id].kind !== 'burst' && G.Moves.BY_ID[id].cat);
         if (pool.length) pl.addMove(G.U.pick(pool));
       }
     }
@@ -545,7 +546,7 @@ G.Game = (() => {
     const lean = p.mon.lean;
     const bursts = p.moves.filter(m => m.kind === 'burst').length, noBurst = bursts >= 2 || p.moves.length < 2;
     const noBuff = p.moves.filter(m => m.kind === 'buff').length >= G.LevelUp.BUFF_MAX;      // same booster cap as the cards
-    let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has(m.id))
+    let cand = G.Moves.ALL.filter(m => !m.sig && !own.has(m.id) && !p.hasMove(m.id) && !(p.banned && p.banned.has('mv:' + m.id))
                                   && !(noBurst && m.kind === 'burst') && !(noBuff && m.kind === 'buff'));
     const out = [], types = new Set();
     while (out.length < 3 && cand.length) {
@@ -746,6 +747,7 @@ G.Game = (() => {
       }
       if (G.Input.tap('keyr')) G.RunUI.reroll();
       if (G.Input.tap('keyx')) G.RunUI.skip();
+      if (G.Input.tap('keyb')) G.RunUI.banMode();
       return;
     }
     if (G.UI.isOpen('scr-bond')) {
@@ -1633,7 +1635,7 @@ G.Game = (() => {
 G.Flow = {
   boot() {
     G.UI.initChrome();
-    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init(); G.ShopUI.init(); G.KeyItemUI.init(); G.TowerUI.init();
+    G.LoginUI.init(); G.TestUI.init(); G.MenuUI.init(); G.GachaUI.init(); G.ShopUI.init(); G.MovesetUI.init(); G.KeyItemUI.init(); G.TowerUI.init();
     G.SocialUI.init(); G.RankingUI.init(); G.ModUI.init(); G.GoalsUI.init(); G.ProfileUI.init(); G.SettingsUI.init(); G.SupportUI.init(); G.NewsUI.init(); G.CodexUI.init(); G.MiniUI.init(); G.Updater.init();
     // Your name at the top right opens your profile.
     document.getElementById('user-pill').onclick = () => G.GoalsUI.open('profile');

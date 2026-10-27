@@ -59,7 +59,9 @@ G.Player = class Player {
     this.skipBonus = perks.skips || 0;       // skips bought in Upgrades (none by default)
     this.rerollBonus = perks.rerolls || 0;   // rerolls bought in Upgrades (plus the free one)
     this.critChance = perks.crit || 0;       // critical hit chance (Upgrades)
-    this.banned = new Set();                 // vetoed moves (Upgrades → Veto): they don't appear on the cards
+    this.banned = new Set();                 // cards banned this run (level-up Ban button): 'mv:<move>' or 'pk:<perk>'
+    this.bansLeft = perks.bans || 0;         // bans you can still use this run (Upgrades → Ban)
+    this.movePool = null;                    // the moves new-move cards come from (G.Moveset; null = the whole pool)
     this.bind = {};                          // move -> fixed slot (0-3), chosen in Upgrades
     this.coins = 0;            // coins picked up this run
     this.t1 = 0; this.t10 = 0; // gacha tickets picked up this run
@@ -99,11 +101,13 @@ G.Player = class Player {
   // Damage boosts (Power cards, items, buffs...) raise Attack and Sp. Atk alike.
   get dmgMul() {
     const b = this.buffs;
-    return this.atkMul * this.growthMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+    return this.atkMul * this.growthMul * this.levelMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
   }
   /** Lower rarities grow stronger with each level (G.RARITY_GROWTH, in overrides.js). */
   get growth() { return (G.RARITY_GROWTH && G.RARITY_GROWTH[this.mon.rarity]) || 0; }
   get growthMul() { return 1 + this.growth * (Math.min(this.level, G.RARITY_GROWTH_CAP || 30) - 1); }
+  /** Every Pokémon: +1.5% damage per level (G.LEVEL_DMG, overrides.js). */
+  get levelMul() { return 1 + (G.LEVEL_DMG || 0) * (this.level - 1); }
   /** Attack: multiplies physical moves. */
   get atk() { return this.baseAtk * this.dmgMul; }
   /** Sp. Atk: multiplies special moves. */
