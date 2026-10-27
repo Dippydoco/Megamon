@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T16:53Z', title: 'Moveset Back button', fix: [
+    'The Back button (and Esc) on the Moveset screen now take you back to the main menu.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T16:35Z', title: 'Max HP grows with levels, stronger Synthesis', new: [
     'Every Pokémon now gains 2% of its base HP as max HP each level in a run, with no cap (on top of the Vigor perk, which is unchanged).'
   ], chg: [

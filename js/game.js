@@ -764,7 +764,7 @@ G.Game = (() => {
     }
     if (state === 'ui') {
       // Esc on a menu sub-screen goes back to the menu.
-      if (G.Input.tap('escape') && !G.UI.isOpen('scr-profile') && ['scr-dex', 'scr-upgrades', 'scr-gacha', 'scr-friends', 'scr-rank', 'scr-goals', 'scr-shop'].some(G.UI.isOpen)
+      if (G.Input.tap('escape') && !G.UI.isOpen('scr-profile') && ['scr-dex', 'scr-upgrades', 'scr-moveset', 'scr-gacha', 'scr-friends', 'scr-rank', 'scr-goals', 'scr-shop'].some(G.UI.isOpen)
           && document.getElementById('pull-fx').classList.contains('hidden')) G.MenuUI.open();
       return;
     }

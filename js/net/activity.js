@@ -4,7 +4,7 @@
  * During a run it also sends when it started, so friends can see how long it's been going.
  */
 G.Activity = (() => {
-  const SCREEN = [['scr-gacha', 'gacha'], ['scr-upgrades', 'upgrades'], ['scr-shop', 'shop'], ['scr-dex', 'dex'],
+  const SCREEN = [['scr-gacha', 'gacha'], ['scr-upgrades', 'upgrades'], ['scr-moveset', 'upgrades'], ['scr-shop', 'shop'], ['scr-dex', 'dex'],
                   ['scr-rank', 'rank'], ['scr-goals', 'goals'], ['scr-lobby', 'lobby']];
 
   function current() {
