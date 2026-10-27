@@ -54,6 +54,21 @@ G.LevelUp = (() => {
   const BY = {};
   for (const s of STATS) BY[s.id] = s;
 
+  /**
+   * A move's evolution, for planning (27-10-2026): which perk it needs and whether you can get it.
+   * → { needs, needName, icon, state } or null. state: 'have' (you hold the perk), 'free' (a perk slot is free),
+   * 'blocked' (your perk slots are full without it: this move can't evolve this run).
+   */
+  function evoPlan(pl, m) {
+    const e = G.Moves.evoNeed(m);
+    if (!e) return null;
+    const d = BY[e.needs];
+    const state = lvOf(pl, e.needs) > 0 ? 'have' : tomesOf(pl).length < maxTomes(pl) ? 'free' : 'blocked';
+    return { needs: e.needs, needName: d ? d.title : e.needName, icon: d ? d.icon : 'up', state };
+  }
+  /** Your moves (not yet evolved) whose evolution needs perk `id`. */
+  const neededBy = (pl, id) => ((pl && pl.moves) || []).filter(m => { const e = G.Moves.evoNeed(m); return e && e.needs === id; });
+
   /** The perks a player holds, in the order taken: [id...] (the Sitrus Berry is not one). */
   function tomesOf(pl) {
     const st = (pl && pl.statsTaken) || {};
@@ -117,7 +132,7 @@ G.LevelUp = (() => {
           w: (d.kind === 'burst' ? 5 : 10) * fit * (pl.moves.length >= 2 ? 0.6 : 1), type: 'new', key: 'new:' + id,
           icon: 'move:' + id, color: G.U.TYPE_COLOR[d.type],
           tag: G.U.TYPE_NAME[d.type] + (d.cat ? ' · ' + (d.cat === 'physical' ? 'Physical' : 'Special') : ''), kind: d.kind,
-          title: d.name, desc: d.desc,
+          title: d.name, desc: d.desc, evo: evoPlan(pl, id),
           apply: p => p.addMove(id)
         });
       }
@@ -155,7 +170,7 @@ G.LevelUp = (() => {
         w: using.has(m.id) ? 16 : 8, type: 'up', key: 'up:' + m.id,
         icon: 'move:' + m.id, color: G.U.TYPE_COLOR[m.type],
         tag: 'Lv.' + m.lvl + ' > ' + (m.lvl + 1), kind: m.kind,
-        title: m.name, desc: txt,
+        title: m.name, desc: txt, evo: evoPlan(pl, m),
         apply: () => G.Moves.levelUp(m)
       });
     }
@@ -181,6 +196,8 @@ G.LevelUp = (() => {
         icon: s.icon, color: evoFor ? '#ffd23f' : '#8fa3c4',
         tag: evoFor ? 'Evolves ' + evoFor.name : s.instant ? 'Instant' : have ? 'Perk' : 'New perk · slot ' + (held.length + 1) + '/' + maxTomes(pl),
         title: s.title, desc: s.desc,
+        // Moves of yours that need this perk to evolve (shown on the card).
+        for: s.instant ? [] : neededBy(pl, s.id).map(m => m.name),
         // How many you have taken so far this run (shown on the card); the healing berry is not a stack.
         owned: s.instant ? null : (pl.statsTaken[s.id] || 0), cap: s.max || 0,
         apply: p => { const n = p.statsTaken[s.id] || 0; s.apply(p, n); p.statsTaken[s.id] = n + 1; fxT = -1; }
@@ -211,5 +228,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, tomesOf, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, tomesOf, evoPlan, neededBy, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
 })();

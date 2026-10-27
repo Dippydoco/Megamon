@@ -1183,6 +1183,18 @@
              ready: !!(statsTaken && statsTaken[needs]) };
   }
 
+  /**
+   * Which perk a move will need to evolve, at any level (27-10-2026: shown on cards, tooltips and the pause menu
+   * so you can plan your perk slots). `m`: a move instance or a move id. → { needs, needName, name } or null
+   * (it doesn't evolve, or already has).
+   */
+  function evoNeed(m) {
+    const inst = typeof m === 'string' ? null : m, id = inst ? inst.id : m;
+    const e = EVO[id], probe = inst || { id, kind: (BY_ID[id] || {}).kind };
+    if (!e || (inst && inst.evolved) || !evoMods(probe)) return null;
+    return { needs: e[1], needName: NEED_NAME[e[1]], name: e[0] };
+  }
+
   /** Evolves an instance (more power and a "+" after its name; it stays the same type). */
   function evolve(m) {
     const e = EVO[m.id];
@@ -1195,5 +1207,5 @@
   }
 
   G.Moves = { ALL: RAW, BY_ID, POOL, poolFor, instance, levelUp, nextUpText, startFor,
-              EVO, NEED_NAME, evoInfo, evolve };
+              EVO, NEED_NAME, evoInfo, evoNeed, evolve };
 })();

@@ -38,6 +38,31 @@ G.RunUI = (() => {
     return `<div class="st-head"><b>${mon.name}</b><span class="st-lean" title="${lean[1]}">${lean[0]}</span></div>
       <div class="st-cols"><span></span><small>Base</small><small>Now</small></div>${rows.join('')}`;
   }
+  // Evolution planning (27-10-2026): which perk each move needs, and whether you can still get it.
+  const EVO_STATE = { have: ['ok', 'you have it'], free: ['free', 'you have a free perk slot'], blocked: ['no', 'your perk slots are full: it can\'t evolve this run'] };
+  /** One line for a card or list: "Evolves with ⟨icon⟩ Power · you have it". */
+  function evoLine(ev) {
+    if (!ev) return '';
+    const [cls, txt] = EVO_STATE[ev.state];
+    return `<div class="ev-need ${cls}">★ Evolves with ${G.Icons.html(ev.icon, 16)} <b>${esc(ev.needName)}</b> · ${txt}</div>`;
+  }
+  /** Pause menu: every move you have, its level and the perk its evolution needs. */
+  function renderEvos(id) {
+    const el = $(id), p = G.Game.player;
+    if (!el) return;
+    const rows = p ? p.moves.filter(m => m.kind !== 'buff' && m.kind !== 'burst' || G.Moves.evoNeed(m) || m.evolved) : [];
+    el.classList.toggle('hidden', !rows.length);
+    if (!rows.length) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="pm-head"><b>Evolutions</b><small>A move evolves at max level once you hold the perk it needs.</small></div>' +
+      rows.map(m => {
+        const ev = G.LevelUp.evoPlan(p, m);
+        const right = m.evolved ? '<span class="ev-st ok">Evolved ★</span>'
+          : !ev ? '<span class="ev-st">Doesn\'t evolve</span>'
+          : `<span class="ev-st ${EVO_STATE[ev.state][0]}">${G.Icons.html(ev.icon, 16)} ${esc(ev.needName)}${ev.state === 'have' ? ' ✓' : ev.state === 'blocked' ? ' ✗' : ''}</span>`;
+        return `<div class="ev-row">${G.Icons.html('move:' + m.id, 16)}<b>${esc(m.name)}</b><small>Lv. ${m.lvl}/${m.def.maxLvl}</small>${right}</div>`;
+      }).join('');
+  }
+
   /** Perk slots (systems/levelup.js): the ones you hold with their level, then the free slots. */
   function renderPerks(id) {
     const el = $(id), p = G.Game.player;
@@ -148,7 +173,9 @@ G.RunUI = (() => {
         ? ` <span class="owned-chip${c.owned ? '' : ' none'}" translate="no">Owned ${c.owned}${c.cap ? '/' + c.cap : ''}</span>` : '';
       el.innerHTML =
         `<div class="ico" style="background:${c.color}33">${G.Icons.html(c.icon, 32)}</div>
-         <div class="txt"><div class="nm">${c.title} ${tag}${owned}${c.kind ? ' ' + G.Icons.kindTag(c.kind) : ''}</div><div class="ds">${c.desc}</div></div>
+         <div class="txt"><div class="nm">${c.title} ${tag}${owned}${c.kind ? ' ' + G.Icons.kindTag(c.kind) : ''}</div><div class="ds">${c.desc}</div>${
+           c.type === 'new' || c.type === 'up' ? evoLine(c.evo)
+           : c.for && c.for.length ? `<div class="ev-need for">★ Evolves your ${c.for.map(esc).join(', ')}</div>` : ''}</div>
          <div class="key">${i + 1}</div>`;
       el.dataset.sfx = 'none';             // the game plays its own sound on choosing
       el.onclick = () => pick(i);
@@ -516,6 +543,7 @@ G.RunUI = (() => {
     $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
     renderStats('pause-stats', true);
     renderPerks('pause-perks');
+    renderEvos('pause-evos');
     // Your ability (systems/abilrun.js), with what it does.
     const ab = G.Abil.info(G.Game.player), abEl = $('pause-ability');
     abEl.classList.toggle('hidden', !ab);

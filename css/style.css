@@ -1819,3 +1819,21 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .perk-strip .pk.max { border-color: var(--gold); }
 .perk-strip .pk.max small { color: var(--gold); }
 .perk-strip .pk.empty { width: 34px; border-style: dashed; background: transparent; }
+
+/* ============ Evolution planning: cards and pause menu (js/ui/run-ui.js) ============ */
+.ev-need { margin-top: 3px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; text-shadow: none; }
+.ev-need b { font-weight: 400; color: #fff; }
+.ev-need.ok { color: #7fe0a0; }
+.ev-need.free { color: #ffd23f; }
+.ev-need.no { color: #ff8a96; }
+.ev-need.for { color: #ffd23f; }
+.pause-evos { margin: 8px 0 4px; }
+.ev-row { display: grid; grid-template-columns: 18px auto 1fr auto; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 6px;
+  font-size: 13px; text-shadow: none; }
+.ev-row:nth-child(odd) { background: rgba(0,0,0,.18); }
+.ev-row b { font-weight: 400; }
+.ev-row small { color: var(--muted); font-size: 11px; }
+.ev-st { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); justify-self: end; }
+.ev-st.ok { color: #7fe0a0; }
+.ev-st.free { color: #ffd23f; }
+.ev-st.no { color: #ff8a96; }

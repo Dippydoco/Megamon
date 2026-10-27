@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T15:10Z', title: 'See which perk evolves each move', new: [
+    'Every move on your move bar shows the perk its evolution needs as a small badge in its corner: lit once you hold that perk, dim while you don\'t. Hover a move to read it in full.',
+    'Level-up cards for moves now say which perk evolves them and whether you have it, a free slot for it, or no room left. Perk cards say which of your moves they evolve.',
+    'The pause menu has an Evolutions list: each of your moves, its level and the perk it needs.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T15:02Z', title: 'Perks: 4 perk slots and new perk cards', chg: [
     'Stat cards are now perks. You can hold up to 4 different perks in a run, shown in a grid next to your moves (and on the level-up and pause screens). Each perk levels up every time you take it; once your 4 slots are full, only the perks you hold come up. A move\'s evolution still needs a perk, so plan your slots.',
     'Every perk now has a cap, and most caps are higher: Power 50, Reflexes 13, Sprint 12, Vigor 12 (new), Synthesis 15 (new), Learning 12, Magnet, Reach and Focus 10. Armor gives +5% a level up to its 70% cap (14 levels).',

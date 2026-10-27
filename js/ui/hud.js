@@ -511,8 +511,15 @@ G.HUD = (() => {
       ctx.stroke();
 
       if (!m) continue;
+      // Each move's line, then which perk evolves it (27-10-2026), so you can plan your perk slots.
+      const evoTip = gm => {
+        if (gm.evolved) return 'Evolved.';
+        const ev = !sv && G.LevelUp.evoPlan(pl, gm);
+        return !ev ? '' : 'Evolves at Lv. ' + gm.def.maxLvl + ' with ' + ev.needName +
+          (ev.state === 'have' ? ' (you have it).' : ev.state === 'free' ? ' (not taken yet).' : ' (your perk slots are full).');
+      };
       tips.push({ x, y, w: S, h: S, title: fused ? m.name + ' +' + (g.length - 1) : m.name, col: fused ? BOND : col,
-                  lines: g.map(gm => (fused ? gm.name + ': ' : '') + (gm.def.desc || '') + (gm.lvl ? ' (Lv. ' + gm.lvl + '/' + gm.def.maxLvl + ')' : '')) });
+                  lines: g.flatMap(gm => [(fused ? gm.name + ': ' : '') + (gm.def.desc || '') + (gm.lvl ? ' (Lv. ' + gm.lvl + '/' + gm.def.maxLvl + ')' : ''), evoTip(gm)].filter(Boolean)) });
 
       if (fused) {
         // Bond: the moves in a 2×2 grid, each with its own cooldown.
@@ -557,6 +564,21 @@ G.HUD = (() => {
         // Icons only scale in whole steps (16 px each): on the bigger slots use 3x so the disc fills the box and the kind tag is easier to see.
         const IS = S >= 64 ? 48 : 32;
         G.Icons.draw(ctx, 'move:' + m.id, x + (S - IS) / 2, y + (S - IS) / 2 - (IS > 32 ? 5 : 2), IS);
+
+        // The perk this move needs to evolve, as a small badge in the top-right corner (dim until you hold it).
+        if (!sv && !m.evolved) {
+          const ev = G.LevelUp.evoPlan(pl, m);
+          if (ev) {
+            const bs = Math.round(16 * K), bx = x + S - bs - 3, by = y + 3;
+            ctx.save();
+            ctx.globalAlpha = ev.state === 'have' ? 1 : ev.state === 'free' ? 0.5 : 0.25;
+            roundRect(ctx, bx - 1, by - 1, bs + 2, bs + 2, 4);
+            ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
+            if (ev.state === 'have') { ctx.lineWidth = 1; ctx.strokeStyle = '#ffd23f'; ctx.stroke(); }
+            G.Icons.draw(ctx, ev.icon, bx, by, bs);
+            ctx.restore();
+          }
+        }
 
         // move level (little dots)
         const dots = m.def.maxLvl;
