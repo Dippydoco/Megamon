@@ -1808,3 +1808,14 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .pf-badge small { font-size: 10px; color: var(--muted); }
 .prof-feat-ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
 .prof-feat-ach .feat-ach { max-width: none; }
+
+/* ============ Perk slots on the level-up and pause screens (js/ui/run-ui.js renderPerks) ============ */
+.perk-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; margin: 10px 0 2px; }
+.perk-strip .pk-lbl { font-size: 12px; color: var(--muted); margin-right: 2px; }
+.perk-strip .pk { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 7px; border-radius: 7px; font-size: 12px;
+  background: rgba(0,0,0,.28); border: 1px solid rgba(160,185,220,.4); text-shadow: none; }
+.perk-strip .pk b { font-weight: 400; }
+.perk-strip .pk small { color: var(--muted); font-size: 11px; }
+.perk-strip .pk.max { border-color: var(--gold); }
+.perk-strip .pk.max small { color: var(--gold); }
+.perk-strip .pk.empty { width: 34px; border-style: dashed; background: transparent; }

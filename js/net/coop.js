@@ -140,7 +140,8 @@ G.Coop = (() => {
             G.arcCount(G.DB.save, local.dex),     // gold star (and how many times this Pokémon has reached Arceus)
             loadout(),                            // moves and held item, for teammates spectating you
             local.keyItem || '',                  // Key Item: the host works out team effects from it (data/keyitems.js)
-            G.Themes.cardId()];                   // your player card theme (Arceus Shop): teammates see it
+            G.Themes.cardId(),                    // your player card theme (Arceus Shop): teammates see it
+            G.LevelUp.share(local)];              // your perks ("atk.5,cd.3"): the host's Roar / Shiny Lure, and spectators
   }
 
   /** Moves (slot by slot, "id.lvl.evolved" joined by + in a bond) ~ held item ~ active slot. */
@@ -157,7 +158,7 @@ G.Coop = (() => {
   function readState(a) {
     return { x: a[0], y: a[1], ang: a[2], walk: a[3], hp: a[4], maxHp: a[5], dead: a[6], mv: a[7], ml: a[8],
              mag: a[9], aim: a[10], xpMul: a[11], rev: a[12], ch: a[13], ld: a[14], ar: a[15], lo: a[16],
-             ki: typeof a[17] === 'string' ? a[17] : '', ct: typeof a[18] === 'string' ? a[18] : '' };
+             ki: typeof a[17] === 'string' ? a[17] : '', ct: typeof a[18] === 'string' ? a[18] : '', tm: typeof a[19] === 'string' ? a[19] : '' };
   }
 
   // ---------------- sending ----------------

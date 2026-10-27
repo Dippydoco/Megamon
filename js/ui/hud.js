@@ -472,8 +472,9 @@ G.HUD = (() => {
     // (layout-ui.js); new attacks appear towards the right.
     const pb = touch && G.Touch.spot('bar');
     if (pb) {
-      const nAll = Math.max(n, pl.maxMoves), bw = S + 18 + nAll * S + (nAll - 1) * GAP;
-      sx = G.U.clamp(pb[0] * w - bw / 2, 6, Math.max(6, w - bw - 6)) + S + 18;
+      // (+ the perk grid on the right, S wide.)
+      const nAll = Math.max(n, pl.maxMoves), bw = S + 18 + nAll * S + (nAll - 1) * GAP + (sv ? 0 : S + 14);
+      sx = G.U.clamp(pb[0] * w - bw / 2, 6, Math.max(6, w - bw - (sv ? 0 : S + 14) - 6)) + S + 18;
       sy = G.U.clamp(pb[1] * h - S / 2, 24, h - S - 6);
     }
     const BOND = '#ff8ad8';
@@ -624,6 +625,39 @@ G.HUD = (() => {
         ctx.textAlign = 'left';
         ctx.fillStyle = BOND;
         ctx.fillText('×' + pl.bonds, bx + 25, by + 20);
+      }
+    }
+
+    // ---------- perks (27-10-2026): a 2×2 grid to the right of the moves ----------
+    // Each held perk with its icon and level (gold at its cap); free slots are dashed. Hover: what it does.
+    if (!sv) {
+      const held = G.LevelUp.tomesOf(pl), maxT = G.LevelUp.maxTomes(pl);
+      const c = Math.round((S - 4) / 2), tg = 4;
+      const tx = sx + totalW + 14 + (pl.bonds > 0 ? (pl.bonds > 1 ? 44 : 30) : 0);
+      for (let i = 0; i < maxT; i++) {
+        const x = tx + (i % 2) * (c + tg), y = sy + Math.floor(i / 2) * (c + tg);
+        const id = held[i], d = id && G.LevelUp.BY[id];
+        roundRect(ctx, x, y, c, c, 7);
+        ctx.fillStyle = d ? 'rgba(10,16,28,.82)' : 'rgba(10,16,28,.45)'; ctx.fill();
+        if (!d) {
+          ctx.save(); ctx.setLineDash([3, 3]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(140,170,210,.3)'; ctx.stroke(); ctx.restore();
+          continue;
+        }
+        const lv = pl.statsTaken[id] || 0, maxed = d.max && lv >= d.max;
+        ctx.lineWidth = maxed ? 2 : 1.2; ctx.strokeStyle = maxed ? '#ffd23f' : 'rgba(160,185,220,.55)'; ctx.stroke();
+        const IS = Math.round(c * 0.62);
+        G.Icons.draw(ctx, d.icon, x + (c - IS) / 2, y + 2, IS);
+        ctx.font = F(800, Math.round(11 * K)); ctx.textAlign = 'right'; ctx.lineJoin = 'round';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.9)'; ctx.strokeText(String(lv), x + c - 3, y + c - 3);
+        ctx.fillStyle = maxed ? '#ffd23f' : '#fff'; ctx.fillText(String(lv), x + c - 3, y + c - 3);
+        tips.push({ x, y, w: c, h: c, title: d.title + ' · Lv. ' + lv + (d.max ? '/' + d.max : ''), col: maxed ? '#ffd23f' : '#9fb1c9', lines: [d.desc] });
+      }
+      if (st.time < 20) {
+        ctx.font = F(700, Math.round(10 * K)); ctx.textAlign = 'center';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+        const lab = 'Perks ' + held.length + '/' + maxT;
+        ctx.strokeText(lab, tx + c + tg / 2, sy - 6);
+        ctx.fillStyle = '#c8d4ea'; ctx.fillText(lab, tx + c + tg / 2, sy - 6);
       }
     }
 

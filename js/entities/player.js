@@ -81,7 +81,8 @@ G.Player = class Player {
     this.sashT = -999;         // the last time the Focus Sash saved you
     this.bellHeal = 0;         // pending Shell Bell healing
     this.drainHeal = 0;        // pending healing from draining moves (Absorb, Drain Punch...)
-    this.statsTaken = {};      // stat upgrades taken (evolution condition)
+    this.statsTaken = {};      // perks taken and their levels (systems/levelup.js; also the evolution condition)
+    this.maxTomes = 4;         // how many different perks can be held
   }
 
   /** Seconds you have to stand next to a fallen teammate to revive them. */

@@ -38,6 +38,22 @@ G.RunUI = (() => {
     return `<div class="st-head"><b>${mon.name}</b><span class="st-lean" title="${lean[1]}">${lean[0]}</span></div>
       <div class="st-cols"><span></span><small>Base</small><small>Now</small></div>${rows.join('')}`;
   }
+  /** Perk slots (systems/levelup.js): the ones you hold with their level, then the free slots. */
+  function renderPerks(id) {
+    const el = $(id), p = G.Game.player;
+    if (!el) return;
+    if (!p) { el.innerHTML = ''; return; }
+    const held = G.LevelUp.tomesOf(p), maxT = G.LevelUp.maxTomes(p);
+    let h = `<span class="pk-lbl">Perks ${held.length}/${maxT}</span>`;
+    for (let i = 0; i < maxT; i++) {
+      const d = G.LevelUp.BY[held[i]];
+      if (!d) { h += '<span class="pk empty" title="Free perk slot"></span>'; continue; }
+      const lv = p.statsTaken[d.id] || 0, maxed = d.max && lv >= d.max;
+      h += `<span class="pk${maxed ? ' max' : ''}" title="${esc(d.title)} · Lv. ${lv}${d.max ? '/' + d.max : ''}: ${esc(d.desc)}">${G.Icons.html(d.icon, 16)}<b>${esc(d.title)}</b><small>${lv}${d.max ? '/' + d.max : ''}</small></span>`;
+    }
+    el.innerHTML = h;
+  }
+
   function renderStats(id, full) {
     let el = $(id);
     if (!el) return;
@@ -65,6 +81,7 @@ G.RunUI = (() => {
     $('lvl-reroll').onclick = reroll;
     $('lvl-skip').onclick = skip;
     renderStats('lvl-stats', false);
+    renderPerks('lvl-perks');
     G.UI.show('scr-levelup');
   }
 
@@ -153,6 +170,7 @@ G.RunUI = (() => {
       pouch = '';
       G.RunLog.pick(i);
       offers[i].apply(G.Game.player);
+      renderPerks('lvl-perks');
       G.Audio.sfx('confirm');
       renderCards(G.LevelUp.offer(G.Game.player));
       pouchNote('Lucky Pouch! Pick your second card');
@@ -497,6 +515,7 @@ G.RunUI = (() => {
     $('pause-coop').classList.toggle('hidden', !coop);
     $('btn-quit').textContent = coop ? 'Leave the game' : 'Quit run';
     renderStats('pause-stats', true);
+    renderPerks('pause-perks');
     // Your ability (systems/abilrun.js), with what it does.
     const ab = G.Abil.info(G.Game.player), abEl = $('pause-ability');
     abEl.classList.toggle('hidden', !ab);

@@ -9,6 +9,15 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T15:02Z', title: 'Perks: 4 perk slots and new perk cards', chg: [
+    'Stat cards are now perks. You can hold up to 4 different perks in a run, shown in a grid next to your moves (and on the level-up and pause screens). Each perk levels up every time you take it; once your 4 slots are full, only the perks you hold come up. A move\'s evolution still needs a perk, so plan your slots.',
+    'Every perk now has a cap, and most caps are higher: Power 50, Reflexes 13, Sprint 12, Vigor 12 (new), Synthesis 15 (new), Learning 12, Magnet, Reach and Focus 10. Armor gives +5% a level up to its 70% cap (14 levels).',
+    'The Sitrus Berry is not a perk: it still heals at once and never takes a slot.'
+  ], new: [
+    'Pay Day perk: +12% PokéCoins from the run per level.',
+    'Shiny Lure perk: +30% chance per level for wild Pokémon to be shiny.',
+    'Roar perk: makes the run harder (+10% wild Pokémon, +8% their health and +5% their damage per level) for +8% experience and +8% PokéCoins per level. In a group the whole team faces the team\'s average. Not offered in the Battle Tower.'
+  ] },
   { d: '2026-10-25', at: '2026-10-25T18:01Z', title: 'Featured achievements and badges', new: [
     'Profile has a new "Featured on your profile" section: choose up to 6 of your achievements and any of your badges, and they show in a Featured section at the top of your public profile, in the order you picked them. Public profiles also show how many badges a player has.'
   ] },

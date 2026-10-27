@@ -239,7 +239,9 @@ G.CodexUI = (() => {
                              : 'No bonus: their base stats are already the highest.';
         };
         return [
-          ['Levelling up', 'Each level offers 3 cards: a new move, a move upgrade, an evolution or a stat card. Each level needs a bit more experience than the last.'],
+          ['Levelling up', 'Each level offers 3 cards: a new move, a move upgrade, an evolution, a perk or a Sitrus Berry. Each level needs a bit more experience than the last.'],
+          ['Perks', 'Perk cards (Power, Reflexes, Pay Day, Roar...) level up each time you take them, up to their cap. You can hold ' + G.LevelUp.maxTomes(null) + ' different perks: once your slots are full, only the ones you hold come up. A move\'s evolution needs a perk, so plan your slots. The Sitrus Berry heals at once and never takes a slot.'],   // levelup.js
+          ['Roar', 'Each level: +10% wild Pokémon, +8% their health and +5% their damage, for +8% experience and +8% PokéCoins. In a group the whole team faces the team\'s average. Not offered in the Battle Tower.'],   // levelup.js teamFx
           ['No automatic growth', 'Epic and Legendary Pokémon only get stronger through cards. Lower rarities also grow by themselves each level (below).'],
           ...[1, 2, 3].map(r => [RN[r] + ' (' + r + '★)', tier(r)]),
           [RN[4] + ' and ' + RN[5], 'Highest base stats, no rarity bonus or growth.'],
@@ -256,7 +258,7 @@ G.CodexUI = (() => {
         ['Teammates', 'Team abilities (Battery, Power Spot, Telepathy...) help teammates within a short distance of you.']
       ]],
       ['Shinies', [
-        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it.'],   // spawner.js, rift.js, gacha.js
+        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it. The Shiny Lure perk adds +30% a level to wild odds (in a group, the team\'s average).'],   // spawner.js, rift.js, gacha.js
         ['Shiny Charms', 'Own every Pokémon of a region to earn its Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for that region\'s Pokémon in runs, rifts and the gacha (not Gacha Battles, where everyone has the same odds). In group runs the host\'s charms count. Completed regions show a sparkle in the Pokédex.']   // charms.js
       ]],
       ['Moves', [

@@ -365,7 +365,7 @@ G.Game = (() => {
     G.Audio.music(null);
     G.Audio.sfx(dead ? 'gameover' : 'back');
     const save = G.DB.save;
-    const mul = pl.coinMul;
+    const mul = pl.coinMul * G.LevelUp.coinK(pl);          // Pay Day and Roar perks (systems/levelup.js)
     // Battle Tower: its own records (systems/tower.js); no survival time, records, history or leaderboard.
     const tower = G.Tower.active ? G.Tower.finish() : null;
     const parts = {

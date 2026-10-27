@@ -77,7 +77,7 @@ G.Spawner = (() => {
   function rollShiny(dex) {
     if (!G.Sprites.hasShiny(dex)) return false;
     if (forceShiny > 0) { forceShiny--; return true; }
-    return Math.random() < SHINY_RATE * G.Charms.mult(dex);      // Shiny Charm: ×2 for completed regions
+    return Math.random() < SHINY_RATE * G.Charms.mult(dex) * G.LevelUp.shinyK();      // Shiny Charm: ×2 for completed regions; Shiny Lure perk
   }
 
   /**
@@ -87,8 +87,9 @@ G.Spawner = (() => {
   function make(def, x, y, t, n) {
     const shiny = rollShiny(def.dex);
     // (G.KeyItems.enemyHp: Black Flute, a flat +25% that doesn't grow with the run.)
-    const e = new G.Enemy(def, x, y, scaled(G.Enemies.scale(t), G.Coop.scaleHp(n) * hpK(t) * G.KeyItems.enemyHp()));
-    e.dmg *= DMG_K; e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
+    // (G.LevelUp.roarHp / roarDmg: the Roar perk, averaged over the team.)
+    const e = new G.Enemy(def, x, y, scaled(G.Enemies.scale(t), G.Coop.scaleHp(n) * hpK(t) * G.KeyItems.enemyHp() * G.LevelUp.roarHp()));
+    e.dmg *= DMG_K * G.LevelUp.roarDmg(); e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
     const rp = G.Enemies.ramp(def, t);
     if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
     if (shiny) e.makeShiny();
@@ -173,7 +174,7 @@ G.Spawner = (() => {
     // More players, more room on the field (20-10-2026): a flat 64 split across a whole team left each
     // player a third of the enemies, so group runs got ~1/3 of solo's kills (and levels) in the same time.
     CAP = 64 + 32 * Math.min(3, Math.max(0, players.length - 1)) + (players.length > 4 ? 12 : 0);
-    CAP = Math.round(CAP * G.KeyItems.capMul());          // Black / White Flute: a fuller or emptier field
+    CAP = Math.round(CAP * G.KeyItems.capMul() * G.LevelUp.roarCap());          // Black / White Flute: a fuller or emptier field; Roar perk
     if (announceT > 0) announceT -= dt;
     // In the rift arena nothing else spawns (and the boss clock waits).
     // In Arceus's Judgment, only its legendaries (systems/judgment.js).
@@ -193,7 +194,7 @@ G.Spawner = (() => {
 
     // --- goteo normal ---
     if (G.EnemyMgr.count < CAP) {
-      acc += rate(t) * G.Coop.scaleRate(players.length) * (bossFight ? 0.25 : 1) * G.KeyItems.spawnRate() * dt;
+      acc += rate(t) * G.Coop.scaleRate(players.length) * (bossFight ? 0.25 : 1) * G.KeyItems.spawnRate() * G.LevelUp.roarRate() * dt;
       let n = Math.floor(acc);
       acc -= n;
       while (n-- > 0 && G.EnemyMgr.count < CAP) spawnOne(anchor(), t);
