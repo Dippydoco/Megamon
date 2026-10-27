@@ -4,9 +4,10 @@ Things deliberately left for later. Cross them off when done.
 
 ## Battle Tower (added 2026-10-25)
 
-- **Publish firestore.rules (Highest level leaderboard).** The new `sl_` / `gl_` tables need the updated rules
-  (`better()` / `notMore()` and the `sl_` solo match). Until they are published in the Firebase console, those writes
-  are refused (a console warning); time and kills tables are unaffected.
+- **Publish firestore.rules (no leaderboard limits + Highest level tables).** 27-10-2026: the time / level / kills
+  limits were removed from `validEntry` and `validAdminEntry`, and the `sl_` / `gl_` tables need the updated rules too.
+  Until `firestore.rules` is pasted into the Firebase console (project megamon-2164e, Firestore > Rules > Publish),
+  big runs (e.g. 60,000 kills) are still refused by the server in every table.
 
 Design doc: the "Megamon Tower Mode: Design Premise" doc (the "Battle Tower v1" section is what was built).
 Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor loop), `js/systems/towerbosses.js`

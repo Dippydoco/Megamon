@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-27', at: '2026-10-27T17:03Z', title: 'Every run counts on the leaderboard', fix: [
+    'Big runs are no longer kept off the leaderboard: there are no automatic limits on time, level or Pokémon defeated any more, so runs like a 60,000-defeated one now go on every board.'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T16:53Z', title: 'Moveset Back button', fix: [
     'The Back button (and Esc) on the Moveset screen now take you back to the main menu.'
   ] },

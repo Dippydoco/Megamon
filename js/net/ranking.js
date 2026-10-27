@@ -205,13 +205,8 @@ G.Ranking = (() => {
    * The server's sanity limits on a record (firestore.rules validEntry / validAdminEntry), mirrored here so a
    * refusal can be explained. Returns '' if the entry is within them, or which limit it breaks.
    */
-  function overLimits(e) {
-    const n = Math.max(1, (e.uids || []).length);
-    if (!(e.t > 0) || e.t > 7200) return 'time ' + e.t + ' s is outside 1 s - 2 h';
-    if (e.lv > 20 + e.t / 3) return 'level ' + e.lv + ' is over the limit of ' + Math.floor(20 + e.t / 3);
-    if (e.kills > 100 + e.t * 30 * n) return e.kills + ' defeated is over the limit of ' + (100 + e.t * 30 * n);
-    return '';
-  }
+  // (27-10-2026: the server has no limits on time, level or kills any more, so nothing is "over" them.)
+  function overLimits() { return ''; }
 
   /**
    * Saves the entry in each table where it improves. → periods improved
@@ -697,8 +692,7 @@ G.Ranking = (() => {
     const pick = boards.filter(([b]) => which === 'both' || kindOf(b) === which);
     boards.length = 0; boards.push(...pick);
     if (!boards.length) throw new Error(which === 'kills' ? 'this run has no kills to add' : which === 'level' ? 'level 1 runs are not on Highest level' : 'nothing to add');
-    const over = overLimits(entry);
-    if (over) throw new Error('the server\'s limits refuse this run (' + over + '). Publish the latest firestore.rules if they are older.');
+
     // Fresh numbers for the admin's browser: no remembered thresholds or bests decide what gets written.
     for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
     try {
@@ -710,10 +704,12 @@ G.Ranking = (() => {
     const errs = [], report = {};
     const better = await store(boards, id, entry, errs, report);
     for (const [b] of boards) { mem.delete('s:' + b); try { localStorage.removeItem('ps.rk.c.s:' + b); } catch (e) { /* nothing */ } }
-    // The limits before 24-10-2026 (20 defeated a second for the whole team, level 10 + t/4): if the server still
-    // refuses a run that breaks only those, the published firestore.rules are older than the repository's.
-    const oldOver = entry.kills > 100 + entry.t * 20 ? entry.kills + ' defeated (old limit ' + (100 + entry.t * 20) + ')'
-      : entry.lv > 10 + entry.t / 4 ? 'level ' + entry.lv + ' (old limit ' + Math.floor(10 + entry.t / 4) + ')' : '';
+    // The limits removed on 27-10-2026 (2 h, level 20 + t/3, 30 defeated a second per player): if the server still
+    // refuses a run that breaks one of them, the published firestore.rules are older than the repository's.
+    const n = entry.uids.length;
+    const oldOver = entry.t > 7200 ? entry.t + ' s (old limit 2 h)'
+      : entry.kills > 100 + entry.t * 30 * n ? entry.kills + ' defeated (old limit ' + (100 + entry.t * 30 * n) + ')'
+      : entry.lv > 20 + entry.t / 3 ? 'level ' + entry.lv + ' (old limit ' + Math.floor(20 + entry.t / 3) + ')' : '';
     return { boards: boards.length, better, missing, errs, report, oldOver,
              numbers: entry.t + ' s, ' + entry.kills + ' defeated, level ' + entry.lv + ', team of ' + entry.uids.length };
   }

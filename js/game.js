@@ -162,7 +162,7 @@ G.Game = (() => {
     G.Sprites.preload([mon.dex], 8000, pl.shiny);
     G.Audio.music(G.BIOME_MUSIC[0]);
     // For the leaderboard: the server records when the run starts (anti-cheat). (The Battle Tower has no leaderboard yet.)
-    if (!tower && (!coop || G.Coop.isHost)) G.Ranking.runStarted(coop ? 'g' : 's');
+    // (No run-start mark for the leaderboard any more: the server no longer times runs, 27-10-2026.)
     deathT = 0;
 
     state = 'playing';
@@ -444,13 +444,11 @@ G.Game = (() => {
    */
   let runReal = 0, tampered = false;
   let portalLost = false;          // the run ended by losing the Zygarde Portal (run details: end 'p')
+  // (27-10-2026) Only runs changed with the developer tools (?dev time skips, speed-ups, free levels, the Balance Lab)
+  // stay off the leaderboard. The automatic checks on time, level, HP and stats are gone: this is a friends-only
+  // game and they kept refusing real runs.
   function clean() {
-    if (tampered) return false;
-    if (time > (performance.now() - runReal) / 1000 + 10) return false;
-    for (const k of ['hurt', 'update', 'heal', 'gainXp']) if (Object.prototype.hasOwnProperty.call(pl, k)) return false;
-    if (!isFinite(pl.hp) || !isFinite(pl.maxHp) || pl.hp > pl.maxHp + 1 || pl.maxHp > 50000) return false;
-    if (pl.atkMul > 2000 || pl.spdMul > 25 || pl.cdMul < 0.03 || pl.level > 20 + time / 3) return false;
-    return true;
+    return !tampered;
   }
 
   // ---------------- level-up ----------------
