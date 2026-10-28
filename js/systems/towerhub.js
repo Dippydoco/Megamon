@@ -99,7 +99,7 @@ G.TowerHub = (() => {
   }
 
   function label(ctx, text, x, y, size, col) {
-    ctx.font = '800 ' + size + 'px Pixelify, monospace';
+    ctx.font = '800 ' + size + 'px m6x11,Pixelify, monospace';
     ctx.textAlign = 'center'; ctx.lineJoin = 'round';
     ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(text, x, y);
     ctx.fillStyle = col; ctx.fillText(text, x, y);

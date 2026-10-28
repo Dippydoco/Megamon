@@ -893,7 +893,7 @@
       let x = Math.round(this.x - total / 2);
       const y = Math.round(this.y - this.bodyH - (this.boss || this.hp < this.maxHp ? 22 : 14));
       ctx.save();
-      ctx.font = '700 8px Pixelify,"Segoe UI",system-ui,sans-serif';
+      ctx.font = '700 8px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       for (const c of chips) {
         const w = wOf(c);

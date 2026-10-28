@@ -3,7 +3,7 @@
  */
 G.HUD = (() => {
   let HUD_SCALE = 1.55;       // size of the top-left block (health, teammates, buffs)
-  const F = (w, s) => `${w} ${s}px Pixelify,"Segoe UI",system-ui,sans-serif`;
+  const F = (w, s) => `${w} ${s}px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif`;
 
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();

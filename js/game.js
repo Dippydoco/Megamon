@@ -1093,7 +1093,7 @@ G.Game = (() => {
     G.Touch.draw(ctx);
     if (G.Settings.get('fps')) {
       ctx.save();
-      ctx.font = '700 11px Pixelify, monospace';
+      ctx.font = '700 11px m6x11,Pixelify, monospace';
       ctx.textAlign = 'right';
       ctx.fillStyle = fpsShown >= 50 ? '#5fe08a' : fpsShown >= 30 ? '#ffd23f' : '#ff5f6d';
       ctx.fillText(fpsShown + ' FPS', w - 10, h - 8);
@@ -1120,7 +1120,7 @@ G.Game = (() => {
     let goldT = 0, evT = 0, banner = null, tags = [], hourOv = null, lastTeam = 0, tapHooked = false;
     const CAST = [1, 4, 7, 25, 133, 52, 39, 35, 16, 43, 60, 69, 74, 92, 129, 147, 113, 143, 54, 79];
     const SCENE_TIME = 30, FADE_HALF = 0.6;
-    const FONT = '800 8px Pixelify,"Segoe UI",system-ui,sans-serif';
+    const FONT = '800 8px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif';
     // Background scenes, in order: the normal map (3 palettes) and rift arenas with their legendary
     // and a small team surrounding it. The arenas use the same code as the real ones.
     // The team comes from a group run in your history (if there is one); otherwise, the one here.
@@ -1589,7 +1589,7 @@ G.Game = (() => {
         else {
           ctx.save();
           ctx.globalAlpha = k;
-          ctx.font = '800 15px Pixelify,"Segoe UI",system-ui,sans-serif';
+          ctx.font = '800 15px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif';
           ctx.textAlign = 'center';
           const tw = ctx.measureText(banner.text).width + 28, bx = w / 2 - tw / 2, by = h - 70;
           ctx.fillStyle = 'rgba(8,6,22,.62)'; ctx.fillRect(Math.round(bx), by, Math.round(tw), 28);

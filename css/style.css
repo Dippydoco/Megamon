@@ -2,6 +2,14 @@
  * Blue boxes with a double white border, like the PMD menus, and a local pixel
  * font (Pixelify Sans, OFL).
  */
+/* m6x11 by Daniel Linssen (28-10-2026, free to use with credit: CREDITS.md), the game's font. It has one weight, so
+   the same file serves regular and bold (no blurry synthesised bold). Pixelify Sans stays as the fallback. */
+@font-face {
+  font-family: 'm6x11';
+  src: url('../assets/fonts/m6x11plus.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: block;
+}
 /* Pixelify Sans with redrawn digits so they aren't confused (tools/make_font.py). */
 @font-face {
   font-family: 'Pixelify';
@@ -30,7 +38,7 @@
   --green: #5fe08a;
   --shadow: #0a1430;
   --r1: #9fb1c9; --r2: #5fe08a; --r3: #4fb4ff; --r4: #c47bff; --r5: #ffcb3d;
-  --font: 'Pixelify', 'Segoe UI', system-ui, sans-serif;
+  --font: 'm6x11', 'Pixelify', 'Segoe UI', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }

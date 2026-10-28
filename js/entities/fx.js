@@ -278,7 +278,7 @@ G.FX = (() => {
       const k = 1 - t.t / t.life;
       ctx.save();
       ctx.globalAlpha = Math.min(1, k * 2.2);
-      ctx.font = '700 ' + Math.round((t.big ? 20 : 13) * (t.sc || 1)) + 'px' + ' Pixelify,"Segoe UI",sans-serif';
+      ctx.font = '700 ' + Math.round((t.big ? 20 : 13) * (t.sc || 1)) + 'px' + ' m6x11,Pixelify,"Segoe UI",sans-serif';
       ctx.textAlign = 'center';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(0,0,0,.75)';

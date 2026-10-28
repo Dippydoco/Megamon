@@ -34,7 +34,7 @@
     if (maintenance()) return;
     if (broken()) return;
     // Waits for the pixel font so the UI doesn't jump when it loads.
-    const ready = document.fonts && document.fonts.load ? document.fonts.load('16px Pixelify') : Promise.resolve();
+    const ready = document.fonts && document.fonts.load ? document.fonts.load('16px m6x11') : Promise.resolve();
     ready.catch(() => {}).then(() => G.Flow.boot());
   }
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', boot);

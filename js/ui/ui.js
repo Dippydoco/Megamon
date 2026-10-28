@@ -339,7 +339,7 @@ G.UI = (() => {
       z.t += dt;
       if (z.t > 2.2) { s.zs.splice(i, 1); continue; }
       const px = Math.max(8, Math.round((z.big ? 7 : 5) * k));
-      ctx.font = '800 ' + px + 'px Pixelify,"Segoe UI",sans-serif';
+      ctx.font = '800 ' + px + 'px m6x11,Pixelify,"Segoe UI",sans-serif';
       ctx.globalAlpha = z.t < 1.6 ? 1 : (2.2 - z.t) / 0.6;
       const x = fx + (z.x + Math.sin(z.t * 3) * 2) * k, y = fy - ay * k * 0.55 - z.t * 9 * k;
       ctx.lineWidth = Math.max(2, k); ctx.strokeStyle = 'rgba(10,14,30,.8)'; ctx.strokeText(z.big ? 'Z' : 'z', x, y);

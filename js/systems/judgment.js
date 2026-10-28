@@ -469,7 +469,7 @@ G.Judgment = (() => {
     ctx.restore();
   }
 
-  const F = (wt, s) => `${wt} ${s}px Pixelify,"Segoe UI",system-ui,sans-serif`;
+  const F = (wt, s) => `${wt} ${s}px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif`;
 
   /** On screen: the animation, or the fight's notice. */
   function drawOverlay(ctx, w, h) {
