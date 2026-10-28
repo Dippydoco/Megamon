@@ -268,7 +268,7 @@ G.CodexUI = (() => {
         ['Teammates', 'Team abilities (Battery, Power Spot, Telepathy...) help teammates within a short distance of you.']
       ]],
       ['Shinies', [
-        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it. The Shiny Lure perk adds +30% a level to wild odds (in a group, the team\'s average).'],   // spawner.js, rift.js, gacha.js
+        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it. The Shiny Lure perk adds +10% a level to wild odds (in a group, the team\'s average).'],   // spawner.js, rift.js, gacha.js
         ['Shiny Charms', 'Own every Pokémon of a region to earn its Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for that region\'s Pokémon in runs, rifts and the gacha (not Gacha Battles, where everyone has the same odds). In group runs the host\'s charms count. Completed regions show a sparkle in the Pokédex.']   // charms.js
       ]],
       ['Moves', [

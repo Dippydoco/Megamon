@@ -43,11 +43,12 @@ G.LevelUp = (() => {
       apply: pl => pl.areaMul *= 1.10, max: 10 },
     { id: 'crit', icon: 'focus', title: 'Focus',      desc: '+4% critical-hit chance (critical hits do ×1.5 damage).',
       apply: pl => pl.critChance += 0.04, max: 10 },
+    // Shiny Lure cut from +30% to +10% a level on 28-10-2026 (too many shinies).
     // Farming perks (27-10-2026). Pay Day is read at the end of the run (game.js endRun, coinK); Shiny Lure by the
     // spawner (shinyK: the team's average in a group, since the host rolls every shiny).
     { id: 'coin', icon: 'coin', title: 'Pay Day', desc: '+12% PokéCoins from this run.',
       apply: () => {}, max: 10 },
-    { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+30% chance for wild Pokémon to be shiny.',
+    { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+10% chance for wild Pokémon to be shiny.',
       apply: () => {}, max: 10 },
     // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience
     // for you. Not in the Battle Tower, whose floors set their own numbers.
@@ -127,7 +128,7 @@ G.LevelUp = (() => {
     let roar = 0, shiny = 0;
     for (const p of ps) { const l = levelsOf(p); roar += l.roar || 0; shiny += l.shiny || 0; }
     const n = Math.max(1, ps.length), r = roar / n;
-    fx = { rate: 1 + 0.10 * r, cap: 1 + 0.06 * r, hp: 1 + 0.08 * r, dmg: 1 + 0.05 * r, spd: 1 + 0.03 * r, shiny: 1 + 0.30 * shiny / n };
+    fx = { rate: 1 + 0.10 * r, cap: 1 + 0.06 * r, hp: 1 + 0.08 * r, dmg: 1 + 0.05 * r, spd: 1 + 0.03 * r, shiny: 1 + 0.10 * shiny / n };
     return fx;
   }
   const inTower = () => !!(G.Tower && G.Tower.active);
