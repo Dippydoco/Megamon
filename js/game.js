@@ -1368,7 +1368,7 @@ G.Game = (() => {
         document.body.appendChild(cv);
         layer = { cv, c: cv.getContext('2d') };
       }
-      const show = state === 'ui' && !sw && menuOnly() && (tags.length || wanderers.some(x => x.thief));
+      const show = state === 'ui' && !sw && menuOnly() && (tags.some(tg => !tg.bg) || wanderers.some(x => x.thief));
       if (!show) { if (layer.on) { layer.c.setTransform(1, 0, 0, 1, 0, 0); layer.c.clearRect(0, 0, layer.cv.width, layer.cv.height); layer.on = false; } return; }
       const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
       if (layer.cv.width !== pw || layer.cv.height !== ph) { layer.cv.width = pw; layer.cv.height = ph; }
@@ -1380,7 +1380,7 @@ G.Game = (() => {
       c.scale(G.Camera.scale, G.Camera.scale);
       G.Camera.apply(c);
       for (const wd of wanderers) if (wd.thief) wd.draw(c);
-      drawTags(c);
+      drawTags(c, true);
       c.restore();
       layer.on = true;
     }
@@ -1512,7 +1512,8 @@ G.Game = (() => {
           if (wd.zT <= 0 && wd.sleep > 0) {
             wd.zT = G.U.rand(1.1, 1.6);
             const h = G.Sprites.bodyHeight(wd.dex, wd.scale);
-            tags.push({ x: wd.x + G.U.rand(4, 10), y: wd.y - h * 0.6, text: Math.random() < 0.5 ? 'z' : 'Z', t: 0, col: '#cfe0ff' });
+            // bg: drawn only behind the menu, never on the front layer over its buttons.
+            tags.push({ x: wd.x + G.U.rand(4, 10), y: wd.y - h * 0.6, text: Math.random() < 0.5 ? 'z' : 'Z', t: 0, col: '#cfe0ff', bg: true });
           }
           if (wd.sleep <= 0) wd.t = G.U.rand(0.6, 1.4);
           if (!G.Camera.sees(wd.x, wd.y, 120)) Object.assign(wd, spawn(wd.m, hm));
@@ -1549,7 +1550,8 @@ G.Game = (() => {
       }
     }
 
-    function drawTags(ctx) {
+    /** `front`: the layer over the menu, which skips the background-only tags (sleep z's). */
+    function drawTags(ctx, front = false) {
       // Age by the real clock, not by update(): a "Caught!" left over when the backdrop stopped updating
       // (starting a run right after catching the thief) used to stay on screen for good.
       const now = performance.now();
@@ -1557,6 +1559,7 @@ G.Game = (() => {
       tags = tags.filter(tg => tg.t < 2.4);
       ctx.font = FONT; ctx.textAlign = 'center';
       for (const tg of tags) {
+        if (front && tg.bg) continue;
         const k = tg.t / 2.4;
         ctx.globalAlpha = k < 0.8 ? 1 : (1 - k) / 0.2;
         const y = Math.round(tg.y - tg.t * 8);

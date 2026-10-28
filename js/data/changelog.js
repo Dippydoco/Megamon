@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T19:19Z', title: 'Sleepy z\'s stay behind the menu', fix: [
+    'The z\'s from Pokémon napping behind the main menu no longer float over the menu\'s buttons.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T19:13Z', title: 'A new font', chg: [
     'The game has a new font, m6x11 by Daniel Linssen: taller, narrower and easier to read at a glance, in the menus and in runs.'
   ] },
