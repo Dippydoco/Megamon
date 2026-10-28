@@ -187,6 +187,7 @@ G.RunUI = (() => {
   function renderCards(list) {
     offers = list;
     setBanning(false);
+    renderAuto(list);
     const bl = bansLeft();
     $('lvl-ban-n').textContent = bl;
     $('lvl-ban').classList.toggle('hidden', bl <= 0 || !list.length || list[0].key === 'pouch:empty');
@@ -222,6 +223,37 @@ G.RunUI = (() => {
     });
   }
 
+  // ---------------- Auto-pick (28-10-2026) ----------------
+  // Only the Sitrus Berry and the Nugget left: offer to take one of them automatically at every level-up from now on.
+  function renderAuto(list) {
+    const el = $('lvl-auto'), p = G.Game.player;
+    const show = !!p && G.LevelUp.onlyInstant(list) && list[0].key !== 'pouch:empty';
+    el.classList.toggle('hidden', !show);
+    if (!show) { el.innerHTML = ''; return; }
+    el.innerHTML = '<span>Everything is maxed. From now on, always take:</span>';
+    list.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'btn small gold'; b.type = 'button'; b.dataset.sfx = 'none';
+      b.innerHTML = G.Icons.html(c.icon, 16) + ' ' + esc(c.title);
+      b.onclick = () => { p.autoPick = c.key; G.UI.toast('Auto-pick: ' + c.title + ' from now on (turn it off in the pause menu)', 3600); pick(offers.indexOf(c)); };
+      el.appendChild(b);
+    });
+  }
+  /** Co-op: auto-pick takes your card the moment the screen opens. */
+  function pickAuto(card) { const i = offers ? offers.indexOf(card) : -1; if (i >= 0) pick(i); }
+  /** Pause menu: the auto-pick in use, with a button to turn it off. */
+  function renderPauseAuto() {
+    const el = $('pause-auto'), p = G.Game.player;
+    const on = !!(p && p.autoPick);
+    el.classList.toggle('hidden', !on);
+    if (!on) { el.innerHTML = ''; return; }
+    el.innerHTML = `<span>Auto-pick at level-up: <b>${esc(G.LevelUp.AUTO_NAME[p.autoPick] || p.autoPick)}</b></span>`;
+    const b = document.createElement('button');
+    b.className = 'btn small ghost'; b.type = 'button'; b.textContent = 'Turn off';
+    b.onclick = () => { p.autoPick = null; G.UI.toast('Auto-pick off: you choose again at every level-up'); renderPauseAuto(); };
+    el.appendChild(b);
+  }
+
   function pouchNote(text, bad) {
     const el = $('lvl-pouch');
     el.textContent = text;
@@ -250,6 +282,7 @@ G.RunUI = (() => {
     $('lvl-reroll').classList.add('hidden');
     $('lvl-skip').classList.add('hidden');
     $('lvl-ban').classList.add('hidden');
+    $('lvl-auto').classList.add('hidden');
     if (coopMode) {
       // The chosen card stays visible while the others choose.
       $('cards').querySelectorAll('.card').forEach((el, j) => el.classList.toggle('picked', j === i));
@@ -586,6 +619,7 @@ G.RunUI = (() => {
     renderStats('pause-stats', true);
     renderPerks('pause-perks');
     renderEvos('pause-evos');
+    renderPauseAuto();
     // Your ability (systems/abilrun.js), with what it does.
     const ab = G.Abil.info(G.Game.player), abEl = $('pause-ability');
     abEl.classList.toggle('hidden', !ab);
@@ -631,5 +665,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, skip, banMode, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, skip, banMode, pickAuto, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

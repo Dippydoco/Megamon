@@ -1858,3 +1858,7 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .ms-t small { font-size: 11px; color: var(--muted); }
 .ms-t .ms-evo { color: #c8b878; }
 .ms-mv em { position: absolute; top: 4px; right: 7px; font-style: normal; font-size: 11px; color: var(--gold); }
+
+/* ============ Auto-pick (level-up and pause, js/ui/run-ui.js) ============ */
+.lvl-auto, .pause-auto { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.pause-auto b { color: var(--gold); font-weight: 400; }

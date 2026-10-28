@@ -63,6 +63,7 @@ G.Player = class Player {
     this.banned = new Set();                 // cards banned this run (level-up Ban button): 'mv:<move>' or 'pk:<perk>'
     this.bansLeft = perks.bans || 0;         // bans you can still use this run (Upgrades → Ban)
     this.movePool = null;                    // the moves new-move cards come from (G.Moveset; null = the whole pool)
+    this.autoPick = null;                    // everything maxed: the card taken at every level-up without the menu ('stat:heal' / 'stat:nugget')
     this.bind = {};                          // move -> fixed slot (0-3), chosen in Upgrades
     this.coins = 0;            // coins picked up this run
     this.t1 = 0; this.t10 = 0; // gacha tickets picked up this run

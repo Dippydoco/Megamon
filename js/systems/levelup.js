@@ -88,6 +88,18 @@ G.LevelUp = (() => {
   /** Your moves (not yet evolved) whose evolution needs perk `id`. */
   const neededBy = (pl, id) => ((pl && pl.moves) || []).filter(m => { const e = G.Moves.evoNeed(m); return e && e.needs === id; });
 
+  /**
+   * Auto-pick (28-10-2026): once only the Sitrus Berry and the Nugget are left, the player can choose one to be taken
+   * automatically at every level-up from then on (pl.autoPick = its card key), so the menu stops opening.
+   * → the card to take, or null (something real is on offer again, or auto-pick is off).
+   */
+  const onlyInstant = list => list.length > 0 && list.every(c => c.instant);
+  function autoCard(pl, list) {
+    if (!pl || !pl.autoPick || !onlyInstant(list)) return null;
+    return list.find(c => c.key === pl.autoPick) || null;
+  }
+  const AUTO_NAME = { 'stat:heal': 'Sitrus Berry', 'stat:nugget': 'Nugget' };
+
   /** PokéCoins from a Nugget card: more the higher your level. */
   const nuggetCoins = pl => 20 + 2 * ((pl && pl.level) || 1);
 
@@ -222,7 +234,7 @@ G.LevelUp = (() => {
         // Moves of yours that need this perk to evolve (shown on the card).
         for: s.instant ? [] : neededBy(pl, s.id).map(m => m.name),
         // How many you have taken so far this run (shown on the card); the healing berry is not a stack.
-        owned: s.instant ? null : (pl.statsTaken[s.id] || 0), cap: s.max || 0,
+        owned: s.instant ? null : (pl.statsTaken[s.id] || 0), cap: s.max || 0, instant: !!s.instant,
         apply: p => { const n = p.statsTaken[s.id] || 0; s.apply(p, n); p.statsTaken[s.id] = n + 1; fxT = -1; }
       });
     }
@@ -231,12 +243,12 @@ G.LevelUp = (() => {
     // level-up is never empty or pointless (28-10-2026). Like the berry, it never takes a perk slot.
     if (out.filter(c => c.key !== 'stat:heal').length < 3) {
       const n = nuggetCoins(pl);
-      out.push({ w: 6, type: 'stat', key: 'stat:nugget', icon: 'coin', color: '#ffd23f', tag: 'Instant', title: 'Nugget',
+      out.push({ w: 6, type: 'stat', key: 'stat:nugget', icon: 'coin', color: '#ffd23f', tag: 'Instant', title: 'Nugget', instant: true,
                  desc: '+' + n + ' PokéCoins, added to what you earn this run.', owned: null, cap: 0,
                  apply: p => { const k = nuggetCoins(p); p.coins += k; G.FX.dmgText(p.x, p.y - p.bodyH - 8, '+' + k, '#ffd23f'); G.Audio.sfx('coin'); } });
     }
     // Last safety net: never an empty level-up screen (it couldn't be closed).
-    if (!out.length) { const h = BY.heal; out.push({ w: 1, type: 'stat', key: 'stat:heal', icon: h.icon, color: '#8fa3c4', tag: 'Instant', title: h.title, desc: h.desc, owned: null, cap: 0, apply: p => h.apply(p) }); }
+    if (!out.length) { const h = BY.heal; out.push({ w: 1, type: 'stat', key: 'stat:heal', icon: h.icon, color: '#8fa3c4', tag: 'Instant', title: h.title, desc: h.desc, owned: null, cap: 0, instant: true, apply: p => h.apply(p) }); }
 
     return out;
   }
@@ -262,5 +274,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, BUFF_MAX, banKey, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, BUFF_MAX, banKey, onlyInstant, autoCard, AUTO_NAME, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
 })();

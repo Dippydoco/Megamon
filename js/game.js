@@ -273,11 +273,14 @@ G.Game = (() => {
       state = 'levelup';
       G.UI.hide('scr-pause');
       G.Audio.sfx('levelup');
-      G.RunUI.showLevelUp(level, G.LevelUp.offer(pl), card => {
+      const list = G.LevelUp.offer(pl), auto = G.LevelUp.autoCard(pl, list);
+      G.RunUI.showLevelUp(level, list, card => {
         G.Audio.sfx('confirm');
         card.apply(pl);
         G.Coop.localPicked();
       }, true);
+      // Auto-pick: your card is taken at once; the screen just shows who the group is waiting for.
+      if (auto) G.RunUI.pickAuto(auto);
     },
     waiting(names) { G.RunUI.setWaiting(names); },
     resume() {
@@ -465,9 +468,19 @@ G.Game = (() => {
     // Never open cards with the Pokémon down (dying and picking up XP on the same frame).
     if (pl.dead) return;
     pendingLevels--;
+    const list = G.LevelUp.offer(pl);
+    // Auto-pick (everything maxed, the player chose the berry or the Nugget for good): no menu at all.
+    const auto = G.LevelUp.autoCard(pl, list);
+    if (auto) {
+      auto.apply(pl);
+      G.Audio.sfx('levelup');
+      G.FX.dmgText(pl.x, pl.y - pl.bodyH - 22, 'Lv. ' + pl.level + ' · ' + auto.title, '#ffd23f');
+      G.RunLog.offer(list); G.RunLog.pick(list.indexOf(auto));
+      return;
+    }
     state = 'levelup';
     G.Audio.sfx('levelup');
-    G.RunUI.showLevelUp(pl.level, G.LevelUp.offer(pl), card => {
+    G.RunUI.showLevelUp(pl.level, list, card => {
       G.Audio.sfx('confirm');
       card.apply(pl);
       state = 'playing';

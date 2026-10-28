@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T11:41Z', title: 'Auto-pick once everything is maxed', new: [
+    'When only the Sitrus Berry and the Nugget are left, the level-up screen lets you pick one to take automatically from then on: level-ups stop opening the menu and just give you that card. Turn it off any time in the pause menu. In a group your card is taken at once and you just wait for the others.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T11:36Z', title: 'No more stuck level-ups when everything is maxed', fix: [
     'Levelling up with every move and perk maxed could leave you stuck on an empty level-up screen (if the Sitrus Berry had been banned). The Sitrus Berry can no longer be banned, and the screen always has a card to pick.'
   ], new: [
