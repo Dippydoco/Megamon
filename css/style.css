@@ -1945,3 +1945,22 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 /* Codex across the whole bottom row of the menu (28-10-2026): easy to find, so people open it. */
 .menu-item.tile.wide.full { grid-column: 1 / -1; min-height: 58px; background: rgba(120,170,255,.08); border-color: rgba(120,170,255,.4); }
 .partner-tabs { margin-bottom: 8px; }
+
+/* ============ Top bar polish (28-10-2026) ============ */
+/* The four currencies share one capsule, with thin dividers between them. */
+.wallet {
+  display: flex; align-items: stretch; border-radius: 30px; overflow: hidden;
+  background: var(--pill-bg, rgba(10,20,50,.85)); border: 2px solid var(--edge); box-shadow: 0 0 0 2px var(--edge-out), 0 3px 10px rgba(0,0,0,.35);
+}
+.wallet .pill { border: 0; box-shadow: none; border-radius: 0; background: transparent; position: relative; }
+.wallet .pill + .pill::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 1px; background: rgba(255,255,255,.2); }
+.wallet .pill:hover { background: rgba(255,255,255,.06); }
+#user-pill { cursor: pointer; box-shadow: 0 0 0 2px var(--edge-out), 0 3px 10px rgba(0,0,0,.35); }
+#user-pill:hover { border-color: var(--gold); }
+/* Sound, fullscreen, settings and log out: one compact cluster. */
+.tb-tools { display: flex; gap: 2px; padding: 2px; border-radius: 12px; background: rgba(6,10,26,.55); border: 1px solid rgba(255,255,255,.12); }
+.tb-tools .btn.small { border-color: transparent; background: transparent; }
+.tb-tools .btn.small:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.25); }
+/* Support: a gold outline instead of a solid gold button, so What's new is the one that stands out when it has news. */
+#btn-support { border-color: rgba(255,210,63,.65); color: #ffe7a0; }
+#btn-support:hover { background: rgba(255,210,63,.15); }

@@ -15,13 +15,34 @@ G.HUD = (() => {
     ctx.closePath();
   }
 
-  function bar(ctx, x, y, w, h, frac, col, bg = 'rgba(0,0,0,.55)') {
+  /**
+   * Damage trail (28-10-2026): after a hit, a pale chip shows the health just lost and drains away a moment later.
+   * `key` names the bar (one trail per bar); it returns the trail's fraction.
+   */
+  const trails = new Map();
+  function trail(key, frac) {
+    const now = performance.now();
+    let t = trails.get(key);
+    if (!t || frac >= t.v) { t = { v: frac, hold: 0, last: now }; trails.set(key, t); return frac; }
+    const dt = Math.min(0.1, (now - t.last) / 1000); t.last = now;
+    if (t.hold <= 0 && t.v > frac && !t.hit) { t.hold = 0.45; t.hit = true; }
+    if (t.hold > 0) t.hold -= dt;
+    else { t.v = Math.max(frac, t.v - dt * 0.9); if (t.v <= frac) t.hit = false; }
+    if (trails.size > 64) trails.clear();
+    return t.v;
+  }
+
+  function bar(ctx, x, y, w, h, frac, col, bg = 'rgba(0,0,0,.55)', key = null) {
     roundRect(ctx, x, y, w, h, h / 2); ctx.fillStyle = bg; ctx.fill();
-    if (frac > 0) {
+    const f = G.U.clamp(frac, 0, 1), tf = key ? G.U.clamp(trail(key, f), 0, 1) : f;
+    if (f > 0 || tf > 0) {
       ctx.save();
       roundRect(ctx, x, y, w, h, h / 2); ctx.clip();
+      if (tf > f) { ctx.fillStyle = 'rgba(255,240,220,.85)'; ctx.fillRect(x, y, w * tf, h); }
       ctx.fillStyle = col;
-      ctx.fillRect(x, y, w * G.U.clamp(frac, 0, 1), h);
+      ctx.fillRect(x, y, w * f, h);
+      ctx.fillStyle = 'rgba(255,255,255,.22)';                       // a light top edge on the fill
+      ctx.fillRect(x, y, w * f, Math.max(1, Math.round(h * 0.3)));
       ctx.restore();
     }
   }
@@ -55,13 +76,34 @@ G.HUD = (() => {
     const touch = G.Touch.active;
 
     // ---------- experience bar (top edge; empty in the Battle Tower, which has no experience) ----------
+    // (28-10-2026) A little more finish: a dark rim, a light top edge, faint 10% ticks and a glowing tip.
     const xpF = G.Tower.active ? 0 : pl.xp / pl.xpNext;
-    ctx.fillStyle = 'rgba(0,0,0,.5)';
-    ctx.fillRect(0, 0, w, 7);
+    const XH = 8, xw = w * G.U.clamp(xpF, 0, 1);
+    ctx.fillStyle = 'rgba(6,10,26,.72)';
+    ctx.fillRect(0, 0, w, XH + 2);
     const g = ctx.createLinearGradient(0, 0, w, 0);
     g.addColorStop(0, '#4fd1ff'); g.addColorStop(1, '#a98bff');
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w * G.U.clamp(xpF, 0, 1), 7);
+    ctx.fillRect(0, 0, xw, XH);
+    if (xw > 0) {
+      ctx.fillStyle = 'rgba(255,255,255,.35)';
+      ctx.fillRect(0, 0, xw, 2);
+      const tip = ctx.createRadialGradient(xw, XH / 2, 0, xw, XH / 2, 16);
+      tip.addColorStop(0, 'rgba(220,240,255,.85)'); tip.addColorStop(1, 'rgba(220,240,255,0)');
+      ctx.fillStyle = tip; ctx.fillRect(xw - 16, 0, 32, XH + 6);
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.28)';
+    for (let i = 1; i < 10; i++) ctx.fillRect(Math.round(w * i / 10), 0, 1, XH);
+
+    // ---------- low health (28-10-2026): the screen's edges pulse red below 25% ----------
+    if (!pl.dead && pl.hp < pl.maxHp * 0.25) {
+      const k = 1 - pl.hp / (pl.maxHp * 0.25), pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
+      const calm = G.Settings && G.Settings.get('calm');
+      const vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.max(w, h) * 0.62);
+      vg.addColorStop(0, 'rgba(255,40,60,0)');
+      vg.addColorStop(1, 'rgba(255,40,60,' + ((0.28 + 0.3 * k) * (calm ? 0.6 : 0.6 + 0.4 * pulse)).toFixed(3) + ')');
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+    }
 
     // ---------- health + level + buffs (top left, at HUD_SCALE) ----------
     const px = 16, py = 20;
@@ -112,11 +154,26 @@ G.HUD = (() => {
     ctx.restore();
 
     // ---------- clock / biome / kills ----------
-    ctx.textAlign = 'center';
-    ctx.font = F(800, 26);
-    ctx.fillStyle = 'rgba(255,255,255,.95)';
     // Battle Tower (systems/tower.js): the floor instead of the clock, and the floor's goal.
     const twr = G.Tower.active ? G.Tower.hud() : null;
+    // (28-10-2026) A dark glass plate behind the clock and the line under it, so both read over any ground.
+    {
+      ctx.save();
+      ctx.font = F(800, 13);
+      const lineW = twr ? 300 : ctx.measureText(G.World.biomeName() + '  ·  ' + Math.floor(pl.kills || 0) + ' DEFEATED  ·  ' + Math.floor(pl.coins || 0) + ' COINS').width;
+      const pw2 = Math.max(150, lineW + 34), ph2 = twr && twr.goal ? 72 : 56;
+      const pg = ctx.createLinearGradient(0, 14, 0, 14 + ph2);
+      pg.addColorStop(0, 'rgba(14,22,52,.62)'); pg.addColorStop(1, 'rgba(6,10,26,.42)');
+      roundRect(ctx, w / 2 - pw2 / 2, 14, pw2, ph2, 14);
+      ctx.fillStyle = pg; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.restore();
+    }
+    ctx.textAlign = 'center';
+    ctx.font = F(800, 26);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.55)';
+    ctx.strokeText(twr ? twr.big : G.U.mmss(st.time), w / 2, 42);
+    ctx.fillStyle = 'rgba(255,255,255,.97)';
     ctx.fillText(twr ? twr.big : G.U.mmss(st.time), w / 2, 42);
     // Stage · defeated · coins: bigger, bold, outlined and colour-coded so it reads over any ground (24-10-2026; was 10px grey).
     {
@@ -196,7 +253,9 @@ G.HUD = (() => {
       const pct = Math.ceil(100 * boss.hp / boss.maxHp) + '%';
       ctx.strokeText(pct, bx0 + bw, by + 21); ctx.fillStyle = '#fff'; ctx.fillText(pct, bx0 + bw, by + 21);
       ctx.textAlign = 'center';
-      bar(ctx, bx0, by + 28, bw, 20, boss.hp / boss.maxHp, '#ffcb3d');
+      bar(ctx, bx0, by + 28, bw, 20, boss.hp / boss.maxHp, '#ffcb3d', 'rgba(0,0,0,.55)', 'boss' + boss.id);
+      ctx.fillStyle = 'rgba(0,0,0,.35)';                               // 10% ticks
+      for (let i = 1; i < 10; i++) ctx.fillRect(Math.round(bx0 + bw * i / 10), by + 31, 1.5, 14);
     }
 
     // ---------- arrows to bosses that can't be seen (at the edge of the screen) ----------
@@ -929,7 +988,7 @@ G.HUD = (() => {
       ctx.fillStyle = 'rgba(255,255,255,.75)';
       ctx.fillText(G.U.hpText(c.hp, c.maxHp), x + CARD_W - 8, y + 14);
     }
-    bar(ctx, tx, y + 19, CARD_W - (tx - x) - 8, 9, c.dead ? 0 : c.hp / c.maxHp, c.barCol);
+    bar(ctx, tx, y + 19, CARD_W - (tx - x) - 8, 9, c.dead ? 0 : c.hp / c.maxHp, c.barCol, undefined, c.key && 'card:' + c.key);
     ctx.textAlign = 'left';
   }
 

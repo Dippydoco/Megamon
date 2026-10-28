@@ -69,7 +69,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/style.css?v=2c55b08b49">
+<link rel="stylesheet" href="css/style.css?v=0557072986">
 </head>
 <body>
 
@@ -193,17 +193,22 @@
 </section>
 
 <div id="topbar" class="topbar hidden">
-  <div class="pill"><span class="coin"></span><span id="coins">0</span></div>
-  <div class="pill" id="tickets-pill" title="Gacha tickets"></div>
-  <div class="pill" id="stars-pill" title="Arceus Stars: one for every run that reached Arceus"></div>
-  <div class="pill" id="bp-pill" title="Battle Points: earned on every Battle Tower floor, spent in its BP Shop"></div>
+  <!-- (28-10-2026) The four currencies in one wallet capsule, and the small buttons grouped. -->
+  <div class="wallet">
+    <div class="pill" title="PokéCoins"><span class="coin"></span><span id="coins">0</span></div>
+    <div class="pill" id="tickets-pill" title="Gacha tickets"></div>
+    <div class="pill" id="stars-pill" title="Arceus Stars: one for every run that reached Arceus"></div>
+    <div class="pill" id="bp-pill" title="Battle Points: earned on every Battle Tower floor, spent in its BP Shop"></div>
+  </div>
   <div class="pill" id="user-pill"></div>
   <button id="btn-news" class="btn small ghost news-btn" title="What's new"></button>
-  <button id="btn-support" class="btn small gold hidden" title="Support the project"></button>
-  <button id="btn-sound" class="btn small ghost" title="Sound"></button>
-  <button id="btn-full" class="btn small ghost hidden" title="Fullscreen"></button>
-  <button id="btn-settings" class="btn small ghost" title="Settings"></button>
-  <button id="btn-logout" class="btn small ghost">Log out</button>
+  <button id="btn-support" class="btn small ghost hidden" title="Support the project"></button>
+  <div class="tb-tools">
+    <button id="btn-sound" class="btn small ghost" title="Sound"></button>
+    <button id="btn-full" class="btn small ghost hidden" title="Fullscreen"></button>
+    <button id="btn-settings" class="btn small ghost" title="Settings"></button>
+    <button id="btn-logout" class="btn small ghost">Log out</button>
+  </div>
 </div>
 <div id="sound-panel" class="box sound-panel hidden"></div>
 <div id="ver-tag" class="ver-tag hidden" title="Game build: quote this when reporting a problem"></div>
@@ -758,7 +763,7 @@
 </section>
 
 <!-- generated data -->
-<script>window.PS_BUILD={"v":"2c55b08b49","at":"2026-10-28T17:10:15.729Z"};</script>
-<script defer src="js/app.min.js?v=2c55b08b49"></script>
+<script>window.PS_BUILD={"v":"0557072986","at":"2026-10-28T17:21:04.498Z"};</script>
+<script defer src="js/app.min.js?v=0557072986"></script>
 </body>
 </html>

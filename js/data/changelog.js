@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T17:20Z', title: 'A cleaner HUD and top bar', chg: [
+    'Run HUD: the clock and the line under it sit on a dark plate so they read over any ground; the experience bar has a glowing tip and 10% ticks; the boss bar has 10% ticks.',
+    'Health bars (yours, teammates\' and bosses\') show the health a hit just took as a pale chip that drains away a moment later.',
+    'Below 25% health the edges of the screen pulse red (gentler with Calm on).',
+    'Top bar: your PokéCoins, tickets, Arceus Stars and Battle Points share one capsule, and the sound, fullscreen, settings and log out buttons are grouped.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T17:09Z', title: 'Tidier main menu, longer Mastery', chg: [
     'The main menu is grouped by what you do: your team (Pokémon, Partner, Gacha), spending and friends (Shop, Friends, Mini-Games), and progress (Profile, Goals, Leaderboard), with the Codex across the bottom.',
     'Partner: Upgrades and Moveset are now two tabs of one screen, and switching tab keeps the Pokémon you picked.',
