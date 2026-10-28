@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T18:35Z', title: 'Naps in the main menu', new: [
+    'The Pokémon wandering behind the main menu now and then lie down for a nap, with little z\'s drifting up. Tap a sleeping one to wake it up.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T18:28Z', title: 'Play tile text', fix: [
     'On the Play and Battle Tower tiles, the line under the name now sits right below it instead of near the bottom, clear of the walking partner.'
   ] },

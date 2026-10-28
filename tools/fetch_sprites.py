@@ -41,7 +41,7 @@ OUT_ASSETS = os.path.join(ROOT, 'assets', 'pokemon')
 OUT_META = os.path.join(ROOT, 'js', 'data', 'sprites-meta.js')
 CACHE = os.path.join(ROOT, 'tools', 'cache')
 
-WANT = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint']
+WANT = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint', 'Sleep']     # Sleep: the menu backdrop (28-10-2026)
 FALLBACK = {
     'Idle': ['Walk'],
     'Walk': ['Idle'],
@@ -50,6 +50,7 @@ FALLBACK = {
     'Charge': ['DeepBreath', 'Idle'],
     'Hurt': ['Cringe', 'Idle'],
     'Faint': ['Hurt', 'Idle'],
+    'Sleep': [],                # no stand-in: Pokémon without it just never sleep
 }
 REQUIRED = {'Idle', 'Walk', 'Attack'}
 
@@ -139,12 +140,12 @@ def save_optimized(png, path):
     return im.size
 
 
-def download_set(url_base, out_dir, anims, geometry_from=None):
+def download_set(url_base, out_dir, anims, geometry_from=None, want=None):
     """Downloads the WANT animations from url_base. `geometry_from` reuses
     the normal sprite's anchors (the shiny is the same drawing recoloured)."""
     os.makedirs(out_dir, exist_ok=True)
     meta = {}
-    for want in WANT:
+    for want in (want or WANT):
         src, geom = None, None
         for cand in [want] + FALLBACK[want]:
             src, geom = resolve(anims, cand)

@@ -1151,6 +1151,9 @@ G.Game = (() => {
 
     const myName = () => (G.Social && G.Social.me && G.Social.me.name) || 'You';
     const hasSprite = d => !!(G.SPRITE_META && G.SPRITE_META[d]);
+    // Naps (28-10-2026): wanderers on the map now and then lie down and sleep, if their sprite has a Sleep animation.
+    const canSleep = d => !!(G.SPRITE_META && G.SPRITE_META[d] && G.SPRITE_META[d].a.Sleep);
+    const napLength = () => G.U.rand(8, 16);
 
     /** A team from a group run in your history (you + your teammates); if there isn't one, your latest Pokémon. */
     function historyTeam() {
@@ -1259,7 +1262,9 @@ G.Game = (() => {
           if (G.World.isFree(x, y, r)) break;
         }
       }
-      return { dex, m, anim: a, x, y, r, vx: 0, vy: 0, t: 0, home, scale, draw(ctx) {
+      // Some of the map's Pokémon are already asleep when the scene starts.
+      const sleep = !home && canSleep(dex) && Math.random() < 0.15 ? G.U.rand(5, 14) : 0;
+      return { dex, m, anim: a, x, y, r, vx: 0, vy: 0, t: 0, home, scale, sleep, zT: 0, draw(ctx) {
         G.Sprites.drawShadow(ctx, this.dex, this.x, this.y, this.scale);
         // Golden hour / thief: a golden glow behind, like the golden enemies.
         if ((goldT > 0 && !(this.home && this.home.boss)) || this.thief) {
@@ -1409,6 +1414,7 @@ G.Game = (() => {
       G.FX.ring(best.x, best.y - h * 0.5, 6, 46, col, 0.45, 4);
       G.FX.burst(best.x, best.y - h * 0.5, col, 14, 150);
       if (best.thief) { catchThief(best); return; }
+      best.sleep = 0;                       // a tap wakes a sleeper up
       best.anim.play(G.U.pick(['Attack', 'Shoot', 'Charge']));
       best.anim.dir = G.Sprites.dirFromAngle(Math.PI / 2);
       best.vx = best.vy = 0; best.t = G.U.rand(1.6, 2.8);
@@ -1495,11 +1501,29 @@ G.Game = (() => {
           }
           continue;
         }
+        // Asleep: it lies still with a "z" drifting up now and then, and gets up when the nap ends (or when tapped).
+        if (wd.sleep > 0) {
+          wd.sleep -= dt;
+          wd.vx = wd.vy = 0;
+          wd.anim.dir = 0;
+          wd.anim.loop(wd.sleep > 0 ? 'Sleep' : 'Idle');
+          wd.anim.update(dt);
+          wd.zT -= dt;
+          if (wd.zT <= 0 && wd.sleep > 0) {
+            wd.zT = G.U.rand(1.1, 1.6);
+            const h = G.Sprites.bodyHeight(wd.dex, wd.scale);
+            tags.push({ x: wd.x + G.U.rand(4, 10), y: wd.y - h * 0.6, text: Math.random() < 0.5 ? 'z' : 'Z', t: 0, col: '#cfe0ff' });
+          }
+          if (wd.sleep <= 0) wd.t = G.U.rand(0.6, 1.4);
+          if (!G.Camera.sees(wd.x, wd.y, 120)) Object.assign(wd, spawn(wd.m, hm));
+          continue;
+        }
         wd.t -= dt;
         if (wd.t <= 0) {
-          // Wanders, stops or "attacks" the air every so often.
+          // Wanders, stops or "attacks" the air every so often (and on the map, sometimes takes a nap).
           wd.t = G.U.rand(1, 3.5);
           const r = Math.random();
+          if (!hm && r > 0.93 && canSleep(wd.dex) && goldT <= 0) { wd.sleep = napLength(); wd.zT = 0.6; wd.vx = wd.vy = 0; continue; }
           const walk = hm && hm.boss ? 0.35 : 0.55;
           if (r < walk) {
             let a = Math.random() * 6.2832;
