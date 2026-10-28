@@ -51,6 +51,16 @@ Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor
 - **Arena options.** Other ideas that were discussed: a larger arena, different monolith layouts, and extra
   effects when the Mega phase starts.
 
+## Form skins (added 2026-10-28)
+
+- **Sprites are in, the feature is not.** `tools/fetch_forms.py` downloaded 392 canon alternate forms (36 Megas and
+  Primals, 56 regional, 59 female variants, 241 other forms) to `assets/pokemon/{id}/` (id = 100000 + dex*100 + form,
+  female +50; Mega Charizard X = 100601). Catalogue and geometry in `js/data/forms.js`, NOT yet in `dev.html`.
+  Still to do: the unlock design, picking a skin per Pokémon, drawing it in runs, menus, co-op and profiles.
+- **Not available on SpriteCollab with animations:** Mega Charizard Y, Mega Venusaur, Mega Blastoise and most other
+  Gen 1-3 starters' Megas, every Gigantamax. Mega Charizard X has no shiny. Re-run the tool later to pick up new ones.
+- **Credits.** `tools/fetch_credits.py` does not credit the form sprites' artists yet.
+
 ## Sprites tooling
 
 - `tools/fetch_zygarde_mega.py` adds Mega Zygarde (number 9718) to `assets/pokemon/` and `js/data/sprites-meta.js`.
