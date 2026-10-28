@@ -49,9 +49,9 @@ G.LevelUp = (() => {
       apply: () => {}, max: 10 },
     { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+30% chance for wild Pokémon to be shiny.',
       apply: () => {}, max: 10 },
-    // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience and
-    // PokéCoins for you. Not in the Battle Tower, whose floors set their own numbers.
-    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +10% wild Pokémon, +8% their health, +5% their damage, +3% their speed. You get +8% experience and +8% PokéCoins.',
+    // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience
+    // for you. Not in the Battle Tower, whose floors set their own numbers.
+    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +10% wild Pokémon, +8% their health, +5% their damage, +3% their speed. You get +8% experience.',
       apply: (pl, n = lvOf(pl, 'roar')) => { pl.xpMul *= lin(0.08, n); }, max: 10 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.healItem(0.45), instant: true }
@@ -100,8 +100,8 @@ G.LevelUp = (() => {
   }
   const AUTO_NAME = { 'stat:heal': 'Sitrus Berry', 'stat:nugget': 'Nugget' };
 
-  /** PokéCoins from a Nugget card: more the higher your level. */
-  const nuggetCoins = pl => 20 + 2 * ((pl && pl.level) || 1);
+  /** PokéCoins from a Nugget card: more the higher your level (halved 28-10-2026, was 20 + 2 a level). */
+  const nuggetCoins = pl => 10 + ((pl && pl.level) || 1);
 
   /** The perks a player holds, in the order taken: [id...] (the Sitrus Berry is not one). */
   function tomesOf(pl) {
@@ -139,8 +139,8 @@ G.LevelUp = (() => {
   const roarSpd = () => (inTower() ? 1 : teamFx().spd);
   /** Shiny Lure (spawner.js rollShiny). */
   const shinyK = () => teamFx().shiny;
-  /** Your PokéCoins at the end of the run (game.js endRun): Pay Day and Roar. */
-  const coinK = pl => 1 + 0.12 * lvOf(pl, 'coin') + 0.08 * lvOf(pl, 'roar');
+  /** Your PokéCoins at the end of the run (game.js endRun): Pay Day (Roar's +8% a level was removed 28-10-2026). */
+  const coinK = pl => 1 + 0.12 * lvOf(pl, 'coin');
   /** Short form of your perks for teammates ("atk.5,cd.3"). */
   const share = pl => tomesOf(pl).map(id => id + '.' + lvOf(pl, id)).join(',');
 

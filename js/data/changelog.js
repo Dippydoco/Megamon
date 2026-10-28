@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T15:21Z', title: 'Roar and Nugget give fewer PokéCoins', chg: [
+    'Roar no longer gives extra PokéCoins (it was +8% a level). It still gives +8% experience a level.',
+    'The Nugget card gives half as many PokéCoins: 10 plus 1 per level (it was 20 plus 2 per level).'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T14:54Z', title: 'Less max HP growth per level', chg: [
     'The max HP every Pokémon gains each level in a run is halved: 1% of its base HP per level (it was 2%). The Vigor perk and the extra growth of lower rarities are unchanged.'
   ] },
