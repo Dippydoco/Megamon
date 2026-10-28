@@ -14,7 +14,12 @@ G.AchDefs = (() => {
   const count = k => s => Object.keys(s[k] || {}).length;
 
   const CATS = [['collection', 'Collection'], ['survival', 'Survival'], ['combat', 'Combat'],
-                ['rifts', 'Rifts'], ['legendaries', 'Legendaries'], ['other', 'Missions & more']];
+                ['rifts', 'Rifts'], ['legendaries', 'Legendaries'], ['forms', 'Forms & Mastery'], ['other', 'Missions & more']];
+  // Forms & Mastery (28-10-2026, systems/mastery.js and skins.js): titles only, no tickets (Mastery stays cosmetic).
+  const mt = s => (G.Mastery ? G.Mastery.totals(s) : { levels: 0, mastered: 0 });
+  const skinN = s => (G.Skins ? G.Skins.count(s) : 0);
+  const megaN = s => Object.keys(s.skins || {}).filter(id => G.SkinData.BY[id] && G.SkinData.BY[id].route.kind === 'mega').length;
+  const setN = dex => s => (G.SkinData.OF[dex] || []).filter(f => s.skins && s.skins[f.id]).length;
 
   const LIST = [
     // ---------- collection ----------
@@ -66,6 +71,15 @@ G.AchDefs = (() => {
     { id: 'leg30', cat: 'legendaries', tier: 3, name: 'Myth tamer', desc: 'Defeat 30 different legendaries.', value: legends, goal: 30, reward: { t10: 2 } },
     { id: 'legAll', cat: 'legendaries', tier: 3, name: 'Legend', desc: 'Defeat every legendary.', value: legends, goal: 87, reward: { t10: 5 }, title: 'Legend' },
 
+    // ---------- forms and mastery ----------
+    { id: 'mst25', cat: 'forms', tier: 1, name: 'Getting to know you', desc: 'Reach 25 Mastery levels in total, across all your Pokémon.', value: s => mt(s).levels, goal: 25 },
+    { id: 'mst100', cat: 'forms', tier: 2, name: 'Old friends', desc: 'Reach 100 Mastery levels in total.', value: s => mt(s).levels, goal: 100, title: 'Devoted' },
+    { id: 'mstOne', cat: 'forms', tier: 2, name: 'Mastered', desc: 'Reach Mastery 10 with a Pokémon.', value: s => mt(s).mastered, goal: 1, title: 'Master Trainer' },
+    { id: 'mstTen', cat: 'forms', tier: 3, name: 'Grand Master', desc: 'Reach Mastery 10 with 10 Pokémon.', value: s => mt(s).mastered, goal: 10, title: 'Grand Master' },
+    { id: 'skin1', cat: 'forms', tier: 1, name: 'New look', desc: 'Unlock your first skin.', value: skinN, goal: 1 },
+    { id: 'skin50', cat: 'forms', tier: 2, name: 'Wardrobe', desc: 'Unlock 50 skins.', value: skinN, goal: 50, title: 'Fashionista' },
+    { id: 'mega1', cat: 'forms', tier: 3, name: 'Mega Evolution', desc: 'Unlock a Mega or Primal skin.', value: megaN, goal: 1, title: 'Mega Evolver' },
+
     // ---------- missions and more ----------
     { id: 'mis10', cat: 'other', tier: 1, name: 'Reliable', desc: 'Complete 10 missions.', value: st('missionsDone'), goal: 10, reward: { t1: 3 } },
     { id: 'mis50', cat: 'other', tier: 2, name: 'Steady', desc: 'Complete 50 missions.', value: st('missionsDone'), goal: 50, reward: { t10: 1 }, title: 'Steady' },
@@ -73,6 +87,13 @@ G.AchDefs = (() => {
     { id: 'group1', cat: 'other', tier: 1, name: 'In good company', desc: 'Play a group game.', value: st('groupRuns'), goal: 1, reward: { t1: 2 } },
     { id: 'group10', cat: 'other', tier: 2, name: 'Loyal Partner', desc: 'Play 10 group games.', value: st('groupRuns'), goal: 10, reward: { t10: 1 }, title: 'Loyal Partner' }
   ];
+
+  // Skin sets (data/skins.js SETS): own every form of these Pokémon.
+  for (const st of (G.SkinData ? G.SkinData.SETS : [])) {
+    const n = (G.SkinData.OF[st.dex] || []).length;
+    if (n) LIST.push({ id: st.id, cat: 'forms', tier: 3, name: st.name, desc: `Unlock all ${n} ${G.DEX_BY[st.dex].name} skins.`,
+                       value: setN(st.dex), goal: n, title: st.title });
+  }
 
   // One achievement per legendary: "Defeat Mewtwo"...
   for (const p of G.DEX.filter(p => p.leg && G.SPRITE_META[p.dex])) {

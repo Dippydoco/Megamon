@@ -10,6 +10,8 @@
  *
  *   Key Items     Klefki (707). PokéCoins. data/keyitems.js G.KeyItems.
  *   Star Shop     shiny Sableye (302). Arceus Stars. Menu themes and player card themes (G.Themes).
+ *   Studio        Smeargle (235). PokéCoins. Form skins: regional forms, colours and patterns (28-10-2026,
+ *                 data/skins.js routes 'shop', systems/skins.js buy and the Daily Spotlight).
  *
  * G.KeyItemUI: the Key Item slot under your partner on the main menu, and its picker.
  */
@@ -49,6 +51,13 @@
       'kkkkkkkkkkkk', 'krwrwrwrwrwk', 'krwrwrwrwrwk', '.krkwkrkwkk.', '.k........k.', '.k.yy..ss.k.',
       '.k.yy..ss.k.', 'kkkkkkkkkkkk', 'kbbbbbbbbbbk', 'kbBbbbbbbBbk', 'kbbbbbbbbbbk', 'kkkkkkkkkkkk'] },
     'gem-p': { pal: { w: '#f4e6ff', c: '#b07bff', b: '#6a3fc0' }, rows: GEM },
+    // Smeargle's paint pots and brush (28-10-2026).
+    ...Object.fromEntries([['r', '#ff5f6d'], ['b', '#4fb4ff'], ['g', '#5fe08a'], ['y', '#ffd23f'], ['p', '#c47bff']].map(([k, c]) => ['pot-' + k, { pal: { c, w: '#e6ecf5', d: '#8a94a8' }, rows: [
+      '............', '...kkkkkk...', '..kccccccck.', '..kcwccccck.', '..kkkkkkkk..', '..kddddddk..',
+      '..kdwddddk..', '..kddddddk..', '..kddddddk..', '..kddddddk..', '..kkkkkkkk..', '............'] }])),
+    brush: { pal: { b: '#b07a4a', s: '#e6ecf5', c: '#5fe08a' }, rows: [
+      '..........kk', '.........kbk', '........kbk.', '.......kbk..', '......kbk...', '.....kbk....',
+      '....kssk....', '...kcssk....', '..kccck.....', '.kccck......', 'kccck.......', 'kkkk........'] },
     'gem-r': { pal: { w: '#ffe6ea', c: '#ff5f7a', b: '#b0283f' }, rows: GEM },
     'gem-g': { pal: { w: '#e6fff0', c: '#5fe08a', b: '#2a9a50' }, rows: GEM },
     palette: { pal: { w: '#e8d7b4', r: '#ff5f6d', b: '#4fb4ff', g: '#5fe08a', y: '#ffd23f' }, rows: [
@@ -392,7 +401,8 @@ G.Stall = class Stall {
 G.ShopUI = (() => {
   const $ = G.UI.$;
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  let tab = 'keys';            // 'keys' (Klefki) | 'arceus' (Sableye)
+  let tab = 'keys';            // 'keys' (Klefki) | 'arceus' (Sableye) | 'skins' (Smeargle)
+  let skinShelf = 'regional', skinFocus = 0, skinMine = false;
   let raf = 0, lastT = 0, stall = null;
   const stalls = {};
 
@@ -404,6 +414,14 @@ G.ShopUI = (() => {
       awn: ['#ff8fbf', '#eef2f8', '#d9619b', '#c3c9d6'], awnTop: ['#8a92a6', '#e6ecf5'], post: ['#7c8496', '#c9d2e2'],
       counter: ['#9aa3b8', '#d6deec', '#6f7890'], shut: ['#a7afc2', '#8f97ab', '#5c6478'],
       lamp: ['#ff7fb2', '#ffd6ea'], lampOff: ['#7a4a5e', '#4a2a3a'], glow: 'rgba(255,170,210,.42)', till: 'coin'
+    },
+    skins: {
+      sky: ['#ffb38a', '#ffc29a', '#ffd0ab', '#ffdcbd', '#ffe7cf', '#fff0e0'], orb: ['#fff6d8', '#ffe0a0'],
+      hill: '#8fc27a', trunk: '#6a4a2a', leaf: ['#4f8f4a', '#6faa5a', '#a6d66f'], grass: '#7ab85a', path: '#e0bf86', pathEdge: '#a8844a',
+      wall: '#f4ecdc', seam: '#ddd2bc', valance: '#5fe08a', shelf: ['#b07a4a', '#e0b07a', '#4a2e18'],
+      awn: ['#ff5f6d', '#ffd23f', '#4fb4ff', '#5fe08a'], awnTop: ['#8a5528', '#e0b07a'], post: ['#8a5528', '#c99a68'],
+      counter: ['#b07a4a', '#e8c49a', '#7a4e28'], shut: ['#e0d6c4', '#cfc3ad', '#a89a80'],
+      lamp: ['#ffd23f', '#fff6c8'], lampOff: ['#7a6a3a', '#4a3e24'], glow: 'rgba(255,220,140,.4)', till: 'coin'
     },
     arceus: {
       sky: ['#140c2e', '#1c1240', '#251852', '#2f1f62', '#3a2672', '#462e80'], orb: ['#f4f0ff', '#140c2e'], stars: true,
@@ -427,6 +445,17 @@ G.ShopUI = (() => {
         wear: ['Good pick! It\'s in your slot.', 'Clink! Ready for your next run!']
       }
     },
+    skins: {
+      keeper: { dex: 235, shiny: false }, look: LOOKS.skins, sign: "Smeargle's Studio",
+      goods: ['pot-r', 'brush', 'pot-b', 'palette', 'pot-y', 'pot-g', 'brush', 'pot-p', 'palette', 'pot-r'],
+      lines: {
+        greet: ['Smeargle! Welcome to the Studio!', 'Fresh paint, fresh looks!'],
+        buy: ['Smear! A masterpiece!', 'It suits them perfectly!', 'Fresh from the easel!'],
+        idle: ['Every Pokémon is a blank canvas…', 'Check the Daily Spotlight: 30% off!', 'Regional looks, new colours…', 'Smear smear…'],
+        poor: ['Not enough PokéCoins for this canvas…', 'Come back with more coins!'],
+        wear: ['Looking sharp!', 'What a look!']
+      }
+    },
     arceus: {
       keeper: { dex: 302, shiny: true }, look: LOOKS.arceus, sign: "Sableye's Star Shop",
       goods: ['gem-p', 'palette', 'gem-g', 'cardi', 'star', 'gem-r', 'palette', 'gem-p', 'cardi', 'gem-g'],
@@ -446,11 +475,13 @@ G.ShopUI = (() => {
     });
     $('shop-tabs').querySelector('[data-tab=keys]').insertAdjacentHTML('afterbegin', G.Icons.html('ki-key', 22));
     $('shop-tabs').querySelector('[data-tab=arceus]').insertAdjacentHTML('afterbegin', G.Icons.html('star', 22));
+    $('shop-tabs').querySelector('[data-tab=skins]').insertAdjacentHTML('afterbegin', G.Icons.html('brush', 22));
     window.addEventListener('resize', () => { if (stall && G.UI.isOpen('scr-shop')) stall.resize(); });
   }
 
-  function open(which) {
+  function open(which, focus) {
     if (which) tab = which;
+    if (focus && G.SkinData.BY[focus]) { skinFocus = +focus; skinShelf = G.SkinData.BY[focus].route.shelf || skinShelf; skinMine = false; }
     G.UI.show('scr-shop', true);
     render();
     if (!raf) { lastT = performance.now(); raf = requestAnimationFrame(loop); }
@@ -515,10 +546,10 @@ G.ShopUI = (() => {
     $('shop-sign').textContent = OPTS[tab].sign;
     if (!stalls[tab]) stalls[tab] = new G.Stall(host, OPTS[tab]);
     if (stall !== stalls[tab]) { stall = stalls[tab]; stall.k.loop('Idle'); requestAnimationFrame(() => stall.open()); }
-    $('shop-wallet').innerHTML = tab === 'keys'
+    $('shop-wallet').innerHTML = tab !== 'arceus'
       ? `<span class="coin"></span> <b>${G.DB.save.coins.toLocaleString('en')}</b> PokéCoins`
       : `${G.Icons.html('star', 18)} <b>${G.DB.stars()}</b> Arceus ${G.DB.stars() === 1 ? 'Star' : 'Stars'}`;
-    if (tab === 'keys') renderKeys(); else renderArceus();
+    if (tab === 'keys') renderKeys(); else if (tab === 'skins') renderSkins(); else renderArceus();
   }
 
   // ---------------- Klefki: Key Items ----------------
@@ -573,6 +604,114 @@ G.ShopUI = (() => {
       list.appendChild(el);
     });
     box.appendChild(list);
+  }
+
+  // ---------------- Smeargle: Studio (form skins) ----------------
+
+  function renderSkins() {
+    const s = G.DB.save, box = $('shop-body');
+    $('shop-sub').innerHTML = 'Skins change how a Pokémon looks, never how it plays. You need the Pokémon to buy its skins; wear them from its page. Shiny owners get the shiny version too.';
+    box.innerHTML = '';
+    const spot = G.Skins.spotlight(s);
+    const card = (f, i, list) => {
+      const own = G.Skins.has(f.id), haveMon = G.DB.owns(f.dex), price = G.Skins.priceOf(f.id), deal = spot.includes(f.id);
+      const el = document.createElement('div');
+      el.className = 'panel skin-card' + (own ? ' owned' : '') + (haveMon ? '' : ' nomon') + (f.id === skinFocus ? ' focus' : '');
+      el.appendChild(G.UI.spriteCanvas(f.id, 96, 84, { scale: 2, silhouette: !haveMon, shadow: haveMon, lively: haveMon,
+                                                       shiny: own && G.DB.ownsShiny(f.dex) }));
+      el.insertAdjacentHTML('beforeend', `<b>${esc(f.name)}</b>${deal && !own ? ' <span class="ki-tag t-gamble">-30%</span>' : ''}
+        <small>${own ? (G.Skins.worn(f.dex) === f.id ? 'Wearing it' : 'Owned') : haveMon ? '' : 'Need ' + esc(G.DEX_BY[f.dex].name)}</small><div class="buy"></div>`);
+      const buy = el.querySelector('.buy');
+      if (own) {
+        const b = document.createElement('button');
+        const on = G.Skins.worn(f.dex) === f.id;
+        b.className = 'btn small' + (on ? ' ghost' : ''); b.dataset.sfx = 'confirm'; b.type = 'button';
+        b.textContent = on ? 'Take off' : 'Wear';
+        b.onclick = () => { G.Skins.wear(f.dex, on ? 0 : f.id); if (!on) stall.say(G.U.pick(OPTS.skins.lines.wear)); render(); };
+        buy.appendChild(b);
+      } else if (haveMon) {
+        const t = document.createElement('button');
+        t.className = 'btn small ghost'; t.type = 'button'; t.dataset.sfx = 'click'; t.textContent = 'Try';
+        t.onclick = () => trySkin(f);
+        const b = document.createElement('button');
+        b.className = 'btn small gold'; b.type = 'button'; b.dataset.sfx = 'none';
+        b.innerHTML = (deal ? `<s>${f.route.price.toLocaleString('en')}</s> ` : '') + `<span class="coin"></span> ${price.toLocaleString('en')}`;
+        b.disabled = s.coins < price;
+        b.onclick = () => {
+          const err = G.Skins.buy(f.id);
+          if (err) { stall.poor(); G.UI.toast(err); return; }
+          G.UI.refreshCoins();
+          G.UI.toast(f.name + ' is yours! Wear it from here or ' + G.DEX_BY[f.dex].name + '\'s page.');
+          skinFocus = f.id;
+          render();
+          stall.bought(OPTS.skins.goods[i % OPTS.skins.goods.length], box.querySelector('.skin-card.focus canvas'), i % OPTS.skins.goods.length);
+        };
+        const w = document.createElement('span'); w.className = 'try-wrap'; w.append(t, b);
+        buy.appendChild(w);
+      }
+      el.onmouseenter = () => stall && stall.pointAt(i % OPTS.skins.goods.length, OPTS.skins.goods.length);
+      return el;
+    };
+
+    if (spot.length) {
+      const h = document.createElement('h3');
+      h.className = 'shop-h';
+      h.innerHTML = G.Icons.html('star', 18) + ' Daily Spotlight <small>30% off today, for Pokémon you own</small>';
+      box.appendChild(h);
+      const g = document.createElement('div');
+      g.className = 'skin-grid';
+      spot.forEach((id, i) => g.appendChild(card(G.SkinData.BY[id], i)));
+      box.appendChild(g);
+    }
+
+    const all = G.SkinData.LIST.filter(f => f.route.kind === 'shop');
+    const chips = document.createElement('div');
+    chips.className = 'filters';
+    for (const [k, label] of [['regional', 'Regional'], ['colours', 'Colours & Patterns']]) {
+      const n = all.filter(f => f.route.shelf === k);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (skinShelf === k ? ' on' : '');
+      b.textContent = `${label} ${n.filter(f => G.Skins.has(f.id)).length}/${n.length}`;
+      b.onclick = () => { skinShelf = k; skinFocus = 0; render(); };
+      chips.appendChild(b);
+    }
+    const mine = document.createElement('button');
+    mine.type = 'button';
+    mine.className = 'chip' + (skinMine ? ' on' : '');
+    mine.textContent = 'Only Pokémon I own';
+    mine.onclick = () => { skinMine = !skinMine; render(); };
+    chips.appendChild(mine);
+    box.appendChild(chips);
+
+    let list = all.filter(f => f.route.shelf === skinShelf && (!skinMine || G.DB.owns(f.dex)));
+    list.sort((a, b) => (G.DB.owns(b.dex) - G.DB.owns(a.dex)) || (a.dex - b.dex) || (a.id - b.id));
+    const g = document.createElement('div');
+    g.className = 'skin-grid';
+    list.forEach((f, i) => g.appendChild(card(f, i)));
+    if (!list.length) g.innerHTML = '<p class="sub">Nothing here yet: you need the Pokémon first.</p>';
+    box.appendChild(g);
+    const foc = box.querySelector('.skin-card.focus');
+    if (foc) requestAnimationFrame(() => foc.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+  }
+
+  /** Try a skin: your Pokémon in that form, walking round in a big window. */
+  function trySkin(f) {
+    closeCardTry();
+    const pop = document.createElement('div');
+    pop.id = 'card-try';
+    pop.className = 'card-try';
+    pop.innerHTML = `<div class="box card-try-box"><h3>Trying ${esc(f.name)}</h3>
+        <p class="sub">A skin only changes the look: ${esc(G.DEX_BY[f.dex].name)} plays exactly the same.</p>
+        <div class="skin-try"><canvas width="220" height="190" class="stage"></canvas></div>
+        <div class="row end"><button class="btn small ghost" type="button">Close</button></div></div>`;
+    pop.querySelector('button').onclick = closeCardTry;
+    pop.onclick = e => { if (e.target === pop) closeCardTry(); };
+    document.body.appendChild(pop);
+    const cv = pop.querySelector('canvas');
+    cv.style.setProperty('--stage-c', G.U.TYPE_COLOR[G.DEX_BY[f.dex].types[0]]);
+    G.UI.sprite(cv, f.id, { anim: 'Walk', spin: true, lively: true, scale: 3, hero: true, shiny: G.DB.ownsShiny(f.dex) });
+    stall.say(G.U.pick(['Smear! Looks great!', 'A fine new coat!', 'Try it on, try it on!']));
   }
 
   // ---------------- Sableye: Star Shop ----------------

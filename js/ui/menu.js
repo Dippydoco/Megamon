@@ -150,10 +150,13 @@ G.MenuUI = (() => {
     G.UI.chrome(true);
     G.UI.show('scr-menu');
     G.KeyItemUI.renderSlot();        // the Key Item you'll take into your next run
-    G.UI.sprite($('menu-partner'), mon.dex, { lively: true, scale: 4, hero: true, shiny });
+    G.Skins.check(false);            // skins earned while away (Mastery head start, merged saves): unlocked quietly
+    G.UI.sprite($('menu-partner'), G.Skins.mine(mon.dex), { lively: true, scale: 4, hero: true, shiny });
     $('menu-partner').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
     $('menu-partner').classList.toggle('shiny', shiny);
-    $('menu-partner-name').innerHTML = mon.name + (shiny ? ' ' + G.Icons.html('shiny', 24) : '') + (reachedArceus(mon.dex) ? ' ' + arcStar(24, mon.dex) : '');
+    const skinF = G.SkinData.BY[G.Skins.worn(mon.dex)];
+    $('menu-partner-name').innerHTML = (skinF ? skinF.name : mon.name) + (shiny ? ' ' + G.Icons.html('shiny', 24) : '') + (reachedArceus(mon.dex) ? ' ' + arcStar(24, mon.dex) : '')
+      + ' ' + G.Mastery.badge(G.Mastery.level(mon.dex), 20);
     $('menu-partner-info').innerHTML = G.UI.typeChips(mon.types) + ' ' + G.UI.stars(mon.rarity);
     featuredStrip();
     // Normal / shiny by hand, right here (on mobile it couldn't be found in the details).
@@ -189,7 +192,7 @@ G.MenuUI = (() => {
     const canKey = G.KeyItems.LIST.filter(k => !G.KeyItems.owns(k.id) && s.coins >= k.price).length;
     const stars = G.DB.stars();
     $('menu-shop-sub').textContent = stars ? stars + (stars === 1 ? ' Star to spend' : ' Stars to spend')
-      : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Key Items and themes';
+      : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Key Items, themes and skins';
     $('menu-shop-sub').classList.toggle('gold', stars > 0 || canKey > 0);
 
     // Battle Tower tile: your checkpoint and Battle Points.
@@ -365,12 +368,16 @@ G.MenuUI = (() => {
       else if (sh) cell.insertAdjacentHTML('beforeend', `<span class="badge-r" title="You have its shiny">${G.Icons.html('shiny', 12)}</span>`);
       const useShiny = sh && p.dex === s.partner && s.partnerShiny;
       const sOpts = { scale: 2, silhouette: !own, shadow: own, shiny: useShiny };
+      const sprDex = own ? G.Skins.mine(p.dex) : p.dex;             // the skin you wear on it
+      const mlv = own ? G.Mastery.level(p.dex) : 0;
+      if (mlv) cell.insertAdjacentHTML('beforeend', `<span class="badge-mst">${G.Mastery.badge(mlv, 11)}</span>`);
+      if (mlv >= 4) { cell.classList.add('mst-frame'); cell.style.setProperty('--mst-c', G.U.TYPE_COLOR[p.types[0]]); }   // Mastery 4
       if (dexIO) {
         const cv = document.createElement('canvas');
-        cv.width = 92; cv.height = 80; cv._lazy = { dex: p.dex, opts: sOpts };
+        cv.width = 92; cv.height = 80; cv._lazy = { dex: sprDex, opts: sOpts };
         cell.appendChild(cv);
         dexIO.observe(cv);
-      } else cell.appendChild(G.UI.spriteCanvas(p.dex, 92, 80, sOpts));
+      } else cell.appendChild(G.UI.spriteCanvas(sprDex, 92, 80, sOpts));
       cell.insertAdjacentHTML('beforeend', `<b>${own ? p.name : '???'}</b>${G.UI.stars(p.rarity, 9)}`);
       cell.onclick = () => {
         dexSel = p.dex;
@@ -384,8 +391,67 @@ G.MenuUI = (() => {
     if (!grid.children.length) grid.innerHTML = query ? '<p class="sub" style="grid-column:1/-1">No Pokémon you own match that.</p>' : '<p class="sub" style="grid-column:1/-1">None with this filter.</p>';
   }
 
-  // Variant being viewed in the details (normal or shiny).
+  // Variant being viewed in the details (normal or shiny), and the skin being previewed (0 = default).
   let viewShiny = false;
+  const viewSkin = { dex: 0, id: 0 };
+
+  /** Mastery in the details: ribbon, bar, today's bonus and a link to the reward track (systems/mastery.js). */
+  function masteryBlock(dex) {
+    const box = $('dex-mst');
+    if (!box) return;
+    const pr = G.Mastery.progress(dex);
+    box.className = 'dex-mst';
+    box.innerHTML = `<div class="row between"><b>${pr.lv ? G.Mastery.badge(pr.lv, 16) : ''} Mastery ${pr.lv}</b>
+        <small>${pr.lv >= G.Mastery.MAX ? 'Mastered!' : (pr.span - pr.into).toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}</small></div>
+      <div class="mst-bar"><i style="width:${(pr.frac * 100).toFixed(1)}%"></i></div>
+      <div class="row between"><small>${G.Mastery.dailyReady(dex) ? '×1.5 first-run bonus ready today' : 'First-run bonus used today'}</small>
+        <button class="btn small ghost" type="button" data-sfx="click">Rewards</button></div>`;
+    box.querySelector('button').onclick = () => G.GoalsUI.open('mastery', dex);
+  }
+
+  /** Skins in the details: default + every form, with how to unlock the locked ones (systems/skins.js). */
+  function skinsBlock(dex) {
+    const box = $('dex-skins'), forms = G.SkinData.OF[dex] || [];
+    if (!box || !forms.length) return;
+    const s = G.DB.save, worn = G.Skins.worn(dex);
+    box.className = 'dex-skins';
+    box.innerHTML = `<div class="row between"><b>Skins</b><small>${forms.filter(f => G.Skins.has(f.id)).length} / ${forms.length}</small></div>
+      <div class="skin-row"></div><div class="skin-info"></div>`;
+    const row = box.querySelector('.skin-row');
+    const opts = [{ id: 0, name: 'Default' }].concat(forms);
+    for (const f of opts) {
+      const got = !f.id || G.Skins.has(f.id);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'skin-opt' + (f.id === viewSkin.id ? ' on' : '') + (got ? '' : ' locked') + (f.id === worn ? ' worn' : '');
+      b.title = f.name + (got ? '' : ' · locked');
+      b.appendChild(G.UI.spriteCanvas(f.id || dex, 52, 46, { scale: 1, silhouette: !got, shadow: got, shiny: got && viewShiny }));
+      if (f.id === worn) b.insertAdjacentHTML('beforeend', '<span class="skin-on">✓</span>');
+      b.onclick = () => { viewSkin.id = f.id; showDetail(dex); };
+      row.appendChild(b);
+    }
+    const f = G.SkinData.BY[viewSkin.id];
+    const info = box.querySelector('.skin-info');
+    if (!f) {
+      info.innerHTML = worn ? '<button class="btn small" type="button" data-sfx="confirm">Wear the default look</button>' : '<small>Wearing the default look.</small>';
+      const b = info.querySelector('button');
+      if (b) b.onclick = () => { G.Skins.wear(dex, 0); G.UI.toast(G.DEX_BY[dex].name + ': default look'); renderGrid(); showDetail(dex); };
+      return;
+    }
+    const got = G.Skins.has(f.id);
+    if (got) {
+      info.innerHTML = `<b>${f.name}</b> ${f.id === worn ? '<small>· wearing it</small>' : '<button class="btn small gold" type="button" data-sfx="confirm">Wear it</button>'}
+        ${viewShiny && !G.Sprites.hasShiny(f.id) ? '<small class="sub">No shiny colours drawn for this form yet.</small>' : ''}`;
+      const b = info.querySelector('button');
+      if (b) b.onclick = () => { G.Skins.wear(dex, f.id); G.UI.toast(f.name + ' on!'); renderGrid(); showDetail(dex); };
+    } else {
+      info.innerHTML = `<b>${f.name}</b> <small>· locked</small><div class="sub">${G.Skins.howText(f)}</div>
+        <div class="sub gold">${G.Skins.progressText(f)}</div>
+        ${f.route.kind === 'shop' ? '<button class="btn small gold" type="button" data-sfx="confirm">Go to Smeargle\'s Studio</button>' : ''}`;
+      const b = info.querySelector('button');
+      if (b) b.onclick = () => G.ShopUI.open('skins', f.id);
+    }
+  }
 
   function showDetail(dex) {
     const s = G.DB.save;
@@ -428,6 +494,8 @@ G.MenuUI = (() => {
         <p style="font-size:14px;margin:10px 0 4px">Starts with <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
         <p class="move-icons">
           ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
+        <div id="dex-mst"></div>
+        <div id="dex-skins"></div>
         <button id="dex-fav" class="btn ghost" style="width:100%;margin-bottom:6px">${G.Icons.html('heart', 14)} ${isFav(dex) ? 'Remove from favourites' : 'Add to favourites'}</button>
         ${usingThis
           ? '<button class="btn grow" disabled style="width:100%">It\'s your partner</button>'
@@ -437,7 +505,9 @@ G.MenuUI = (() => {
     `;
     $('dex-big').style.setProperty('--stage-c', !own ? '#5b83d6' : viewShiny ? '#9ae6ff' : G.U.TYPE_COLOR[p.types[0]]);
     $('dex-big').classList.toggle('shiny', own && viewShiny);
-    G.UI.sprite($('dex-big'), dex, { lively: own, spin: own, silhouette: !own, scale: 3, hero: true, shiny: own && viewShiny });
+    if (viewSkin.dex !== dex) { viewSkin.dex = dex; viewSkin.id = G.Skins.worn(dex); }
+    G.UI.sprite($('dex-big'), own ? G.Skins.sprite(dex, viewSkin.id) : dex, { lively: own, spin: own, silhouette: !own, scale: 3, hero: true, shiny: own && viewShiny });
+    if (own) { masteryBlock(dex); skinsBlock(dex); }
     box.querySelectorAll('.seg button').forEach(b => {
       b.onclick = () => { viewShiny = b.dataset.v === '1'; showDetail(dex); };
     });

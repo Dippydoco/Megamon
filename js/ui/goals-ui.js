@@ -5,6 +5,7 @@
  *   Missions      3 daily + 2 weekly, with a bar, reward and collect button
  *   Achievements  medals by category; legendaries one by one with their sprite
  *   Badges        one per generation, for owning every Pokémon of it (25-10-2026)
+ *   Mastery       every Pokémon you've played, its Mastery level and reward track (28-10-2026, systems/mastery.js)
  * and the public profile window for any player (G.ProfileUI.show).
  */
 (() => {
@@ -47,8 +48,9 @@
       });
     }
 
-    function open(t) {
+    function open(t, dex) {
       if (t) tab = t;
+      if (dex) mst.sel = +dex;
       G.UI.show('scr-goals', true);
       G.Progress.ensure(G.DB.save);
       G.Progress.checkAch();
@@ -63,7 +65,93 @@
       else if (tab === 'ach') achievements(box);
       else if (tab === 'history') history(box);
       else if (tab === 'badges') badges(box);
+      else if (tab === 'mastery') mastery(box);
       else profile(box);
+    }
+
+    // ---------------- mastery (28-10-2026) ----------------
+
+    const mst = { sel: 0, sort: 'mastery', type: '', gen: 0 };
+    function mastery(box) {
+      const s = G.DB.save, T = G.Mastery.totals(s);
+      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Mastery</h3>
+        <span class="sub">${T.levels} Mastery levels · ${T.mastered} mastered · ${T.played} played</span></div>
+        <p class="sub">Play runs with a Pokémon to raise its Mastery (1 to 10). It never changes stats: every reward is a look,
+        a title or a skin. The first run of the day with each Pokémon gives ×${G.Mastery.DAILY} XP.</p>`);
+      if (mst.sel && G.DEX_BY[mst.sel]) box.appendChild(masteryDetail(mst.sel));
+
+      const last = {};
+      for (const e of s.history || []) if (!last[e.d]) last[e.d] = e.id;
+      let list = Object.keys(s.mxp || {}).map(Number).filter(d => G.DEX_BY[d] && s.mxp[d] > 0);
+      if (mst.type) list = list.filter(d => G.DEX_BY[d].types.includes(mst.type));
+      if (mst.gen) list = list.filter(d => G.DEX_BY[d].gen === mst.gen);
+      list.sort(mst.sort === 'dex' ? (a, b) => a - b : mst.sort === 'recent' ? (a, b) => (last[b] || 0) - (last[a] || 0) : (a, b) => s.mxp[b] - s.mxp[a]);
+
+      const bar = document.createElement('div');
+      bar.className = 'row mst-ctl';
+      const sel = (opts, val, on) => {
+        const el = document.createElement('select');
+        el.innerHTML = opts.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? ' selected' : ''}>${t}</option>`).join('');
+        el.onchange = () => { on(el.value); render(); };
+        return el;
+      };
+      bar.appendChild(sel([['mastery', 'Sort: Mastery'], ['recent', 'Sort: recent'], ['dex', 'Sort: Pokédex']], mst.sort, v => { mst.sort = v; }));
+      bar.appendChild(sel([['', 'All types']].concat(G.SkinData.TYPES.map(t => [t, G.SkinData.cap(t)])), mst.type, v => { mst.type = v; }));
+      bar.appendChild(sel([[0, 'All generations']].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, 'Generation ' + g])), mst.gen, v => { mst.gen = +v; }));
+      box.appendChild(bar);
+
+      if (!list.length) { box.insertAdjacentHTML('beforeend', '<p class="sub">No Pokémon here yet. Finish a run and its Pokémon shows up with its Mastery.</p>'); return; }
+      const grid = document.createElement('div');
+      grid.className = 'mst-grid';
+      for (const d of list) {
+        const pr = G.Mastery.progress(d, s), mon = G.DEX_BY[d];
+        const c = document.createElement('button');
+        c.type = 'button';
+        c.className = 'mst-cell' + (d === mst.sel ? ' on' : '') + (pr.lv >= 10 ? ' max' : '');
+        c.style.setProperty('--mst-p', (pr.lv >= 10 ? 100 : pr.frac * 100).toFixed(1) + '%');
+        c.style.setProperty('--mst-c', G.U.TYPE_COLOR[mon.types[0]]);
+        const ring = document.createElement('span');
+        ring.className = 'mst-ring';
+        ring.appendChild(G.UI.spriteCanvas(G.Skins.mine(d), 64, 56, { scale: 1 }));
+        c.appendChild(ring);
+        c.insertAdjacentHTML('beforeend', `<b translate="no">${esc(mon.name)}</b><small>${pr.lv ? G.Mastery.badge(pr.lv, 11) : 'Mastery 0'}</small>`);
+        c.onclick = () => { mst.sel = d; render(); box.scrollTop = 0; };
+        grid.appendChild(c);
+      }
+      box.appendChild(grid);
+    }
+
+    /** One Pokémon's reward track and skins. */
+    function masteryDetail(dex) {
+      const s = G.DB.save, mon = G.DEX_BY[dex], pr = G.Mastery.progress(dex, s);
+      const el = document.createElement('div');
+      el.className = 'panel mst-detail';
+      el.innerHTML = `<div class="mst-head"><span class="mst-pic"></span><div>
+          <h3 translate="no">${esc(mon.name)} ${G.Mastery.badge(pr.lv, 18)}</h3>
+          <div class="mst-bar"><i style="width:${(pr.frac * 100).toFixed(1)}%"></i></div>
+          <small>${pr.lv >= 10 ? 'Mastered · ' + pr.xp.toLocaleString('en') + ' XP' : pr.xp.toLocaleString('en') + ' / ' + G.Mastery.NEED[pr.lv + 1].toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}
+            · ${G.Mastery.dailyReady(dex, s) ? '×' + G.Mastery.DAILY + ' first-run bonus ready today' : 'first-run bonus used today'}</small>
+        </div><button class="btn small ghost x" type="button" aria-label="Close">×</button></div>
+        <ol class="mst-track">${G.Mastery.track(dex).map(r => `<li class="${pr.lv >= r.lv ? 'ok' : ''}">
+          <span class="lv">${r.lv}</span>${G.Icons.html(r.icon, 14)}<span>${esc(r.text)}</span>${pr.lv >= r.lv ? '<em>✓</em>' : ''}</li>`).join('')}</ol>`;
+      el.querySelector('.mst-pic').appendChild(G.UI.spriteCanvas(G.Skins.mine(dex), 96, 84, { scale: 2, lively: true }));
+      el.querySelector('.x').onclick = () => { mst.sel = 0; render(); };
+      const forms = G.SkinData.OF[dex] || [];
+      if (forms.length) {
+        const sk = document.createElement('div');
+        sk.className = 'mst-skins';
+        sk.innerHTML = '<h4>Skins</h4>';
+        for (const f of forms) {
+          const got = G.Skins.has(f.id, s);
+          const r = document.createElement('div');
+          r.className = 'mst-skin' + (got ? ' ok' : '');
+          r.appendChild(G.UI.spriteCanvas(f.id, 52, 46, { scale: 1, silhouette: !got, shadow: got }));
+          r.insertAdjacentHTML('beforeend', `<div><b>${esc(f.name)}</b><small>${got ? 'Unlocked' + (G.Skins.worn(dex, s) === f.id ? ' · wearing it' : '') : esc(G.Skins.howText(f)) + ' · ' + esc(G.Skins.progressText(f, s))}</small></div>`);
+          sk.appendChild(r);
+        }
+        el.appendChild(sk);
+      }
+      return el;
     }
 
     // ---------------- history (last 100 runs) ----------------
@@ -139,12 +227,12 @@
               ${e.m.length ? e.m.map(([id, lv]) => `<i>${G.Icons.html('move:' + id, 16)} ${esc(G.Moves.BY_ID[id].name)} Lv.${lv}</i>`).join('') : '<i>—</i>'}</div>`}
             ${mates.length ? `<div class="hist-mates"><span>Teammates</span><div class="hist-mate-row"></div></div>` : ''}
           </div>`;
-        el.querySelector('.hist-mon').appendChild(G.UI.spriteCanvas(e.d, 44, 40, { scale: 1, shiny: !!e.sh }));
+        el.querySelector('.hist-mon').appendChild(G.UI.spriteCanvas(G.Skins.sprite(e.d, e.sk), 44, 40, { scale: 1, shiny: !!e.sh }));
         const mr = el.querySelector('.hist-mate-row');
-        if (mr) mates.forEach(([n, d, sh]) => {
+        if (mr) mates.forEach(([n, d, sh, sk]) => {
           const m = document.createElement('span');
           m.className = 'hist-mate';
-          if (G.DEX_BY[d]) m.appendChild(G.UI.spriteCanvas(d, 32, 30, { scale: 1, shiny: !!sh }));
+          if (G.DEX_BY[d]) m.appendChild(G.UI.spriteCanvas(G.Skins.sprite(d, sk), 32, 30, { scale: 1, shiny: !!sh }));
           m.insertAdjacentHTML('beforeend', `<b translate="no">${esc(n)}</b><small translate="no">${G.DEX_BY[d] ? esc(G.DEX_BY[d].name) : ''}</small>`);
           mr.appendChild(m);
         });
@@ -286,8 +374,8 @@
       el.innerHTML = `${G.Icons.html(ok ? 'medal' + a.tier : 'medalOff', 36)}
         <div class="a-txt"><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>
           ${ok ? '' : `<div class="bar"><i style="width:${v / a.goal * 100}%"></i></div>`}
-          <div class="a-rw">${ok ? 'Unlocked!' : v.toLocaleString('en') + ' / ' + a.goal.toLocaleString('en')} · ${G.Progress.rewardText(a.reward)}
-          ${a.title ? ` · <span class="gold">Title: ${esc(a.title)}</span>` : ''}</div></div>`;
+          <div class="a-rw">${[ok ? 'Unlocked!' : v.toLocaleString('en') + ' / ' + a.goal.toLocaleString('en'), G.Progress.rewardText(a.reward),
+            a.title ? `<span class="gold">Title: ${esc(a.title)}</span>` : ''].filter(Boolean).join(' · ')}</div></div>`;
       return el;
     }
 
@@ -307,7 +395,7 @@
         const slot = document.createElement('div');
         slot.className = 'fav-slot';
         if (f && G.DEX_BY[f.dex]) {
-          slot.appendChild(G.UI.spriteCanvas(f.dex, 120, 100, { scale: 2, lively: true, shiny: !!f.shiny }));
+          slot.appendChild(G.UI.spriteCanvas(G.Skins.mine(f.dex), 120, 100, { scale: 2, lively: true, shiny: !!f.shiny }));
           slot.insertAdjacentHTML('beforeend', `<b>${f.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${esc(G.DEX_BY[f.dex].name)}</b>`);
         } else slot.innerHTML = '<span>Choose</span>';
         slot.onclick = () => pickFav(i);
@@ -353,7 +441,11 @@
         }
         box.appendChild(row);
       };
-      pick('Profile banner', C.BANNERS, 'banner', (b, it) => { b.style.setProperty('--bg', it.bg); b.classList.add('bn'); });
+      // + Mastery 9 banners (one per Pokémon at Mastery 9 or more, with its sprite).
+      pick('Profile banner', C.BANNERS.concat(G.Mastery.banners().map(C.monBanner).filter(Boolean)), 'banner', (b, it) => {
+        b.style.setProperty('--bg', it.bg); b.classList.add('bn');
+        if (it.dex) { const cv = G.UI.spriteCanvas(it.dex, 30, 28, { scale: 1, shadow: false }); cv.className = 'bn-sw-mon'; b.appendChild(cv); }
+      });
       pick('Profile border', C.FRAMES, 'frame', (b, it) => { b.classList.add('fr'); b.dataset.frame = it.id; if (it.color) b.style.setProperty('--fc', it.color); });
       box.insertAdjacentHTML('beforeend', '<p class="sub" style="margin:2px 0 0">✦ animated</p>');
       // Profile background colour and wallpaper (19-10-2026).
@@ -569,6 +661,7 @@
           <div><span>Legendaries</span><b>${b.legends || 0}</b></div>
           <div><span>Defeated</span><b>${(b.kills || 0).toLocaleString('en')}</b></div>
         </div>
+        <div id="prof-mst" class="prof-feat hidden"><h3>Most mastered</h3><div class="mst-top" id="prof-mst-row"></div></div>
         <div id="prof-feat" class="prof-feat hidden"><h3>Featured</h3><div class="prof-feat-badges" id="prof-feat-b"></div><div class="prof-feat-ach" id="prof-feat-a"></div></div>
         <h3>Medals <span class="sub">${b.medals || 0}</span>${b.badges ? ` · Badges <span class="sub">${b.badges} / 9</span>` : ''}</h3>
         <div class="prof-medals" id="prof-medals"></div>
@@ -598,11 +691,23 @@
         if (!G.DEX_BY[f.dex]) continue;
         const slot = document.createElement('div');
         slot.className = 'fav-slot';
-        slot.appendChild(G.UI.spriteCanvas(f.dex, 120, 100, { scale: 2, lively: true, shiny: !!f.shiny }));
+        slot.appendChild(G.UI.spriteCanvas(G.Skins.sprite(f.dex, f.sk), 120, 100, { scale: 2, lively: true, shiny: !!f.shiny }));
         slot.insertAdjacentHTML('beforeend', `<b>${f.shiny ? G.Icons.html('shiny', 12) + ' ' : ''}${esc(G.DEX_BY[f.dex].name)}</b>`);
         favs.appendChild(slot);
       }
       if (!favs.children.length) favs.innerHTML = '<p class="sub">No favourites yet.</p>';
+      // Top 3 Pokémon by Mastery (best.mm, 28-10-2026).
+      const mm = (Array.isArray(b.mm) ? b.mm : []).filter(x => Array.isArray(x) && G.DEX_BY[x[0]]).slice(0, 3);
+      if (mm.length) {
+        $('prof-mst').classList.remove('hidden');
+        for (const [d, lv] of mm) {
+          const w = document.createElement('div');
+          w.className = 'mst-top-cell';
+          w.appendChild(G.UI.spriteCanvas(d, 64, 56, { scale: 1 }));
+          w.insertAdjacentHTML('beforeend', `<b>${esc(G.DEX_BY[d].name)}</b>${G.Mastery.badge(Math.min(10, lv | 0), 12)}`);
+          $('prof-mst-row').appendChild(w);
+        }
+      }
       // Featured achievements and badges (kept in `best` so the published profiles rules accept them).
       const fa = (Array.isArray(b.fa) ? b.fa : []).filter(id => G.AchDefs.BY[id]).slice(0, FEAT_ACH);
       const fbg = (Array.isArray(b.fb) ? b.fb : []).map(Number).filter(g => BADGE_MON[g]).slice(0, 9);

@@ -19,7 +19,7 @@
  *   host -> guest       { k:'f', t, lv, xp, xn, ki, bo, co, p:{uid:[state]},
  *                         e:[[id,x,y,health,anim,dir,statuses]], ev:[events],
  *                         ja:[x,y,anim,dir] (Arceus, only in the Judgment) }
- *   host -> everyone    { k:'start', seed, host, members:[{uid,name,dex,shiny}] }
+ *   host -> everyone    { k:'start', seed, host, members:[{uid,name,dex,shiny,sk,ml}] }   (sk worn skin, ml Mastery level)
  */
 G.Coop = (() => {
   const ANIMS = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint'];
@@ -76,13 +76,15 @@ G.Coop = (() => {
     levelSeq = 0; levelNow = 1; seenSeq = 0; doneSeq = 0; lastHo = '';
     cfg.members.forEach((m, i) => {
       const x = (i - (cfg.members.length - 1) / 2) * 34, y = 0;
-      if (m.uid === me) { pl.x = x; pl.y = y; pl.uid = me; pl.coopHost = host; pl.tagColor = COLORS[i]; return; }
+      // Mastery 7 (systems/mastery.js): the name tag takes the Pokémon's type colour.
+      const tagCol = mon => ((m.ml | 0) >= 7 && mon ? G.U.TYPE_COLOR[mon.types[0]] : COLORS[i]);
+      if (m.uid === me) { pl.x = x; pl.y = y; pl.uid = me; pl.coopHost = host; pl.tagColor = tagCol(pl.mon); return; }
       const mon = G.DEX_BY[m.dex] || G.DEX_BY[25];
-      const p = new G.Player(mon, {}, !!m.shiny);
-      p.remote = true; p.uid = m.uid; p.tag = m.name; p.tagColor = COLORS[i]; p.revLabel = 'Stay by their side';
+      const p = new G.Player(mon, {}, !!m.shiny, { sk: m.sk, ml: m.ml });       // their skin and Mastery cosmetics
+      p.remote = true; p.uid = m.uid; p.tag = m.name; p.tagColor = tagCol(mon); p.revLabel = 'Stay by their side';
       p.x = x; p.y = y;
       p.net = { x, y, ang: Math.PI / 2, walk: 0, hp: p.maxHp, maxHp: p.maxHp, dead: 0, mv: G.startMoveOf(mon.dex), ml: 1, mag: 78, aim: Math.PI / 2, rev: 0 };
-      G.Sprites.preload([mon.dex], 8000, p.shiny);
+      G.Sprites.preload([p.sprite], 8000, p.shiny);
       mates.set(m.uid, { uid: m.uid, name: m.name, color: COLORS[i], pl: p, connected: true, q: [], flushT: 0, xpMul: 1 });
     });
   }

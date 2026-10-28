@@ -802,8 +802,9 @@ G.HUD = (() => {
   let portraitT = performance.now(), portraitDt = 0;
   function portrait(key, o) {
     let p = portraits.get(key);
-    if (!p || p.dex !== o.dex || p.shinyWanted !== !!o.shiny) {
-      p = new G.Sprites.Animator(o.dex, 1, !!o.shiny);
+    const sp = o.sprite || o.dex;          // the worn skin, if any (systems/skins.js)
+    if (!p || p.dex !== sp || p.shinyWanted !== !!o.shiny) {
+      p = new G.Sprites.Animator(sp, 1, !!o.shiny);
       p.shinyWanted = !!o.shiny;
       p.dir = G.Sprites.dirFromAngle(Math.PI / 2);
       p.loop('Idle');
@@ -816,7 +817,7 @@ G.HUD = (() => {
   function portraitBox(ctx, key, o, x, y, size) {
     const pt = portrait(key, o);
     pt.update(portraitDt);
-    const am = G.Sprites.animMeta(o.dex, 'Idle', pt.shiny);
+    const am = G.Sprites.animMeta(o.sprite || o.dex, 'Idle', pt.shiny);
     pt.scale = Math.min(2, (size - 6) / ((am && am.ay) || 24)) / G.Sprites.PX;
     ctx.save();
     roundRect(ctx, x, y, size, size, 7); ctx.clip();
@@ -886,7 +887,7 @@ G.HUD = (() => {
     ctx.strokeStyle = c.color; ctx.lineWidth = 1.5; ctx.stroke();
     const pt = portrait(c.key, o);
     pt.update(portraitDt);
-    const am = G.Sprites.animMeta(o.dex, 'Idle', pt.shiny);
+    const am = G.Sprites.animMeta(o.sprite || o.dex, 'Idle', pt.shiny);
     pt.scale = Math.min(2, (CARD_IC - 6) / ((am && am.ay) || 24)) / G.Sprites.PX;
     ctx.save();
     roundRect(ctx, ix, iy, CARD_IC, CARD_IC, 7); ctx.clip();

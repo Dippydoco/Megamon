@@ -119,7 +119,11 @@ G.Game = (() => {
     time = 0; pendingLevels = 0;
     runReal = performance.now(); tampered = false;
 
-    pl = new G.Player(mon, perks, !drafted && !!save.partnerShiny && G.DB.ownsShiny(mon.dex));
+    // Skin and Mastery cosmetics (28-10-2026): yours, not in Draft Night (you play a Pokémon you don't own there).
+    pl = new G.Player(mon, perks, !drafted && !!save.partnerShiny && G.DB.ownsShiny(mon.dex),
+                      drafted ? {} : { sk: G.Skins.worn(mon.dex), ml: G.Mastery.level(mon.dex) });
+    pl.legendsRun = 0;           // legendaries defeated in rifts this run (Mastery XP)
+    pl.drafted = !!drafted;
     banked = { t1: 0, t10: 0 };
     caught = [];
     // Shortcuts: moves with a fixed slot (save.pbind[dex] = [id of 1, id of 2, ...]),
@@ -159,7 +163,7 @@ G.Game = (() => {
     }
     G.Camera.x = pl.x; G.Camera.y = pl.y; G.Camera.shake = 0;
     // Local sprite sheets: the partner and the first enemies.
-    G.Sprites.preload([mon.dex], 8000, pl.shiny);
+    G.Sprites.preload([pl.sprite], 8000, pl.shiny);
     G.Audio.music(G.BIOME_MUSIC[0]);
     // For the leaderboard: the server records when the run starts (anti-cheat). (The Battle Tower has no leaderboard yet.)
     // (No run-start mark for the leaderboard any more: the server no longer times runs, 27-10-2026.)
@@ -399,15 +403,21 @@ G.Game = (() => {
     // (20-10-2026). Runs that reached Arceus are always kept (their star count comes from the history).
     const runLog = G.RunLog.finish(pl, { dead, judged: !!judge && dead, fail: portalLost, team: coop ? team.length : 1 });
     if (!tower && (dead || portalLost || judge)) G.DB.addHistory({
-      id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
+      id: Date.now(), d: pl.dex, sh: pl.shiny ? 1 : 0, sk: pl.skin !== pl.dex ? pl.skin : 0, t: Math.floor(time), lv: pl.level, k: pl.kills, b: pl.bosses, c: coins,
       dd: mine.d, dt: mine.t, m: pl.moves.map(m => [m.id, m.lvl]), it: pl.item || '', ki: pl.keyItem || '', x: dead ? 1 : 0, g: coop ? 1 : 0,
-      mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0]),
+      mt: team.filter(m => m.uid !== pl.uid).map(m => [m.name, m.dex, m.shiny ? 1 : 0, m.sk || 0]),
       ar: judge ? [Math.floor(judge.time), judge.bosses] : 0,
       kb: dead && pl.killer ? pl.killer : 0,
       z: runLog
     });
     portalLost = false;
     if (judge) G.Progress.event('judgeEnd', judge);
+    // Mastery XP for this Pokémon and the challenge skins checked at the end of a run (28-10-2026). Not for runs
+    // that were quit, and not in Draft Night (you played a Pokémon you don't own).
+    const drafted = pl.drafted;
+    const mastery = drafted ? null : G.Mastery.award(pl.dex, { time, level: pl.level, bosses: pl.bosses, legends: pl.legendsRun || 0,
+                                                               judged: !!judge, tower, group: coop });
+    if (!drafted) G.Skins.runEnd(pl, tower ? 60 : time);
     G.Judgment.reset();
     if (!tower) G.Progress.event('runEnd', { time, level: pl.level, coins: pl.coins, types: pl.mon.types, group: coop });
     G.Progress.checkAch();
@@ -429,7 +439,7 @@ G.Game = (() => {
 
     G.RunUI.showOver({
       dead, killer: dead && pl.killer ? pl.killer : null, recent: dead && pl.hits ? pl.hits.slice(-4) : [],
-      time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge, tower,
+      time, level: pl.level, kills: pl.kills, bosses: pl.bosses, coins, record, t1: pl.t1, t10: pl.t10, judge, tower, mastery,
       moves: pl.moves, caught, mine, team: () => [...teamStats.values()], order: team.map(m => m.uid),
       breakdown: Object.entries(parts).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') +
                  (mul > 1 ? ` · ×${mul.toFixed(2)} Fortune` : '') + (feat > 1 ? ` · ×${feat} Featured Pokémon` : '')
@@ -965,6 +975,7 @@ G.Game = (() => {
     G.Judgment.update(dt, pl, time);                     // (only measures damage in the tower: see judgment.js)
     if (!G.Tower.active) G.Events.update(dt, all, time);
     G.Weather.update(dt, time, pl);
+    G.Skins.tick(dt, pl);                // challenge skins: weather time for Castform and Cherrim
     G.FX.update(dt);
 
     G.Audio.music(G.Tower.active ? G.Tower.music() : G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);

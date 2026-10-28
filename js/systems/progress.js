@@ -121,6 +121,7 @@ G.Progress = (() => {
 
   function rewardText(r) {
     const p = [];
+    if (!r) return '';
     if (r.t10) p.push(G.Icons.html('ticket10', 12) + ' ' + r.t10 + ' ×10');
     if (r.t1) p.push(G.Icons.html('ticket', 12) + ' ' + r.t1);
     if (r.coins) p.push('<span class="coin"></span> ' + r.coins);
@@ -164,6 +165,7 @@ G.Progress = (() => {
         S.judgeBosses = Math.max(S.judgeBosses || 0, d.bosses);
         break;
     }
+    if ((kind === 'rift' || kind === 'judge') && G.Skins) G.Skins.check(true);      // Arceus type skins, Megas
     advance(s.missions.daily, kind, d);
     advance(s.missions.weekly, kind, d);
     // Achievements are checked at most once a second (there are hundreds of kills).
@@ -178,6 +180,10 @@ G.Progress = (() => {
     if (G.Judgment.active && e.boss) { G.Judgment.bossDown(); event('kill', { types: e.types || [], boss: false, legend: 0 }); return; }
     const legend = e.legend || (G.Rift.inArena && e.boss) ? e.dex : 0;
     event('kill', { types: e.types || [], boss: !!e.boss, legend });
+    // Mastery (legendaries this run) and the challenge skins (Silvally, Origin, Therian, Kyurem: systems/skins.js).
+    const pl = G.Game && G.Game.player;
+    if (legend && pl) pl.legendsRun = (pl.legendsRun || 0) + 1;
+    if (G.Skins) G.Skins.onKill(e.types || [], legend);
   }
 
   // ---------------- achievements ----------------
@@ -199,7 +205,8 @@ G.Progress = (() => {
   /** Titles you have (from earned achievements). */
   function titles() {
     const s = G.DB.save;
-    return G.AchDefs.LIST.filter(a => a.title && s && s.ach && s.ach[a.id]).map(a => a.title);
+    const out = G.AchDefs.LIST.filter(a => a.title && s && s.ach && s.ach[a.id]).map(a => a.title);
+    return out.concat(G.Mastery ? G.Mastery.titles(s) : []);          // + Mastery titles (systems/mastery.js)
   }
 
   /** Mission rewards waiting to be collected (for the menu notice). */
@@ -235,5 +242,5 @@ G.Progress = (() => {
     }, 2800);
   }
 
-  return { ensure, event, kill, claim, reroll, checkAch, titles, pending, text, done, rewardText, grant };
+  return { ensure, event, kill, claim, reroll, checkAch, titles, pending, text, done, rewardText, grant, notify };
 })();

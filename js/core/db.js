@@ -112,6 +112,14 @@ G.DB = (() => {
       // floor saved by Climbs (10, 20...), best / bestX = highest floor reached in a Climb / an Expedition,
       // firsts = floor -> date of its first clear, badges = Badge id -> date unlocked with BP, runs = tower runs played.
       tower: { bp: 0, cp: 0, best: 0, bestX: 0, firsts: {}, badges: {}, runs: 0 },
+      // Mastery and skins (28-10-2026, systems/mastery.js and systems/skins.js): mxp dex -> Mastery XP, mday dex -> date
+      // of its last first-run-of-the-day bonus, skins form id -> date unlocked, skinOn dex -> worn form id,
+      // fc challenge counters for the challenge skins.
+      mxp: {},
+      mday: {},
+      skins: {},
+      skinOn: {},
+      fc: {},
       menuTheme: '',          // worn menu theme ('' = Classic Blue)
       cardTheme: '',          // worn player card theme ('' = Classic)
       profile: { favs: [], title: '' },   // public profile: 3 favourites and title
@@ -141,7 +149,7 @@ G.DB = (() => {
       if (!isObj(e) || !n(e.id) || seen.has(e.id) || (G.DEX_BY && !G.DEX_BY[e.d])) continue;
       seen.add(e.id);
       out.push({
-        id: n(e.id), d: n(e.d), sh: e.sh ? 1 : 0, t: Math.min(n(e.t), 86400), lv: n(e.lv), k: n(e.k), b: n(e.b), c: n(e.c),
+        id: n(e.id), d: n(e.d), sh: e.sh ? 1 : 0, ...(n(e.sk) ? { sk: n(e.sk) } : {}), t: Math.min(n(e.t), 86400), lv: n(e.lv), k: n(e.k), b: n(e.b), c: n(e.c),
         dd: n(e.dd), dt: n(e.dt),
         m: arr(e.m).filter(x => Array.isArray(x) && typeof x[0] === 'string' && (!G.Moves || G.Moves.BY_ID[x[0]]))
             .slice(0, 12).map(x => [x[0], Math.min(n(x[1]), 99)]),
@@ -149,7 +157,7 @@ G.DB = (() => {
         ...(typeof e.ki === 'string' && e.ki && (!G.KeyItems || G.KeyItems.BY[e.ki]) ? { ki: e.ki } : {}),   // key item (only when there was one)
         x: e.x ? 1 : 0, g: e.g ? 1 : 0,
         mt: arr(e.mt).filter(x => Array.isArray(x)).slice(0, 4)
-            .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0]),
+            .map(x => [String(x[0] || '').slice(0, 20), G.DEX_BY && G.DEX_BY[x[1]] ? n(x[1]) : 0, x[2] ? 1 : 0, n(x[3])]),
         ar: Array.isArray(e.ar) ? [n(e.ar[0]), n(e.ar[1])] : 0,
         kb: e.x && G.Killer ? G.Killer.clean(e.kb) : 0,
         z: e.z && G.RunLog ? G.RunLog.clean(e.z) : 0
@@ -201,6 +209,7 @@ G.DB = (() => {
       if (!s.arceus[d]) s.arceus[d] = Date.now();
       s.arceusN[d] = Math.max(s.arceusN[d] || 0, arcRuns[d]);
     }
+    if (G.Mastery) G.Mastery.backfill(s);      // Mastery head start from the run history (once)
     sanitize(s);
     s.v = VERSION;
     return s;
@@ -369,7 +378,7 @@ G.DB = (() => {
     }
     r.pupgDone = r.pupgDone || older.pupgDone;
     // What's earned is never lost: union of legendaries, arenas, items, achievements...
-    for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach', 'keyItems', 'themes']) {
+    for (const coll of ['legends', 'arceus', 'arenas', 'itemsFound', 'evoMoves', 'ach', 'keyItems', 'themes', 'skins']) {
       r[coll] = r[coll] || {};
       for (const k in older[coll] || {}) if (!r[coll][k]) r[coll][k] = older[coll][k];
     }
@@ -379,6 +388,17 @@ G.DB = (() => {
     for (const coll of ['firsts', 'badges']) {
       tr[coll] = tr[coll] || {};
       for (const k in to[coll] || {}) if (!tr[coll][k]) tr[coll][k] = to[coll][k];
+    }
+    // Mastery XP only grows: the highest of each. The daily-bonus dates: the latest. Challenge counters: the highest.
+    r.mxp = r.mxp || {};
+    for (const k in older.mxp || {}) r.mxp[k] = Math.max(r.mxp[k] || 0, older.mxp[k] || 0);
+    r.mday = r.mday || {};
+    for (const k in older.mday || {}) if (!r.mday[k] || String(older.mday[k]) > String(r.mday[k])) r.mday[k] = older.mday[k];
+    r.mxpInit = r.mxpInit || older.mxpInit;
+    const fr = r.fc = isObj(r.fc) ? r.fc : {}, fo = isObj(older.fc) ? older.fc : {};
+    for (const k in fo) {
+      if (isObj(fo[k])) { fr[k] = isObj(fr[k]) ? fr[k] : {}; for (const j in fo[k]) fr[k][j] = Math.max(+fr[k][j] || 0, +fo[k][j] || 0); }
+      else fr[k] = Math.max(+fr[k] || 0, +fo[k] || 0);
     }
     r.arceusN = r.arceusN || {};
     for (const k in older.arceusN || {}) r.arceusN[k] = Math.max(r.arceusN[k] || 0, older.arceusN[k] || 0);

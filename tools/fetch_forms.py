@@ -82,8 +82,9 @@ def catalogue(tracker):
                     spath = f'{tag}/{fid}/0001/0002'
                 else:
                     spath = f'{tag}/{fid}/0001'
-                has_shiny = bool(shiny and shiny.get('sprite_complete', 0) >= 1
-                                 and {'Idle', 'Walk'} <= set(shiny.get('sprite_files', {})))
+                # The shiny only needs its files: SpriteCollab marks some finished shinies "incomplete"
+                # (Mega Charizard X's), so its completeness flag is not checked.
+                has_shiny = bool(shiny and {'Idle', 'Walk'} <= set(shiny.get('sprite_files', {})))
                 base_form = form[:-7].strip() if plus else form
                 shown = ((label(base_form) + ' ') if base_form else '') + 'Female' if plus else label(form)
                 out.append({'id': 100000 + dex * 100 + n, 'dex': dex, 'form': shown,

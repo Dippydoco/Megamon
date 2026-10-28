@@ -9,6 +9,14 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T16:22Z', title: 'Mastery and skins', new: [
+    'Mastery: every Pokémon now has its own Mastery, from 1 to 10, raised by playing runs with it (time survived, level, bosses, legendaries, reaching Arceus and Battle Tower floors). The first run of the day with each Pokémon gives ×1.5 Mastery XP. Your past runs already count, so your favourites start ahead.',
+    'Mastery never changes stats. Its rewards are looks: ribbons on your Pokémon, a footstep trail, a glow, a run intro, a sparkle aura, titles, a profile banner with your Pokémon, and skins. See every Pokémon\'s reward track in Profile > Mastery, and your Mastery XP at the end of each run.',
+    'Skins: 390 alternate forms to collect and wear, from Mega Charizard X to Alolan Vulpix. They only change the look; your Pokémon plays exactly the same. Teammates see your skin in group runs, and it shows in your history and on your profile.',
+    'Megas and Primals unlock when a Pokémon reaches Mastery 10 and has reached Arceus. Female variants and signature forms (Ultra Necrozma, Crowned Zacian, Complete Zygarde and more) come from Mastery. Others have themed challenges, like winning a type\'s rift arena for that Arceus type or playing Deerling in each season.',
+    'Smeargle\'s Studio in the Shop sells regional forms, colours and patterns for PokéCoins, with a Daily Spotlight of 4 skins at 30% off. Try any skin before buying it.',
+    'New Forms & Mastery achievements, with titles for mastering Pokémon and completing skin sets.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T15:21Z', title: 'Roar and Nugget give fewer PokéCoins', chg: [
     'Roar no longer gives extra PokéCoins (it was +8% a level). It still gives +8% experience a level.',
     'The Nugget card gives half as many PokéCoins: 10 plus 1 per level (it was 20 plus 2 per level).'

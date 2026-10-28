@@ -144,7 +144,7 @@
             for (const fv of (pr.favs || []).slice(0, 3)) {
               const d = G.DEX_BY[fv.dex];
               if (!d) continue;
-              const cv = G.UI.spriteCanvas(fv.dex, 36, 36, { shiny: !!fv.shiny });
+              const cv = G.UI.spriteCanvas(G.Skins.sprite(fv.dex, fv.sk), 36, 36, { shiny: !!fv.shiny });
               cv.title = (fv.shiny ? 'Shiny ' : '') + d.name;
               favs.appendChild(cv);
             }
@@ -330,7 +330,7 @@
         : 'You\'re in ' + ((ms.find(m => m.uid === room.host) || {}).name || '…') + '\'s room. Ready up, and the host will start the game.';
 
       // The cards are only rebuilt if the members change (so the sprites don't flicker).
-      const key = ms.map(m => m.uid + ':' + m.dex + ':' + (m.shiny ? 1 : 0)).join('|');
+      const key = ms.map(m => m.uid + ':' + m.dex + ':' + (m.shiny ? 1 : 0) + ':' + (m.sk | 0) + ':' + (m.ml | 0)).join('|');
       const box = $('lobby-members');
       if (key !== membersKey) {
         membersKey = key;
@@ -341,8 +341,8 @@
           c.className = 'lob-card' + (m ? '' : ' empty');
           if (m) {
             c.style.setProperty('--pc', G.Coop.COLORS[i]);
-            c.appendChild(G.UI.spriteCanvas(m.dex, 120, 96, { scale: 2, lively: true, shiny: !!m.shiny }));
-            c.insertAdjacentHTML('beforeend', `<b translate="no">${esc(m.name)}</b><small>${esc((G.DEX_BY[m.dex] || {}).name || '')}</small><span class="conn" data-u="${m.uid}"></span>`);
+            c.appendChild(G.UI.spriteCanvas(G.Skins.sprite(m.dex, m.sk), 120, 96, { scale: 2, lively: true, shiny: !!m.shiny }));
+            c.insertAdjacentHTML('beforeend', `<b translate="no">${esc(m.name)}</b><small>${esc((G.DEX_BY[m.dex] || {}).name || '')} ${G.Mastery.badge(m.ml | 0, 12)}</small><span class="conn" data-u="${m.uid}"></span>`);
           } else c.innerHTML = '<span>Free</span>';
           box.appendChild(c);
         }
@@ -443,10 +443,11 @@
         // Your own partner is taken from your save (the most recent), not from what
         // has already come back from the room.
         members: room.members.map(m => m.uid === G.Social.uid
-          ? { uid: m.uid, name: m.name, dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }
-          : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny })
+          ? { uid: m.uid, name: m.name, dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner),
+              sk: G.Skins.worn(G.DB.save.partner), ml: G.Mastery.level(G.DB.save.partner) }
+          : { uid: m.uid, name: m.name, dex: m.dex, shiny: !!m.shiny, sk: m.sk | 0, ml: m.ml | 0 })
       };
-      if (drafted) for (const m of cfg.members) { const d = G.MiniUI.draftedFor(m.uid); if (d) { m.dex = d; m.shiny = false; } }
+      if (drafted) for (const m of cfg.members) { const d = G.MiniUI.draftedFor(m.uid); if (d) { m.dex = d; m.shiny = false; m.sk = 0; m.ml = 0; } }
       // Battle Tower Expedition (ui/tower-ui.js): the same start message, with the tower's config (not for Draft Night).
       const tower = drafted ? null : G.TowerUI.lobbyCfg();
       if (tower) cfg.tower = tower;

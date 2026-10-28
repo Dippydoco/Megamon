@@ -123,10 +123,22 @@ G.Cosmetics = (() => {
     return { banner: banner || '', pbg: bg || '', wall: wall || '' };
   }
 
+  /**
+   * Mastery 9 banners (28-10-2026, systems/mastery.js): 'm' + dex, a gradient in the Pokémon's type colours with its
+   * sprite on the right. Fits the 16-character `banner` field like the others.
+   */
+  function monBanner(dex) {
+    const p = G.DEX_BY[dex];
+    if (!p) return null;
+    const c1 = G.U.TYPE_COLOR[p.types[0]], c2 = G.U.TYPE_COLOR[p.types[1] || p.types[0]];
+    return { id: 'm' + p.dex, name: p.name, dex: p.dex, bg: `linear-gradient(120deg, #0b1020 0%, ${c1} 55%, ${c2} 100%)` };
+  }
+  const bannerOf = id => (/^m\d+$/.test(id || '') && monBanner(+id.slice(1))) || find(BANNERS, id);
+
   /** Dresses the public profile window: banner on the head, border, background colour and wallpaper on the box. */
   function apply(box, head, d) {
     const u = unpack(d.banner);
-    const fr = find(FRAMES, d.frame), bn = find(BANNERS, u.banner);
+    const fr = find(FRAMES, d.frame), bn = bannerOf(u.banner);
     const bg = find(BG_COLORS, u.pbg), wall = find(WALLPAPERS, u.wall);
     if (bg.c) box.style.setProperty('--pbg', bg.c); else box.style.removeProperty('--pbg');
     if (bg.c) box.dataset.pbg = bg.id; else delete box.dataset.pbg;
@@ -136,8 +148,15 @@ G.Cosmetics = (() => {
     if (head) {
       head.dataset.banner = bn.id;
       head.style.background = bn.id ? bn.bg : '';
+      const old = head.querySelector('.bn-mon');
+      if (old) old.remove();
+      if (bn.dex && G.UI) {
+        const cv = G.UI.spriteCanvas(bn.dex, 72, 60, { scale: 2, lively: true, shadow: false });
+        cv.className = 'bn-mon';
+        head.appendChild(cv);
+      }
     }
   }
 
-  return { BANNERS, FRAMES, NAME_COLORS, BG_COLORS, WALLPAPERS, pack, unpack, find, unlocked, hint, chatColor, validColor, apply };
+  return { BANNERS, FRAMES, NAME_COLORS, BG_COLORS, WALLPAPERS, pack, unpack, find, unlocked, hint, chatColor, validColor, apply, monBanner };
 })();

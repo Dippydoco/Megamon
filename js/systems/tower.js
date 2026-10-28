@@ -430,6 +430,7 @@ G.Tower = (() => {
     if (!run || !fl || fl.cfg.n !== n || fl.phase === 'clear') return;
     const cfg = fl.cfg, pl = G.Game.player, s = G.DB.save, D_ = D();
     fl.phase = 'clear'; fl.t = 0;
+    if (cfg.kind === 'sequence' && G.Skins) G.Skins.unown();      // Unown Sequence: a new Unown letter skin
     G.Pickups.pullAll();
     G.Audio.sfx(cfg.kind === 'horde' || cfg.kind === 'plates' ? 'levelup' : 'legend');
     // Battle Points (+1 with the Bounty Badge).

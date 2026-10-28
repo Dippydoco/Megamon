@@ -232,7 +232,7 @@ G.Abil = (() => {
     'dazzling': merge(dr(0.05), { inc: (pl, S, h) => { if (lunge(h)) h.block = 'Dazzling'; } }),
     'queenly-majesty': merge(dr(0.05), { inc: (pl, S, h) => { if (lunge(h)) h.block = 'Queenly Majesty'; } }),
     'disguise': { start: (pl, S) => { S.disg = 0; }, tick: (pl, S, dt) => { if (S.disg > 0) S.disg -= dt; },
-                  inc: (pl, S, h) => { if (!(S.disg > 0)) { S.disg = 90; h.block = 'Disguise!'; } } },
+                  inc: (pl, S, h) => { if (!(S.disg > 0)) { S.disg = 90; h.block = 'Disguise!'; if (G.Skins) G.Skins.disguise(pl); } } },
     'filter': { inc: (pl, S, h) => { if (h.k > 1) h.amount *= 0.75; } },
     'solid-rock': { inc: (pl, S, h) => { if (h.k > 1) h.amount *= 0.75; } },
     'prism-armor': merge(dr(0.05), { inc: (pl, S, h) => { if (h.k > 1) h.amount *= 0.7; } }),

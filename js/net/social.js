@@ -371,7 +371,8 @@ G.Social = (() => {
 
   function memberInfo() {
     const s = G.DB.save;
-    return { name: me.name, dex: s.partner, shiny: !!s.partnerShiny && G.DB.ownsShiny(s.partner), at: ts() };
+    return { name: me.name, dex: s.partner, shiny: !!s.partnerShiny && G.DB.ownsShiny(s.partner),
+             sk: G.Skins.worn(s.partner), ml: G.Mastery.level(s.partner), at: ts() };
   }
 
   /**
@@ -566,8 +567,9 @@ G.Social = (() => {
   /** Updates your Pokémon in the room (if you change partner). */
   function refreshMember() {
     if (!room || !me) return Promise.resolve();
+    const d = G.DB.save.partner;
     return fb.rtdb.ref('rooms/' + room.id + '/m/' + uid).update(
-      { dex: G.DB.save.partner, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(G.DB.save.partner) }).catch(() => {});
+      { dex: d, shiny: !!G.DB.save.partnerShiny && G.DB.ownsShiny(d), sk: G.Skins.worn(d), ml: G.Mastery.level(d) }).catch(() => {});
   }
 
   /**
@@ -581,7 +583,7 @@ G.Social = (() => {
     const mine = room.members.find(m => m.uid === uid);
     if (!mine) return;
     const dex = G.DB.save.partner, shiny = !!G.DB.save.partnerShiny && G.DB.ownsShiny(dex);
-    if (mine.dex === dex && !!mine.shiny === shiny) return;
+    if (mine.dex === dex && !!mine.shiny === shiny && (mine.sk | 0) === G.Skins.worn(dex) && (mine.ml | 0) === G.Mastery.level(dex)) return;
     healing = true;
     refreshMember().then(() => { setTimeout(() => { healing = false; }, 1500); });
   }
@@ -643,7 +645,7 @@ G.Social = (() => {
     const medals = unlocked.slice().sort((a, b) => (b.tier - a.tier) || (s.ach[b.id] - s.ach[a.id])).slice(0, 8).map(a => a.id);
     return {
       name: me ? me.name : G.DB.user,
-      favs: (prof.favs || []).slice(0, 3).map(f => ({ dex: f.dex | 0, shiny: !!f.shiny })),
+      favs: (prof.favs || []).slice(0, 3).map(f => ({ dex: f.dex | 0, shiny: !!f.shiny, sk: G.Skins.worn(f.dex) })),   // + worn skin
       title: prof.title || '',
       banner: G.Cosmetics.pack(prof),     // banner id, plus the background colour and wallpaper (cosmetics.js)
       frame: prof.frame || '',
@@ -653,7 +655,8 @@ G.Social = (() => {
               // the profiles rule only allows a fixed set of top-level fields and checks nothing inside `best`.
               fa: (prof.featAch || []).filter(id => s.ach && s.ach[id]).slice(0, 6),
               fb: (prof.featBadges || []).filter(g => G.Charms.has(g, s)).slice(0, 9),
-              badges: G.Charms.list(s).length },
+              badges: G.Charms.list(s).length,
+              mm: G.Mastery.top(3, s) },          // top 3 Pokémon by Mastery [[dex, level]] (28-10-2026)
       medals
     };
   }

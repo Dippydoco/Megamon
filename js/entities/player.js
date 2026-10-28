@@ -7,12 +7,19 @@ G.Player = class Player {
   /**
    * @param mon   G.DEX entry
    * @param perks permanent upgrades already resolved (see data/upgrades.js)
+   * @param look  cosmetics (28-10-2026): { sk: worn skin (form id), ml: Mastery level } (systems/skins.js, mastery.js)
    */
-  constructor(mon, perks = {}, shiny = false) {
+  constructor(mon, perks = {}, shiny = false, look = {}) {
     this.mon = mon;
     this.dex = mon.dex;
     this.shiny = shiny && G.Sprites.hasShiny(mon.dex);
-    this.anim = new G.Sprites.Animator(mon.dex, 1, this.shiny);
+    // A skin only changes the animation sheet: hitbox (r), height, shadow and everything else stay the base Pokémon's.
+    this.skin = G.Skins ? G.Skins.sprite(mon.dex, look.sk) : mon.dex;
+    this.sprite = this.skin;
+    this.mastery = Math.max(0, Math.min(10, look.ml | 0));
+    this.anim = new G.Sprites.Animator(this.sprite, 1, shiny && G.Sprites.hasShiny(this.sprite));
+    this.introT = this.mastery >= 6 ? 1.1 : 0;          // Mastery 6: a hop and a spin when the run starts
+    this.trailT = 0;
     this.x = 0; this.y = 0;
     this.r = G.Sprites.bodyRadius(mon.dex);
     this.bodyH = G.Sprites.bodyHeight(mon.dex);
@@ -455,6 +462,7 @@ G.Player = class Player {
   // ---------------- ciclo ----------------
   update(dt) {
     this.anim.update(dt);
+    this.look(dt);
     if (this.dead) return;
     if (this.invuln > 0) this.invuln -= dt;
     if (this.reviveSafe > 0) this.reviveSafe -= dt;
@@ -572,6 +580,7 @@ G.Player = class Player {
    */
   netUpdate(dt) {
     this.anim.update(dt);
+    this.look(dt);
     const n = this.net;
     if (!n) return;
     if (this.flash > 0) this.flash -= dt;
@@ -601,6 +610,35 @@ G.Player = class Player {
     const face = this.attackFace > 0 || !this.walking ? this.aim : this.moveAngle;
     this.anim.dir = G.Sprites.dirFromAngle(face);
     this.anim.loop(this.walking ? 'Walk' : 'Idle', this.walking ? this.baseSpd / 110 : 1);
+  }
+
+  /**
+   * Mastery cosmetics (28-10-2026, systems/mastery.js; teammates see yours, their level comes in the start message):
+   *   2 a footstep trail in its type colour · 5 a soft type-coloured glow (Pokémon with no female variant)
+   *   6 a hop and a spin when the run starts · 8 a subtle sparkle aura
+   */
+  look(dt) {
+    const ml = this.mastery;
+    if (!ml || this.dead) return;
+    if (this.introT > 0) {
+      this.introT -= dt;
+      const k = 1 - Math.max(0, this.introT) / 1.1;
+      this.anim.dir = Math.floor(k * 8) % 8;
+    }
+    this.trailT -= dt;
+    if (this.trailT > 0) return;
+    this.trailT = 0.11;
+    const col = G.U.TYPE_COLOR[this.mon.types[0]];
+    if (ml >= 2 && this.walking) G.FX.px(this.x + G.U.rand(-4, 4), this.y - 1, col, { vy: -6, life: 0.55, drag: 0.8 });
+    if (ml >= 8 && Math.random() < 0.45) {
+      const a = Math.random() * 6.2832, rr = this.r * G.U.rand(1, 1.8);
+      G.FX.px(this.x + Math.cos(a) * rr, this.y - this.bodyH * G.U.rand(0.1, 0.9), Math.random() < 0.5 ? '#fff6c8' : '#ffffff', { vy: -14, life: 0.5, drag: 0.85 });
+    }
+  }
+  /** Mastery 5 glow under Pokémon that have no female variant. */
+  get glows() {
+    if (this._glows == null) this._glows = this.mastery >= 5 && !(G.SkinData && (G.SkinData.OF[this.dex] || []).some(f => f.cat === 'female'));
+    return this._glows;
   }
 
   /** Dash moves draw the body springing out to the strike and back (combat.js dash); the real position never moves. */
@@ -647,7 +685,17 @@ G.Player = class Player {
     }
     const shielded = !this.dead && (this.protectUntil || 0) > performance.now();
     const alpha = this.invuln > 0 && !this.dead && !shielded ? (Math.floor(this.invuln * 18) % 2 ? 0.45 : 1) : 1;
-    this.anim.draw(ctx, this.x, this.y, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
+    if (this.glows && !this.dead) {
+      ctx.save();
+      const cy = this.y - this.bodyH * 0.45, rr = Math.max(this.r * 2.2, this.bodyH * 0.8);
+      const g = ctx.createRadialGradient(this.x, cy, 0, this.x, cy, rr);
+      g.addColorStop(0, G.U.TYPE_COLOR[this.mon.types[0]]); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 0.16 + Math.sin(performance.now() / 500) * 0.04; ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(this.x, cy, rr, 0, 6.2832); ctx.fill();
+      ctx.restore();
+    }
+    const hop = this.introT > 0 ? Math.sin((1 - this.introT / 1.1) * Math.PI) * 12 : 0;      // Mastery 6 intro
+    this.anim.draw(ctx, this.x, this.y - hop, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
 
     // Protect: a shimmering bubble around you (it flickers in its last second).
     if (shielded) {

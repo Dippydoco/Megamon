@@ -384,6 +384,7 @@ G.RunUI = (() => {
       <div style="grid-column:1/-1"><span>Poké Coins earned</span>
         <b class="gold"><span class="coin"></span> +${r.coins}</b>
         <div style="font-size:12px;color:var(--muted)">${r.breakdown}</div></div>
+      ${r.mastery ? `<div style="grid-column:1/-1" class="over-mst" id="over-mst"></div>` : ''}
       ${r.t1 || r.t10 ? `<div style="grid-column:1/-1"><span>Gacha tickets</span><b>
         ${r.t1 ? G.Icons.html('ticket', 22) + ' +' + r.t1 + ' ' : ''}${r.t10 ? G.Icons.html('ticket10', 22) + ' +' + r.t10 + ' ×10' : ''}</b></div>` : ''}
       ${r.killer ? `<div style="grid-column:1/-1" class="killer"><span>Defeated by</span>
@@ -403,6 +404,7 @@ G.RunUI = (() => {
         <p>Enjoying Megamon? I make it on my own and the servers cost money. If you like, you can help me keep it online.</p>
         <a class="btn small gold" href="${G.Funding.url}" target="_blank" rel="noopener">${G.Icons.html('heart', 14)} Support on Ko-fi</a>
       </div>` : ''}`;
+    if (r.mastery) masteryStrip($('over-mst'), r.mastery);
     const ks = document.querySelector('#over-stats .killer-sprite');
     if (ks && r.killer && r.killer.d) ks.appendChild(G.UI.spriteCanvas(r.killer.d, 56, 48, { scale: 1 }));
     const ask = $('over-ask');
@@ -418,6 +420,43 @@ G.RunUI = (() => {
       }
     }
     G.UI.show('scr-over');
+  }
+
+  /**
+   * The run's Mastery XP (28-10-2026, systems/mastery.js): the Pokémon, its ribbon and a bar that fills from the old
+   * value to the new one. Passing a level flashes the bar and lists what the new level unlocked.
+   */
+  function masteryStrip(box, m) {
+    const mon = G.DEX_BY[m.dex];
+    if (!box || !mon) return;
+    if (m.none) { box.innerHTML = `<span>Mastery</span><small class="sub">${m.none}</small>`; return; }
+    const N = G.Mastery.NEED, MAX = G.Mastery.MAX;
+    const fracAt = xp => { const l = G.Mastery.levelFor(xp); return l >= MAX ? 1 : (xp - N[l]) / (N[l + 1] - N[l]); };
+    const P = m.parts, NAMES = { time: 'time', level: 'level', bosses: 'bosses', legends: 'legendaries', arceus: 'Arceus', floors: 'floors', boss: 'boss floors' };
+    const parts = Object.keys(P).filter(k => P[k]).map(k => `+${P[k]} ${NAMES[k] || k}`)
+      .concat(m.group ? ['×' + G.Mastery.GROUP + ' group'] : [], m.daily ? ['×' + G.Mastery.DAILY + ' first run today'] : []);
+    box.innerHTML = `<span>Mastery</span>
+      <div class="over-mst-row"><span class="mst-pic"></span><div class="over-mst-main">
+        <b translate="no">${mon.name} <span class="over-mst-lv">${G.Mastery.badge(m.lvBefore, 16)} Mastery ${m.lvBefore}</span> <em class="gold">+${m.gained} XP</em></b>
+        <div class="mst-bar big"><i style="width:${(fracAt(m.before) * 100).toFixed(1)}%"></i></div>
+        <small>${parts.join(' · ')}</small>
+        <div class="over-mst-up"></div></div></div>`;
+    box.querySelector('.mst-pic').appendChild(G.UI.spriteCanvas(G.Skins.mine(m.dex), 64, 56, { scale: 1, lively: true }));
+    const bar = box.querySelector('.mst-bar i');
+    const up = m.lvAfter > m.lvBefore;
+    setTimeout(() => {
+      bar.style.width = (up ? 100 : fracAt(m.after) * 100).toFixed(1) + '%';
+      if (!up) return;
+      setTimeout(() => {
+        box.classList.add('lvup');
+        G.Audio.sfx('levelup');
+        box.querySelector('.over-mst-lv').innerHTML = G.Mastery.badge(m.lvAfter, 16) + ' Mastery ' + m.lvAfter;
+        bar.style.transition = 'none'; bar.style.width = '0%';
+        requestAnimationFrame(() => { bar.style.transition = ''; bar.style.width = (fracAt(m.after) * 100).toFixed(1) + '%'; });
+        const got = G.Mastery.track(m.dex).filter(t => t.lv > m.lvBefore && t.lv <= m.lvAfter);
+        box.querySelector('.over-mst-up').innerHTML = '<b class="gold">Mastery up!</b> ' + got.map(t => `<span>${G.Icons.html(t.icon, 12)} ${t.text}</span>`).join(' ');
+      }, 900);
+    }, 350);
   }
 
   /** You found an item while already holding one: which do you keep? */
