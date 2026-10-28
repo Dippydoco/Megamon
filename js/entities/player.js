@@ -405,7 +405,7 @@ G.Player = class Player {
       this.level++;
       this.xpNext = Player.xpFor(this.level);
       if (this.growth && this.level <= (G.RARITY_GROWTH_CAP || 30)) this.addMaxHp(this.mon.hp * this.growth);   // low-rarity growth: max HP too
-      if (G.LEVEL_HP) this.addMaxHp(this.mon.hp * G.LEVEL_HP);          // every Pokémon: +2% of its base HP a level (overrides.js)
+      if (G.LEVEL_HP) this.addMaxHp(this.mon.hp * G.LEVEL_HP);          // every Pokémon: +1% of its base HP a level (overrides.js)
       leveled++;
     }
     return leveled;

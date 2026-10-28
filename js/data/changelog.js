@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T14:54Z', title: 'Less max HP growth per level', chg: [
+    'The max HP every Pokémon gains each level in a run is halved: 1% of its base HP per level (it was 2%). The Vigor perk and the extra growth of lower rarities are unchanged.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T13:39Z', title: 'Roar makes wild Pokémon faster', chg: [
     'Roar is tougher: each level now also makes wild Pokémon 3% faster (up to +30% at the cap), on top of more of them with more health and damage. The experience and PokéCoin bonus is unchanged.'
   ] },
