@@ -41,7 +41,9 @@ OUT_ASSETS = os.path.join(ROOT, 'assets', 'pokemon')
 OUT_META = os.path.join(ROOT, 'js', 'data', 'sprites-meta.js')
 CACHE = os.path.join(ROOT, 'tools', 'cache')
 
-WANT = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint', 'Sleep']     # Sleep: the menu backdrop (28-10-2026)
+WANT = ['Idle', 'Walk', 'Attack', 'Shoot', 'Charge', 'Hurt', 'Faint',
+        # (28-10-2026) for the main menu: Sleep (backdrop naps and your partner), the rest for your partner's box.
+        'Sleep', 'Hop', 'Rotate', 'Nod', 'Eat', 'LookUp', 'Sit', 'Pose', 'Twirl', 'Appeal', 'Dance']
 FALLBACK = {
     'Idle': ['Walk'],
     'Walk': ['Idle'],
@@ -147,7 +149,7 @@ def download_set(url_base, out_dir, anims, geometry_from=None, want=None):
     meta = {}
     for want in (want or WANT):
         src, geom = None, None
-        for cand in [want] + FALLBACK[want]:
+        for cand in [want] + FALLBACK.get(want, []):
             src, geom = resolve(anims, cand)
             if geom:
                 break

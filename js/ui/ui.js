@@ -290,6 +290,64 @@ G.UI = (() => {
     return s;
   }
 
+  // ---- Your partner in the menu box (28-10-2026, opts.partner) ----
+  // Instead of only attacking now and then, it hops, spins, nods, eats, sits, poses... (whatever its sprite has:
+  // tools/fetch_anims.py). With no input for a while it falls asleep with z's drifting up; any input wakes it, and
+  // poke() (a tap on it) makes it react straight away.
+  const NAP_AFTER = 40;
+  let lastInput = performance.now();
+  for (const ev of ['pointerdown', 'keydown', 'wheel']) addEventListener(ev, () => { lastInput = performance.now(); }, { passive: true, capture: true });
+  addEventListener('pointermove', () => { lastInput = performance.now(); }, { passive: true });
+  const MOODS = [['Attack', 1], ['Shoot', 1], ['Charge', 1], ['Hop', 2.5], ['Rotate', 1.2], ['Nod', 2], ['Eat', 2], ['LookUp', 2],
+                 ['Sit', 1.5], ['Pose', 2], ['Twirl', 2], ['Appeal', 2], ['Dance', 2]];
+  function canDo(s, name) {
+    const m = G.Sprites.meta(s.dex);
+    return !!(m && m.a[name] && !(s.a.shiny && m.sm && m.sm.includes(name)));
+  }
+  function partnerMood(s) {
+    const opts = MOODS.filter(([n]) => canDo(s, n));
+    let r = Math.random() * opts.reduce((a, o) => a + o[1], 0);
+    for (const [n, w] of opts) { r -= w; if (r <= 0) return n; }
+    return 'Attack';
+  }
+  function partnerTick(s, dt) {
+    const idle = (performance.now() - lastInput) / 1000;
+    if (s.asleep) {
+      if (idle < 1) { s.asleep = false; s.a.loop('Idle'); s.a.play(canDo(s, 'Hop') ? 'Hop' : 'Idle'); s.t = G.U.rand(2, 3.5); }
+      return;
+    }
+    if (idle > NAP_AFTER && canDo(s, 'Sleep')) { s.asleep = true; s.a.dir = 0; s.a.loop('Sleep'); s.zs = []; s.zT = 0.8; return; }
+    s.t -= dt;
+    if (s.t <= 0 && !s.a.busy()) { s.t = G.U.rand(3, 6); s.a.play(partnerMood(s)); }
+  }
+  /** A tap on your partner: it reacts at once (and wakes up). */
+  function poke(cv) {
+    for (const s of live) if (s.cv === cv && s.opts.partner) {
+      lastInput = performance.now();
+      if (s.asleep) { s.asleep = false; s.a.loop('Idle'); }
+      s.a.play(G.U.pick(['Hop', 'Rotate', 'Pose', 'Appeal', 'Twirl'].filter(n => canDo(s, n))) || 'Attack');
+      s.t = G.U.rand(3, 5);
+    }
+  }
+  function drawZs(s, ctx, fx, fy, ay, k, dt) {
+    s.zT -= dt;
+    if (s.zT <= 0) { s.zT = G.U.rand(0.9, 1.4); s.zs.push({ t: 0, x: G.U.rand(4, 10), big: Math.random() < 0.5 }); }
+    ctx.save();
+    ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+    for (let i = s.zs.length - 1; i >= 0; i--) {
+      const z = s.zs[i];
+      z.t += dt;
+      if (z.t > 2.2) { s.zs.splice(i, 1); continue; }
+      const px = Math.max(8, Math.round((z.big ? 7 : 5) * k));
+      ctx.font = '800 ' + px + 'px Pixelify,"Segoe UI",sans-serif';
+      ctx.globalAlpha = z.t < 1.6 ? 1 : (2.2 - z.t) / 0.6;
+      const x = fx + (z.x + Math.sin(z.t * 3) * 2) * k, y = fy - ay * k * 0.55 - z.t * 9 * k;
+      ctx.lineWidth = Math.max(2, k); ctx.strokeStyle = 'rgba(10,14,30,.8)'; ctx.strokeText(z.big ? 'Z' : 'z', x, y);
+      ctx.fillStyle = '#d8e6ff'; ctx.fillText(z.big ? 'Z' : 'z', x, y);
+    }
+    ctx.restore();
+  }
+
   function tick(dt) {
     for (const s of live) {
       if (!s.cv.isConnected) { live.delete(s); if (io) io.unobserve(s.cv); continue; }
@@ -297,7 +355,8 @@ G.UI = (() => {
       if (io && seen.get(s.cv) === false) continue;         // out of view
       s.a.update(dt);
 
-      if (s.opts.lively) {
+      if (s.opts.partner) partnerTick(s, dt);
+      else if (s.opts.lively) {
         s.t -= dt;
         if (s.t <= 0) { s.t = G.U.rand(2.5, 4.5); s.a.play(G.U.pick(['Attack', 'Shoot', 'Charge'])); }
       }
@@ -334,6 +393,7 @@ G.UI = (() => {
       } else {
         s.a.draw(ctx, fx, fy);
       }
+      if (s.asleep) drawZs(s, ctx, fx, fy, ay, k, dt);
 
       // Sparkles around shinies: each one appears at a random spot.
       if (s.opts.shiny && !s.opts.silhouette) {
@@ -362,6 +422,6 @@ G.UI = (() => {
     return cv;
   }
 
-  return { buildLabel, copyText, $, show, hide, hideAll, isOpen, chrome, refreshCoins, coinPop, toast, typeChips, stars, confirmDelete,
+  return { buildLabel, copyText, $, show, hide, hideAll, isOpen, chrome, refreshCoins, coinPop, poke, toast, typeChips, stars, confirmDelete,
            sprite, spriteCanvas, ask, tick, initChrome, soundControls };
 })();

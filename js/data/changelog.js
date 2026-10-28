@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T18:44Z', title: 'Your partner comes alive in the menu', new: [
+    'Your partner in its box on the main menu does more than attack now: it hops, spins and, depending on the Pokémon, nods, eats, sits, poses, twirls or dances.',
+    'Leave the menu alone for a while and your partner falls asleep, with z\'s drifting up. Move the mouse or touch the screen to wake it, and tap it to make it react.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T18:35Z', title: 'Naps in the main menu', new: [
     'The Pokémon wandering behind the main menu now and then lie down for a nap, with little z\'s drifting up. Tap a sleeping one to wake it up.'
   ] },

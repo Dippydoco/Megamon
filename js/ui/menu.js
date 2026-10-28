@@ -152,7 +152,8 @@ G.MenuUI = (() => {
     G.UI.show('scr-menu');
     G.KeyItemUI.renderSlot();        // the Key Item you'll take into your next run
     G.Skins.check(false);            // skins earned while away (Mastery head start, merged saves): unlocked quietly
-    G.UI.sprite($('menu-partner'), G.Skins.mine(mon.dex), { lively: true, scale: 4, hero: true, shiny });
+    G.UI.sprite($('menu-partner'), G.Skins.mine(mon.dex), { lively: true, partner: true, scale: 4, hero: true, shiny });
+    $('menu-partner').onclick = () => G.UI.poke($('menu-partner'));       // a tap: it hops, spins or poses
     $('menu-partner').style.setProperty('--stage-c', shiny ? '#9ae6ff' : G.U.TYPE_COLOR[mon.types[0]]);
     $('menu-partner').classList.toggle('shiny', shiny);
     const skinF = G.SkinData.BY[G.Skins.worn(mon.dex)];
