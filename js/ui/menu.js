@@ -183,17 +183,17 @@ G.MenuUI = (() => {
     // Gacha tile: tickets ready to use.
     const tk = s.tickets || { t1: 0, t10: 0 };
     const pulls = (tk.t1 || 0) + (tk.t10 || 0);
-    $('menu-gacha-sub').textContent = pulls ? pulls + (pulls === 1 ? ' ticket ready' : ' tickets ready') : 'Pokémon and shinies';
+    $('menu-gacha-sub').textContent = pulls ? pulls + (pulls === 1 ? ' ticket ready' : ' tickets ready') : 'New Pokémon';
     $('menu-gacha-sub').classList.toggle('gold', pulls > 0);
     // Upgrades tile: how many levels your partner has.
     const plv = Object.values(s.pupg && s.pupg[s.partner] || {}).reduce((a, b) => a + b, 0);
     // Partner tile (Upgrades and Moveset): your partner's upgrade levels and whether its moveset is set.
-    $('menu-partner-sub').textContent = plv ? plv + (plv === 1 ? ' upgrade' : ' upgrades') + (G.Moveset.edited(mon.dex) ? ' · own moves' : '') : 'Upgrades and moveset';
+    $('menu-partner-sub').textContent = plv ? plv + (plv === 1 ? ' upgrade' : ' upgrades') + (G.Moveset.edited(mon.dex) ? ' · own moves' : '') : 'Upgrades, moves';
     // Shop tile: what you can afford right now.
     const canKey = G.KeyItems.LIST.filter(k => !G.KeyItems.owns(k.id) && s.coins >= k.price).length;
     const stars = G.DB.stars();
     $('menu-shop-sub').textContent = stars ? stars + (stars === 1 ? ' Star to spend' : ' Stars to spend')
-      : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Key Items, themes and skins';
+      : canKey ? canKey + (canKey === 1 ? ' Key Item to buy' : ' Key Items to buy') : 'Items, themes, skins';
     $('menu-shop-sub').classList.toggle('gold', stars > 0 || canKey > 0);
 
     // Battle Tower tile: your checkpoint and Battle Points.
@@ -211,9 +211,9 @@ G.MenuUI = (() => {
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions and medals';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, medals';
     const pm = G.Mastery.top(1)[0];
-    $('menu-prof-sub').textContent = pm ? 'Top: ' + G.DEX_BY[pm[0]].name + ' ' + pm[1] : 'You, your runs, Mastery';
+    $('menu-prof-sub').textContent = pm ? 'Top: ' + G.DEX_BY[pm[0]].name + ' ' + pm[1] : 'Runs and Mastery';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
     tileAlert('goals', pend > 0);
     // With a cloud account: friends online, invitations and (once) the nickname.
@@ -303,7 +303,7 @@ G.MenuUI = (() => {
       cv._x += dt * (calm ? 0 : 22);
       if (cv._x > W + 30) cv._x = -30;
       const m = G.Sprites.animMeta(a.dex, 'Walk', a.shiny);
-      a.scale = Math.min(1, (H * 0.3) / ((m ? m.ay : 24) || 24)) / G.Sprites.PX;    // small, along the grass, under the text
+      a.scale = Math.min(1, (H * 0.38) / ((m ? m.ay : 24) || 24)) / G.Sprites.PX;    // small, along the grass, under the text
       c.globalAlpha = 0.9;
       a.draw(c, cv._x, gy + 2);
       c.globalAlpha = 1;
@@ -325,7 +325,7 @@ G.MenuUI = (() => {
     if (req) parts.push(req + (req === 1 ? ' request' : ' requests'));
     const msgs = G.Chat ? G.Chat.totalUnread() : 0;
     if (msgs) parts.push(msgs + (msgs === 1 ? ' new message' : ' new messages'));
-    $('menu-friends-sub').textContent = parts.length ? parts.join(' · ') : 'Play in a group, up to 5';
+    $('menu-friends-sub').textContent = parts.length ? parts.join(' · ') : 'Play together';
     $('menu-friends-sub').classList.toggle('gold', req > 0 || msgs > 0);
     tileAlert('friends', req > 0 || msgs > 0);
   }
