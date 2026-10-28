@@ -538,7 +538,9 @@ G.HUD = (() => {
     }
     const BOND = '#ff8ad8';
     const tips = [];            // hover tooltips for moves and the held item
-    const cdOf = m => m.kind === 'orbit' ? 0 : G.U.clamp(m.t / (m.cd * pl.cdMul), 0, 1);
+    // A ready move with nothing to hit re-arms a 0.05 s retry (combat.js), so anything at or under that counts as ready;
+    // otherwise the slot flickered between "cooling down" and "ready" every few frames.
+    const cdOf = m => m.kind === 'orbit' || m.t <= 0.06 ? 0 : G.U.clamp(m.t / (m.cd * pl.cdMul), 0, 1);
     let moveLbl = null;         // horizontal extent of the active move's name, so the item's name can dodge it
 
     // A burst move's seconds left, centred on (cx, cy) with a thick outline so it reads over any icon.
@@ -599,22 +601,28 @@ G.HUD = (() => {
           if (fl > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (fl * 0.55).toFixed(2) + ')'; ctx.fillRect(cx, cy, C, C); }
         });
       } else {
-        // Cooldown (28-10-2026): a clock sweep instead of a curtain. The dark wedge is the time left, the ring round the
-        // icon fills in the move's type colour, and moves with a longer cooldown flash when they're ready again.
+        // Cooldown (28-10-2026): a clock sweep. The dark wedge is the time left; the type-coloured ring fills along the
+        // slot's own frame (28-10-2026, was a circle inside it that covered the level dots and the evolve badge), from
+        // the top centre, clockwise. Moves with a longer cooldown flash when they're ready again.
         const cdFrac = cdOf(m), nowT = performance.now();
         if (cdFrac > 0 && m.kind !== 'burst') {
           const cx = x + S / 2, cy = y + S / 2, a0 = -Math.PI / 2;
           ctx.save();
           roundRect(ctx, x, y, S, S, 12); ctx.clip();
-          ctx.fillStyle = 'rgba(0,0,0,.5)';
+          ctx.fillStyle = 'rgba(0,0,0,.4)';
           ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, S, a0 + 6.2832 * (1 - cdFrac), a0 + 6.2832); ctx.closePath(); ctx.fill();
           ctx.restore();
+          const r = 12, L = 4 * (S - 2 * r) + 6.2832 * r;
           ctx.save();
-          ctx.lineWidth = Math.max(2, 2.5 * K); ctx.lineCap = 'round';
-          ctx.strokeStyle = 'rgba(0,0,0,.45)';
-          ctx.beginPath(); ctx.arc(cx, cy, S * 0.44, 0, 6.2832); ctx.stroke();
-          ctx.strokeStyle = col;
-          ctx.beginPath(); ctx.arc(cx, cy, S * 0.44, a0, a0 + 6.2832 * (1 - cdFrac)); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx, y);
+          ctx.arcTo(x + S, y, x + S, y + S, r); ctx.arcTo(x + S, y + S, x, y + S, r);
+          ctx.arcTo(x, y + S, x, y, r); ctx.arcTo(x, y, x + S, y, r);
+          ctx.lineTo(cx, y);
+          ctx.lineWidth = 3; ctx.lineCap = 'butt';
+          ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.stroke();      // track (the time left)
+          ctx.setLineDash([L * (1 - cdFrac), L + 1]);
+          ctx.strokeStyle = col; ctx.stroke();                   // filled part
           ctx.restore();
         }
         if (m._cdWas > 0 && cdFrac === 0 && m.cd * pl.cdMul >= 1.5) m._readyAt = nowT;

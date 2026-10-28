@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T19:48Z', title: 'Tidier cooldown ring', chg: [
+    'The coloured cooldown ring on your move slots now runs along the slot\'s edge instead of a circle inside it, so it no longer covers the move\'s level dots or its evolution perk badge. The dark sweep is a little lighter too.'
+  ], fix: [
+    'A move that\'s ready but has nothing to hit no longer makes its cooldown ring flicker rapidly; it stays shown as ready.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T19:39Z', title: 'Lighter small text', chg: [
     'Small text uses a lighter companion font, m5x7 (also by Daniel Linssen), while names, headings and buttons keep m6x11. Small lines that had become hard to read, like the one under the clock in runs, are clear again.',
     'Some small text (mission details, the featured Pokémon, filters, run history) is a little bigger so it stays sharp.'
