@@ -51,7 +51,7 @@ G.LevelUp = (() => {
       apply: () => {}, max: 10 },
     // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience and
     // PokéCoins for you. Not in the Battle Tower, whose floors set their own numbers.
-    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +10% wild Pokémon, +8% their health, +5% their damage. You get +8% experience and +8% PokéCoins.',
+    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +10% wild Pokémon, +8% their health, +5% their damage, +3% their speed. You get +8% experience and +8% PokéCoins.',
       apply: (pl, n = lvOf(pl, 'roar')) => { pl.xpMul *= lin(0.08, n); }, max: 10 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.healItem(0.45), instant: true }
@@ -127,15 +127,16 @@ G.LevelUp = (() => {
     let roar = 0, shiny = 0;
     for (const p of ps) { const l = levelsOf(p); roar += l.roar || 0; shiny += l.shiny || 0; }
     const n = Math.max(1, ps.length), r = roar / n;
-    fx = { rate: 1 + 0.10 * r, cap: 1 + 0.06 * r, hp: 1 + 0.08 * r, dmg: 1 + 0.05 * r, shiny: 1 + 0.30 * shiny / n };
+    fx = { rate: 1 + 0.10 * r, cap: 1 + 0.06 * r, hp: 1 + 0.08 * r, dmg: 1 + 0.05 * r, spd: 1 + 0.03 * r, shiny: 1 + 0.30 * shiny / n };
     return fx;
   }
   const inTower = () => !!(G.Tower && G.Tower.active);
-  /** Roar (spawner.js): enemies per second, field cap, wild Pokémon health and damage. */
+  /** Roar (spawner.js): enemies per second, field cap, wild Pokémon health, damage and speed. */
   const roarRate = () => (inTower() ? 1 : teamFx().rate);
   const roarCap = () => (inTower() ? 1 : teamFx().cap);
   const roarHp = () => (inTower() ? 1 : teamFx().hp);
   const roarDmg = () => (inTower() ? 1 : teamFx().dmg);
+  const roarSpd = () => (inTower() ? 1 : teamFx().spd);
   /** Shiny Lure (spawner.js rollShiny). */
   const shinyK = () => teamFx().shiny;
   /** Your PokéCoins at the end of the run (game.js endRun): Pay Day and Roar. */
@@ -274,5 +275,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, BUFF_MAX, banKey, onlyInstant, autoCard, AUTO_NAME, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, shinyK, coinK };
+  return { offer, STATS, BY, BUFF_MAX, banKey, onlyInstant, autoCard, AUTO_NAME, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, roarSpd, shinyK, coinK };
 })();

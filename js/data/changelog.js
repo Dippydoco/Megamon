@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T13:39Z', title: 'Roar makes wild Pokémon faster', chg: [
+    'Roar is tougher: each level now also makes wild Pokémon 3% faster (up to +30% at the cap), on top of more of them with more health and damage. The experience and PokéCoin bonus is unchanged.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T11:41Z', title: 'Auto-pick once everything is maxed', new: [
     'When only the Sitrus Berry and the Nugget are left, the level-up screen lets you pick one to take automatically from then on: level-ups stop opening the menu and just give you that card. Turn it off any time in the pause menu. In a group your card is taken at once and you just wait for the others.'
   ] },

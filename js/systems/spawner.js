@@ -87,9 +87,9 @@ G.Spawner = (() => {
   function make(def, x, y, t, n) {
     const shiny = rollShiny(def.dex);
     // (G.KeyItems.enemyHp: Black Flute, a flat +25% that doesn't grow with the run.)
-    // (G.LevelUp.roarHp / roarDmg: the Roar perk, averaged over the team.)
+    // (G.LevelUp.roarHp / roarDmg / roarSpd: the Roar perk, averaged over the team.)
     const e = new G.Enemy(def, x, y, scaled(G.Enemies.scale(t), G.Coop.scaleHp(n) * hpK(t) * G.KeyItems.enemyHp() * G.LevelUp.roarHp()));
-    e.dmg *= DMG_K * G.LevelUp.roarDmg(); e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
+    e.dmg *= DMG_K * G.LevelUp.roarDmg(); e.spd *= G.LevelUp.roarSpd(); e.xp = Math.round(e.xp * XP_K * xpT(t)); e.born = t;
     const rp = G.Enemies.ramp(def, t);
     if (rp) { e.maxHp = e.hp = Math.max(1, Math.round(e.maxHp * rp.hp)); e.dmg *= rp.dmg; }
     if (shiny) e.makeShiny();
