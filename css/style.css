@@ -1990,10 +1990,7 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .tile-new { position: absolute; top: 6px; right: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0; line-height: 16px; padding: 0 6px; border-radius: 5px;
   background: #5fe08a; color: #0b2014; text-shadow: none; box-shadow: 0 0 0 2px rgba(0,0,0,.35); animation: tileNew 1.8s ease-in-out infinite; }
 @keyframes tileNew { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-/* 2. (prototype) Progress bar along the bottom of tiles that track something, in the theme's accent. */
-.tile-prog { position: absolute; left: 12px; right: 12px; bottom: 6px; height: 4px; border-radius: 3px; background: rgba(0,0,0,.35); overflow: hidden; }
-.tile-prog b { display: block; height: 100%; background: var(--tile-accent, var(--gold)); border-radius: 3px; transition: width .6s; }
-/* 5. (prototype) Play: grass scrolling behind, your partner walking; Battle Tower: a dim castle silhouette. */
+/* Play: grass scrolling behind, your partner walking; Battle Tower: a dim castle silhouette. */
 .menu-item.tile.play { overflow: hidden; }
 .menu-item.tile.play > :not(.play-bg) { position: relative; z-index: 1; }
 canvas.play-bg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; z-index: 0; opacity: .7; }

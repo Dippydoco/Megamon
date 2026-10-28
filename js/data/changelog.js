@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T18:18Z', title: 'Livelier menu tiles', chg: [
+    'Menu tiles: the icon hops when you point at a tile and the tile presses in when you click it. A NEW tag marks tiles with something new until you open them.',
+    'The Play tile has a strip of grass with your partner (in its skin) walking along it, and the Battle Tower tile a faint castle. Both stay still with Calm on.',
+    'The lines under each tile are bigger and sharper, with shorter wording.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T17:26Z', title: 'Move slots and coin pop', chg: [
     'Move slots: the cooldown is now a clock sweep, with a ring that fills in the move\'s type colour. Moves with a longer cooldown flash when they\'re ready again, and evolved moves have a softly glowing gold rim.',
     'Back on the menu after a run, the PokéCoins you earned pop up under your wallet and the total counts up.'

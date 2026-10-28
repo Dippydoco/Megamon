@@ -237,16 +237,6 @@ G.MenuUI = (() => {
     s.seenNew = s.seenNew || {};
     if (!s.seenNew[k]) { s.seenNew[k] = Date.now(); G.DB.commit(); }
   }
-  // Progress bars (PROTOTYPE 28-10-2026): a slim bar along the bottom of the tiles that track something, in the menu
-  // theme's accent colour.
-  function tileBar(go, frac, title) {
-    const b = document.querySelector('#scr-menu [data-go=' + go + ']');
-    if (!b) return;
-    let el = b.querySelector('.tile-prog');
-    if (!el) { el = document.createElement('i'); el.className = 'tile-prog'; el.innerHTML = '<b></b>'; b.appendChild(el); }
-    el.firstChild.style.width = (G.U.clamp(frac, 0, 1) * 100).toFixed(1) + '%';
-    el.title = title || '';
-  }
   function tileExtras() {
     const s = G.DB.save;
     for (const go in NEW_TILES) {
@@ -257,17 +247,10 @@ G.MenuUI = (() => {
       if (fresh && !tag) { tag = document.createElement('span'); tag.className = 'tile-new'; tag.textContent = 'NEW'; b.appendChild(tag); }
       if (!fresh && tag) tag.remove();
     }
-    const daily = (s.missions && s.missions.daily) || [];
-    const doneN = daily.filter(m => G.Progress.done(m)).length;
-    tileBar('goals', daily.length ? doneN / daily.length : 0, doneN + ' / ' + daily.length + ' daily missions done');
-    const own = Object.keys(s.owned).filter(d => G.DEX_BY[d]).length;
-    tileBar('dex', own / G.DEX.length, own + ' / ' + G.DEX.length + ' Pokémon');
-    const pr = G.Mastery.progress(s.partner);
-    tileBar('profile', pr.frac, G.DEX_BY[s.partner].name + ': Mastery ' + pr.lv);
     playScene();
   }
 
-  // Play tile scene (PROTOTYPE 28-10-2026): grass scrolling behind the Play tile with your partner (in its skin)
+  // Play tile scene (28-10-2026): grass scrolling behind the Play tile with your partner (in its skin)
   // walking along it; the Battle Tower tile gets a dim castle silhouette (CSS).
   let sceneRaf = 0;
   function playScene() {
