@@ -3,6 +3,7 @@ videos/
 
 # Caches from the download scripts
 tools/cache/
+tools/cache_forms/
 __pycache__/
 
 # Firebase / emulator / logs
