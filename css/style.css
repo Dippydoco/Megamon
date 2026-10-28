@@ -2,12 +2,21 @@
  * Blue boxes with a double white border, like the PMD menus, and a local pixel
  * font (Pixelify Sans, OFL).
  */
-/* m6x11 by Daniel Linssen (28-10-2026, free to use with credit: CREDITS.md), the game's font. It has one weight, so
-   the same file serves regular and bold (no blurry synthesised bold). Pixelify Sans stays as the fallback. */
+/* The game's font family 'm6x11' (28-10-2026), both by Daniel Linssen (free to use with credit: CREDITS.md):
+   regular text is m5x7 (light, for small text) and bold text is m6x11 (headings, names, buttons). Each has one weight,
+   so nothing gets a blurry synthesised bold. m5x7 is enlarged by 16/14 so CSS 14px lands exactly on its sharp size
+   (one screen pixel per font pixel): keep small regular text at 14px. Pixelify Sans stays as the fallback. */
+@font-face {
+  font-family: 'm6x11';
+  src: url('../assets/fonts/m5x7.ttf') format('truetype');
+  font-weight: 100 550;
+  size-adjust: 114.3%;
+  font-display: block;
+}
 @font-face {
   font-family: 'm6x11';
   src: url('../assets/fonts/m6x11plus.ttf') format('truetype');
-  font-weight: 100 900;
+  font-weight: 551 900;
   font-display: block;
 }
 /* Pixelify Sans with redrawn digits so they aren't confused (tools/make_font.py). */
@@ -245,7 +254,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
 .chip {
   appearance: none; cursor: pointer; padding: 4px 10px; border-radius: 20px;
-  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.25); font-size: 13px;
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.25); font-size: 14px;
   text-shadow: 1px 1px 0 var(--shadow);
 }
 .chip.on { border-color: var(--gold); color: var(--gold); }
@@ -267,7 +276,7 @@ label { display: block; font-size: 14px; color: var(--muted); margin: 8px 0 4px;
 .partner-card .nm { font-size: 24px; font-weight: 700; text-shadow: 3px 3px 0 var(--shadow); }
 .partner-card .lv { color: var(--muted); font-size: 14px; text-shadow: 2px 2px 0 var(--shadow); }
 /* Your record, a small line under the partner. */
-.menu-stats { margin-top: 10px; font-size: 13px; color: var(--muted); text-shadow: 2px 2px 0 var(--shadow); line-height: 1.5; }
+.menu-stats { margin-top: 10px; font-size: 14px; color: var(--muted); text-shadow: 2px 2px 0 var(--shadow); line-height: 1.5; }
 .menu-stats b { color: var(--ink); font-weight: 400; }
 .menu-stats .guest { color: #ffb0b8; }
 .menu-right {
@@ -692,7 +701,7 @@ select.field { font-family: var(--font); }
 .hist-run.open { border-color: var(--edge); background: rgba(255,255,255,.06); }
 .hist-head { display: grid; grid-template-columns: 48px 1fr auto auto; gap: 12px; align-items: center; padding: 6px 12px; cursor: pointer; }
 .hist-main b { display: block; font-size: 15px; }
-.hist-main small, .hist-nums small { color: var(--muted); font-size: 12px; }
+.hist-main small, .hist-nums small { color: var(--muted); font-size: 14px; }
 .hist-nums { text-align: right; }
 .hist-t { display: block; font-weight: 800; font-size: 17px; }
 .hist-t.best { color: var(--gold); }
@@ -712,10 +721,10 @@ select.field { font-family: var(--font); }
 
 .mission.ready { border-color: var(--gold); background: rgba(255,210,63,.1); }
 .mission.claimed { opacity: .55; }
-.mission small, .ach small { color: var(--muted); font-size: 12px; }
+.mission small, .ach small { color: var(--muted); font-size: 14px; }
 .mission .bar, .ach .bar { height: 7px; background: rgba(0,0,0,.4); border-radius: 6px; overflow: hidden; margin: 4px 0 2px; }
 .mission .bar i, .ach .bar i { display: block; height: 100%; background: var(--gold); }
-.m-rw, .a-rw { font-size: 13px; color: var(--ink); }
+.m-rw, .a-rw { font-size: 14px; color: var(--ink); }
 .m-rw img, .a-rw img, .tag-chip img { vertical-align: middle; }
 .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
 .ach {
@@ -1222,24 +1231,21 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .killer-main em { margin-left: auto; font-style: normal; font-weight: 700; color: #ff6b7a; white-space: nowrap; }
 .killer-sprite { display: inline-flex; width: 56px; height: 48px; align-items: center; justify-content: center; }
 .killer .ktype { font-style: normal; text-transform: capitalize; font-weight: 600; }
-.killer-prev { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.killer-prev { margin-top: 6px; font-size: 14px; color: var(--muted); }
 
 /* "Use all tickets": the duplicates that are not shown as full cards */
 .pull-dups { grid-column: 1 / -1; width: 100%; margin-top: 6px; padding: 8px; border-radius: 10px; background: rgba(255, 255, 255, .06); }
-.pull-dups-h { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.pull-dups-h { text-align: center; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
 .pull-dups-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-height: 170px; overflow-y: auto; }
 .dup { position: relative; width: 70px; text-align: center; padding: 2px 0; border-radius: 8px; background: rgba(255, 255, 255, .05); }
 .dup small { display: block; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
 .dup i { position: absolute; top: 0; right: 2px; font-style: normal; font-size: 11px; font-weight: 700; color: #ffd23f; text-shadow: 0 1px 2px #000; }
 
-/* Small text in the regular weight: the bold Pixelify "C" nearly closes and reads like an "O" at small sizes.
-   (Canvas text does the same in js/core/fontweight.js. Titles and big text stay bold.) */
-.btn, .menu-item, .tab, .gen-tab b, .chip, kbd, .tag-chip, .owned-chip, .hist-tag,
-.grow > b, .sub b, .cell b, .fr-row b, .lob-card b, .rk-row .who b, .hist-main b, .hist-grid b, .hist-t,
-.pcard b, .pcard .new, .dup small, .killer-main small { font-weight: 400; }
+/* (28-10-2026) The rule that forced small bold labels to regular (a Pixelify workaround: its bold "C" read like an
+   "O") is gone: bold is m6x11 now, which doesn't have that problem, and regular would be the small m5x7. */
 
 /* Hover tooltip for moves in the menu (Pokémon tab, ban picker) */
-#mv-tip { position: fixed; z-index: 100000; display: none; max-width: 270px; padding: 8px 10px; border: 2px solid #9fb1c9; border-radius: 8px; background: rgba(8, 12, 22, .96); color: #fff; font-size: 13px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
+#mv-tip { position: fixed; z-index: 100000; display: none; max-width: 270px; padding: 8px 10px; border: 2px solid #9fb1c9; border-radius: 8px; background: rgba(8, 12, 22, .96); color: #fff; font-size: 14px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
 #mv-tip .mt-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
 #mv-tip .mt-head b { font-size: 15px; }
 #mv-tip .mt-type { font-size: 11px; padding: 1px 6px; border-radius: 5px; color: #10131a; font-weight: 400; }
@@ -1434,10 +1440,10 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 
 /* Daily featured Pokémon (menu.js featuredStrip) */
 .featured { margin-top: 10px; padding: 6px 8px; border-radius: 10px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,210,63,.35); }
-.featured .ft-h { font-size: 13px; color: var(--muted); }
+.featured .ft-h { font-size: 14px; color: var(--muted); }
 .featured .ft-h b { color: #ffd23f; font-weight: 400; }
 .featured .ft-row { display: flex; justify-content: center; gap: 6px; margin-top: 4px; }
-.featured .ft-note { font-size: 11px; color: var(--muted); margin-top: 4px; max-width: 250px; margin-inline: auto; line-height: 1.4; }
+.featured .ft-note { font-size: 14px; color: var(--muted); margin-top: 4px; max-width: 250px; margin-inline: auto; line-height: 1.4; }
 /* Upgrades screen: the Pokémon is featured today (every upgrade at max in runs, except Ban). */
 .featured-note { margin: 0 0 10px; padding: 8px 12px; border-radius: 10px; font-size: 13px; line-height: 1.5;
   background: rgba(255,210,63,.10); border: 1px solid rgba(255,210,63,.45); color: var(--muted); }
@@ -1448,7 +1454,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .ft-mon:hover { border-color: rgba(255,210,63,.6); }
 .ft-mon.on { border-color: #ffd23f; }
 .ft-mon.locked { cursor: default; opacity: .6; }
-.ft-mon small { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72px; }
+.ft-mon small { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72px; }
 
 /* Mini-Games (js/ui/minigames.js) */
 .mini-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -1687,7 +1693,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .ki-slot.empty { border-style: dashed; border-color: rgba(244,248,255,.35); }
 .ki-slot .ki-ic { display: flex; }
 .ki-slot .ki-t { display: flex; flex-direction: column; line-height: 1.1; }
-.ki-slot small { font-size: 11px; color: var(--muted); }
+.ki-slot small { font-size: 14px; color: var(--muted); }
 .ki-slot b { font-size: 15px; color: var(--gold); }
 .ki-slot.empty b { color: var(--ink); }
 .partner-card #menu-keyitem { display: flex; width: max-content; }

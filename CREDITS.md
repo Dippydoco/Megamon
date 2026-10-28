@@ -2,8 +2,9 @@
 
 ## Font
 
-The game's font is **m6x11** by [Daniel Linssen](https://managore.itch.io/m6x11) (the m6x11plus version, with
-accented letters), free to use with credit. Pixelify Sans (OFL, `assets/fonts/OFL.txt`) stays as the fallback.
+The game's fonts are **m6x11** (bold text: headings, names, buttons; the m6x11plus version, with accented letters) and
+**m5x7** (regular text) by Daniel Linssen ([m6x11](https://managore.itch.io/m6x11), [m5x7](https://managore.itch.io/m5x7)),
+free to use with credit. Pixelify Sans (OFL, `assets/fonts/OFL.txt`) stays as the fallback.
 
 ## Type font
 
