@@ -1979,3 +1979,25 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
   100% { opacity: 0; transform: translate(-50%, 18px); }
 }
 @media (prefers-reduced-motion: reduce) { .coin-pop { animation-duration: .01s; } }
+
+/* ============ Menu tile extras (28-10-2026) ============ */
+/* 4. Hover and press: the icon hops, the tile presses in. */
+.menu-item.tile:hover .mi-ico, .menu-item.tile:focus-visible .mi-ico { animation: tileHop .42s ease-out; }
+@keyframes tileHop { 0% { transform: translateY(0); } 35% { transform: translateY(-5px); } 65% { transform: translateY(1px); } 100% { transform: translateY(0); } }
+.menu-item.tile:active { transform: translateY(1px) scale(.97); transition-duration: .05s; }
+@media (prefers-reduced-motion: reduce) { .menu-item.tile:hover .mi-ico { animation: none; } }
+/* 6. NEW tag until you open the tile. */
+.tile-new { position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 800; letter-spacing: .5px; padding: 1px 6px; border-radius: 6px;
+  background: #5fe08a; color: #0b2014; text-shadow: none; box-shadow: 0 0 0 2px rgba(0,0,0,.35); animation: tileNew 1.8s ease-in-out infinite; }
+@keyframes tileNew { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+/* 2. (prototype) Progress bar along the bottom of tiles that track something, in the theme's accent. */
+.tile-prog { position: absolute; left: 12px; right: 12px; bottom: 6px; height: 4px; border-radius: 3px; background: rgba(0,0,0,.35); overflow: hidden; }
+.tile-prog b { display: block; height: 100%; background: var(--tile-accent, var(--gold)); border-radius: 3px; transition: width .6s; }
+/* 5. (prototype) Play: grass scrolling behind, your partner walking; Battle Tower: a dim castle silhouette. */
+.menu-item.tile.play { overflow: hidden; }
+.menu-item.tile.play > :not(.play-bg) { position: relative; z-index: 1; }
+canvas.play-bg { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; z-index: 0; opacity: .7; }
+.menu-item.tile.play.tower::after {
+  content: ''; position: absolute; right: 10px; bottom: 0; width: 90px; height: 70px; opacity: .14; pointer-events: none;
+  background: no-repeat bottom right / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 70' shape-rendering='crispEdges'%3E%3Cpath fill='%23fff' d='M0 70V34h6v-6h6v6h6v-6h6v6h6V14h6V6h6V0h6v6h6v8h6v20h6v-6h6v6h6v-6h6v6h6v36z'/%3E%3C/svg%3E");
+}

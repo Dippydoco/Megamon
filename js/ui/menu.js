@@ -62,6 +62,7 @@ G.MenuUI = (() => {
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
       b.onclick = () => {
         const go = b.dataset.go;
+        markSeen(go);
         if (go === 'play') {
           if (G.Social.room) G.LobbyUI.open();
           else if (!playing) {
@@ -223,6 +224,92 @@ G.MenuUI = (() => {
       });
     }
     G.InvitePop.refresh();
+    tileExtras();
+  }
+
+  // ---------------- tile extras (28-10-2026) ----------------
+  // NEW tags: a tile with something new on it carries a tag until you open it (save.seenNew). Add a key here when a
+  // screen gets something worth pointing at; it shows once per account.
+  const NEW_TILES = { shop: 'studio-2026-10', profile: 'mastery-2026-10' };
+  function markSeen(go) {
+    const s = G.DB.save, k = NEW_TILES[go];
+    if (!s || !k) return;
+    s.seenNew = s.seenNew || {};
+    if (!s.seenNew[k]) { s.seenNew[k] = Date.now(); G.DB.commit(); }
+  }
+  // Progress bars (PROTOTYPE 28-10-2026): a slim bar along the bottom of the tiles that track something, in the menu
+  // theme's accent colour.
+  function tileBar(go, frac, title) {
+    const b = document.querySelector('#scr-menu [data-go=' + go + ']');
+    if (!b) return;
+    let el = b.querySelector('.tile-prog');
+    if (!el) { el = document.createElement('i'); el.className = 'tile-prog'; el.innerHTML = '<b></b>'; b.appendChild(el); }
+    el.firstChild.style.width = (G.U.clamp(frac, 0, 1) * 100).toFixed(1) + '%';
+    el.title = title || '';
+  }
+  function tileExtras() {
+    const s = G.DB.save;
+    for (const go in NEW_TILES) {
+      const b = document.querySelector('#scr-menu [data-go=' + go + ']');
+      if (!b) continue;
+      const fresh = !(s.seenNew && s.seenNew[NEW_TILES[go]]);
+      let tag = b.querySelector('.tile-new');
+      if (fresh && !tag) { tag = document.createElement('span'); tag.className = 'tile-new'; tag.textContent = 'NEW'; b.appendChild(tag); }
+      if (!fresh && tag) tag.remove();
+    }
+    const daily = (s.missions && s.missions.daily) || [];
+    const doneN = daily.filter(m => G.Progress.done(m)).length;
+    tileBar('goals', daily.length ? doneN / daily.length : 0, doneN + ' / ' + daily.length + ' daily missions done');
+    const own = Object.keys(s.owned).filter(d => G.DEX_BY[d]).length;
+    tileBar('dex', own / G.DEX.length, own + ' / ' + G.DEX.length + ' Pokémon');
+    const pr = G.Mastery.progress(s.partner);
+    tileBar('profile', pr.frac, G.DEX_BY[s.partner].name + ': Mastery ' + pr.lv);
+    playScene();
+  }
+
+  // Play tile scene (PROTOTYPE 28-10-2026): grass scrolling behind the Play tile with your partner (in its skin)
+  // walking along it; the Battle Tower tile gets a dim castle silhouette (CSS).
+  let sceneRaf = 0;
+  function playScene() {
+    const b = document.querySelector('#scr-menu [data-go=play]');
+    if (!b) return;
+    let cv = b.querySelector('canvas.play-bg');
+    if (!cv) { cv = document.createElement('canvas'); cv.className = 'play-bg'; b.prepend(cv); }
+    const s = G.DB.save, sp = G.Skins.mine(s.partner);
+    const shiny = !!s.partnerShiny && G.DB.ownsShiny(s.partner);
+    if (!cv._a || cv._a.dex !== sp || cv._sh !== shiny) {
+      cv._a = new G.Sprites.Animator(sp, 1, shiny); cv._a.dir = 2; cv._a.loop('Walk'); cv._sh = shiny; cv._x = -40;
+    }
+    if (sceneRaf) return;
+    let last = performance.now(), off = 0;
+    const loop = now => {
+      sceneRaf = 0;
+      if (!G.UI.isOpen('scr-menu') || !cv.isConnected) return;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const r = b.getBoundingClientRect(), W = Math.max(1, Math.round(r.width / 2)), H = Math.max(1, Math.round(r.height / 2));
+      if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+      const c = cv.getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.clearRect(0, 0, W, H);
+      const calm = G.Settings && G.Settings.get('calm');
+      off = (off + dt * (calm ? 0 : 14)) % 16;
+      const gy = H - 6;
+      c.fillStyle = 'rgba(79,154,74,.55)'; c.fillRect(0, gy, W, 6);
+      c.fillStyle = 'rgba(111,196,122,.6)'; c.fillRect(0, gy, W, 2);
+      c.fillStyle = 'rgba(47,122,69,.6)';
+      for (let x = -16 + (16 - off); x < W + 16; x += 16) { c.fillRect(Math.round(x), gy - 3, 2, 3); c.fillRect(Math.round(x) + 6, gy + 5, 2, 2); }
+      const a = cv._a;
+      a.update(dt);
+      cv._x += dt * (calm ? 0 : 22);
+      if (cv._x > W + 30) cv._x = -30;
+      const m = G.Sprites.animMeta(a.dex, 'Walk', a.shiny);
+      a.scale = Math.min(1, (H * 0.3) / ((m ? m.ay : 24) || 24)) / G.Sprites.PX;    // small, along the grass, under the text
+      c.globalAlpha = 0.9;
+      a.draw(c, cv._x, gy + 2);
+      c.globalAlpha = 1;
+      sceneRaf = requestAnimationFrame(loop);
+    };
+    sceneRaf = requestAnimationFrame(loop);
   }
 
   /** Text below "Friends" and "Play": who's online, requests, room. */
