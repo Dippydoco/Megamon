@@ -1964,3 +1964,18 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 /* Support: a gold outline instead of a solid gold button, so What's new is the one that stands out when it has news. */
 #btn-support { border-color: rgba(255,210,63,.65); color: #ffe7a0; }
 #btn-support:hover { background: rgba(255,210,63,.15); }
+/* Coin pop (28-10-2026): the run's PokéCoins float up from the wallet. */
+.coin-pop {
+  position: fixed; z-index: 40; transform: translateX(-50%); pointer-events: none;
+  display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px;
+  background: rgba(10,20,50,.9); border: 2px solid var(--gold); color: var(--gold); font-weight: 800;
+  text-shadow: 2px 2px 0 var(--shadow); animation: coinPop 1.6s ease-out forwards;
+}
+@keyframes coinPop {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); }
+  15% { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+  25% { transform: translate(-50%, 0) scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, 18px); }
+}
+@media (prefers-reduced-motion: reduce) { .coin-pop { animation-duration: .01s; } }

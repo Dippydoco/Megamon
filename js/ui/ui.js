@@ -30,6 +30,32 @@ G.UI = (() => {
     $('ver-tag').classList.toggle('hidden', !on);
     if (!on) $('sound-panel').classList.add('hidden');
     if (on) refreshCoins();
+    if (on && popPending) { const n = popPending; popPending = 0; setTimeout(() => coinPopNow(n), 350); }
+  }
+
+  /**
+   * Coin pop (28-10-2026): the PokéCoins a run earned float up from the wallet when you're back on the menu, and the
+   * number counts up to the new total. coinPop(n) is called at the end of a run, while the top bar is still hidden.
+   */
+  let popPending = 0;
+  function coinPop(n) { if (n > 0) popPending += n; }
+  function coinPopNow(n) {
+    const el = $('coins'), s = G.DB.save;
+    if (!el || !s || $('topbar').classList.contains('hidden')) return;
+    const to = s.coins, from = Math.max(0, to - n), t0 = performance.now();
+    (function step(now) {
+      const k = Math.min(1, (now - t0) / 800), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e).toLocaleString('en');
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+    const r = el.getBoundingClientRect();
+    const p = document.createElement('div');
+    p.className = 'coin-pop';
+    p.innerHTML = '<span class="coin"></span>+' + n.toLocaleString('en');
+    p.style.left = (r.left + r.width / 2) + 'px'; p.style.top = (r.bottom + 4) + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1600);
+    if (G.Audio) G.Audio.sfx('coin');
   }
 
   function refreshCoins() {
@@ -336,6 +362,6 @@ G.UI = (() => {
     return cv;
   }
 
-  return { buildLabel, copyText, $, show, hide, hideAll, isOpen, chrome, refreshCoins, toast, typeChips, stars, confirmDelete,
+  return { buildLabel, copyText, $, show, hide, hideAll, isOpen, chrome, refreshCoins, coinPop, toast, typeChips, stars, confirmDelete,
            sprite, spriteCanvas, ask, tick, initChrome, soundControls };
 })();

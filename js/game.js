@@ -388,6 +388,7 @@ G.Game = (() => {
     const record = !tower && time > save.stats.bestTime;
 
     save.coins += coins;
+    G.UI.coinPop(coins);                 // "+N" floats up from the wallet back on the menu (ui/ui.js)
     bankTickets(false);
     save.stats.totalKills += pl.kills;
     save.stats.coinsEarned += coins;

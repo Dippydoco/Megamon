@@ -567,7 +567,12 @@ G.HUD = (() => {
       ctx.lineWidth = on ? 2.5 : fused || (m && m.evolved) ? 2 : 1.2;
       // Bond: pink border. Evolved: gold.
       ctx.strokeStyle = fused ? BOND : m && m.evolved ? '#ffd23f' : on ? col : 'rgba(140,170,210,.22)';
-      ctx.stroke();
+      if (m && m.evolved && !fused) {               // evolved (28-10-2026): the gold rim glows softly
+        ctx.save();
+        ctx.shadowColor = 'rgba(255,210,63,.9)'; ctx.shadowBlur = 6 + 4 * Math.sin(performance.now() / 400);
+        ctx.stroke();
+        ctx.restore();
+      } else ctx.stroke();
 
       if (!m) continue;
       // Each move's line, then which perk evolves it (27-10-2026), so you can plan your perk slots.
@@ -594,13 +599,32 @@ G.HUD = (() => {
           if (fl > 0) { ctx.fillStyle = 'rgba(255,255,255,' + (fl * 0.55).toFixed(2) + ')'; ctx.fillRect(cx, cy, C, C); }
         });
       } else {
-        // cooldown: empties from the bottom up
-        const cdFrac = cdOf(m);
-        if (cdFrac > 0) {
+        // Cooldown (28-10-2026): a clock sweep instead of a curtain. The dark wedge is the time left, the ring round the
+        // icon fills in the move's type colour, and moves with a longer cooldown flash when they're ready again.
+        const cdFrac = cdOf(m), nowT = performance.now();
+        if (cdFrac > 0 && m.kind !== 'burst') {
+          const cx = x + S / 2, cy = y + S / 2, a0 = -Math.PI / 2;
           ctx.save();
           roundRect(ctx, x, y, S, S, 12); ctx.clip();
-          ctx.fillStyle = 'rgba(0,0,0,.6)';
-          ctx.fillRect(x, y, S, S * cdFrac);
+          ctx.fillStyle = 'rgba(0,0,0,.5)';
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, S, a0 + 6.2832 * (1 - cdFrac), a0 + 6.2832); ctx.closePath(); ctx.fill();
+          ctx.restore();
+          ctx.save();
+          ctx.lineWidth = Math.max(2, 2.5 * K); ctx.lineCap = 'round';
+          ctx.strokeStyle = 'rgba(0,0,0,.45)';
+          ctx.beginPath(); ctx.arc(cx, cy, S * 0.44, 0, 6.2832); ctx.stroke();
+          ctx.strokeStyle = col;
+          ctx.beginPath(); ctx.arc(cx, cy, S * 0.44, a0, a0 + 6.2832 * (1 - cdFrac)); ctx.stroke();
+          ctx.restore();
+        }
+        if (m._cdWas > 0 && cdFrac === 0 && m.cd * pl.cdMul >= 1.5) m._readyAt = nowT;
+        m._cdWas = cdFrac;
+        const rf = 1 - (nowT - (m._readyAt || 0)) / 380;
+        if (rf > 0) {
+          ctx.save();
+          roundRect(ctx, x - 3 * (1 - rf), y - 3 * (1 - rf), S + 6 * (1 - rf), S + 6 * (1 - rf), 13);
+          ctx.lineWidth = 3; ctx.strokeStyle = col; ctx.globalAlpha = rf; ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,' + (rf * 0.25).toFixed(2) + ')'; ctx.fill();
           ctx.restore();
         }
 
