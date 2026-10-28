@@ -84,7 +84,7 @@
       const s = G.DB.save, T = G.Mastery.totals(s);
       box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Mastery</h3>
         <span class="sub">${T.levels} Mastery levels · ${T.mastered} mastered · ${T.played} played</span></div>
-        <p class="sub">Play runs with a Pokémon to raise its Mastery (1 to 10). It never changes stats: every reward is a look,
+        <p class="sub">Play runs with a Pokémon to raise its Mastery. Rewards come up to Mastery 10, and the number keeps rising after. It never changes stats: every reward is a look,
         a title or a skin. The first run of the day with each Pokémon gives ×${G.Mastery.DAILY} XP.</p>`);
       if (mst.sel && G.DEX_BY[mst.sel]) box.appendChild(masteryDetail(mst.sel));
 
@@ -116,7 +116,7 @@
         const c = document.createElement('button');
         c.type = 'button';
         c.className = 'mst-cell' + (d === mst.sel ? ' on' : '') + (pr.lv >= 10 ? ' max' : '');
-        c.style.setProperty('--mst-p', (pr.lv >= 10 ? 100 : pr.frac * 100).toFixed(1) + '%');
+        c.style.setProperty('--mst-p', (pr.frac * 100).toFixed(1) + '%');
         c.style.setProperty('--mst-c', G.U.TYPE_COLOR[mon.types[0]]);
         const ring = document.createElement('span');
         ring.className = 'mst-ring';
@@ -137,11 +137,12 @@
       el.innerHTML = `<div class="mst-head"><span class="mst-pic"></span><div>
           <h3 translate="no">${esc(mon.name)} ${G.Mastery.badge(pr.lv, 18)}</h3>
           <div class="mst-bar"><i style="width:${(pr.frac * 100).toFixed(1)}%"></i></div>
-          <small>${pr.lv >= 10 ? 'Mastered · ' + pr.xp.toLocaleString('en') + ' XP' : pr.xp.toLocaleString('en') + ' / ' + G.Mastery.NEED[pr.lv + 1].toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}
+          <small>${pr.lv >= 10 ? 'Mastered · ' : ''}${pr.xp.toLocaleString('en') + ' / ' + G.Mastery.need(pr.lv + 1).toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}
             · ${G.Mastery.dailyReady(dex, s) ? '×' + G.Mastery.DAILY + ' first-run bonus ready today' : 'first-run bonus used today'}</small>
         </div><button class="btn small ghost x" type="button" aria-label="Close">×</button></div>
         <ol class="mst-track">${G.Mastery.track(dex).map(r => `<li class="${pr.lv >= r.lv ? 'ok' : ''}">
-          <span class="lv">${r.lv}</span>${G.Icons.html(r.icon, 14)}<span>${esc(r.text)}</span>${pr.lv >= r.lv ? '<em>✓</em>' : ''}</li>`).join('')}</ol>`;
+          <span class="lv">${r.lv}</span>${G.Icons.html(r.icon, 14)}<span>${esc(r.text)}</span>${pr.lv >= r.lv ? '<em>✓</em>' : ''}</li>`).join('')}</ol>
+        <p class="sub" style="margin:6px 0 0">Past Mastery 10 the number keeps rising, with no further rewards.</p>`;
       el.querySelector('.mst-pic').appendChild(G.UI.spriteCanvas(G.Skins.mine(dex), 96, 84, { scale: 2, lively: true }));
       el.querySelector('.x').onclick = () => { mst.sel = 0; render(); };
       const forms = G.SkinData.OF[dex] || [];
@@ -712,7 +713,7 @@
           const w = document.createElement('div');
           w.className = 'mst-top-cell';
           w.appendChild(G.UI.spriteCanvas(d, 64, 56, { scale: 1 }));
-          w.insertAdjacentHTML('beforeend', `<b>${esc(G.DEX_BY[d].name)}</b>${G.Mastery.badge(Math.min(10, lv | 0), 12)}`);
+          w.insertAdjacentHTML('beforeend', `<b>${esc(G.DEX_BY[d].name)}</b>${G.Mastery.badge(Math.min(999, lv | 0), 12)}`);
           $('prof-mst-row').appendChild(w);
         }
       }

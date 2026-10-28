@@ -1942,3 +1942,6 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .over-mst > span { display: block; text-align: center; }
 .over-mst-main b { font-size: 16px; }
 .over-mst-main em { white-space: nowrap; }
+/* Codex across the whole bottom row of the menu (28-10-2026): easy to find, so people open it. */
+.menu-item.tile.wide.full { grid-column: 1 / -1; min-height: 58px; background: rgba(120,170,255,.08); border-color: rgba(120,170,255,.4); }
+.partner-tabs { margin-bottom: 8px; }

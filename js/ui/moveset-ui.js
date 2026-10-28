@@ -27,8 +27,9 @@ G.MovesetUI = (() => {
   }
   let clearing = false;          // just pressed "Start from scratch": show the auto fill as off until you tap
 
-  function open() {
+  function open(want) {
     const s = G.DB.save;
+    if (want && G.DB.canUse(want)) dex = +want;
     if (!dex || !G.DB.canUse(dex)) dex = s.partner;
     G.UI.show('scr-moveset', true);
     const sel = $('ms-mon');
@@ -102,5 +103,5 @@ G.MovesetUI = (() => {
     render();
   }
 
-  return { init, open };
+  return { init, open, get dex() { return dex; } };
 })();

@@ -69,7 +69,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/style.css?v=3760e6bc47">
+<link rel="stylesheet" href="css/style.css?v=2c55b08b49">
 </head>
 <body>
 
@@ -176,18 +176,18 @@
     <div class="box menu-grid">
       <button class="menu-item tile play half" data-go="play">Play<small>Enter the dungeon</small></button>
       <button class="menu-item tile play half tower" data-go="tower">Battle Tower<small id="menu-tower-sub">Climb 50 floors</small></button>
+      <!-- (28-10-2026) Rows by what you do: your team, spend and socialise, progress; then the Codex across the bottom.
+           Partner = Upgrades and Moveset as two tabs of one screen. -->
       <button class="menu-item tile" data-go="dex">Pokémon<small id="menu-dex-count">Your collection</small></button>
+      <button class="menu-item tile" data-go="partner">Partner<small id="menu-partner-sub">Upgrades and moveset</small></button>
       <button class="menu-item tile" data-go="gacha">Gacha<small id="menu-gacha-sub">Pokémon and shinies</small></button>
       <button class="menu-item tile" data-go="shop">Shop<small id="menu-shop-sub">Key Items and themes</small></button>
       <button class="menu-item tile" data-go="friends">Friends<small id="menu-friends-sub">Play in a group, up to 5</small></button>
       <button class="menu-item tile" data-go="mini">Mini-Games<small>Battles and drafts</small></button>
-      <button class="menu-item tile" data-go="rank">Leaderboard<small>Who survives longest</small></button>
-      <!-- (28-10-2026: Profile split into Profile and Goals, so 9 normal tiles in three rows and two wide ones.) -->
       <button class="menu-item tile" data-go="profile">Profile<small id="menu-prof-sub">You, your runs, Mastery</small></button>
-      <button class="menu-item tile" data-go="goals">Goals<small id="menu-goals-sub">Missions, achievements, badges</small></button>
-      <button class="menu-item tile" data-go="codex">Codex<small>Every rule, move and ability</small></button>
-      <button class="menu-item tile wide" data-go="upgrades">Upgrades<small id="menu-upg-sub">Stronger every run</small></button>
-      <button class="menu-item tile wide" data-go="moveset">Moveset<small id="menu-ms-sub">Which moves show up in runs</small></button>
+      <button class="menu-item tile" data-go="goals">Goals<small id="menu-goals-sub">Missions and medals</small></button>
+      <button class="menu-item tile" data-go="rank">Leaderboard<small>Who survives longest</small></button>
+      <button class="menu-item tile wide full" data-go="codex">Codex<small>Every rule, move and ability: learn how to get further</small></button>
     </div>
   </div>
 </section>
@@ -472,7 +472,8 @@
 <!-- ====== Moveset: the moves that can come up in runs, per Pokémon (js/ui/moveset-ui.js) ====== -->
 <section id="scr-moveset" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Moveset</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="row between"><h2>Partner</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="tabs partner-tabs"><div class="tab" data-ptab="upgrades">Upgrades</div><div class="tab on" data-ptab="moveset">Moveset</div></div>
     <div class="upg-head">
       <canvas id="ms-stage" class="stage" width="120" height="96"></canvas>
       <div class="grow">
@@ -626,7 +627,8 @@
 
 <section id="scr-upgrades" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Upgrades</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="row between"><h2>Partner</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="tabs partner-tabs"><div class="tab on" data-ptab="upgrades">Upgrades</div><div class="tab" data-ptab="moveset">Moveset</div></div>
     <div class="upg-head">
       <canvas id="upg-stage" class="stage" width="120" height="96"></canvas>
       <div class="grow">
@@ -756,7 +758,7 @@
 </section>
 
 <!-- generated data -->
-<script>window.PS_BUILD={"v":"3760e6bc47","at":"2026-10-28T17:00:36.261Z"};</script>
-<script defer src="js/app.min.js?v=3760e6bc47"></script>
+<script>window.PS_BUILD={"v":"2c55b08b49","at":"2026-10-28T17:10:15.729Z"};</script>
+<script defer src="js/app.min.js?v=2c55b08b49"></script>
 </body>
 </html>

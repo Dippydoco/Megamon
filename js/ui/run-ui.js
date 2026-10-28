@@ -430,8 +430,8 @@ G.RunUI = (() => {
     const mon = G.DEX_BY[m.dex];
     if (!box || !mon) return;
     if (m.none) { box.innerHTML = `<span>Mastery</span><small class="sub">${m.none}</small>`; return; }
-    const N = G.Mastery.NEED, MAX = G.Mastery.MAX;
-    const fracAt = xp => { const l = G.Mastery.levelFor(xp); return l >= MAX ? 1 : (xp - N[l]) / (N[l + 1] - N[l]); };
+    const N = G.Mastery.need;
+    const fracAt = xp => { const l = G.Mastery.levelFor(xp); return (xp - N(l)) / (N(l + 1) - N(l)); };
     const P = m.parts, NAMES = { time: 'time', level: 'level', bosses: 'bosses', legends: 'legendaries', arceus: 'Arceus', floors: 'floors', boss: 'boss floors' };
     const parts = Object.keys(P).filter(k => P[k]).map(k => `+${P[k]} ${NAMES[k] || k}`)
       .concat(m.group ? ['×' + G.Mastery.GROUP + ' group'] : [], m.daily ? ['×' + G.Mastery.DAILY + ' first run today'] : []);

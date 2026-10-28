@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T17:09Z', title: 'Tidier main menu, longer Mastery', chg: [
+    'The main menu is grouped by what you do: your team (Pokémon, Partner, Gacha), spending and friends (Shop, Friends, Mini-Games), and progress (Profile, Goals, Leaderboard), with the Codex across the bottom.',
+    'Partner: Upgrades and Moveset are now two tabs of one screen, and switching tab keeps the Pokémon you picked.',
+    'Mastery levels need twice as much XP (Mastery 10 now takes 8,000 XP). Skins and rewards you already unlocked stay yours.',
+    'Mastery keeps going past 10 (every 3,200 XP is one more level). The rewards still end at Mastery 10; after that it is just the number.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T17:00Z', title: 'Profile and Goals', chg: [
     'The Profile tile is now two: Profile (your profile, run history and Mastery) and Goals (missions, achievements and badges). The red dot for rewards to claim is on Goals.'
   ] },

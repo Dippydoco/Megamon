@@ -56,7 +56,7 @@ G.MenuUI = (() => {
   document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
-    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', profile: 'user', moveset: 'focus', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
+    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', profile: 'user', partner: 'up', moveset: 'focus', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
       b.insertAdjacentHTML('afterbegin', `<span class="mi-ico">${G.Icons.html(ICON[b.dataset.go], 26)}</span>`);
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
@@ -78,8 +78,7 @@ G.MenuUI = (() => {
         else if (go === 'dex') openDex();
         else if (go === 'codex') G.CodexUI.open();
         else if (go === 'mini') G.MiniUI.open();
-        else if (go === 'upgrades') openUpgrades();
-        else if (go === 'moveset') G.MovesetUI.open();
+        else if (go === 'partner') openUpgrades();
         else if (go === 'shop') G.ShopUI.open();
         else if (go === 'gacha') G.GachaUI.open();
         else if (go === 'goals') G.GoalsUI.open('missions');
@@ -187,8 +186,8 @@ G.MenuUI = (() => {
     $('menu-gacha-sub').classList.toggle('gold', pulls > 0);
     // Upgrades tile: how many levels your partner has.
     const plv = Object.values(s.pupg && s.pupg[s.partner] || {}).reduce((a, b) => a + b, 0);
-    $('menu-upg-sub').textContent = plv ? mon.name + ': ' + plv + (plv === 1 ? ' level' : ' levels') : 'Stronger every run';
-    $('menu-ms-sub').textContent = mon ? mon.name + ': ' + (G.Moveset.edited(mon.dex) ? 'your ' + G.Moveset.SIZE + ' moves' : 'automatic') : 'Which moves show up in runs';
+    // Partner tile (Upgrades and Moveset): your partner's upgrade levels and whether its moveset is set.
+    $('menu-partner-sub').textContent = plv ? plv + (plv === 1 ? ' upgrade' : ' upgrades') + (G.Moveset.edited(mon.dex) ? ' · own moves' : '') : 'Upgrades and moveset';
     // Shop tile: what you can afford right now.
     const canKey = G.KeyItems.LIST.filter(k => !G.KeyItems.owns(k.id) && s.coins >= k.price).length;
     const stars = G.DB.stars();
@@ -211,7 +210,7 @@ G.MenuUI = (() => {
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, achievements, badges';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions and medals';
     const pm = G.Mastery.top(1)[0];
     $('menu-prof-sub').textContent = pm ? 'Top: ' + G.DEX_BY[pm[0]].name + ' ' + pm[1] : 'You, your runs, Mastery';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
@@ -405,7 +404,7 @@ G.MenuUI = (() => {
     const pr = G.Mastery.progress(dex);
     box.className = 'dex-mst';
     box.innerHTML = `<div class="row between"><b>${pr.lv ? G.Mastery.badge(pr.lv, 16) : ''} Mastery ${pr.lv}</b>
-        <small>${pr.lv >= G.Mastery.MAX ? 'Mastered!' : (pr.span - pr.into).toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}</small></div>
+        <small>${pr.lv >= G.Mastery.MAX ? 'Mastered · ' : ''}${(pr.span - pr.into).toLocaleString('en') + ' XP to Mastery ' + (pr.lv + 1)}</small></div>
       <div class="mst-bar"><i style="width:${(pr.frac * 100).toFixed(1)}%"></i></div>
       <div class="row between"><small>${G.Mastery.dailyReady(dex) ? '×1.5 first-run bonus ready today' : 'First-run bonus used today'}</small>
         <button class="btn small ghost" type="button" data-sfx="click">Rewards</button></div>`;
@@ -616,9 +615,11 @@ G.MenuUI = (() => {
 
   let upgDex = null;
 
-  function openUpgrades() {
+  /** The Partner screen's Upgrades tab (the Moveset tab is ui/moveset-ui.js); `dex` keeps the Pokémon picked in the other tab. */
+  function openUpgrades(dex) {
     G.UI.show('scr-upgrades', true);
     const s = G.DB.save;
+    if (dex && G.DB.canUse(dex)) upgDex = +dex;
     if (!upgDex || !G.DB.canUse(upgDex)) upgDex = s.partner;
     // Picker with your Pokémon: the partner first, then those that already have upgrades.
     const sel = $('upg-mon');
@@ -760,5 +761,15 @@ G.MenuUI = (() => {
     return el;
   }
 
-  return { init, open, GEN_NAMES, refreshSocial() { if (G.UI.isOpen('scr-menu')) socialLine(); } };
+  // Partner screen (28-10-2026): Upgrades and Moveset are two tabs of one screen; each tab opens the other, same Pokémon.
+  document.querySelectorAll('.partner-tabs [data-ptab]').forEach(t => {
+    t.onclick = () => {
+      if (t.classList.contains('on')) return;
+      G.Audio.sfx('click');
+      if (t.dataset.ptab === 'moveset') G.MovesetUI.open(upgDex);
+      else openUpgrades(G.MovesetUI.dex);
+    };
+  });
+
+  return { init, open, GEN_NAMES, openUpgrades, refreshSocial() { if (G.UI.isOpen('scr-menu')) socialLine(); } };
 })();

@@ -1,5 +1,6 @@
 /* ============ mastery.js — per-Pokémon Mastery (out of runs, cosmetic only) ============
- * Every Pokémon has its own Mastery level, 1 to 10, earned by playing runs with it (28-10-2026). It gives no
+ * Every Pokémon has its own Mastery level, earned by playing runs with it (28-10-2026). The rewards stop at Mastery 10
+ * (MAX, "mastered"), but the level keeps going past it with no further rewards, just the number. It gives no
  * stats: every reward is cosmetic (ribbons, titles, a footstep trail, a run intro, an aura, a profile banner, its
  * skins). Shown as a ribbon and "Mastery N", never "level", so it isn't mixed up with the per-Pokémon Upgrades.
  *
@@ -12,20 +13,25 @@
  * first run of the day with that Pokémon. Runs under a minute give nothing.
  */
 G.Mastery = (() => {
-  // Total XP needed for Mastery 1..10.
-  const NEED = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000];
-  const MAX = 10;
+  // Total XP needed for Mastery 1..10 (doubled on 28-10-2026: it was 100 ... 4,000). Past 10 each level costs STEP more.
+  const NEED = [0, 200, 500, 900, 1400, 2000, 2800, 3800, 5000, 6400, 8000];
+  const MAX = 10, STEP = 3200, CAP = 999;
+  /** Total XP needed for Mastery `l` (any level, past 10 too). */
+  const need = l => (l <= MAX ? NEED[l] : NEED[MAX] + (l - MAX) * STEP);
   const DAILY = 1.5, GROUP = 1.1;
 
   const save = () => G.DB.save;
   const xpOf = (dex, s = save()) => (s && s.mxp && s.mxp[dex]) || 0;
-  function levelFor(xp) { let l = 0; while (l < MAX && xp >= NEED[l + 1]) l++; return l; }
+  function levelFor(xp) {
+    if (xp >= NEED[MAX]) return Math.min(CAP, MAX + Math.floor((xp - NEED[MAX]) / STEP));
+    let l = 0; while (l < MAX && xp >= NEED[l + 1]) l++; return l;
+  }
   const level = (dex, s = save()) => levelFor(xpOf(dex, s));
   /** { lv, xp, into, span, frac } for drawing a bar. */
   function progress(dex, s = save()) {
     const xp = xpOf(dex, s), lv = levelFor(xp);
-    if (lv >= MAX) return { lv, xp, into: 0, span: 0, frac: 1 };
-    const into = xp - NEED[lv], span = NEED[lv + 1] - NEED[lv];
+    if (lv >= CAP) return { lv, xp, into: 0, span: 0, frac: 1 };
+    const into = xp - need(lv), span = need(lv + 1) - need(lv);
     return { lv, xp, into, span, frac: into / span };
   }
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -165,6 +171,6 @@ G.Mastery = (() => {
       .sort((a, b) => s.mxp[b] - s.mxp[a]).slice(0, n).map(d => [+d, level(d, s)]);
   }
 
-  return { NEED, MAX, DAILY, GROUP, xpOf, level, levelFor, progress, ribbon, badge, TIERS, track, titles, banners,
+  return { NEED, MAX, need, DAILY, GROUP, xpOf, level, levelFor, progress, ribbon, badge, TIERS, track, titles, banners,
            award, backfill, totals, top, dailyReady, partsFor };
 })();
