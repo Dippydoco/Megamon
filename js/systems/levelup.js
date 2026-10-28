@@ -65,8 +65,10 @@ G.LevelUp = (() => {
   /** Banned this run with the level-up Ban button ('mv:<move>' or 'pk:<perk>')? */
   const banned = (pl, key) => !!(pl.banned && pl.banned.has(key));
   /** What a card's ban removes: its move (new or upgrade) or its perk. Evolutions can't be banned. */
+  // (The Sitrus Berry and the Nugget can't be banned either: they are what's left when everything is maxed, and
+  //  banning the berry used to leave an empty level-up screen with no way out, 28-10-2026.)
   const banKey = c => (c.type === 'new' || c.type === 'up' ? 'mv:' + c.key.slice(c.key.indexOf(':') + 1)
-                     : c.type === 'stat' && c.key.startsWith('stat:') ? 'pk:' + c.key.slice(5) : null);          // booster moves (Swords Dance, Agility, Harden...) you can hold at once
+                     : c.type === 'stat' && BY[c.key.slice(5)] && !BY[c.key.slice(5)].instant ? 'pk:' + c.key.slice(5) : null);          // booster moves (Swords Dance, Agility, Harden...) you can hold at once
 
   const BY = {};
   for (const s of STATS) BY[s.id] = s;
@@ -85,6 +87,9 @@ G.LevelUp = (() => {
   }
   /** Your moves (not yet evolved) whose evolution needs perk `id`. */
   const neededBy = (pl, id) => ((pl && pl.moves) || []).filter(m => { const e = G.Moves.evoNeed(m); return e && e.needs === id; });
+
+  /** PokéCoins from a Nugget card: more the higher your level. */
+  const nuggetCoins = pl => 20 + 2 * ((pl && pl.level) || 1);
 
   /** The perks a player holds, in the order taken: [id...] (the Sitrus Berry is not one). */
   function tomesOf(pl) {
@@ -201,7 +206,7 @@ G.LevelUp = (() => {
     const room = s => !s.max || (pl.statsTaken[s.id] || 0) < s.max;
     // Perk slots: a perk you don't hold yet only comes up while a slot is free (the berry never takes one).
     const held = tomesOf(pl), full = held.length >= maxTomes(pl);
-    const fits = s => (s.instant || held.includes(s.id) || !full) && !banned(pl, 'pk:' + s.id);
+    const fits = s => s.instant || ((held.includes(s.id) || !full) && !banned(pl, 'pk:' + s.id));
     // (Battle Tower: no experience there, so no Learning card, and no Roar: the floors set their own difficulty.)
     const useful = s => !((s.id === 'xp' || s.id === 'roar') && inTower());
     const pickStats = G.U.pickN(STATS.filter(s => !waiting[s.id] && room(s) && fits(s) && useful(s)), 5)
@@ -221,6 +226,17 @@ G.LevelUp = (() => {
         apply: p => { const n = p.statsTaken[s.id] || 0; s.apply(p, n); p.statsTaken[s.id] = n + 1; fxT = -1; }
       });
     }
+
+    // Nearly everything maxed (fewer than 3 real cards left): a Nugget joins the Sitrus Berry as a filler, so a
+    // level-up is never empty or pointless (28-10-2026). Like the berry, it never takes a perk slot.
+    if (out.filter(c => c.key !== 'stat:heal').length < 3) {
+      const n = nuggetCoins(pl);
+      out.push({ w: 6, type: 'stat', key: 'stat:nugget', icon: 'coin', color: '#ffd23f', tag: 'Instant', title: 'Nugget',
+                 desc: '+' + n + ' PokéCoins, added to what you earn this run.', owned: null, cap: 0,
+                 apply: p => { const k = nuggetCoins(p); p.coins += k; G.FX.dmgText(p.x, p.y - p.bodyH - 8, '+' + k, '#ffd23f'); G.Audio.sfx('coin'); } });
+    }
+    // Last safety net: never an empty level-up screen (it couldn't be closed).
+    if (!out.length) { const h = BY.heal; out.push({ w: 1, type: 'stat', key: 'stat:heal', icon: h.icon, color: '#8fa3c4', tag: 'Instant', title: h.title, desc: h.desc, owned: null, cap: 0, apply: p => h.apply(p) }); }
 
     return out;
   }

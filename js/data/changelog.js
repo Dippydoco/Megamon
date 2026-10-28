@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T11:36Z', title: 'No more stuck level-ups when everything is maxed', fix: [
+    'Levelling up with every move and perk maxed could leave you stuck on an empty level-up screen (if the Sitrus Berry had been banned). The Sitrus Berry can no longer be banned, and the screen always has a card to pick.'
+  ], new: [
+    'Nugget: when there\'s almost nothing left to upgrade, a Nugget card joins the Sitrus Berry and gives PokéCoins (more at higher levels).'
+  ] },
   { d: '2026-10-27', at: '2026-10-27T17:03Z', title: 'Every run counts on the leaderboard', fix: [
     'Big runs are no longer kept off the leaderboard: there are no automatic limits on time, level or Pokémon defeated any more, so runs like a 60,000-defeated one now go on every board.'
   ] },

@@ -162,7 +162,7 @@ G.RunUI = (() => {
   }
   function banCard(i) {
     const p = G.Game.player, c = offers[i], key = c && G.LevelUp.banKey(c);
-    if (!key) { G.UI.toast(c && c.type === 'evo' ? 'Evolutions can\'t be banned' : 'This card can\'t be banned'); G.Audio.sfx('error'); return; }
+    if (!key) { G.UI.toast(c && c.type === 'evo' ? 'Evolutions can\'t be banned' : c && c.tag === 'Instant' ? c.title + ' can\'t be banned' : 'This card can\'t be banned'); G.Audio.sfx('error'); return; }
     p.banned.add(key);
     p.bansLeft = Math.max(0, (p.bansLeft || 0) - 1);
     G.UI.toast(c.title + ' banned for this run');
