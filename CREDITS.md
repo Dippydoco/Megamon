@@ -5,6 +5,13 @@
 The game's font is **m6x11** by [Daniel Linssen](https://managore.itch.io/m6x11) (the m6x11plus version, with
 accented letters), free to use with credit. Pixelify Sans (OFL, `assets/fonts/OFL.txt`) stays as the fallback.
 
+## Type font
+
+The letters on the type chips come from
+[Bigger Pokemon type icons and font](https://www.deviantart.com/slevanas/art/Bigger-Pokemon-type-icons-and-font-501606704)
+by Slevanas, free to use with a link back to that page. They were converted into the font `assets/fonts/MegamonTypes.ttf`
+(`tools/make_type_font.py`, letters in `tools/type_glyphs.json`).
+
 ## Sprites
 
 The *Pokémon Mystery Dungeon* style sprites come from

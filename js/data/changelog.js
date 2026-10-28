@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T19:29Z', title: 'New type chips', chg: [
+    'Type chips use pixel letters in the style of the Pokémon games (by Slevanas), in white with a small shadow, everywhere types are shown.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T19:19Z', title: 'Sleepy z\'s stay behind the menu', fix: [
     'The z\'s from Pokémon napping behind the main menu no longer float over the menu\'s buttons.'
   ] },
