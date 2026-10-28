@@ -1,5 +1,6 @@
-/* ============ goals-ui.js — the Profile screen ============
- * One screen (the "Profile" tile on the menu; it used to be called Missions) with five tabs:
+/* ============ goals-ui.js — the Profile and Goals screens ============
+ * One screen shown as two (28-10-2026): the "Profile" menu tile shows Profile, History and Mastery; the "Goals" tile
+ * shows Missions, Achievements and Badges (GROUPS below). The tabs:
  *   Profile       your 3 favourites and your title; preview of the public profile
  *   History       your last runs
  *   Missions      3 daily + 2 weekly, with a bar, reward and collect button
@@ -41,6 +42,8 @@
 
   G.GoalsUI = (() => {
     let tab = 'profile', cat = 'collection';
+    const GROUPS = { profile: ['profile', 'history', 'mastery'], goals: ['missions', 'ach', 'badges'] };
+    const groupOf = t => (GROUPS.goals.includes(t) ? 'goals' : 'profile');
 
     function init() {
       document.querySelectorAll('#goals-tabs .tab').forEach(t => {
@@ -58,7 +61,12 @@
     }
 
     function render() {
-      document.querySelectorAll('#goals-tabs .tab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
+      const g = groupOf(tab);
+      $('goals-title').textContent = g === 'goals' ? 'Goals' : 'Profile';
+      document.querySelectorAll('#goals-tabs .tab').forEach(t => {
+        t.classList.toggle('on', t.dataset.tab === tab);
+        t.classList.toggle('hidden', groupOf(t.dataset.tab) !== g);
+      });
       const box = $('goals-body');
       box.innerHTML = '';
       if (tab === 'missions') missions(box);

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-28', at: '2026-10-28T17:00Z', title: 'Profile and Goals', chg: [
+    'The Profile tile is now two: Profile (your profile, run history and Mastery) and Goals (missions, achievements and badges). The red dot for rewards to claim is on Goals.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T16:22Z', title: 'Mastery and skins', new: [
     'Mastery: every Pokémon now has its own Mastery, from 1 to 10, raised by playing runs with it (time survived, level, bosses, legendaries, reaching Arceus and Battle Tower floors). The first run of the day with each Pokémon gives ×1.5 Mastery XP. Your past runs already count, so your favourites start ahead.',
     'Mastery never changes stats. Its rewards are looks: ribbons on your Pokémon, a footstep trail, a glow, a run intro, a sparkle aura, titles, a profile banner with your Pokémon, and skins. See every Pokémon\'s reward track in Profile > Mastery, and your Mastery XP at the end of each run.',

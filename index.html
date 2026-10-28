@@ -69,7 +69,7 @@
   ]
 }
 </script>
-<link rel="stylesheet" href="css/style.css?v=fc8c2c8b44">
+<link rel="stylesheet" href="css/style.css?v=3760e6bc47">
 </head>
 <body>
 
@@ -182,11 +182,12 @@
       <button class="menu-item tile" data-go="friends">Friends<small id="menu-friends-sub">Play in a group, up to 5</small></button>
       <button class="menu-item tile" data-go="mini">Mini-Games<small>Battles and drafts</small></button>
       <button class="menu-item tile" data-go="rank">Leaderboard<small>Who survives longest</small></button>
-      <!-- (27-10-2026: 10 screens, so the last four are wide tiles in two rows of two.) -->
+      <!-- (28-10-2026: Profile split into Profile and Goals, so 9 normal tiles in three rows and two wide ones.) -->
+      <button class="menu-item tile" data-go="profile">Profile<small id="menu-prof-sub">You, your runs, Mastery</small></button>
+      <button class="menu-item tile" data-go="goals">Goals<small id="menu-goals-sub">Missions, achievements, badges</small></button>
+      <button class="menu-item tile" data-go="codex">Codex<small>Every rule, move and ability</small></button>
       <button class="menu-item tile wide" data-go="upgrades">Upgrades<small id="menu-upg-sub">Stronger every run</small></button>
       <button class="menu-item tile wide" data-go="moveset">Moveset<small id="menu-ms-sub">Which moves show up in runs</small></button>
-      <button class="menu-item tile wide" data-go="goals">Profile<small id="menu-goals-sub">Missions, badges and history</small></button>
-      <button class="menu-item tile wide" data-go="codex">Codex<small>Every rule, move and ability</small></button>
     </div>
   </div>
 </section>
@@ -488,10 +489,10 @@
   </div>
 </section>
 
-<!-- ====== Profile: profile, history, missions, achievements and badges ====== -->
+<!-- ====== Profile (profile, history, Mastery) and Goals (missions, achievements, badges): one screen, two tab sets ====== -->
 <section id="scr-goals" class="scr dim hidden">
   <div class="box wide">
-    <div class="row between"><h2>Profile</h2><button class="btn small ghost" data-back>Back</button></div>
+    <div class="row between"><h2 id="goals-title">Profile</h2><button class="btn small ghost" data-back>Back</button></div>
     <div class="tabs" id="goals-tabs">
       <div class="tab on" data-tab="profile">Profile</div>
       <div class="tab" data-tab="history">History</div>
@@ -755,7 +756,7 @@
 </section>
 
 <!-- generated data -->
-<script>window.PS_BUILD={"v":"fc8c2c8b44","at":"2026-10-28T16:23:16.020Z"};</script>
-<script defer src="js/app.min.js?v=fc8c2c8b44"></script>
+<script>window.PS_BUILD={"v":"3760e6bc47","at":"2026-10-28T17:00:36.261Z"};</script>
+<script defer src="js/app.min.js?v=3760e6bc47"></script>
 </body>
 </html>

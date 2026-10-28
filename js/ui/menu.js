@@ -56,7 +56,7 @@ G.MenuUI = (() => {
   document.addEventListener('click', e => { if (!tipFor(e)) hideMoveTip(); });
 
   function init() {
-    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', moveset: 'focus', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
+    const ICON = { play: 'ball', dex: 'book', codex: 'codex', mini: 'cards', upgrades: 'up', gacha: 'ball4', goals: 'medal3', profile: 'user', moveset: 'focus', friends: 'friends', rank: 'trophy', settings: 'gear', shop: 'shop', tower: 'tower' };
     document.querySelectorAll('#scr-menu [data-go]').forEach(b => {
       b.insertAdjacentHTML('afterbegin', `<span class="mi-ico">${G.Icons.html(ICON[b.dataset.go], 26)}</span>`);
       b.dataset.sfx = b.dataset.go === 'play' ? 'confirm' : 'click';
@@ -82,7 +82,8 @@ G.MenuUI = (() => {
         else if (go === 'moveset') G.MovesetUI.open();
         else if (go === 'shop') G.ShopUI.open();
         else if (go === 'gacha') G.GachaUI.open();
-        else if (go === 'goals') G.GoalsUI.open(G.Progress.pending() ? 'missions' : 'profile');   // rewards waiting: straight to Missions
+        else if (go === 'goals') G.GoalsUI.open('missions');
+        else if (go === 'profile') G.GoalsUI.open('profile');
         else if (go === 'friends') G.FriendsUI.open();
         else if (go === 'rank') G.RankingUI.open();
         else if (go === 'settings') G.SettingsUI.open();
@@ -210,7 +211,9 @@ G.MenuUI = (() => {
     // Mission rewards waiting to be collected.
     G.Progress.checkAch();
     const pend = G.Progress.pending();
-    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, badges and history';
+    $('menu-goals-sub').textContent = pend ? pend + (pend === 1 ? ' reward to claim' : ' rewards to claim') : 'Missions, achievements, badges';
+    const pm = G.Mastery.top(1)[0];
+    $('menu-prof-sub').textContent = pm ? 'Top: ' + G.DEX_BY[pm[0]].name + ' ' + pm[1] : 'You, your runs, Mastery';
     $('menu-goals-sub').classList.toggle('gold', pend > 0);
     tileAlert('goals', pend > 0);
     // With a cloud account: friends online, invitations and (once) the nickname.
