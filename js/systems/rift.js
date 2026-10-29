@@ -23,7 +23,9 @@ G.Rift = (() => {
   // Less luck (12-10-2026): each time it doesn't come up, the next is more
   // likely (20 %, 40 %, 60 %, 80 %, 100 %): at most 2.5 min without a rift.
   // From 2 min before Arceus's Judgment (minute 30) they no longer open.
-  const CHECK = 30, CHANCE = 0.2, TTL = 45;
+  // Spread out (29-10-2026): after a rift opens, the next check waits REST more seconds once it has gone (the checks
+  // stop while a rift or arena is up), so about 12 rifts in a full run instead of about 18; at most 3¼ min without one.
+  const CHECK = 30, CHANCE = 0.2, TTL = 45, REST = 45;
   const ARENA_R = 11, ARENA_TIME = 120, FROM = 75;
   const MEGA_DEX = 9718;    // Mega Zygarde sprite (assets/pokemon/9718, tools/fetch_zygarde_mega.py)
   const MEGA_SWAP = 1.6, MEGA_TIME = 3.2;   // seconds: sprite/arena change · untouchable
@@ -55,7 +57,7 @@ G.Rift = (() => {
       if (checkT <= 0) {
         checkT = CHECK;
         if (G.EnemyMgr.bossAlive()) return;           // with a boss alive it doesn't count as an attempt
-        if (Math.random() < CHANCE * (1 + misses)) { misses = 0; open(); }
+        if (Math.random() < CHANCE * (1 + misses)) { misses = 0; checkT = CHECK + REST; open(); }
         else misses++;
       }
     }

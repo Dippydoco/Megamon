@@ -16,44 +16,48 @@ G.LevelUp = (() => {
   const lvOf = (pl, id) => (pl && pl.statsTaken && pl.statsTaken[id]) || 0;
 
   // Caps raised on 27-10-2026 (perks can be held in only 4 slots now, so each one goes deeper); Vigor and
-  // Synthesis got caps for the first time. Armor: +5% a level up to its 70% cap (it was +6%, cap reached at 12).
+  // Synthesis got caps for the first time.
+  // Finer levels (29-10-2026): every perk except Quantity has twice the levels at half the step, so a level gives
+  // less but a maxed perk is exactly what it was (multipliers use the square root of the old step). Old values:
+  // Vigor +20 ×12, Power +5% ×30, Sprint +7% ×12, Reflexes -8% ×13, Armor +5% ×14, Synthesis +1.5/+0.3% ×15,
+  // Learning +12% ×12, Reach +10% ×10, Focus +4% ×10, Pay Day +12% ×10, Shiny Lure +10% ×10, Roar ×10.
   const STATS = [
-    { id: 'hp',   icon: 'heart', title: 'Vigor',        desc: '+20 max HP (and heals it).',
-      apply: pl => pl.addMaxHp(20), max: 12 },
+    { id: 'hp',   icon: 'heart', title: 'Vigor',        desc: '+10 max HP (and heals it).',
+      apply: pl => pl.addMaxHp(10), max: 24 },
     // Power (27-10-2026): +5% a level, adding up (it was +10% multiplying, which compounded to ×45 at its cap). Every
     // Pokémon now also gains +1.5% damage per level on its own (player.js levelMul), so Power is no longer a must.
-    { id: 'atk',  icon: 'fist', title: 'Power',     desc: '+5% damage with every move.',
-      apply: (pl, n = lvOf(pl, 'atk')) => pl.atkMul *= lin(0.05, n), max: 30 },
-    { id: 'spd',  icon: 'boot', title: 'Sprint',      desc: '+7% movement speed.',
-      apply: pl => pl.spdMul *= 1.07, max: 12 },
-    { id: 'cd',   icon: 'clock', title: 'Reflexes',     desc: '-8% cooldown on every move.',
-      apply: pl => pl.cdMul *= 0.92, max: 13 },
-    { id: 'def',  icon: 'shield', title: 'Armor',       desc: '+5% damage reduction.',
-      apply: pl => pl.dmgReduce = Math.min(0.7, pl.dmgReduce + 0.05), max: 14 },
+    { id: 'atk',  icon: 'fist', title: 'Power',     desc: '+2.5% damage with every move.',
+      apply: (pl, n = lvOf(pl, 'atk')) => pl.atkMul *= lin(0.025, n), max: 60 },
+    { id: 'spd',  icon: 'boot', title: 'Sprint',      desc: '+3.4% movement speed.',
+      apply: pl => pl.spdMul *= Math.sqrt(1.07), max: 24 },
+    { id: 'cd',   icon: 'clock', title: 'Reflexes',     desc: '-4.1% cooldown on every move.',
+      apply: pl => pl.cdMul *= Math.sqrt(0.92), max: 26 },
+    { id: 'def',  icon: 'shield', title: 'Armor',       desc: '+2.5% damage reduction.',
+      apply: pl => pl.dmgReduce = Math.min(0.7, pl.dmgReduce + 0.025), max: 28 },
     // Synthesis (27-10-2026, much stronger: it was +0.9 HP/s): flat healing plus a share of max HP, so it keeps up late.
-    { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+1.5 HP and +0.3% of your max HP regenerated per second.',
-      apply: pl => { pl.regenFlat += 1.5; pl.regenPct = (pl.regenPct || 0) + 0.003; }, max: 15 },
+    { id: 'rgn',  icon: 'sprout', title: 'Synthesis',     desc: '+0.75 HP and +0.15% of your max HP regenerated per second.',
+      apply: pl => { pl.regenFlat += 0.75; pl.regenPct = (pl.regenPct || 0) + 0.0015; }, max: 30 },
     // Quantity (27-10-2026, replaces the Magnet perk: pickup range still comes from the Magnet upgrade, power-up and
     // shrine). +1 to the count of every move that fires several things; moves learned later get it too (qtyOn).
     { id: 'qty',  icon: 'ball3', title: 'Quantity', desc: '+1 projectile, orb, ring, target, link or bee on every move that fires several things.',
       apply: pl => { for (const m of pl.moves) if (qtyOn(m)) m.count += 1; }, max: 3 },
-    { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+12% experience gained.',
-      apply: pl => pl.xpMul *= 1.12, max: 12 },
-    { id: 'area', icon: 'reach', title: 'Reach',      desc: '+10% size of every area attack.',
-      apply: pl => pl.areaMul *= 1.10, max: 10 },
-    { id: 'crit', icon: 'focus', title: 'Focus',      desc: '+4% critical-hit chance (critical hits do ×1.5 damage).',
-      apply: pl => pl.critChance += 0.04, max: 10 },
+    { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+5.8% experience gained.',
+      apply: pl => pl.xpMul *= Math.sqrt(1.12), max: 24 },
+    { id: 'area', icon: 'reach', title: 'Reach',      desc: '+4.9% size of every area attack.',
+      apply: pl => pl.areaMul *= Math.sqrt(1.10), max: 20 },
+    { id: 'crit', icon: 'focus', title: 'Focus',      desc: '+2% critical-hit chance (critical hits do ×1.5 damage).',
+      apply: pl => pl.critChance += 0.02, max: 20 },
     // Shiny Lure cut from +30% to +10% a level on 28-10-2026 (too many shinies).
     // Farming perks (27-10-2026). Pay Day is read at the end of the run (game.js endRun, coinK); Shiny Lure by the
     // spawner (shinyK: the team's average in a group, since the host rolls every shiny).
-    { id: 'coin', icon: 'coin', title: 'Pay Day', desc: '+12% PokéCoins from this run.',
-      apply: () => {}, max: 10 },
-    { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+10% chance for wild Pokémon to be shiny.',
-      apply: () => {}, max: 10 },
+    { id: 'coin', icon: 'coin', title: 'Pay Day', desc: '+6% PokéCoins from this run.',
+      apply: () => {}, max: 20 },
+    { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+5% chance for wild Pokémon to be shiny.',
+      apply: () => {}, max: 20 },
     // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience
     // for you. Not in the Battle Tower, whose floors set their own numbers.
-    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +10% wild Pokémon, +8% their health, +5% their damage, +3% their speed. You get +8% experience.',
-      apply: (pl, n = lvOf(pl, 'roar')) => { pl.xpMul *= lin(0.08, n); }, max: 10 },
+    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +5% wild Pokémon, +4% their health, +2.5% their damage, +1.5% their speed. You get +4% experience.',
+      apply: (pl, n = lvOf(pl, 'roar')) => { pl.xpMul *= lin(0.04, n); }, max: 20 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.healItem(0.45), instant: true }
   ];
@@ -128,7 +132,7 @@ G.LevelUp = (() => {
     let roar = 0, shiny = 0;
     for (const p of ps) { const l = levelsOf(p); roar += l.roar || 0; shiny += l.shiny || 0; }
     const n = Math.max(1, ps.length), r = roar / n;
-    fx = { rate: 1 + 0.10 * r, cap: 1 + 0.06 * r, hp: 1 + 0.08 * r, dmg: 1 + 0.05 * r, spd: 1 + 0.03 * r, shiny: 1 + 0.10 * shiny / n };
+    fx = { rate: 1 + 0.05 * r, cap: 1 + 0.03 * r, hp: 1 + 0.04 * r, dmg: 1 + 0.025 * r, spd: 1 + 0.015 * r, shiny: 1 + 0.05 * shiny / n };
     return fx;
   }
   const inTower = () => !!(G.Tower && G.Tower.active);
@@ -141,7 +145,7 @@ G.LevelUp = (() => {
   /** Shiny Lure (spawner.js rollShiny). */
   const shinyK = () => teamFx().shiny;
   /** Your PokéCoins at the end of the run (game.js endRun): Pay Day (Roar's +8% a level was removed 28-10-2026). */
-  const coinK = pl => 1 + 0.12 * lvOf(pl, 'coin');
+  const coinK = pl => 1 + 0.06 * lvOf(pl, 'coin');
   /** Short form of your perks for teammates ("atk.5,cd.3"). */
   const share = pl => tomesOf(pl).map(id => id + '.' + lvOf(pl, id)).join(',');
 

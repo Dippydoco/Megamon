@@ -62,7 +62,7 @@ G.SkinData = (() => {
         return { text: 'As Deoxys, max out the ' + perk + ' perk in one run', ev: 1 };
       }
       case 483: case 484: case 487:
-        return { text: 'Defeat ' + G.DEX_BY[dex].name + ' in a rift with Roar at level 5 or higher', ev: 1 };
+        return { text: 'Defeat ' + G.DEX_BY[dex].name + ' in a rift with Roar at level 10 or higher', ev: 1 };
       case 645: case 905:
         return { text: 'Defeat ' + G.DEX_BY[dex].name + ' in a rift 3 times', goal: 3, val: s => ((fc(s).th || {})[dex] || 0) };
       case 646:

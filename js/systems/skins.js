@@ -160,7 +160,7 @@ G.Skins = (() => {
       for (const t of types) sv[t] = (sv[t] || 0) + 1;
     }
     if (!legend) return;
-    if ((legend === 483 || legend === 484 || legend === 487) && perkLv(pl, 'roar') >= 5) grant(formId(legend, 'Origin'));
+    if ((legend === 483 || legend === 484 || legend === 487) && perkLv(pl, 'roar') >= 10) grant(formId(legend, 'Origin'));
     if (legend === 645 || legend === 905) { const th = fcOf(s).th = fcOf(s).th || {}; th[legend] = (th[legend] || 0) + 1; }
     if (pl.dex === 646 && legend === 644) grant(formId(646, 'Black'));
     if (pl.dex === 646 && legend === 643) grant(formId(646, 'White'));

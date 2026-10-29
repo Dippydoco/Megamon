@@ -245,7 +245,7 @@ G.CodexUI = (() => {
           ['Perks', 'Perk cards (Power, Reflexes, Pay Day, Roar...) level up each time you take them, up to their cap. You can hold ' + G.LevelUp.maxTomes(null) + ' different perks: once your slots are full, only the ones you hold come up. A move\'s evolution needs a perk, so plan your slots. The Sitrus Berry heals at once and never takes a slot.'],   // levelup.js
           ['Moveset', 'New-move cards only offer the ' + G.Moveset.SIZE + ' moves in your Pokémon\'s moveset (Moveset on the main menu). Every Pokémon has ' + G.Moveset.SIZE + ', chosen by you or filled in automatically. Starting moves and Spiritomb\'s moves are not limited by it.'],   // moveset.js
           ['Ban', 'With the Ban upgrade, press Ban (or B) on a level-up and then a card: that move or perk never comes up again this run, and a new card takes its place. Evolutions can\'t be banned.'],   // run-ui.js banMode
-          ['Roar', 'Each level: +10% wild Pokémon, +8% their health, +5% their damage and +3% their speed, for +8% experience. In a group the whole team faces the team\'s average. Not offered in the Battle Tower.'],   // levelup.js teamFx
+          ['Roar', 'Each level: +5% wild Pokémon, +4% their health, +2.5% their damage and +1.5% their speed, for +4% experience. In a group the whole team faces the team\'s average. Not offered in the Battle Tower.'],   // levelup.js teamFx
           ['Growing with levels', 'Every Pokémon deals +' + Math.round((G.LEVEL_DMG || 0) * 1000) / 10 + '% damage and gains ' + Math.round((G.LEVEL_HP || 0) * 1000) / 10 + '% of its base HP as max HP per level in a run, with no cap. Lower rarities also grow a little more each level (below).'],   // player.js levelMul, gainXp
           ...[1, 2, 3].map(r => [RN[r] + ' (' + r + '★)', tier(r)]),
           [RN[4] + ' and ' + RN[5], 'Highest base stats, no rarity bonus or growth.'],
@@ -268,7 +268,7 @@ G.CodexUI = (() => {
         ['Teammates', 'Team abilities (Battery, Power Spot, Telepathy...) help teammates within a short distance of you.']
       ]],
       ['Shinies', [
-        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it. The Shiny Lure perk adds +10% a level to wild odds (in a group, the team\'s average).'],   // spawner.js, rift.js, gacha.js
+        ['Shiny odds', 'Wild enemies are shiny 1 in ' + Math.round(1 / G.Spawner.SHINY_RATE) + ', rift legendaries 1 in 512 and gacha pulls 1 in ' + Math.round(1 / G.Gacha.SHINY_RATE) + '. Defeat a wild shiny to keep it. The Shiny Lure perk adds +5% a level to wild odds (in a group, the team\'s average).'],   // spawner.js, rift.js, gacha.js
         ['Shiny Charms', 'Own every Pokémon of a region to earn its Shiny Charm: shiny odds ×' + G.Charms.MULT + ' for that region\'s Pokémon in runs, rifts and the gacha (not Gacha Battles, where everyone has the same odds). In group runs the host\'s charms count. Completed regions show a sparkle in the Pokédex.']   // charms.js
       ]],
       ['Moves', [
