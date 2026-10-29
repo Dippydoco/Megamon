@@ -2,15 +2,17 @@
  * Blue boxes with a double white border, like the PMD menus, and a local pixel
  * font (Pixelify Sans, OFL).
  */
-/* The game's font family 'm6x11' (28-10-2026), both by Daniel Linssen (free to use with credit: CREDITS.md):
-   regular text is m5x7 (light, for small text) and bold text is m6x11 (headings, names, buttons). Each has one weight,
-   so nothing gets a blurry synthesised bold. m5x7 is enlarged by 16/14 so CSS 14px lands exactly on its sharp size
-   (one screen pixel per font pixel): keep small regular text at 14px. Pixelify Sans stays as the fallback. */
+/* The game's font family 'm6x11': regular text is Pixeloid Sans by GGBotNet (OFL, assets/fonts/OFL-Pixeloid.txt;
+   29-10-2026, replaced m5x7) and bold text is m6x11 by Daniel Linssen (headings, names, buttons; free to use with
+   credit: CREDITS.md). Each has one weight, so nothing gets a blurry synthesised bold. Pixeloid is drawn on a 9 px em
+   with the same 7 px capitals and 5 px x-height as m5x7, so it is scaled by 9/14: CSS 14px lands exactly on its sharp
+   size (one screen pixel per font pixel) and text stays the size it was. Keep small regular text at 14px.
+   Pixelify Sans stays as the fallback. */
 @font-face {
   font-family: 'm6x11';
-  src: url('../assets/fonts/m5x7.ttf') format('truetype');
+  src: url('../assets/fonts/PixeloidSans.woff2') format('woff2');
   font-weight: 100 550;
-  size-adjust: 114.3%;
+  size-adjust: 64.29%;
   font-display: block;
 }
 @font-face {
@@ -1242,7 +1244,7 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .dup i { position: absolute; top: 0; right: 2px; font-style: normal; font-size: 11px; font-weight: 700; color: #ffd23f; text-shadow: 0 1px 2px #000; }
 
 /* (28-10-2026) The rule that forced small bold labels to regular (a Pixelify workaround: its bold "C" read like an
-   "O") is gone: bold is m6x11 now, which doesn't have that problem, and regular would be the small m5x7. */
+   "O") is gone: bold is m6x11 now, which doesn't have that problem, and regular is the small Pixeloid Sans. */
 
 /* Hover tooltip for moves in the menu (Pokémon tab, ban picker) */
 #mv-tip { position: fixed; z-index: 100000; display: none; max-width: 270px; padding: 8px 10px; border: 2px solid #9fb1c9; border-radius: 8px; background: rgba(8, 12, 22, .96); color: #fff; font-size: 14px; line-height: 1.35; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-29', at: '2026-10-29T10:05Z', title: 'New font for small text', chg: [
+    'Regular and small text now uses Pixeloid Sans by GGBotNet, a clearer pixel font at the same size as before. Names, headings and buttons keep m6x11.'
+  ] },
   { d: '2026-10-29', at: '2026-10-29T08:48Z', title: 'Skins tab in Goals', new: [
     'Goals has a new Skins tab listing every skin you earn rather than buy (challenges, Mastery and Megas), grouped by Pokémon, with what each one needs and how close you are. "Hide unlocked" shows only the ones you still need.'
   ] },
