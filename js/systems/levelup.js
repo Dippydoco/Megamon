@@ -17,7 +17,7 @@ G.LevelUp = (() => {
 
   // Caps raised on 27-10-2026 (perks can be held in only 4 slots now, so each one goes deeper); Vigor and
   // Synthesis got caps for the first time.
-  // Finer levels (29-10-2026): every perk except Quantity has twice the levels at half the step, so a level gives
+  // Finer levels (29-10-2026): every perk except Quantity (one more level instead) has twice the levels at half the step, so a level gives
   // less but a maxed perk is exactly what it was (multipliers use the square root of the old step). Old values:
   // Vigor +20 ×12, Power +5% ×30, Sprint +7% ×12, Reflexes -8% ×13, Armor +5% ×14, Synthesis +1.5/+0.3% ×15,
   // Learning +12% ×12, Reach +10% ×10, Focus +4% ×10, Pay Day +12% ×10, Shiny Lure +10% ×10, Roar ×10.
@@ -39,8 +39,9 @@ G.LevelUp = (() => {
       apply: pl => { pl.regenFlat += 0.75; pl.regenPct = (pl.regenPct || 0) + 0.0015; }, max: 30 },
     // Quantity (27-10-2026, replaces the Magnet perk: pickup range still comes from the Magnet upgrade, power-up and
     // shrine). +1 to the count of every move that fires several things; moves learned later get it too (qtyOn).
+    // Cap 3 -> 4 on 29-10-2026.
     { id: 'qty',  icon: 'ball3', title: 'Quantity', desc: '+1 projectile, orb, ring, target, link or bee on every move that fires several things.',
-      apply: pl => { for (const m of pl.moves) if (qtyOn(m)) m.count += 1; }, max: 3 },
+      apply: pl => { for (const m of pl.moves) if (qtyOn(m)) m.count += 1; }, max: 4 },
     { id: 'xp',   icon: 'book', title: 'Learning',  desc: '+5.8% experience gained.',
       apply: pl => pl.xpMul *= Math.sqrt(1.12), max: 24 },
     { id: 'area', icon: 'reach', title: 'Reach',      desc: '+4.9% size of every area attack.',

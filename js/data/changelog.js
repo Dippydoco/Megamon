@@ -9,11 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
-  { d: '2026-10-29', at: '2026-10-29T13:08Z', title: 'Finer perk levels', chg: [
+  { d: '2026-10-29', at: '2026-10-29T13:15Z', title: 'Finer perk levels', chg: [
     'Every perk except Quantity now has twice as many levels, each giving half as much, so it grows more gradually but a maxed perk is just as strong as before. For example, Power is +2.5% damage a level up to level 60 (was +5% up to 30) and Vigor is +10 max HP up to level 24 (was +20 up to 12).',
+    'Quantity can now be taken 4 times (was 3), for +4 projectiles, orbs and the like at most.',
     'Giratina\'s, Dialga\'s and Palkia\'s Origin skins now need Roar at level 10 or higher, the same difficulty as level 5 before.'
   ] },
-  { d: '2026-10-29', at: '2026-10-29T13:08Z', title: 'Rifts spread out', chg: [
+  { d: '2026-10-29', at: '2026-10-29T13:15Z', title: 'Rifts spread out', chg: [
     'In survival runs, after a rift appears there is a short rest before the next one can open, so rifts (and the Bonds they give) come a little less often: about 12 in a full run instead of about 18.'
   ] },
   { d: '2026-10-29', at: '2026-10-29T10:05Z', title: 'New font for small text', chg: [
