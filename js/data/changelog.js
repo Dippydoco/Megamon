@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-29', at: '2026-10-29T08:48Z', title: 'Skins tab in Goals', new: [
+    'Goals has a new Skins tab listing every skin you earn rather than buy (challenges, Mastery and Megas), grouped by Pokémon, with what each one needs and how close you are. "Hide unlocked" shows only the ones you still need.'
+  ] },
   { d: '2026-10-28', at: '2026-10-28T19:48Z', title: 'Tidier cooldown ring', chg: [
     'The coloured cooldown ring on your move slots now runs along the slot\'s edge instead of a circle inside it, so it no longer covers the move\'s level dots or its evolution perk badge. The dark sweep is a little lighter too.'
   ], fix: [

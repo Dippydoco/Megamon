@@ -7,6 +7,8 @@
  *   Achievements  medals by category; legendaries one by one with their sprite
  *   Badges        one per generation, for owning every Pokémon of it (25-10-2026)
  *   Mastery       every Pokémon you've played, its Mastery level and reward track (28-10-2026, systems/mastery.js)
+ *   Skins         how to unlock every skin that isn't sold at Smeargle's Studio: challenges, Mastery and Megas,
+ *                 with your progress (29-10-2026, data/skins.js routes)
  * and the public profile window for any player (G.ProfileUI.show).
  */
 (() => {
@@ -42,7 +44,7 @@
 
   G.GoalsUI = (() => {
     let tab = 'profile', cat = 'collection';
-    const GROUPS = { profile: ['profile', 'history', 'mastery'], goals: ['missions', 'ach', 'badges'] };
+    const GROUPS = { profile: ['profile', 'history', 'mastery'], goals: ['missions', 'ach', 'skins', 'badges'] };
     const groupOf = t => (GROUPS.goals.includes(t) ? 'goals' : 'profile');
 
     function init() {
@@ -74,6 +76,7 @@
       else if (tab === 'history') history(box);
       else if (tab === 'badges') badges(box);
       else if (tab === 'mastery') mastery(box);
+      else if (tab === 'skins') skins(box);
       else profile(box);
     }
 
@@ -280,6 +283,82 @@
         grid.appendChild(el);
       }
       box.appendChild(grid);
+    }
+
+    // ---------------- skins (29-10-2026) ----------------
+    // Every skin you can't buy, by route, grouped by Pokémon. When all of a Pokémon's locked skins share one
+    // requirement (Unown's letters, a Pokémon's Megas) it is written once under its name instead of on each card.
+    const SKIN_CATS = [['challenge', 'Challenges'], ['mastery', 'Mastery'], ['mega', 'Megas']];
+    let skinCat = 'challenge', skinHide = false;
+    /** 0..1 progress towards a locked skin, or -1 when there's no counter (event challenges). */
+    function skinFrac(f, s) {
+      const r = f.route;
+      if (r.kind === 'mega') return Math.min(1, (Math.min(10, G.Mastery.level(f.dex, s)) + (s.arceus && s.arceus[f.dex] ? 1 : 0)) / 11);
+      if (r.kind === 'mastery') return Math.min(1, G.Mastery.level(f.dex, s) / r.level);
+      if (r.kind === 'challenge' && r.ch.goal) return Math.min(1, r.ch.val(s) / r.ch.goal);
+      return -1;
+    }
+    function skins(box) {
+      const s = G.DB.save, all = G.SkinData.LIST.filter(f => f.route.kind !== 'shop');
+      const got = all.filter(f => G.Skins.has(f.id, s)).length;
+      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Skins ${got} / ${all.length}</h3></div>
+        <p class="sub">Skins you earn rather than buy. The rest are sold at Smeargle's Studio in the Shop. Skins only change how your Pokémon looks.</p>`);
+      const chips = document.createElement('div');
+      chips.className = 'filters';
+      for (const [k, label] of SKIN_CATS) {
+        const list = all.filter(f => f.route.kind === k);
+        const b = document.createElement('button');
+        b.className = 'chip' + (k === skinCat ? ' on' : '');
+        b.textContent = `${label} ${list.filter(f => G.Skins.has(f.id, s)).length}/${list.length}`;
+        b.onclick = () => { skinCat = k; render(); };
+        chips.appendChild(b);
+      }
+      const hide = document.createElement('button');
+      hide.className = 'chip' + (skinHide ? ' on' : '');
+      hide.textContent = 'Hide unlocked';
+      hide.onclick = () => { skinHide = !skinHide; render(); };
+      chips.appendChild(hide);
+      box.appendChild(chips);
+
+      const groups = new Map();
+      for (const f of all) {
+        if (f.route.kind !== skinCat) continue;
+        if (!groups.has(f.dex)) groups.set(f.dex, []);
+        groups.get(f.dex).push(f);
+      }
+      const order = [...groups.keys()].sort((a, b) => a - b);
+      let shown = 0;
+      for (const dex of order) {
+        const forms = groups.get(dex), have = forms.filter(f => G.Skins.has(f.id, s)).length;
+        const locked = forms.filter(f => !G.Skins.has(f.id, s));
+        if (skinHide && !locked.length) continue;
+        const how = new Set(locked.map(f => G.Skins.howText(f)));
+        const shared = forms.length > 1 && how.size === 1 ? [...how][0] : '';
+        const sec = document.createElement('div');
+        sec.className = 'gsk-sec';
+        sec.innerHTML = `<div class="gsk-h"><b>${esc(G.DEX_BY[dex].name)}</b><small>${have} / ${forms.length}</small></div>`
+          + (shared ? `<p class="gsk-how">${esc(shared)}</p>` : '');
+        const grid = document.createElement('div');
+        grid.className = 'gsk-grid';
+        for (const f of forms) {
+          const ok = G.Skins.has(f.id, s);
+          if (skinHide && ok) continue;
+          const c = document.createElement('div');
+          c.className = 'gsk-card' + (ok ? ' ok' : '');
+          c.appendChild(G.UI.spriteCanvas(f.id, 52, 46, { scale: 1, silhouette: !ok, shadow: ok }));
+          const fr = ok ? 1 : skinFrac(f, s);
+          c.insertAdjacentHTML('beforeend', `<div class="gsk-txt"><b>${esc(f.name)}</b>
+            ${ok ? `<small class="gold">Unlocked${G.Skins.worn(dex, s) === f.id ? ' · wearing it' : ''}</small>`
+                 : `${shared ? '' : `<small>${esc(G.Skins.howText(f))}</small>`}
+                    ${fr >= 0 ? `<div class="bar"><i style="width:${(fr * 100).toFixed(1)}%"></i></div>` : ''}
+                    ${G.Skins.progressText(f, s) ? `<small>${esc(G.Skins.progressText(f, s))}</small>` : ''}`}</div>`);
+          grid.appendChild(c);
+          shown++;
+        }
+        sec.appendChild(grid);
+        box.appendChild(sec);
+      }
+      if (!shown) box.insertAdjacentHTML('beforeend', '<p class="sub">You have every skin in this group. Well done!</p>');
     }
 
     // ---------------- missions ----------------
