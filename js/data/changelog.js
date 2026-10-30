@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-30', at: '2026-10-30T22:05Z', title: 'Most mastered on profiles', chg: [
+    'Public profiles show a player\'s 3 most mastered Pokémon as proper cards, with a bigger sprite and their Mastery level written out ("Mastery 11"). Pokémon at Mastery 10 or more get a gold card.'
+  ] },
   { d: '2026-10-30', at: '2026-10-30T13:43Z', title: 'Smoother runs', fix: [
     'Fewer brief freezes during runs: the ground ahead of you is now drawn a little at a time before it comes into view, instead of several pieces at once as you walk, and at each biome change the new ground fades in piece by piece instead of all in one go.',
     'New Pokémon sprites are prepared in the background before they first appear, so a wave of new species no longer stalls a frame.'

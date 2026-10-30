@@ -790,9 +790,12 @@
         $('prof-mst').classList.remove('hidden');
         for (const [d, lv] of mm) {
           const w = document.createElement('div');
-          w.className = 'mst-top-cell';
-          w.appendChild(G.UI.spriteCanvas(d, 64, 56, { scale: 1 }));
-          w.insertAdjacentHTML('beforeend', `<b>${esc(G.DEX_BY[d].name)}</b>${G.Mastery.badge(Math.min(999, lv | 0), 12)}`);
+          // (30-10-2026) Cards like the favourites, with "Mastery N" spelled out: the small sprites and ribbons were easy to miss.
+          const L = Math.min(999, lv | 0);
+          w.className = 'mst-top-cell' + (L >= 10 ? ' maxed' : '');
+          w.title = G.DEX_BY[d].name + ': Mastery ' + L;
+          w.appendChild(G.UI.spriteCanvas(d, 96, 84, { scale: 2, lively: true }));
+          w.insertAdjacentHTML('beforeend', `<b>${esc(G.DEX_BY[d].name)}</b><span class="mst-top-lv">${G.Mastery.badge(L, 16)}Mastery ${L}</span>`);
           $('prof-mst-row').appendChild(w);
         }
       }

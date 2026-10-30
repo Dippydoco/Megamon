@@ -1948,8 +1948,16 @@ button.feat-ach.on { border-color: var(--gold); background: rgba(255,210,63,.1);
 .over-mst-up { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 13px; margin-top: 4px; }
 .over-mst.lvup .mst-bar { animation: mstFlash .8s ease-out; }
 @keyframes mstFlash { 0% { box-shadow: 0 0 0 0 rgba(255,210,63,.9); } 100% { box-shadow: 0 0 0 10px rgba(255,210,63,0); } }
-.mst-top { display: flex; gap: 10px; flex-wrap: wrap; }
-.mst-top-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 13px; }
+/* Public profile: the 3 most mastered Pokémon as cards (30-10-2026). */
+.mst-top { display: flex; gap: 12px; flex-wrap: wrap; margin: 6px 0; }
+.mst-top-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1 1 0; min-width: 0; max-width: 120px; padding: 6px 4px 8px;
+  border-radius: 10px; background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.18); }
+.mst-top-cell.maxed { border-color: rgba(255,210,63,.6); background: linear-gradient(180deg, rgba(255,210,63,.12), rgba(0,0,0,.25)); }
+.mst-top-cell b { font-size: 14px; text-align: center; }
+.mst-top-cell canvas { max-width: 100%; height: auto; image-rendering: pixelated; }
+.mst-top-lv { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--muted); }
+.mst-top-cell.maxed .mst-top-lv { color: var(--gold); }
+.mst-top-lv .mst-rib b { display: none; }   /* the number is in the text next to it */
 .bn-mon { position: absolute; right: 6px; bottom: 0; z-index: -1; opacity: .95; pointer-events: none; }
 .cos-sw.bn { position: relative; }
 .bn-sw-mon { position: absolute; right: 2px; top: 2px; pointer-events: none; }
