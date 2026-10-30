@@ -1144,6 +1144,12 @@ G.Combat = (() => {
             set.add(e.id);
             hit(o, e, f.dmg, f.col, e.x - f.x, e.y - f.y, f.m.knock || 0, f.m);
           }
+          // Chests, rocks and tall grass too (30-10-2026: pulses used to pass through them), once per ring like foes.
+          for (const p of G.World.propsInCircle(f.x, f.y, front)) {
+            if (set.has(p)) continue;
+            set.add(p);
+            G.World.damageProp(p, f.dmg, f.col);
+          }
         });
         if (f.t >= f.life) fields.splice(i, 1);
         return true;

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-30', at: '2026-10-30T13:04Z', title: 'Pulse moves break chests', fix: [
+    'Pulse moves (Psywave, Boomburst, Water Pulse, Clanging Scales and the like) now break chests, rocks and tall grass, like every other attack. Before, their rings passed straight through them.'
+  ] },
   { d: '2026-10-29', at: '2026-10-29T13:15Z', title: 'Finer perk levels', chg: [
     'Every perk except Quantity now has twice as many levels, each giving half as much, so it grows more gradually but a maxed perk is just as strong as before. For example, Power is +2.5% damage a level up to level 60 (was +5% up to 30) and Vigor is +10 max HP up to level 24 (was +20 up to 12).',
     'Quantity can now be taken 4 times (was 3), for +4 projectiles, orbs and the like at most.',
