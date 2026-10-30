@@ -485,7 +485,7 @@ G.World = (() => {
   function chunkImage(cx, cy, bi = biome, cache = images) {
     const k = cx + ',' + cy;
     let img = cache.get(k);
-    if (img) return img;
+    if (img) { cache.delete(k); cache.set(k, img); return img; }      // most recently used last (eviction takes the oldest)
     const at = (tx, ty) => KIND[terrainAt(tx, ty)];
     // Continuous "dirt" field; tiles.js samples it on a grid and
     // interpolates it per pixel so the patches have organic edges.
@@ -514,10 +514,15 @@ G.World = (() => {
     for (const [cx, cy] of visibleChunks(cam)) {
       // +1 overlap: with non-integer scales it avoids seams between chunks.
       if (k == null) { ctx.drawImage(chunkImage(cx, cy), cx * CW, cy * CW, CW + 1, CW + 1); continue; }
-      // Crossfade: the old biome below and the new one appearing on top.
-      ctx.drawImage(chunkImage(cx, cy, fade.from, fade.images), cx * CW, cy * CW, CW + 1, CW + 1);
-      ctx.globalAlpha = k;
-      ctx.drawImage(chunkImage(cx, cy), cx * CW, cy * CW, CW + 1, CW + 1);
+      // Crossfade: the old biome below and the new one appearing on top. The new biome's chunks are painted a couple
+      // per frame by update() (30-10-2026: all of them in one frame froze the game at every biome change); until
+      // one is ready, the old one shows on its own.
+      // A chunk that scrolls in during the fade only gets the new biome (it isn't painted in the old one as well).
+      const ck = cx + ',' + cy, old = fade.images.get(ck), nu = images.get(ck) || (old ? null : chunkImage(cx, cy));
+      if (old) ctx.drawImage(old, cx * CW, cy * CW, CW + 1, CW + 1);
+      if (!nu) continue;
+      ctx.globalAlpha = old ? k : 1;
+      ctx.drawImage(nu, cx * CW, cy * CW, CW + 1, CW + 1);
       ctx.globalAlpha = 1;
     }
   }
@@ -672,6 +677,12 @@ G.World = (() => {
 
   function update(dt, cam) {
     if (fade && (fade.t += dt) >= FADE) fade = null;
+    // Pre-bake (30-10-2026): the ground chunks just outside the view (and, during a biome fade, the new biome's) are
+    // painted ahead of time, one per frame, instead of several at once in the frame they scroll into view.
+    const ahead = visibleChunks(cam, CW * 0.8);
+    if (ahead.length < MAX_IMAGES - 4) {
+      for (const [cx, cy] of ahead) if (!images.has(cx + ',' + cy)) { chunkImage(cx, cy); break; }
+    }
     for (const [cx, cy] of visibleChunks(cam, 60)) {
       for (const p of chunkData(cx, cy).props) if (p.flash > 0) p.flash -= dt;
     }

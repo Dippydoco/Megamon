@@ -96,7 +96,12 @@ G.Sprites = (() => {
     if (sheets.size >= MAX_SHEETS) evict(now);
     s = { ready: false, failed: false, img: new Image(), tries: 0, retryAt: 0, at: now,
           src: `assets/pokemon/${dex}/${shiny ? 's/' : ''}${name}.png` };
-    s.img.onload = () => { s.ready = true; };
+    // (30-10-2026) Decoded in the background before it counts as ready: otherwise the browser decodes the sheet on
+    // its first drawImage, on the main thread, and several new species appearing together froze a frame.
+    s.img.onload = () => {
+      if (!s.img.decode) { s.ready = true; return; }
+      s.img.decode().then(() => { s.ready = true; }, () => { s.ready = true; });
+    };
     s.img.onerror = () => { s.failed = true; s.retryAt = performance.now() + 1000 * Math.min(8, 2 ** s.tries++); };
     s.img.src = s.src;
     sheets.set(k, s);

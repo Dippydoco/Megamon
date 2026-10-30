@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-30', at: '2026-10-30T13:43Z', title: 'Smoother runs', fix: [
+    'Fewer brief freezes during runs: the ground ahead of you is now drawn a little at a time before it comes into view, instead of several pieces at once as you walk, and at each biome change the new ground fades in piece by piece instead of all in one go.',
+    'New Pokémon sprites are prepared in the background before they first appear, so a wave of new species no longer stalls a frame.'
+  ] },
   { d: '2026-10-30', at: '2026-10-30T13:04Z', title: 'Pulse moves break chests', fix: [
     'Pulse moves (Psywave, Boomburst, Water Pulse, Clanging Scales and the like) now break chests, rocks and tall grass, like every other attack. Before, their rings passed straight through them.'
   ] },
