@@ -550,7 +550,7 @@ G.MenuUI = (() => {
           <button class="${viewShiny ? '' : 'on'}" data-v="0">Normal</button>
           <button class="${viewShiny ? 'on' : ''}" data-v="1">${G.Icons.html('shiny', 12)} Shiny</button></div>` : ''}
       <div class="center">
-        <div style="color:var(--muted);font-size:13px">Nº ${String(p.dex).padStart(3, '0')} · ${GEN_NAMES[p.gen - 1]}</div>
+        <div style="color:var(--muted);font-size:14px">Nº ${String(p.dex).padStart(3, '0')} · ${GEN_NAMES[p.gen - 1]}</div>
         <h3>${own ? p.name : '???'}${own && reachedArceus(p.dex) ? ' ' + arcStar(20, p.dex) : ''}${NEW_DEX.has(p.dex) ? ' <span class="tag-new inline">NEW</span>' : ''}</h3>
         <div style="color:${G.Gacha.RARITY_COLOR[p.rarity]}">${G.UI.stars(p.rarity, 24)} ${G.Gacha.RARITY_NAME[p.rarity]}</div>
         ${loan ? '<div class="loan-note">Featured today: on loan until the day ends</div>' : ''}
@@ -563,7 +563,7 @@ G.MenuUI = (() => {
         ${bar('Sp. Atk', p.spa, max.spa, '×' + p.spa.toFixed(2))}
         ${p.def != null ? bar('Defense', p.def, max.def, p.def) : ''}
         ${bar('Speed', p.spd, max.spd, p.spd)}
-        <p style="font-size:13px;margin:6px 0 0;color:var(--muted)">${LEAN[p.lean] || ''}</p>
+        <p style="font-size:14px;margin:6px 0 0;color:var(--muted)">${LEAN[p.lean] || ''}</p>
         <p style="font-size:14px;margin:10px 0 4px">Starts with <b class="gold">${G.Moves.BY_ID[G.startMoveOf(dex)].name}</b></p>
         <p class="move-icons">
           ${G.Moves.poolFor(p).map(id => `<span data-mv="${id}">${G.Icons.html('move:' + id, 16)}</span>`).join('')}</p>
@@ -727,7 +727,7 @@ G.MenuUI = (() => {
       el.innerHTML = `
         <div class="ic">${G.Icons.html(u.icon, 32)}</div>
         <div>
-          <b>${u.name}</b> <span style="color:var(--muted);font-size:13px">${u.unit}</span>
+          <b>${u.name}</b> <span style="color:var(--muted);font-size:14px">${u.unit}</span>
           <div class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</div>
         </div>
         <div class="upg-btns">

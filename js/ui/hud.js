@@ -3,7 +3,18 @@
  */
 G.HUD = (() => {
   let HUD_SCALE = 1.55;       // size of the top-left block (health, teammates, buffs)
-  const F = (w, s) => `${w} ${s}px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif`;
+  // Small text is drawn a bit bigger (30-10-2026, easier to read; the same steps as the CSS): judged by its size ON
+  // SCREEN, so text inside the scaled top-left block (HUD_SCALE) isn't bumped twice.
+  let FC = null;                 // the HUD's canvas context while it draws (set in draw)
+  const BUMP = { 9: 12, 10: 12, 11: 13, 12: 14, 13: 14 };
+  function F(w, s) {
+    if (FC && s < 14) {
+      const m = FC.getTransform(), k = Math.hypot(m.a, m.b) / (G.Camera.dpr || 1), on = Math.round(s * k);
+      if (on < 9) s = 12 / k;                                      // (very small: 12 on screen at least)
+      else if (BUMP[on]) s = BUMP[on] / k;
+    }
+    return `${w} ${s}px m6x11,Pixelify,"Segoe UI",system-ui,sans-serif`;
+  }
 
   function roundRect(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -69,6 +80,7 @@ G.HUD = (() => {
   }
 
   function draw(ctx, w, h, pl, st) {
+    FC = ctx;
     HUD_SCALE = w < 640 ? 1.2 : w < 1000 ? 1.4 : 1.55;      // on narrow screens, smaller so it doesn't cover the clock
     ctx.save();
     ctx.textBaseline = 'alphabetic';

@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-10-30', at: '2026-10-30T22:29Z', title: 'Bigger small text', chg: [
+    'All the small and very small text is a little bigger and easier to read, in the menus and in runs: collection counts, Pokédex numbers, card details, tags, the line under the clock and more. Boxes grew slightly where they needed to.'
+  ] },
   { d: '2026-10-30', at: '2026-10-30T22:05Z', title: 'Most mastered on profiles', chg: [
     'Public profiles show a player\'s 3 most mastered Pokémon as proper cards, with a bigger sprite and their Mastery level written out ("Mastery 11"). Pokémon at Mastery 10 or more get a gold card.'
   ] },
