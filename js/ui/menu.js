@@ -731,7 +731,7 @@ G.MenuUI = (() => {
           <div class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('')}</div>
         </div>
         <div class="upg-btns">
-          ${u.id === 'moves' && lvl > 0 ? `<button class="btn small" data-start>Choose (${startList().length}/${lvl})</button>` : ''}
+          ${u.id === 'moves' && lvl > 0 ? `<button class="btn small" data-start>Choose (${Math.min(startList().length, lvl >= 2 && s.pone && s.pone[upgDex] ? 1 : lvl)}/${lvl >= 2 && s.pone && s.pone[upgDex] ? 1 : lvl})</button>` : ''}
           <button class="btn small ${maxed ? '' : 'gold'}" data-buy data-sfx="none" ${maxed || s.coins < cost ? 'disabled' : ''}>
           ${maxed ? 'Max.' : `<span class="coin"></span> ${cost}`}</button></div>`;
       if (u.id === 'moves' && lvl > 0) el.querySelector('[data-start]').onclick = () => { startOpen = !startOpen; startScroll = startOpen; renderUpgrades(); };
@@ -801,7 +801,11 @@ G.MenuUI = (() => {
     s.pstart = s.pstart || {};
     return s.pstart[upgDex] || (s.pstart[upgDex] = []);
   }
-  function startPicker(max) {
+  function startPicker(lvl) {
+    const s = G.DB.save;
+    s.pone = s.pone || {};
+    const one = lvl >= 2 && !!s.pone[upgDex];       // "Only 1 move": level 2 owners can still start with just one
+    const max = one ? 1 : lvl;
     const mon = G.DEX_BY[upgDex];
     const def = G.startMoveOf(upgDex);
     const ids = G.startableMoves(mon)
@@ -813,9 +817,18 @@ G.MenuUI = (() => {
       : ' With none chosen you start with ' + dn + '.';
     const el = document.createElement('div');
     el.className = 'panel ban-picker';
-    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Tap the move${max > 1 ? 's' : ''} ${mon.name} starts every run with (${list.length}/${max}).${rest}</p>
+    el.innerHTML = `<p class="sub" style="margin:0 0 8px">Tap the move${max > 1 ? 's' : ''} ${mon.name} starts every run with (${Math.min(list.length, max)}/${max}).${rest}</p>
+      ${lvl >= 2 ? `<div style="margin:0 0 8px"><button class="chip ${one ? 'on' : ''}" data-one>${one ? G.Icons.html('star', 14) + ' ' : ''}Only 1 move</button> <small class="sub">Start with a single move instead of 2</small></div>` : ''}
       <div class="ban-moves">${ids.map(id => { const d = G.Moves.BY_ID[id]; const on = list.includes(id);
         return `<button class="chip ${on ? 'on' : ''}" data-id="${id}" data-mv="${id}">${G.Icons.html('move:' + id, 16)} ${d.name}${id === def ? ' <small>(default)</small>' : ''}${on ? ' ' + G.Icons.html('star', 14) : ''}</button>`; }).join('')}</div>`;
+    const oneBtn = el.querySelector('[data-one]');
+    if (oneBtn) oneBtn.onclick = () => {
+      if (one) delete s.pone[upgDex];
+      else { s.pone[upgDex] = 1; const l = startList(); if (l.length > 1) l.splice(1); }   // keep the first pick
+      G.DB.commit();
+      G.Audio.sfx('select');
+      renderUpgrades();
+    };
     el.querySelectorAll('[data-id]').forEach(b => {
       b.onclick = () => {
         const l = startList(), id = b.dataset.id, i = l.indexOf(id);

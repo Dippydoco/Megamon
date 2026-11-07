@@ -132,7 +132,8 @@ G.Game = (() => {
     // "Starting Moves" upgrade (23-10-2026, replaced Repertoire): level 1 = the move you chose instead of the
     // default one, level 2 = up to 2 chosen moves. A pick you haven't made is filled as before: the default
     // starting move, then a random attacking move.
-    const picks = perks.startPicks || 0;
+    // "Only 1 move" (07-11-2026, save.pone[dex]): with level 2 you can still choose to start with just one move.
+    const picks = Math.min(perks.startPicks || 0, save.pone && save.pone[mon.dex] ? 1 : 2);
     const startOk = G.startableMoves(mon);
     const chosen = picks ? (save.pstart && save.pstart[mon.dex] || []).filter(id => startOk.includes(id)).slice(0, picks) : [];
     for (const id of chosen) pl.addMove(id);

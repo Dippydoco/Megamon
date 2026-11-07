@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-07', at: '2026-11-07T17:22Z', title: 'Start with 1 move', new: [
+    'Starting Moves level 2 now has an "Only 1 move" option in its Choose panel (per Pokémon): turn it on to start every run with a single move instead of 2, with no random second move filled in.'
+  ] },
   { d: '2026-10-30', at: '2026-10-30T22:29Z', title: 'Bigger small text', chg: [
     'All the small and very small text is a little bigger and easier to read, in the menus and in runs: collection counts, Pokédex numbers, card details, tags, the line under the clock and more. Boxes grew slightly where they needed to.'
   ] },
