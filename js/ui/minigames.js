@@ -530,6 +530,12 @@ G.MiniUI = (() => {
     // Gacha Battle from the Mini-Games screen: to your room if friends are in it, otherwise against the Bot.
     $('mini-gb').onclick = () => { if (room() && room().members.length > 1) $('mini-room').click(); else soloFrom('mini'); };
     $('mini-draft').onclick = () => { $('mini-room').click(); };
+    // Roulette: at your room's table if you're in one (the host opens it), otherwise a table of your own.
+    $('mini-rl').onclick = () => {
+      const r = room();
+      if (r && r.members.length > 1) { if (r.game && r.game.type === 'rl') G.RouletteUI.show(); else if (r.isHost && !r.game) G.RouletteUI.open(); else $('mini-room').click(); }
+      else G.RouletteUI.open();
+    };
     $('dr-start').onclick = () => G.LobbyUI.startDraftRun();
     $('dr-cancel').onclick = () => G.Social.setGame(null);
     $('gb-back').onclick = () => { if (solo) { if (solo.phase === 'roll') { G.UI.toast('Wait for the battle to finish'); return; } closeBattle(); } else G.LobbyUI.open(); };
@@ -549,14 +555,14 @@ G.MiniUI = (() => {
     if (!r) { box.innerHTML = ''; return; }
     const g = game();
     if (g) {
-      box.innerHTML = `<p class="note">${g.type === 'gb' ? 'A Gacha Battle is on.' : g.phase === 'done' ? 'Draft done: the next group run uses the drafted Pokémon.' : 'Draft Night is on.'}</p>`;
+      box.innerHTML = `<p class="note">${g.type === 'gb' ? 'A Gacha Battle is on.' : g.type === 'rl' ? 'The Roulette table is open.' : g.phase === 'done' ? 'Draft done: the next group run uses the drafted Pokémon.' : 'Draft Night is on.'}</p>`;
       const b = document.createElement('button'); b.className = 'btn small'; b.textContent = 'Open it';
-      b.onclick = () => (g.type === 'gb' ? (solo = null, showBattle()) : showDraft());
+      b.onclick = () => (g.type === 'gb' ? (solo = null, showBattle()) : g.type === 'rl' ? G.RouletteUI.show() : showDraft());
       box.appendChild(b);
       return;
     }
     if (!r.isHost) {
-      box.innerHTML = '<p class="note">The host can start a Gacha Battle or Draft Night.</p>';
+      box.innerHTML = '<p class="note">The host can start a Gacha Battle, Roulette or Draft Night.</p>';
       const b = document.createElement('button'); b.className = 'btn small ghost'; b.textContent = 'Gacha Battle vs Bot';
       b.onclick = () => soloFrom('lobby');
       box.appendChild(b);
@@ -572,6 +578,9 @@ G.MiniUI = (() => {
     const d = document.createElement('button'); d.className = 'btn small gold'; d.textContent = 'Draft Night';
     d.title = 'Take turns drafting Pokémon for the next group run'; d.disabled = r.members.length < 2; d.onclick = hostDraft;
     row.appendChild(d);
+    const rl = document.createElement('button'); rl.className = 'btn small'; rl.textContent = 'Roulette';
+    rl.title = 'Open a roulette table: everyone takes turns betting ×1 tickets while the room watches'; rl.onclick = () => G.RouletteUI.open();
+    row.appendChild(rl);
     box.appendChild(row);
     if (r.members.length < 2) box.insertAdjacentHTML('beforeend', '<p class="note">Invite a friend to play together, or battle the Bot meanwhile.</p>');
   }

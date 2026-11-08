@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T17:39Z', title: 'Roulette', new: [
+    'New mini-game: Roulette. A European wheel (one zero) played with ×1 tickets. Bet on numbers (35 to 1), dozens and columns (2 to 1), or red/black, odd/even and 1-18/19-36 (1 to 1), up to 100 tickets a spin.',
+    'In a room the host opens the table and everyone takes turns, one player at a time, while the whole room watches the chips go down and the ball spin. You have 45 seconds to bet on your turn, or you can pass. On your own, open it from Mini-Games and play at your own pace.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T17:25Z', title: 'Tougher rifts and bosses', chg: [
     'Rift legendaries get tougher with every rift your team has won, and much tougher after the first two: more health, harder hits, faster shots and a little more speed. Their health also grows with how hard your team hits a single target, so bonded moves can no longer melt them in seconds.',
     'Open-map bosses get the same treatment: tougher for every rift won, later bosses more so, with health that keeps up with your single-target damage.',
