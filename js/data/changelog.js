@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T19:03Z', title: 'Smoother big co-op games', fix: [
+    'Less lag in 3 to 5 player games: the host sends far less data. Damage numbers on the same enemy are combined into one, and only as many are sent as a screen can show. Players\' hits on the same enemy travel together.',
+    'Damage numbers and homing shots are a little cheaper to draw and update, which helps when the screen is busy.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T18:55Z', title: 'Blackjack and Poker', new: [
     'New mini-game: Blackjack against Murkrow, the dealer. Bet ×1 tickets, then hit, stand or double down. Murkrow stands on 17, blackjack pays 3 to 2. In a room players take turns at the table while everyone watches; on your own, open it from Mini-Games.',
     'New mini-game: Poker. No-limit Texas Hold\'em against your friends in a room, played with ×1 tickets (blinds 1 and 2). Sit down to join the next hand. Your cards are only shown to you until the showdown, and side pots work when someone goes all in.'

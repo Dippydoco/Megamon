@@ -273,18 +273,23 @@ G.FX = (() => {
       });
     }
 
-    // Damage numbers.
-    for (const t of texts) {
-      const k = 1 - t.t / t.life;
+    // Damage numbers. (08-11-2026: one save/restore for all of them, and the font is only set when its size changes:
+    // setting ctx.font parses the string every time, which added up with dozens of numbers on screen.)
+    if (texts.length) {
       ctx.save();
-      ctx.globalAlpha = Math.min(1, k * 2.2);
-      ctx.font = '700 ' + Math.round((t.big ? 20 : 13) * (t.sc || 1)) + 'px' + ' m6x11,Pixelify,"Segoe UI",sans-serif';
       ctx.textAlign = 'center';
       ctx.lineWidth = 3;
       ctx.strokeStyle = 'rgba(0,0,0,.75)';
-      ctx.strokeText(t.s, t.x, t.y);
-      ctx.fillStyle = t.color;
-      ctx.fillText(t.s, t.x, t.y);
+      let px = 0;
+      for (const t of texts) {
+        const k = 1 - t.t / t.life;
+        ctx.globalAlpha = Math.min(1, k * 2.2);
+        const size = Math.round((t.big ? 20 : 13) * (t.sc || 1));
+        if (size !== px) { px = size; ctx.font = '700 ' + size + 'px m6x11,Pixelify,"Segoe UI",sans-serif'; }
+        ctx.strokeText(t.s, t.x, t.y);
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.s, t.x, t.y);
+      }
       ctx.restore();
     }
   }

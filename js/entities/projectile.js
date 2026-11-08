@@ -69,8 +69,12 @@ G.Projectiles = (() => {
       }
 
       // Homing: curves its velocity towards the nearest enemy.
+      // (08-11-2026: the target is picked again every 0.12 s, not every frame; with 4 players' homing shots and their
+      //  copies on every screen, each one searched every enemy 60 times a second.)
       if (p.homing > 0 && p.friendly) {
-        const tg = nearest(enemies, p.x, p.y, 340);
+        p.tgT = (p.tgT || 0) - dt;
+        if (p.tgT <= 0 || !p.tg || p.tg.dead) { p.tgT = 0.12; p.tg = nearest(enemies, p.x, p.y, 340); }
+        const tg = p.tg;
         if (tg) {
           const [dx, dy] = G.U.norm(tg.x - p.x, tg.cy() - p.y);
           const sp = Math.hypot(p.vx, p.vy);

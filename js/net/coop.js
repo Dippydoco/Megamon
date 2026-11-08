@@ -71,7 +71,7 @@ G.Coop = (() => {
     api = cb;
     members = cfg.members;
     mates.clear();
-    outEv = []; flushT = 0; waiting = new Set(); holds = new Set();
+    outEv = []; hitIdx.clear(); flushT = 0; waiting = new Set(); holds = new Set();
     hostAway = false; stalled = false; lastHostAt = performance.now();
     levelSeq = 0; levelNow = 1; seenSeq = 0; doneSeq = 0; lastHo = '';
     cfg.members.forEach((m, i) => {
@@ -91,7 +91,7 @@ G.Coop = (() => {
 
   function end() {
     active = false; host = false; local = null;
-    mates.clear(); outEv = []; waiting = new Set(); holds = new Set(); choosingSince.clear();
+    mates.clear(); outEv = []; hitIdx.clear(); waiting = new Set(); holds = new Set(); choosingSince.clear();
   }
 
   /** You leave the run (the others carry on). */
@@ -171,11 +171,28 @@ G.Coop = (() => {
     for (const m of mates.values()) if (m.connected && m.uid !== except) m.q.push(ev);
   }
 
-  /** Host: event only for those nearby (damage numbers). */
+  /**
+   * Host: event only for those nearby (damage numbers).
+   * Lighter in big groups (08-11-2026): each send carried up to 400 damage numbers per player although a screen shows
+   * at most 70 (fx.js CAP_TEXTS), so most were uploaded only to be dropped. Now hits on the same enemy between two sends
+   * become one number (their sum) and at most HN_MAX numbers go per send.
+   */
+  const HN_MAX = 24;
   function emitNear(ev, x, y, except) {
+    const hn = ev[0] === 'hn';
     for (const m of mates.values()) {
       if (!m.connected || m.uid === except) continue;
       if (G.U.dist2(m.pl.x, m.pl.y, x, y) > 700 * 700) continue;
+      if (hn) {
+        const seen = m.hn || (m.hn = new Map());
+        const prev = seen.get(ev[1]);
+        if (prev) { prev[2] = Math.round(prev[2] + ev[2]); continue; }
+        if (seen.size >= HN_MAX) continue;
+        const one = [ev[0], ev[1], Math.round(ev[2]), ev[3]];
+        seen.set(ev[1], one);
+        m.q.push(one);
+        continue;
+      }
       if (m.q.length > 400) continue;
       m.q.push(ev);
     }
@@ -203,6 +220,7 @@ G.Coop = (() => {
       if (o.connected && o.uid !== m.uid && o.state) p[o.uid] = o.state;
     }
     const ev = m.q; m.q = [];
+    if (m.hn) m.hn.clear();
     const f = { k: 'f', t: r2(st.time), lv: st.level, xp: r2(st.xp), xn: st.xpNext, ki: st.kills, bo: st.bosses, co: st.coins, tk: [st.t1, st.t10],
                 p, e: enemyList(m.pl), ev };
     const gd = G.Interact.goldState();      // Gold shrine combo (everyone sees it)
@@ -221,6 +239,7 @@ G.Coop = (() => {
     if (!force && !outEv.length && flushT > 0) return;
     G.Net.toHost({ k: 'f', p: myState(), ev: outEv });
     outEv = [];
+    hitIdx.clear();
   }
 
   /** Every frame (also on the level-up screen). */
@@ -267,6 +286,7 @@ G.Coop = (() => {
         flushT = rateFor(hostUid);
         G.Net.toHost({ k: 'f', p: myState(), ev: outEv });
         outEv = [];
+        hitIdx.clear();
       }
     }
   }
@@ -501,7 +521,16 @@ G.Coop = (() => {
   }
 
   // guest
-  function hit(e, d, color, dx, dy, knock) { outEv.push(['h', e.id, d, color, r1(dx), r1(dy), knock || 0]); }
+  // Guest hits (08-11-2026): hits of the same colour on the same enemy between two sends (1/15 s) travel as one, with the
+  // damage added up and the strongest knockback; area and multi-hit moves used to send one message per hit. Rounded too.
+  const hitIdx = new Map();
+  function hit(e, d, color, dx, dy, knock) {
+    const k = e.id + color, prev = hitIdx.get(k);
+    if (prev) { prev[2] = r2(prev[2] + d); prev[4] = r1(dx); prev[5] = r1(dy); prev[6] = Math.max(prev[6], r1(knock || 0)); return; }
+    const ev = ['h', e.id, r2(d), color, r1(dx), r1(dy), r1(knock || 0)];
+    hitIdx.set(k, ev);
+    outEv.push(ev);
+  }
   function status(e, kind, val) { outEv.push(['s', e.id, kind, val]); }
 
   // host
