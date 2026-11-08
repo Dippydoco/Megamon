@@ -57,7 +57,7 @@ G.MiniUI = (() => {
   const meUid = () => G.Social.uid || 'me';
   const nameOf = uid => uid === BOT ? 'Bot' : ((room() && room().members.find(m => m.uid === uid)) || {}).name || (uid === meUid() ? 'You' : 'Someone');
   const mineOf = (uid, key) => ((room() && room().members.find(m => m.uid === uid)) || {})[key];
-  const now = () => G.Social.now();
+  const now = () => G.Social.syncNow();               // the server's clock, so reveals happen in step
   // Sprites go in as placeholders (a canvas's drawing is lost in innerHTML) and are filled in afterwards.
   const spr = (dex, w, h, shiny) => `<i class="mg-spr" data-d="${dex}" data-w="${w}" data-h="${h}"${shiny ? ' data-s="1"' : ''}></i>`;
   function fillSprites(root) {

@@ -42,6 +42,12 @@ G.Social = (() => {
    */
   let skew = 0;
   const now = () => Date.now() + skew;
+  // Precise shared clock for live mini-games (08-11-2026): `now` only corrects clocks more than a minute off, so devices a
+  // few seconds apart started and finished the roulette spin at different moments. The Realtime Database tells each
+  // device how far its clock is from the server's (.info/serverTimeOffset, a local read that costs nothing), so every
+  // screen agrees to within the network delay.
+  let srvOff = 0, srvOk = false;
+  const syncNow = () => (srvOk ? Date.now() + srvOff : now());
   function measureSkew() {
     const t0 = Date.now();
     fetch('version.json?t=' + t0, { method: 'HEAD', cache: 'no-store' }).then(r => {
@@ -86,6 +92,7 @@ G.Social = (() => {
     fb = G.DB.fb; uid = fb.uid;
     started = true;
     measureSkew();
+    try { fb.rtdb.ref('.info/serverTimeOffset').on('value', s => { const v = +s.val(); if (Number.isFinite(v) && v !== 0) { srvOff = v; srvOk = true; } }); } catch (e) { /* nothing */ }
     // The nickname rarely changes (Settings > Account): it's remembered in this browser so the
     // profile isn't read on every visit (one read fewer per player and session).
     const NICK = 'ps.nick.' + uid;
@@ -763,6 +770,8 @@ G.Social = (() => {
     get uid() { return uid; },
     /** The real time (corrects the device's clock if it's off). */
     now,
+    /** The server's time to within the network delay (for things every screen must show at the same moment). */
+    syncNow,
     VALID, MAX_PLAYERS
   };
 })();

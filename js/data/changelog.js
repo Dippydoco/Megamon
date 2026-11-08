@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T17:47Z', title: 'Roulette in sync', fix: [
+    'The roulette wheel now spins and stops at the same moment for everyone in the room. Devices whose clocks were a few seconds apart used to see the ball land at different times.',
+    'Gacha Battle reveals use the same shared clock, so cards turn over in step on every screen too.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T17:39Z', title: 'Roulette', new: [
     'New mini-game: Roulette. A European wheel (one zero) played with ×1 tickets. Bet on numbers (35 to 1), dozens and columns (2 to 1), or red/black, odd/even and 1-18/19-36 (1 to 1), up to 100 tickets a spin.',
     'In a room the host opens the table and everyone takes turns, one player at a time, while the whole room watches the chips go down and the ball spin. You have 45 seconds to bet on your turn, or you can pass. On your own, open it from Mini-Games and play at your own pace.'

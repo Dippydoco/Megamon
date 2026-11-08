@@ -22,7 +22,7 @@ G.RouletteUI = (() => {
   const MAX_BET = 100;                       // tickets on the table per spin
   const TURN = 45;                           // seconds to place your bets
   const SPIN_MS = 6500, SHOW_MS = 3800;      // wheel spin · result shown before the next turn
-  const LEAD_MS = 700;                       // the wheel starts this long after the host draws (so everyone has it)
+  const LEAD_MS = 1200;                      // the wheel starts this long after the host draws (so everyone has it before it moves)
   const CHIPS = [1, 5, 10, 25];
   const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
   const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
@@ -66,7 +66,7 @@ G.RouletteUI = (() => {
   // ---- room / solo plumbing ----
   const room = () => G.Social.room;
   const meUid = () => G.Social.uid || 'me';
-  const now = () => G.Social.now();
+  const now = () => G.Social.syncNow();               // the server's clock, so every screen spins in step
   const tickets = () => (G.DB.save.tickets || {}).t1 || 0;
   let solo = null, soloMine = null;
   const roomGame = () => { const g = room() && room().game; return g && g.type === 'rl' ? g : null; };
