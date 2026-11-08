@@ -56,9 +56,9 @@ G.LevelUp = (() => {
     { id: 'shiny', icon: 'shiny', title: 'Shiny Lure', desc: '+5% chance for wild Pokémon to be shiny.',
       apply: () => {}, max: 20 },
     // Difficulty: more and tougher wild Pokémon for everyone (the team's average in a group), more experience
-    // for you. Not in the Battle Tower, whose floors set their own numbers.
-    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +5% wild Pokémon, +4% their health, +2.5% their damage, +1.5% their speed. You get +4% experience.',
-      apply: (pl, n = lvOf(pl, 'roar')) => { pl.xpMul *= lin(0.04, n); }, max: 20 },
+    // for you. Not in the Battle Tower, whose floors set their own numbers. (08-11-2026: its +4% experience a level was removed.)
+    { id: 'roar', icon: 'flag', title: 'Roar', desc: 'Harder run: +5% wild Pokémon, +4% their health, +2.5% their damage, +1.5% their speed.',
+      apply: () => {}, max: 20 },
     { id: 'heal', icon: 'berry', title: 'Sitrus Berry',   desc: 'Restores 45% of your HP right now.',
       apply: pl => pl.healItem(0.45), instant: true }
   ];

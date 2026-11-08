@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T17:09Z', title: 'Roar: no more experience bonus', chg: [
+    'The Roar perk no longer gives extra experience (it was +4% a level). It still makes wild Pokémon more numerous, tougher, harder-hitting and faster.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T09:42Z', title: 'Co-op fixes for non-hosts', fix: [
     'Shinies defeated in a co-op run are now given to every player, not only the host.',
     'Players who aren\'t the host now gain max HP with each level (+1% of base HP a level), like the host and solo players.',
