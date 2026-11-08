@@ -10,6 +10,8 @@
  * Each account can redeem each code ONCE. Case and hyphens don't matter.
  */
 G.CODES = [
+  // QUITWHILEAHEAD  ->  503 normal tickets
+  { h: '492e093430b8eaaa681b2d63e01d4626ce729cc076fca8229e39c38acf6ca08f', t1: 503 },
   // CHINESEPARLIAMENT  ->  433 normal tickets (the yellow ones)
   { h: '6b96515e2b085a96c6f147e0bc6993c056cd2e30443e5de7aaef476399136b24', t1: 433 },
   // Demo-mode code (multi-use, never spent): turns the gacha's dummy pulls on/off on this device.

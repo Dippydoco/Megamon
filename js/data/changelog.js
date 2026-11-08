@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T19:21Z', title: 'New code: quitwhileahead', new: [
+    'Redeem the code quitwhileahead for 503 ×1 tickets (once per account).'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T19:03Z', title: 'Smoother big co-op games', fix: [
     'Less lag in 3 to 5 player games: the host sends far less data. Damage numbers on the same enemy are combined into one, and only as many are sent as a screen can show. Players\' hits on the same enemy travel together.',
     'Damage numbers and homing shots are a little cheaper to draw and update, which helps when the screen is busy.'
