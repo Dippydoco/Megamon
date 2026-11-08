@@ -2095,7 +2095,7 @@ canvas.play-bg { position: absolute; inset: 0; width: 100%; height: 100%; image-
 .rl-ctl { margin-top: 10px; }
 .rl-chips { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
 .rl-chipbtn { appearance: none; font: inherit; width: 44px; height: 44px; border-radius: 50%; border: 3px dashed #fff; background: #3a6fd8; color: #fff; cursor: pointer; }
-.rl-chipbtn:nth-child(2) { background: #c8283a; } .rl-chipbtn:nth-child(3) { background: #1f8f4a; } .rl-chipbtn:nth-child(4) { background: #222; }
+.rl-chipbtn:nth-child(2) { background: #c8283a; } .rl-chipbtn:nth-child(3) { background: #1f8f4a; } .rl-chipbtn:nth-child(4) { background: #222; } .rl-chipbtn:nth-child(5) { background: #7a3fc8; }
 .rl-chipbtn.on { outline: 3px solid #ffd23f; transform: scale(1.1); }
 @media (max-width: 560px) {
   .rl-table { grid-template-rows: repeat(5, 30px); gap: 1px; padding: 3px; }

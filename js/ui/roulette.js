@@ -14,16 +14,16 @@
  * Alone (no room): a table on this device only (`solo`), same rules.
  *
  * Bets and payouts (the winnings; the stake comes back too): a number 35 to 1 · a dozen or a column 2 to 1 ·
- * red/black, odd/even, 1-18/19-36 1 to 1. On 0 every outside bet loses. MAX_BET tickets on the table per spin.
+ * red/black, odd/even, 1-18/19-36 1 to 1. On 0 every outside bet loses. No table limit: you can bet all the ×1 tickets you have
+ * (the 100-ticket limit was removed on 08-11-2026).
  */
 G.RouletteUI = (() => {
   const $ = G.UI.$;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const MAX_BET = 100;                       // tickets on the table per spin
   const TURN = 45;                           // seconds to place your bets
   const SPIN_MS = 6500, SHOW_MS = 3800;      // wheel spin · result shown before the next turn
   const LEAD_MS = 1200;                      // the wheel starts this long after the host draws (so everyone has it before it moves)
-  const CHIPS = [1, 5, 10, 25];
+  const CHIPS = [1, 5, 10, 25, 100];
   const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
   const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
   const colorOf = n => (n === 0 ? 'green' : RED.has(n) ? 'red' : 'black');
@@ -47,15 +47,13 @@ G.RouletteUI = (() => {
   const payOf = k => (OUTSIDE[k] ? OUTSIDE[k].pay : 35);
   const wins = (k, n) => (OUTSIDE[k] ? OUTSIDE[k].win(n) : +k.slice(1) === n);
   const nameOfBet = k => (OUTSIDE[k] ? (k[0] === 'c' ? 'Column ' + k[1] : OUTSIDE[k].label) : 'Number ' + k.slice(1));
-  /** Clean bets: known keys, whole tickets, at most MAX_BET in all. */
+  /** Clean bets: known keys, whole tickets. */
   function cleanBets(b) {
-    const out = {}; let tot = 0;
+    const out = {};
     for (const k in (b || {})) {
       const v = Math.floor(+b[k]);
       if (!validKey(k) || !(v > 0)) continue;
-      const take = Math.min(v, MAX_BET - tot);
-      if (take <= 0) break;
-      out[k] = take; tot += take;
+      out[k] = v;
     }
     return out;
   }
@@ -187,8 +185,8 @@ G.RouletteUI = (() => {
   function placeBet(k) {
     const g = cur();
     if (!myTurn(g) || !validKey(k)) return;
-    const left = Math.min(MAX_BET - total(myBets), tickets() - total(myBets));
-    if (left <= 0) { G.UI.toast(total(myBets) >= MAX_BET ? 'The table limit is ' + MAX_BET + ' tickets a spin' : 'You have no more ×1 tickets'); G.Audio.sfx('error'); return; }
+    const left = tickets() - total(myBets);
+    if (left <= 0) { G.UI.toast('You have no more ×1 tickets'); G.Audio.sfx('error'); return; }
     const v = Math.min(chip, left);
     myBets = Object.assign({}, myBets, { [k]: (myBets[k] || 0) + v });
     undo.push([k, v]);
@@ -290,7 +288,7 @@ G.RouletteUI = (() => {
         </div>
         ${tableHtml()}
         <div id="rl-ctl" class="rl-ctl"></div>
-        <p class="note">European wheel (one zero). Pays: a number 35 to 1 · a dozen or a column 2 to 1 · red, black, odd, even, 1-18 or 19-36 1 to 1. On 0 only bets on 0 win. Up to ${MAX_BET} ×1 tickets a spin.</p>`;
+        <p class="note">European wheel (one zero). Pays: a number 35 to 1 · a dozen or a column 2 to 1 · red, black, odd, even, 1-18 or 19-36 1 to 1. On 0 only bets on 0 win. No table limit: bet as many ×1 tickets as you have.</p>`;
       body.querySelectorAll('.rl-c').forEach(b => { b.onclick = () => placeBet(b.dataset.k); });
     }
     $('rl-back').textContent = solo ? 'Back' : 'Room';
@@ -489,5 +487,5 @@ G.RouletteUI = (() => {
     });
   }
 
-  return { init, open, show, isOn: () => !!roomGame(), MAX_BET };
+  return { init, open, show, isOn: () => !!roomGame() };
 })();

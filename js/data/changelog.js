@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T18:41Z', title: 'Roulette: no table limit', chg: [
+    'Roulette no longer has a 100-ticket limit a spin: bet as many ×1 tickets as you have. A new 100 chip makes big bets quicker to place.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T17:47Z', title: 'Roulette in sync', fix: [
     'The roulette wheel now spins and stops at the same moment for everyone in the room. Devices whose clocks were a few seconds apart used to see the ball land at different times.',
     'Gacha Battle reveals use the same shared clock, so cards turn over in step on every screen too.'
