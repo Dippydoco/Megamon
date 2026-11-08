@@ -12,13 +12,12 @@
  *      target it). It chases you faster and faster; touching it takes 40 % of your
  *      health, and it casts the Judgment (pillars of light), cross beams and waves, all
  *      with a warning on the ground. That damage ignores types and defence.
- *   3. Every 5 s a random legendary joins, each with DOUBLE the health and
- *      damage of the previous one. The first is based on the damage you were dealing
+ *   3. Every 5 s a random legendary joins, each with 15% more health and
+ *      damage than the previous one (double until 08-11-2026). The first is based on the damage you were dealing
  *      to ONE enemy before the Judgment (about 3 s), so it doesn't fall instantly.
  *      They give experience, but nothing else (no coins, tickets or items).
- *   4. No time limit: however strong you are (uncapped healing,
- *      defence...), the legendaries piling up, each twice as
- *      strong, finish you off (the 8th already hits 128 times harder than the 1st).
+ *   4. No time limit: the legendaries keep piling up, each a little stronger, alongside
+ *      an Arceus that keeps speeding up.
  *
  * While it lasts nothing else appears (no waves, events or rifts; from
  * 28:00 rifts no longer open). If at 30:00 you're in a rift or
@@ -32,6 +31,7 @@ G.Judgment = (() => {
   const AT = 30 * 60;
   const ARENA_R = 24;                 // in tiles (the rift arena: 11)
   const BOSS_EVERY = 5;               // no cap: they keep coming while you survive
+  const GROW = 1.15;                  // health and damage of each legendary over the previous one (was 2)
   const TOUCH = 0.4;                  // health taken by touching Arceus
   const ARCEUS = 493, SCALE = 1.5;
   // Animation timeline (seconds).
@@ -365,7 +365,7 @@ G.Judgment = (() => {
       x = center.x + Math.cos(a) * d; y = center.y + Math.sin(a) * d;
       if (G.Game.everyone().every(p => G.U.dist2(p.x, p.y, x, y) > 280 * 280)) break;
     }
-    const k = Math.pow(2, bossN);          // each one, double the previous
+    const k = Math.pow(GROW, bossN);       // each one a little stronger than the previous (was double until 08-11-2026)
     const def = {
       dex, name: mon.name,
       hp: Math.round(base * k),

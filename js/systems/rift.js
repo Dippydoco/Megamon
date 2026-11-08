@@ -39,10 +39,17 @@ G.Rift = (() => {
   const EXIT_SAFE = 3;      // seconds of immunity on leaving the rift
   let arena = null;         // { tx, ty, r, dex, shiny, x, y, back, biome, t, phase, endT, bossId }
   let checkT = CHECK, asked = false, downT = 0, misses = 0;
+  let wins = 0;             // rift legendaries beaten this run (not the Zygarde Portal): later rifts and bosses scale with it
+  // Tougher rifts (08-11-2026): with 3+ bonds (4 bonded moves) legendaries fell in seconds. Each rift won makes the next
+  // one tougher, more so after the first two, and its health is at least this many seconds of the team's measured
+  // single-target damage (judgment.js singleDps), capped so it still fits in ARENA_TIME.
+  const riftHpK = w => 1 + 0.25 * w + 0.35 * Math.max(0, w - 2);
+  const riftDmgK = w => 1 + 0.12 * w + 0.15 * Math.max(0, w - 2);
+  const riftDpsSecs = w => Math.min(40, 8 + 6 * w);
   const authority = () => !G.Coop.active || G.Coop.isHost;
   const TS = () => G.Tiles.T * G.Sprites.PX;
 
-  function reset() { rift = null; arena = null; checkT = CHECK; asked = false; downT = 0; misses = 0; }
+  function reset() { rift = null; arena = null; checkT = CHECK; asked = false; downT = 0; misses = 0; wins = 0; }
 
   // ---------------- rift on the map ----------------
 
@@ -164,13 +171,15 @@ G.Rift = (() => {
     // uses, judgment.js singleDps), so strong teams cannot melt it. Not totalDps: that is damage spread over the
     // whole horde (area attacks), many times what anyone can do to a single boss (18-10-2026: 2 players, 75% left).
     if (hard) hp = Math.max(hp, Math.round(G.Judgment.singleDps() * ZY_DPS_SECONDS));
+    else hp = Math.max(Math.round(hp * riftHpK(wins)), Math.round(G.Judgment.singleDps() * riftDpsSecs(wins)));
+    const dk = hard ? 1.35 : riftDmgK(wins);
     const def = {
       dex: mon.dex, name: mon.name,
       hp,
-      spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105) * (hard ? 1.15 : 1)),
-      dmg: Math.round((36 + t / 20) * (hard ? 1.35 : 1)), xp: Math.round((500 + t * 1.2) * (hard ? 2 : 1)),
+      spd: Math.round(G.U.clamp(48 + (mon.spd - 78) * 0.6, 48, 105) * (hard ? 1.15 : 1 + 0.03 * Math.min(wins, 8))),
+      dmg: Math.round((36 + t / 20) * dk), xp: Math.round((500 + t * 1.2) * (hard ? 2 : 1)),
       behavior: mon.types.some(x => ['psychic', 'electric', 'ghost', 'fairy', 'fire', 'water', 'ice', 'dragon'].includes(x)) ? 'ranged' : 'charger',
-      shotDmg: Math.round((18 + t / 40) * (hard ? 1.35 : 1)), shotCd: hard ? 0.65 : 0.9, range: hard ? 340 : 300
+      shotDmg: Math.round((18 + t / 40) * dk), shotCd: hard ? 0.65 : Math.max(0.6, 0.9 - 0.04 * wins), range: hard ? 340 : 300
     };
     const e = new G.Enemy(def, arena.x, arena.y - ts * 3.5, { hp: 1, spd: 1, dmg: 1 }, true);
     e.legend = true;
@@ -267,6 +276,7 @@ G.Rift = (() => {
     if (!arena || arena.phase !== 'fight') return;
     arena.phase = 'won'; arena.endT = 5;
     G.RunLog.rift('w', arena.zy);
+    if (!arena.zy) wins++;
     G.Progress.event('rift', { type: arena.btype || arena.type });
     G.Pickups.pullAll();
     G.Spawner.say('You defeated ' + G.DEX_BY[arena.dex].name + '! Grab your reward…', 3.4, true);
@@ -412,6 +422,8 @@ G.Rift = (() => {
     },
     get rift() { return rift; }, get arena() { return arena; },
     get inArena() { return !!arena; },
+    /** Rift legendaries beaten this run (open-map bosses scale with it too: spawner.js). */
+    get wins() { return wins; },
     get timeLeft() { return arena ? Math.max(0, arenaTime() - arena.t) : 0; },
     debugOpen() { open(); },
     /** Tests: the Zygarde Portal fight right now, as if you had stepped on a portal where you stand. */

@@ -160,6 +160,13 @@ G.Spawner = (() => {
     const [x, y] = ringPoint(pl, Math.random() * 6.2832);
     const e = new G.Enemy(b, x, y, scaled(G.Enemies.bossScale(t), G.Coop.scaleHp(players.length) * (players.length > 4 ? 1.55 : players.length > 1 ? 1.4 : 1)
                                          * G.KeyItems.bossHp()), true);       // Wishing Star: +25%
+    // Tougher bosses (08-11-2026): with bonded moves they fell in a few seconds. Each rift the team has won makes
+    // them tougher, later bosses more so, and their health is at least some seconds of the team's measured
+    // single-target damage (judgment.js singleDps). Damage scales too (shots follow e.dmg).
+    const w = G.Rift.wins || 0, idx = Math.max(0, G.Enemies.BOSSES.indexOf(b));
+    e.maxHp = Math.max(Math.round(e.maxHp * (1 + 0.2 * w)), Math.round(G.Judgment.singleDps() * Math.min(45, 8 + 4 * idx + 4 * w)));
+    e.hp = e.maxHp;
+    e.dmg *= 1 + 0.1 * w + 0.05 * idx;
     if (rollShiny(b.dex)) e.makeShiny();
     G.EnemyMgr.add(e);
     say('A wild ' + (e.shiny ? 'shiny ' : '') + e.name + ' appeared!', 3.2);

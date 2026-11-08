@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T17:25Z', title: 'Tougher rifts and bosses', chg: [
+    'Rift legendaries get tougher with every rift your team has won, and much tougher after the first two: more health, harder hits, faster shots and a little more speed. Their health also grows with how hard your team hits a single target, so bonded moves can no longer melt them in seconds.',
+    'Open-map bosses get the same treatment: tougher for every rift won, later bosses more so, with health that keeps up with your single-target damage.',
+    'Arceus\'s Judgment: each legendary that joins is now 15% stronger than the one before instead of twice as strong.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T17:09Z', title: 'Roar: no more experience bonus', chg: [
     'The Roar perk no longer gives extra experience (it was +4% a level). It still makes wild Pokémon more numerous, tougher, harder-hitting and faster.'
   ] },
