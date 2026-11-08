@@ -104,6 +104,8 @@ G.DB = (() => {
       evoMoves: {},           // id -> date: moves ever evolved
       ach: {},                // id -> date: achievements earned
       missions: {},           // the day's / week's missions (systems/progress.js)
+      bj: {},                 // Blackjack: { done: { hand id: time } } (ui/blackjack.js)
+      pk: {},                 // Poker: { done: { hand id: time settled } } (ui/poker.js)
       rl: {},                 // Roulette: { done: { spin id: time settled } } (ui/roulette.js)
       gb: {},                 // Gacha Battles: { done: { battle id: time settled } } (ui/minigames.js)
       charms: {},             // gen -> date: Shiny Charms already announced (systems/charms.js)

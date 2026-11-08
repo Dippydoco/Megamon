@@ -9,6 +9,10 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T18:55Z', title: 'Blackjack and Poker', new: [
+    'New mini-game: Blackjack against Murkrow, the dealer. Bet ×1 tickets, then hit, stand or double down. Murkrow stands on 17, blackjack pays 3 to 2. In a room players take turns at the table while everyone watches; on your own, open it from Mini-Games.',
+    'New mini-game: Poker. No-limit Texas Hold\'em against your friends in a room, played with ×1 tickets (blinds 1 and 2). Sit down to join the next hand. Your cards are only shown to you until the showdown, and side pots work when someone goes all in.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T18:41Z', title: 'Roulette: no table limit', chg: [
     'Roulette no longer has a 100-ticket limit a spin: bet as many ×1 tickets as you have. A new 100 chip makes big bets quicker to place.'
   ] },

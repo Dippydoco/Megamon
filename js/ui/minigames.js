@@ -531,6 +531,13 @@ G.MiniUI = (() => {
     $('mini-gb').onclick = () => { if (room() && room().members.length > 1) $('mini-room').click(); else soloFrom('mini'); };
     $('mini-draft').onclick = () => { $('mini-room').click(); };
     // Roulette: at your room's table if you're in one (the host opens it), otherwise a table of your own.
+    const tableAt = (type, ui) => () => {
+      const r = room();
+      if (r && r.members.length > 1) { if (r.game && r.game.type === type) ui.show(); else if (r.isHost && !r.game) ui.open(); else $('mini-room').click(); }
+      else ui.open();
+    };
+    $('mini-bj').onclick = tableAt('bj', G.BlackjackUI);
+    $('mini-pk').onclick = () => { const r = room(); if (r && r.members.length > 1) tableAt('pk', G.PokerUI)(); else { G.UI.toast('Poker is played against friends: invite them to your room'); $('mini-room').click(); } };
     $('mini-rl').onclick = () => {
       const r = room();
       if (r && r.members.length > 1) { if (r.game && r.game.type === 'rl') G.RouletteUI.show(); else if (r.isHost && !r.game) G.RouletteUI.open(); else $('mini-room').click(); }
@@ -555,14 +562,14 @@ G.MiniUI = (() => {
     if (!r) { box.innerHTML = ''; return; }
     const g = game();
     if (g) {
-      box.innerHTML = `<p class="note">${g.type === 'gb' ? 'A Gacha Battle is on.' : g.type === 'rl' ? 'The Roulette table is open.' : g.phase === 'done' ? 'Draft done: the next group run uses the drafted Pokémon.' : 'Draft Night is on.'}</p>`;
+      box.innerHTML = `<p class="note">${g.type === 'gb' ? 'A Gacha Battle is on.' : g.type === 'rl' ? 'The Roulette table is open.' : g.type === 'bj' ? 'The Blackjack table is open.' : g.type === 'pk' ? 'The Poker table is open.' : g.phase === 'done' ? 'Draft done: the next group run uses the drafted Pokémon.' : 'Draft Night is on.'}</p>`;
       const b = document.createElement('button'); b.className = 'btn small'; b.textContent = 'Open it';
-      b.onclick = () => (g.type === 'gb' ? (solo = null, showBattle()) : g.type === 'rl' ? G.RouletteUI.show() : showDraft());
+      b.onclick = () => (g.type === 'gb' ? (solo = null, showBattle()) : g.type === 'rl' ? G.RouletteUI.show() : g.type === 'bj' ? G.BlackjackUI.show() : g.type === 'pk' ? G.PokerUI.show() : showDraft());
       box.appendChild(b);
       return;
     }
     if (!r.isHost) {
-      box.innerHTML = '<p class="note">The host can start a Gacha Battle, Roulette or Draft Night.</p>';
+      box.innerHTML = '<p class="note">The host can start a Gacha Battle, Roulette, Blackjack, Poker or Draft Night.</p>';
       const b = document.createElement('button'); b.className = 'btn small ghost'; b.textContent = 'Gacha Battle vs Bot';
       b.onclick = () => soloFrom('lobby');
       box.appendChild(b);
@@ -581,6 +588,12 @@ G.MiniUI = (() => {
     const rl = document.createElement('button'); rl.className = 'btn small'; rl.textContent = 'Roulette';
     rl.title = 'Open a roulette table: everyone takes turns betting ×1 tickets while the room watches'; rl.onclick = () => G.RouletteUI.open();
     row.appendChild(rl);
+    const bj = document.createElement('button'); bj.className = 'btn small'; bj.textContent = 'Blackjack';
+    bj.title = 'Open a blackjack table: take turns playing against Murkrow while the room watches'; bj.onclick = () => G.BlackjackUI.open();
+    row.appendChild(bj);
+    const pk = document.createElement('button'); pk.className = 'btn small'; pk.textContent = 'Poker';
+    pk.title = 'Texas Hold\'em against each other with ×1 tickets'; pk.disabled = r.members.length < 2; pk.onclick = () => G.PokerUI.open();
+    row.appendChild(pk);
     box.appendChild(row);
     if (r.members.length < 2) box.insertAdjacentHTML('beforeend', '<p class="note">Invite a friend to play together, or battle the Bot meanwhile.</p>');
   }

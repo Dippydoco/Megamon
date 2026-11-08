@@ -452,7 +452,7 @@
       const tower = drafted ? null : G.TowerUI.lobbyCfg();
       if (tower) cfg.tower = tower;
       if (drafted) G.Social.setGame(null);          // the draft is used up by this run
-      else if (G.RouletteUI.isOn()) G.Social.setGame(null);   // the roulette table closes when the run starts
+      else if (G.RouletteUI.isOn() || G.BlackjackUI.isOn() || G.PokerUI.isOn()) G.Social.setGame(null);   // a card or roulette table closes when the run starts
       G.Social.setOpen(false);
       resetReady();                                        // back in the room after the run: ready up again
       G.Net.broadcast(cfg);
