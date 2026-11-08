@@ -9,6 +9,11 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-08', at: '2026-11-08T09:42Z', title: 'Co-op fixes for non-hosts', fix: [
+    'Shinies defeated in a co-op run are now given to every player, not only the host.',
+    'Players who aren\'t the host now gain max HP with each level (+1% of base HP a level), like the host and solo players.',
+    'Auto-pick in co-op now takes your Sitrus Berry or Nugget without flashing the level-up screen open. If others are still choosing, a banner says who the game is waiting for.'
+  ] },
   { d: '2026-11-07', at: '2026-11-07T17:22Z', title: 'Start with 1 move', new: [
     'Starting Moves level 2 now has an "Only 1 move" option in its Choose panel (per Pokémon): turn it on to start every run with a single move instead of 2, with no random second move filled in.'
   ] },

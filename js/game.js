@@ -20,6 +20,7 @@ G.Game = (() => {
   let time = 0, last = 0, pendingLevels = 0;
   let pl = null;
   let caught = [];          // shinies caught this run
+  let lvlWait = [];         // co-op: who is still picking a level-up card (for the HUD banner when yours was auto-picked)
   let biome = -1;
 
   const st = { get time() { return time; } };
@@ -266,6 +267,7 @@ G.Game = (() => {
       if (t.level > pl.level) G.Audio.sfx('xp');
       const cap = G.RARITY_GROWTH_CAP || 30, gain = Math.min(t.level, cap) - Math.min(pl.level, cap);
       if (gain > 0 && pl.growth) pl.addMaxHp(pl.mon.hp * pl.growth * gain);   // low-rarity growth (up to the cap level)
+      if (t.level > pl.level && G.LEVEL_HP) pl.addMaxHp(pl.mon.hp * G.LEVEL_HP * (t.level - pl.level));   // every Pokémon's +1% base HP a level (gainXp only runs on the host)
       pl.level = t.level; pl.xp = t.xp; pl.xpNext = t.xpNext;
       pl.kills = t.kills; pl.bosses = t.bosses; pl.coins = t.coins;
       if (t.t1 > pl.t1 || t.t10 > pl.t10) G.Audio.sfx('shiny');
@@ -279,16 +281,25 @@ G.Game = (() => {
       G.UI.hide('scr-pause');
       G.Audio.sfx('levelup');
       const list = G.LevelUp.offer(pl), auto = G.LevelUp.autoCard(pl, list);
+      lvlWait = [];
+      // Auto-pick (08-11-2026): taken at once with no screen at all, as in solo (it used to flash the cards open).
+      // If others are still choosing, the HUD's "in a menu" banner says who (waitingChoosers).
+      if (auto) {
+        auto.apply(pl);
+        G.FX.dmgText(pl.x, pl.y - pl.bodyH - 22, 'Lv. ' + level + ' · ' + auto.title, '#ffd23f');
+        G.RunLog.offer(list); G.RunLog.pick(list.indexOf(auto));
+        G.Coop.localPicked();
+        return;
+      }
       G.RunUI.showLevelUp(level, list, card => {
         G.Audio.sfx('confirm');
         card.apply(pl);
         G.Coop.localPicked();
       }, true);
-      // Auto-pick: your card is taken at once; the screen just shows who the group is waiting for.
-      if (auto) G.RunUI.pickAuto(auto);
     },
-    waiting(names) { G.RunUI.setWaiting(names); },
+    waiting(names) { lvlWait = names || []; G.RunUI.setWaiting(names); },
     resume() {
+      lvlWait = [];
       G.RunUI.closeLevelUp();
       if (state === 'levelup') { state = holdBy.length ? 'held' : 'playing'; afterLevelUp(); }
     },
@@ -1668,7 +1679,9 @@ G.Game = (() => {
     /** Group: the OTHER players who are choosing (bond or item) and have the run paused. */
     get waitingChoosers() {
       const me = G.Social.me && G.Social.me.name;
-      return holdBy.filter(n => n !== me && n !== 'You');
+      // (Also the level-up choosers when your card was auto-picked and no level-up screen is open.)
+      const lvl = state === 'levelup' && !G.UI.isOpen('scr-levelup') ? lvlWait : [];
+      return [...new Set([...holdBy, ...lvl])].filter(n => n !== me && n !== 'You');
     },
     /** Down in a group: who you're watching ({ name, color, index, count }) or null. */
     get spectating() {
