@@ -10,6 +10,8 @@
  * Each account can redeem each code ONCE. Case and hyphens don't matter.
  */
 G.CODES = [
+  // CASINOCHALLENGE  ->  1000 normal tickets
+  { h: '40de3af7afe9a362a44c7c7f6595c40553b15f6b06577d0fb626596cc47bfae5', t1: 1000 },
   // QUITWHILEAHEAD  ->  503 normal tickets
   { h: '492e093430b8eaaa681b2d63e01d4626ce729cc076fca8229e39c38acf6ca08f', t1: 503 },
   // CHINESEPARLIAMENT  ->  433 normal tickets (the yellow ones)
