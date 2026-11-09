@@ -9,6 +9,9 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-09', at: '2026-11-09T01:09Z', title: 'Gacha: use any number of tickets', new: [
+    'The Gacha has a "Use X tickets" slider: pick how many ×1 tickets to spend (drag it or type the number) and pull them all at once. Every full 10 still guarantees an Epic, and big amounts ask you to confirm first.'
+  ] },
   { d: '2026-11-08', at: '2026-11-08T19:21Z', title: 'New code: quitwhileahead', new: [
     'Redeem the code quitwhileahead for 503 ×1 tickets (once per account).'
   ] },

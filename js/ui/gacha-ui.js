@@ -21,6 +21,12 @@ G.GachaUI = (() => {
     $('pull-10b').onclick = () => pull(10, 't10');
     $('pull-close').onclick = close;
     $('pull-all').onclick = pullAll;
+    // "Use X tickets" (09-11-2026): pick any number of ×1 tickets with the slider (or type it) and pull them all at once.
+    const setN = v => { const max = maxN(); wantN = Math.max(1, Math.min(max, Math.floor(+v) || 1)); syncN(); };
+    $('pull-n').oninput = () => setN($('pull-n').value);
+    $('pull-n-num').oninput = () => { const v = Math.floor(+$('pull-n-num').value); if (v >= 1) { wantN = Math.min(maxN(), v); $('pull-n').value = wantN; syncLabel(); } };
+    $('pull-n-num').onchange = () => setN($('pull-n-num').value);
+    $('pull-n-go').onclick = () => pullN(wantN);
     $('gacha-surprise').onclick = () => {
       surprise = !surprise;
       if (surprise) mystery = G.U.shuffle ? G.U.shuffle(G.DEX.filter(p => p.rarity === 5 && G.SPRITE_META[p.dex])).slice(0, 3).map(p => p.dex)
@@ -113,7 +119,44 @@ G.GachaUI = (() => {
     $('pull-10b').disabled = !dm && !G.Gacha.costOf(s, 10, 't10');
     $('pull-all').disabled = !dm && !(t.t1 > 0 || t.t10 > 0);
     if (dm) $('gacha-pity').textContent += ' · DEMO MODE: pulls are free and nothing is saved';
+    syncN();
     G.UI.refreshCoins();
+  }
+
+  // ---- "Use X tickets" slider ----
+  let wantN = 10;
+  const maxN = () => (demo() ? 1000 : Math.max(0, (G.DB.save.tickets || {}).t1 || 0));
+  function syncLabel() { $('pull-n-go').textContent = 'Pull ×' + wantN; }
+  function syncN() {
+    const max = maxN();
+    const box = $('pull-n-box');
+    box.classList.toggle('off', max < 1);
+    $('pull-n').max = Math.max(1, max); $('pull-n-num').max = Math.max(1, max);
+    wantN = Math.max(1, Math.min(Math.max(1, max), wantN));
+    $('pull-n').value = wantN; $('pull-n-num').value = wantN;
+    $('pull-n').disabled = $('pull-n-num').disabled = $('pull-n-go').disabled = max < 1;
+    syncLabel();
+  }
+  /** Spends n ×1 tickets on the banner: groups of 10 first (each keeps its Epic guarantee), then singles. */
+  async function pullN(n) {
+    if (busy) return;
+    const s = sv();
+    if (demo()) s.tickets = { t1: 1000, t10: (s.tickets || {}).t10 || 0 };
+    n = Math.floor(n);
+    if (!(n >= 1) || s.tickets.t1 < n) { G.Audio.sfx('error'); G.UI.toast('Not enough tickets: earn them by playing'); return; }
+    if (n >= 100) {
+      const where = surprise ? 'the Surprise banner' : G.Gacha.BANNERS[gen - 1].name;
+      busy = true;
+      const ok = await G.UI.ask('Use ' + n + ' tickets?', `Spend <b>${n}</b> ×1 tickets (${n} pulls) on <b>${where}</b>?`, 'Pull', 'Cancel');
+      busy = false;
+      if (!ok) return;
+    }
+    const res = [];
+    let left = n;
+    while (left >= 10) { const r = G.Gacha.pull(s, 10, gen, 't1', surprise); if (!r) break; res.push(...r); left -= 10; }
+    while (left > 0) { const r = G.Gacha.pull(s, 1, gen, 't1', surprise); if (!r) break; res.push(...r); left--; }
+    if (!res.length) return;
+    present(res, res.length);
   }
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
