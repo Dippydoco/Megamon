@@ -10,6 +10,8 @@
  * Each account can redeem each code ONCE. Case and hyphens don't matter.
  */
 G.CODES = [
+  // MURKROWSJACKPOT  ->  7520 normal tickets
+  { h: '1c1f0c8dcd9bdc8426de318ce29f05e2788c9afe73727b332b132b5f8bd6214f', t1: 7520 },
   // CASINOCHALLENGE  ->  1000 normal tickets
   { h: '40de3af7afe9a362a44c7c7f6595c40553b15f6b06577d0fb626596cc47bfae5', t1: 1000 },
   // QUITWHILEAHEAD  ->  503 normal tickets
