@@ -9,6 +9,23 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-15', at: '2026-11-15T17:09Z', title: 'Terrain shapes', new: [
+    'Every survival run now gets one of five terrain shapes, picked at random when it starts: Classic (the map as it was), Open Plains (wide open ground with few rocks), Islands (lots of water or lava, with land joined by winding causeways), Canyons (long rock ridges with gaps to slip through) and Ruins (broken buildings with doorways along streets). A message names the shape when the run starts, and a group always shares the same one.'
+  ] },
+  { d: '2026-11-15', at: '2026-11-15T17:09Z', title: 'Five new biomes and new scenery', new: [
+    'Five new biomes can come up during a run: Sunny Beach (palm trees), Snowy Pines (snow-covered pines and slippery ice), Mushroom Grove (giant mushrooms and swamp), Ancient Ruins (broken columns) and Autumn Woods (red and orange maples). Each has its own weather.',
+    'The Red Desert now grows cacti among its dead trees, and the Gloomy Graveyard has gravestones.'
+  ] },
+  { d: '2026-11-15', at: '2026-11-15T17:09Z', title: 'Random biome order', chg: [
+    'Survival runs still start in the Shady Forest, but the biomes after it now come in a random order (a different one every run) instead of always the same sequence. You see every biome once before any comes back, and never the same one twice in a row. In a group everyone gets the same order.',
+    'The rift-themed biomes no longer show "Rift ·" in front of their name when they come up as a normal biome of the run.'
+  ] },
+  { d: '2026-11-15', at: '2026-11-15T17:09Z', title: 'Three held items you invest in', new: [
+    'Macho Brace: -15% movement speed, but every level you gain while holding it gives +1% damage for the rest of the run (up to +30%). You keep that damage even after you swap the item out.',
+    'Odd Keystone: knock out 108 foes while holding it to gain +1 level in a random perk you hold. Every reward doubles the number needed for the next one (108, 216, 432...).',
+    'Rusted Sword: -15% damage until you win 2 rifts while holding it. Then it is reforged into the Crowned Sword: +40% damage.',
+    'These items show their progress in the corner of the item box. Macho Brace and Rusted Sword have a drawback, so you are always asked before taking them. None of the three is found in the Battle Tower.'
+  ] },
   { d: '2026-11-09', at: '2026-11-09T01:09Z', title: 'Gacha: use any number of tickets', new: [
     'The Gacha has a "Use X tickets" slider: pick how many ×1 tickets to spend (drag it or type the number) and pull them all at once. Every full 10 still guarantees an Epic, and big amounts ask you to confirm first.'
   ] },

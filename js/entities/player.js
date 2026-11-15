@@ -47,6 +47,10 @@ G.Player = class Player {
     this.active = 0;           // hueco activo
     this.maxMoves = 4;         // huecos
     this.bonds = 0;            // bonds to use (the legendaries' reward)
+    // Items you invest in (data/items.js): they stay on the player, so they survive swapping the item out.
+    this.braceLv = 0;          // Macho Brace: levels trained = +1% damage each
+    this.keyN = 0; this.keyWon = 0;   // Odd Keystone: foes sealed towards the next reward · rewards won
+    this.swordWins = 0;        // Rusted Sword: rifts won while holding it
 
     this.buffs = {
       atk: { n: 0, t: 0, amount: 0 },
@@ -110,7 +114,7 @@ G.Player = class Player {
   // Damage boosts (Power cards, items, buffs...) raise Attack and Sp. Atk alike.
   get dmgMul() {
     const b = this.buffs;
-    return this.atkMul * this.growthMul * this.levelMul * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+    return this.atkMul * this.growthMul * this.levelMul * (1 + 0.01 * (this.braceLv || 0)) * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
   }
   /** Lower rarities grow stronger with each level (G.RARITY_GROWTH, in overrides.js). */
   get growth() { return (G.RARITY_GROWTH && G.RARITY_GROWTH[this.mon.rarity]) || 0; }

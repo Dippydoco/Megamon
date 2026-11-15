@@ -35,6 +35,18 @@ G.World = (() => {
   const KIND = ['floor', 'wall', 'liquid'];
 
   let seed = 1, biome = 0;
+  /*
+   * Terrain shape (15-11-2026): one per run, picked from the run's seed by game.js (so a group shares it). It only
+   * changes where the open map's walls and liquid go; arenas, the Battle Tower and the menu backdrop are 'classic'.
+   *   classic  the original mix of rock formations and pools
+   *   plains   wide open ground: few rocks, small ponds
+   *   islands  mostly liquid, with land joined by winding causeways
+   *   canyons  long winding rock ridges with gaps to slip through
+   *   ruins    blocks of broken walls with doorways, on a grid of streets
+   */
+  const SHAPES = ['classic', 'plains', 'islands', 'canyons', 'ruins'];
+  const SHAPE_NAME = { classic: 'Classic', plains: 'Open Plains', islands: 'Islands', canyons: 'Canyons', ruins: 'Ruins' };
+  let shape = 'classic';
   let arena = null;                        // { tx, ty, r } in tiles
   const data = new Map();                  // "cx,cy" -> chunk data
   let images = new Map();                  // "cx,cy" -> canvas horneado
@@ -115,8 +127,48 @@ G.World = (() => {
     const d = Math.hypot(tx, ty);
     if (d < 9) return FLOOR;                          // starting clearing
     const ramp = G.U.clamp((d - 9) / 8, 0, 1);       // gentle appearance
-    if (fbm(tx / 13, ty / 13, seed + 101) < 0.04 + 0.23 * ramp) return LIQUID;
-    if (fbm(tx / 8, ty / 8, seed + 202) > 1 - 0.27 * ramp) return WALL;
+    const pool = fbm(tx / 13, ty / 13, seed + 101), crag = fbm(tx / 8, ty / 8, seed + 202);
+    switch (shape) {
+      case 'plains':
+        if (pool < 0.04 + 0.15 * ramp) return LIQUID;
+        if (crag > 1 - 0.19 * ramp) return WALL;
+        return FLOOR;
+      case 'islands': {
+        if (crag > 1 - 0.2 * ramp) return WALL;
+        if (pool < 0.04 + 0.42 * ramp) {
+          // Causeways: thin winding strips of land across the liquid, so no island is cut off.
+          // (Plain value noise, not fbm: its contour lines are smooth, so the strips don't break into specks.)
+          const a = vnoise(tx / 9, ty / 9, seed + 151), b = vnoise(tx / 9 + 40, ty / 9 - 23, seed + 152);
+          return Math.abs(a - 0.5) < 0.03 || Math.abs(b - 0.5) < 0.03 ? FLOOR : LIQUID;
+        }
+        return FLOOR;
+      }
+      case 'canyons': {
+        if (pool < 0.04 + 0.14 * ramp) return LIQUID;
+        // Ridges follow the contour lines of two noise fields; a finer field opens gaps in them.
+        // (Plain value noise for the lines: smooth, unbroken ridges.)
+        const r1 = Math.abs(vnoise(tx / 13, ty / 13, seed + 251) - 0.5), r2 = Math.abs(vnoise(tx / 10 - 31, ty / 10 + 17, seed + 252) - 0.5);
+        if ((r1 < 0.036 * ramp || r2 < 0.03 * ramp) && vnoise(tx / 5, ty / 5, seed + 253) > 0.33) return WALL;
+        return FLOOR;
+      }
+      case 'ruins': {
+        if (pool < 0.04 + 0.12 * ramp) return LIQUID;
+        // One building at most per 10×10 block: a rectangle of walls with a doorway in each side and
+        // stretches that have fallen down. The two tiles around every block stay clear (streets).
+        const C = 10, bx = Math.floor(tx / C), by = Math.floor(ty / C), lx = tx - bx * C, ly = ty - by * C;
+        if (ramp < 1 || H(bx, by, seed + 301) > 0.55) return crag > 1 - 0.12 * ramp ? WALL : FLOOR;
+        const w = 5 + Math.floor(H(bx, by, seed + 302) * 3), h = 5 + Math.floor(H(bx, by, seed + 303) * 3);   // 5-7 tiles
+        const x0 = 1 + Math.floor(H(bx, by, seed + 304) * (C - 2 - w + 1)), y0 = 1 + Math.floor(H(bx, by, seed + 305) * (C - 2 - h + 1));
+        const ix = lx - x0, iy = ly - y0;
+        if (ix < 0 || iy < 0 || ix >= w || iy >= h) return FLOOR;
+        const edgeX = ix === 0 || ix === w - 1, edgeY = iy === 0 || iy === h - 1;
+        if (!edgeX && !edgeY) return FLOOR;                                        // inside the building
+        if ((edgeY && ix === (w >> 1)) || (edgeX && iy === (h >> 1))) return FLOOR; // doorways
+        return fbm(tx / 2.5, ty / 2.5, seed + 306) > 0.3 ? WALL : FLOOR;           // fallen stretches
+      }
+    }
+    if (pool < 0.04 + 0.23 * ramp) return LIQUID;
+    if (crag > 1 - 0.27 * ramp) return WALL;
     return FLOOR;
   }
 
@@ -252,6 +304,7 @@ G.World = (() => {
       r: d.r, hp: d.hp, maxHp: d.hp, solid: d.solid, flat: !!d.flat,
       destructible: d.hp !== Infinity, flash: 0,
       wiggle: H(tx, ty, 9) * 6.28,
+      alt: H(tx, ty, 11) < 0.5 ? 1 : 0,                  // trees: the biome's second style, if it has one (tiles.js prop2)
       used: usedAlt.has(tx + ',' + ty), charge: 1, open: 0          // altar / spring / locked chest
     };
   }
@@ -600,7 +653,8 @@ G.World = (() => {
                   : p.type === 'rock' ? (p.hp < p.maxHp * 0.5 ? 1 : 0)
                   : p.type === 'altar' ? p.kind * 2 + (p.used ? 1 : 0)
                   : p.type === 'spring' ? (p.charge < 0.15 ? 1 : 0)
-                  : p.type === 'trap' ? p.kind : 0;
+                  : p.type === 'trap' ? p.kind
+                  : p.type === 'tree' ? p.alt || 0 : 0;
     if (p.type === 'zportal' && p.used) return;       // a portal works only once
     const img = G.Tiles.propSprite(biome, p.type, variant);
     const w = img.width * P, h = img.height * P;
@@ -690,8 +744,10 @@ G.World = (() => {
 
   // ---------------- control ----------------
 
-  function reset(s) {
+  /** @param sh  the run's terrain shape (one of SHAPES); none = classic */
+  function reset(s, sh) {
     seed = (s | 0) || 1;
+    shape = SHAPES.includes(sh) ? sh : 'classic';
     usedAlt.clear();
     data.clear(); images.clear(); broken.clear();
     fade = null; arena = null;
@@ -714,7 +770,8 @@ G.World = (() => {
     images = new Map();
   }
 
-  function biomeName() { return G.Tiles.BIOMES[biome].name; }
+  // (Outside an arena the rift palettes are ordinary biomes of the run, so they drop their "Rift · " label.)
+  function biomeName() { const n = G.Tiles.BIOMES[biome].name; return arena ? n : n.replace(/^Rift · /, ''); }
 
   /** Vignette in screen coordinates. */
   function drawVignette(ctx, w, h) {
@@ -726,7 +783,7 @@ G.World = (() => {
   }
 
   return {
-    TS, CW, reset, setBiome, biomeName, liquidKind, liquidEffect, walkable,
+    TS, CW, reset, setBiome, biomeName, SHAPES, get shape() { return shape; }, get shapeName() { return SHAPE_NAME[shape]; }, liquidKind, liquidEffect, walkable,
     kindAt, isWall, isLiquid, isFree, collide, projectileBlock, propsInCircle, nearestBreakable,
     damageProp, breakAt, specialsNear, update, markUsed, altarUsed,
     breakProp(p) { if (!broken.has(p.tx + ',' + p.ty)) destroyProp(p); },

@@ -21,7 +21,30 @@ G.Game = (() => {
   let pl = null;
   let caught = [];          // shinies caught this run
   let lvlWait = [];         // co-op: who is still picking a level-up card (for the HUD banner when yours was auto-picked)
-  let biome = -1;
+  let biome = -1;                       // which 4-minute stretch of the run we are in (0, 1, 2...), not a palette
+  let runSeed = 0, biomeSeq = [0];      // the run's seed and its order of biomes (see biomeAt)
+
+  /**
+   * Random biome order (15-11-2026; it used to walk the list in the same order every run). A run always starts in
+   * the Shady Forest; after that the other biomes come in a shuffled order, each one once before any repeats, and
+   * never the same one twice in a row. The shuffle comes from the run's seed, so everyone in a group sees the same
+   * order without sending anything. Left out: the Battle Tower hall, Arceus's ruins and the Zygarde Core.
+   */
+  function biomeAt(step) {
+    const T = G.Tiles, skip = ['tower', 'judgment', 'zygarde', 'zygarde2'];
+    while (biomeSeq.length <= step) {
+      const round = biomeSeq.length, bag = [];
+      for (let i = 0; i < T.BIOMES.length; i++) if (i < T.ARENA || !skip.includes(T.ARENA_TYPES[i - T.ARENA])) bag.push(i);
+      if (round === 1) bag.shift();                                    // first lap: the forest has just been
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(G.U.hash(i, round, runSeed + 7919) * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      if (bag[0] === biomeSeq[biomeSeq.length - 1]) [bag[0], bag[1]] = [bag[1], bag[0]];
+      biomeSeq.push(...bag);
+    }
+    return biomeSeq[step];
+  }
 
   const st = { get time() { return time; } };
 
@@ -89,7 +112,8 @@ G.Game = (() => {
    * @param coop   { seed, host, members } for a group run (a Battle Tower Expedition also carries `tower`)
    * @param tower  { mode: 'climb' | 'exp', start } for a Battle Tower run (systems/tower.js)
    */
-  function startRun(coop = null, tower = null) {
+  /** @param opts  { plain: true } = classic terrain (the Balance Lab, so its tests stay comparable) */
+  function startRun(coop = null, tower = null, opts = null) {
     if (coop && coop.tower) tower = coop.tower;
     holdBy = []; awayBy = null;
     openItem = null; laterItems.length = 0;      // nothing left over from the last run's choice screens
@@ -114,8 +138,13 @@ G.Game = (() => {
     G.Weather.reset();
     G.Path.clear();
     G.Hazards.clear();
-    G.World.reset(coop ? coop.seed : Math.floor(Math.random() * 1e6));
+    runSeed = coop ? coop.seed : Math.floor(Math.random() * 1e6);
+    biomeSeq = [0];
+    // Terrain shape: one per run, from the seed (the same for a whole group). Not in the Battle Tower or the lab.
+    const plain = tower || (opts && opts.plain);
+    G.World.reset(runSeed, plain ? 'classic' : G.World.SHAPES[Math.floor(G.U.hash(runSeed, 5, 4421) * G.World.SHAPES.length)]);
     G.World.setBiome(0, true);
+    if (G.World.shape !== 'classic') G.Spawner.say('Terrain: ' + G.World.shapeName, 3.4);
     biome = 0;
     time = 0; pendingLevels = 0;
     runReal = performance.now(); tampered = false;
@@ -689,7 +718,8 @@ G.Game = (() => {
       return;
     }
     // For now the Life Orb isn't put on automatically: if it's the first thing you find, you choose to accept or discard it.
-    if (!pl.item && id !== 'lifeorb') { take(id); return; }
+    // (Also the other items with a drawback, `ask` in data/items.js: Macho Brace, Rusted Sword.)
+    if (!pl.item && !G.Items.BY[id].ask) { take(id); return; }
     if (pl.item === id) { G.Spawner.say('You already hold ' + G.Items.BY[id].name, 2, true); return; }
     // The game pauses while you choose; in a group, for everyone (as with
     // fusions). Previously in a group it carried on and you got hit while choosing.
@@ -949,11 +979,12 @@ G.Game = (() => {
     // its own countdown, and the minutes spent in it no longer bring biomes, difficulty or Arceus closer.
     if (!G.Rift.inArena) time += dt;
     G.RunLog.tick(pl, time);
+    G.Items.tick(pl);                    // Macho Brace, Odd Keystone: levels and knockouts while holding them
 
     const b = Math.floor(time / 240);
     if (b !== biome && !G.Rift.inArena && !G.Judgment.active && !G.Tower.active) {
       biome = b;
-      G.World.setBiome(b);
+      G.World.setBiome(biomeAt(b));
       G.Audio.sfx('biome');
       G.Spawner.say('— ' + G.World.biomeName() + ' —', 3);
       G.FX.ring(pl.x, pl.y, 10, G.Camera.outerRadius(), '#ffffff', 0.7, 6);
@@ -991,7 +1022,7 @@ G.Game = (() => {
     G.Skins.tick(dt, pl);                // challenge skins: weather time for Castform and Cherrim
     G.FX.update(dt);
 
-    G.Audio.music(G.Tower.active ? G.Tower.music() : G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biome % G.BIOME_MUSIC.length]);
+    G.Audio.music(G.Tower.active ? G.Tower.music() : G.Judgment.active ? G.Judgment.music : G.Rift.inArena ? 'rift' : G.EnemyMgr.bossAlive() ? 'boss' : G.BIOME_MUSIC[biomeAt(Math.max(0, biome)) < G.BIOME_MUSIC.length ? biomeAt(Math.max(0, biome)) : biome % G.BIOME_MUSIC.length]);
     if (!coop || G.Coop.isHost) maybeLevelUp();
     if (pl.bonds > 0) offerBond(true);
     if (G.Coop.isHost) checkAllDown(dt);

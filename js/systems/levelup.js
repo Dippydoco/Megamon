@@ -150,6 +150,20 @@ G.LevelUp = (() => {
   /** Short form of your perks for teammates ("atk.5,cd.3"). */
   const share = pl => tomesOf(pl).map(id => id + '.' + lvOf(pl, id)).join(',');
 
+  /**
+   * Odd Keystone (data/items.js): +1 level in a random perk you hold that still has room (never Roar: nobody wants a harder
+   * run as a reward). → the perk, or null if you hold none or they are all at their cap.
+   */
+  function bonusPerk(pl) {
+    const open = tomesOf(pl).map(id => BY[id]).filter(s => s && !s.instant && s.id !== 'roar' && (!s.max || lvOf(pl, s.id) < s.max));
+    if (!open.length) return null;
+    const s = G.U.pick(open), n = lvOf(pl, s.id);
+    s.apply(pl, n);
+    pl.statsTaken[s.id] = n + 1;
+    fxT = -1;
+    return s;
+  }
+
   /** Builds the set of candidate cards, with weights. */
   function candidates(pl) {
     const out = [];
@@ -281,5 +295,5 @@ G.LevelUp = (() => {
     return picked;
   }
 
-  return { offer, STATS, BY, BUFF_MAX, banKey, onlyInstant, autoCard, AUTO_NAME, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, roarSpd, shinyK, coinK };
+  return { offer, bonusPerk, STATS, BY, BUFF_MAX, banKey, onlyInstant, autoCard, AUTO_NAME, tomesOf, evoPlan, neededBy, newMove, qtyOn, maxTomes, share, roarRate, roarCap, roarHp, roarDmg, roarSpd, shinyK, coinK };
 })();

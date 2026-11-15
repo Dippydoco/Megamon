@@ -73,7 +73,7 @@ G.Tiles = (() => {
     poison:   { name: 'Toxic Swamp', floor: '#46384f', wall: '#33263f', liquid: 'poison', liq: '#9a4fc0', foam: '#e0a6ff', prop: 'dead',
                 leaf: '#5a4a6a', trunk: '#3a2f45', flowers: ['#c86bdc', '#8bd94a', '#e0a6ff'], grass: '#6a5a8a', rock: '#5a4f6a',
                 pools: 0.31, pillars: 0.015, props: { tree: 0.02 }, weather: null },
-    ground:   { name: 'Red Desert', floor: '#b08a52', wall: '#8a5e34', liquid: 'swamp', liq: '#9a7a48', foam: '#d6b98a', prop: 'dead',
+    ground:   { name: 'Red Desert', floor: '#b08a52', wall: '#8a5e34', liquid: 'swamp', liq: '#9a7a48', foam: '#d6b98a', prop: 'cactus', prop2: 'dead',
                 leaf: '#8a6a40', trunk: '#6a4a2a', flowers: ['#e06a4a', '#f4d65c', '#ffffff'], grass: '#b0904a', rock: '#9a7a5a',
                 pools: 0.25, pillars: 0.04, props: { tree: 0.01, rock: 0.015 }, weather: 'sand' },
     flying:   { name: 'Sky Peak', floor: '#9fb8d8', wall: '#dfe8f4', liquid: 'water', liq: '#7fb8ff', prop: 'tree',
@@ -88,7 +88,7 @@ G.Tiles = (() => {
     rock:     { name: 'Ancient Quarry', floor: '#7a6a58', wall: '#55473a', liquid: 'water', liq: '#4f8fd0', prop: 'dead',
                 leaf: '#6a5a4a', trunk: '#4a3e32', flowers: ['#c9b28a', '#ffffff', '#a89070'], grass: '#8a7a5a', rock: '#8a7a6a',
                 pools: 0, pillars: 0.08, props: { rock: 0.03 }, weather: 'sand' },
-    ghost:    { name: 'Gloomy Graveyard', floor: '#383447', wall: '#24202e', liquid: 'water', liq: '#3a3a6a', prop: 'dead',
+    ghost:    { name: 'Gloomy Graveyard', floor: '#383447', wall: '#24202e', liquid: 'water', liq: '#3a3a6a', prop: 'dead', prop2: 'grave',
                 leaf: '#4a4060', trunk: '#2e2838', flowers: ['#9a8ad0', '#5fe0c0', '#c9cfdc'], grass: '#4a4a60', rock: '#5a5670',
                 pools: 0, pillars: 0.03, props: { tree: 0.03 }, weather: 'fog' },
     dragon:   { name: 'Dragon Sanctuary', floor: '#363a5e', wall: '#24264a', liquid: 'lava', liq: '#7b5cff', foam: '#c9a6ff', prop: 'crystal',
@@ -141,7 +141,7 @@ G.Tiles = (() => {
       wallFace: [shade(w, -0.3), shade(w, -0.38)], wallFaceDark: shade(w, -0.55),
       liq: L, liqDeep: shade(L, -0.22), foam: th.foam || shade(L, 0.55), shore: shade(f, -0.32),
       cells: !!th.cells, glow: th.glow,
-      prop: th.prop, leaf: [shade(th.leaf, -0.35), shade(th.leaf, -0.15), th.leaf, shade(th.leaf, 0.3)],
+      prop: th.prop, prop2: th.prop2, leaf: [shade(th.leaf, -0.35), shade(th.leaf, -0.15), th.leaf, shade(th.leaf, 0.3)],
       trunk: [shade(th.trunk, -0.2), th.trunk],
       rock: [shade(th.rock, -0.2), th.rock, shade(th.rock, 0.22)],
       grass: [shade(th.grass, -0.28), th.grass, shade(th.grass, 0.28)]
@@ -149,6 +149,54 @@ G.Tiles = (() => {
   }
   for (const t of ARENA_TYPES) BIOMES.push(arenaBiome(ARENA_THEMES[t]));
   BIOMES[ARENA + ARENA_TYPES.indexOf('judgment')].name = ARENA_THEMES.judgment.name;
+
+  // ---------------- more biomes for the run (15-11-2026) ----------------
+  // They go AFTER the rift arenas so every arena keeps its number (G.Tiles.arenaBiome, saved rift state...).
+  // The run's biome order is random (game.js biomeAt) and takes them like any other.
+  //   prop   the style its "trees" are painted in (PAINT.tree) · prop2  a second style, on about half of them
+  //   wx     its own weather odds (systems/weather.js); without it, one of the first three biomes' tables
+  BIOMES.push(
+    { name: 'Sunny Beach', liquid: 'water', wx: { sun: 3, rain: 2 },
+      floor: ['#e2cf9a', '#e8d6a4', '#dcc890'], dirt: ['#c9b27c', '#c2aa74', '#d0ba84'],
+      speck: '#c4ad78', light: '#f4e6ba', flowers: ['#ff9ec4', '#ffffff', '#ffb35c'],
+      wallTop: ['#b89a6c', '#c2a476', '#ae9064'], wallLight: '#dcc49a', wallEdge: '#4a3a24',
+      wallFace: ['#8a7048', '#7e6640'], wallFaceDark: '#5a4628',
+      liq: '#3cc4d0', liqDeep: '#2a9cb8', foam: '#eaffff', shore: '#b8a26e',
+      prop: 'palm', leaf: ['#1f6a34', '#2f8a40', '#4aaa4c', '#7acc5e'], trunk: ['#7a5a36', '#9a764a'],
+      rock: ['#8a8478', '#a8a294', '#c8c2b4'], grass: ['#6a9a48', '#8aba58', '#b0d878'] },
+    { name: 'Snowy Pines', liquid: 'ice', wx: { snow: 4, fog: 1 },
+      floor: ['#e4eef6', '#ecf4fa', '#dae6f0'], dirt: ['#b4c4d4', '#aabccc', '#bccadc'],
+      speck: '#c4d4e2', light: '#ffffff', flowers: ['#9fd8f0', '#ffffff', '#c8b8ff'],
+      wallTop: ['#8a9cb4', '#96a8c0', '#8092aa'], wallLight: '#c4d4e8', wallEdge: '#28344a',
+      wallFace: ['#5c6e88', '#52647e'], wallFaceDark: '#34425a',
+      liq: '#a8dcf0', liqDeep: '#84c4e0', foam: '#ffffff', shore: '#b0c4d8',
+      prop: 'pine', leaf: ['#1e4a3a', '#2a6248', '#3c7c58', '#ffffff'], trunk: ['#4a3626', '#644a34'],
+      rock: ['#7a8898', '#98a6b6', '#bcc8d6'], grass: ['#8aa8b8', '#a8c4d2', '#cfe2ec'] },
+    { name: 'Mushroom Grove', liquid: 'swamp', wx: { fog: 3, rain: 2 },
+      floor: ['#24484a', '#2a5052', '#204244'], dirt: ['#3a3050', '#40365a', '#342a48'],
+      speck: '#1c3a3c', light: '#3c6c6a', flowers: ['#7ef0d0', '#ff8ad8', '#c9a6ff'],
+      wallTop: ['#4a3a6a', '#544476', '#42335e'], wallLight: '#7a68a8', wallEdge: '#161026',
+      wallFace: ['#30264a', '#2a2042'], wallFaceDark: '#1a1430',
+      liq: '#3a7a8a', liqDeep: '#2a5e70', foam: '#9af0e0', shore: '#1c3638',
+      prop: 'mushroom', leaf: ['#8a2a5a', '#c0407a', '#e8609a', '#ffd0e8'], trunk: ['#c8b8a0', '#e8dcc8'],
+      rock: ['#4a5068', '#666c88', '#8a90ac'], grass: ['#2a6a5a', '#3c9a7a', '#6ad0a8'] },
+    { name: 'Ancient Ruins', liquid: 'water', wx: { rain: 2, fog: 2, sun: 1, sand: 1 },
+      floor: ['#8a9a78', '#92a280', '#829270'], dirt: ['#a8a290', '#a09a88', '#b0aa98'],
+      speck: '#72825f', light: '#aab894', flowers: ['#f4d65c', '#ffffff', '#c9a6ff'],
+      wallTop: ['#b4ae9c', '#beb8a6', '#aaa492'], wallLight: '#dcd6c4', wallEdge: '#3a362c',
+      wallFace: ['#827c6c', '#767062'], wallFaceDark: '#504c40',
+      liq: '#4a9ab0', liqDeep: '#387e96', foam: '#c8eef4', shore: '#66785a',
+      prop: 'column', prop2: 'tree', leaf: ['#4a6a3a', '#5e8448', '#7aa25c', '#9cc078'], trunk: ['#8a8474', '#c4beac'],
+      rock: ['#8a8676', '#a8a492', '#c8c4b2'], grass: ['#5a8a48', '#78aa5c', '#a0cc7c'] },
+    { name: 'Autumn Woods', liquid: 'water', wx: { rain: 3, fog: 2, sun: 1 },
+      floor: ['#7a7a3a', '#828240', '#727234'], dirt: ['#7a5a36', '#72522f', '#84643e'],
+      speck: '#5e5e2a', light: '#a0a052', flowers: ['#ff8a3d', '#e0483a', '#ffd23f'],
+      wallTop: ['#6e6654', '#78705c', '#665e4c'], wallLight: '#9c947c', wallEdge: '#2a261c',
+      wallFace: ['#4a4436', '#423c30'], wallFaceDark: '#2a261e',
+      liq: '#3b7fc6', liqDeep: '#2c64a6', foam: '#b3defa', shore: '#5a5a2a',
+      prop: 'maple', leaf: ['#a83a1e', '#d4582a', '#f08a30', '#ffc24a'], leaf2: ['#7a1e1e', '#b02a2a', '#dc4a3a', '#ff8a5a'],
+      trunk: ['#4e3220', '#6e4a2e'], rock: ['#6e6a62', '#8e8a80', '#b0aca0'], grass: ['#8a7a2a', '#b89a3a', '#e0c05a'] }
+  );
 
   // ---------------- colour / pixel utilities ----------------
 
@@ -421,23 +469,27 @@ G.Tiles = (() => {
   }
 
   const PAINT = {
-    tree(B) {
+    // `variant` 1 (about half the trees, world.js): the biome's second style, if it has one (B.prop2).
+    tree(B, variant) {
+      const style = variant && B.prop2 ? B.prop2 : B.prop;
+      if (style !== 'tree' && style !== 'maple' && PAINT_STYLE[style]) return PAINT_STYLE[style](B);
       const P = Pix(30, 40);
       const L = B.leaf.map(h => pack(h)), Tr = B.trunk.map(h => pack(h));
+      // Maple: every other clump of leaves in the second colour (red among the orange).
+      const L2 = style === 'maple' && B.leaf2 ? B.leaf2.map(h => pack(h)) : L;
       const edge = pack('#14200f');
-      if (B.prop === 'crystal') return PAINT.crystal(B);
-      if (B.prop === 'dead') return PAINT.deadtree(B);
       for (let y = 26; y < 38; y++) for (let x = 13; x < 18; x++) P.set(x, y, Tr[x === 13 || x === 17 ? 0 : 1]);
       P.set(12, 37, Tr[0]); P.set(18, 37, Tr[0]); P.set(11, 38, Tr[0]); P.set(19, 38, Tr[0]);
       const blobs = [[15, 20, 10], [9, 16, 7], [21, 16, 7], [15, 10, 8], [10, 23, 6], [20, 23, 6]];
-      for (const [bx, by, br] of blobs) {
+      blobs.forEach(([bx, by, br], bi) => {
+        const C = bi % 2 ? L2 : L;
         disc(P, bx, by, br, (x, y, d) => {
           // Light from the top left.
           const lit = ((x - bx) * -0.6 + (y - by) * -0.8) / br;
           const idx = lit > 0.45 ? 3 : lit > 0.05 ? 2 : lit > -0.45 ? 1 : 0;
-          return (H(x, y, 41) < 0.12 && idx > 0) ? L[idx - 1] : L[idx];
+          return (H(x, y, 41) < 0.12 && idx > 0) ? C[idx - 1] : C[idx];
         });
-      }
+      });
       outline(P, edge);
       return P.canvas();
     },
@@ -468,6 +520,127 @@ G.Tiles = (() => {
         for (let i = 0; i < len; i++) { P.set(x0 + dx * i, y0 - i, L[1]); P.set(x0 + dx * i, y0 - i + 1, L[0]); }
       };
       branch(12, 20, -1, 9); branch(15, 17, 1, 10); branch(13, 13, -1, 7); branch(14, 12, 1, 6);
+      outline(P, pack('#0f0b09'));
+      return P.canvas();
+    },
+
+    // ---- more "tree" styles (15-11-2026) ----
+    /** Palm: a leaning ringed trunk and drooping fronds. */
+    palm(B) {
+      const P = Pix(36, 42);
+      const L = B.leaf.map(h => pack(h)), Tr = B.trunk.map(h => pack(h));
+      const cx = 15, cy = 13;
+      for (let y = cy; y <= 40; y++) {
+        const x0 = 19 - Math.round(4 * Math.sin((40 - y) / (40 - cy) * 1.45));
+        const wide = y > 37 ? 1 : 0;
+        for (let x = x0 - 1 - wide; x <= x0 + 1 + wide; x++) P.set(x, y, y % 3 === 0 ? Tr[0] : x < x0 + 1 ? Tr[1] : Tr[0]);
+      }
+      // Fronds: [sideways, up, droop, length].
+      // The low pair first, so the upper ones overlap them.
+      const fronds = [[-1, -0.25, 0.75, 12], [1, -0.25, 0.75, 12], [-1, 0.45, 0.85, 15], [1, 0.45, 0.85, 15],
+                      [-0.6, 1.0, 0.45, 11], [0.6, 1.0, 0.45, 11]];
+      fronds.forEach(([dx, up, droop, len], fi) => {
+        for (let i = 0; i <= len * 2; i++) {
+          const t = i / (len * 2);
+          const x = Math.round(cx + dx * t * len), y = Math.round(cy + (-up * t + droop * t * t) * len);
+          const thick = t > 0.12 && t < 0.8 ? 3 : 2;                    // a leaf: wide in the middle
+          for (let k = 0; k < thick; k++) P.set(x, y + k, k === 0 ? (fi < 2 ? L[2] : L[3]) : k === thick - 1 ? L[0] : fi < 2 ? L[1] : L[2]);
+        }
+      });
+      const nut = pack('#5a3a22');
+      P.set(cx - 1, cy + 2, nut); P.set(cx + 2, cy + 2, nut); P.set(cx + 1, cy + 3, nut);
+      outline(P, pack('#14200f'));
+      return P.canvas();
+    },
+
+    /** Pine: three tiers of branches, snow on the top of each (leaf[3] is the snow). */
+    pine(B) {
+      const P = Pix(30, 42);
+      const L = B.leaf.map(h => pack(h)), Tr = B.trunk.map(h => pack(h));
+      for (let y = 33; y <= 40; y++) for (let x = 13; x <= 16; x++) P.set(x, y, Tr[x < 15 ? 1 : 0]);
+      for (const [top, bot, half] of [[19, 35, 12], [11, 26, 9], [3, 17, 6]]) {
+        for (let y = top; y <= bot; y++) {
+          const k = (y - top) / (bot - top), hw = Math.max(0, Math.round(half * k));
+          for (let x = 14 - hw; x <= 15 + hw; x++) {
+            // Snow lies along each tier's slopes (the tier above hides its top) and on the tip.
+            const rim = hw - Math.abs(x - 14.5);
+            const snow = (rim < 2.2 && k < 0.85 && H(x, y, 77) < 0.85) || (top < 5 && k < 0.3);
+            P.set(x, y, snow ? L[3] : y === bot ? L[0] : x < 14 ? L[2] : L[1]);
+          }
+        }
+      }
+      outline(P, pack('#10201c'));
+      return P.canvas();
+    },
+
+    /** Giant mushroom: a pale stem under a wide spotted cap. */
+    mushroom(B) {
+      const P = Pix(32, 38);
+      const L = B.leaf.map(h => pack(h)), Tr = B.trunk.map(h => pack(h));
+      for (let y = 18; y <= 36; y++) {
+        const hw = y > 33 ? 4 : 3;
+        for (let x = 16 - hw; x < 16 + hw; x++) P.set(x, y, x < 15 ? Tr[1] : Tr[0]);
+      }
+      const spots = [[9, 12, 2.2], [18, 8, 2.6], [24, 14, 2], [14, 16, 1.5]];
+      for (let y = 3; y <= 20; y++) for (let x = 1; x <= 30; x++) {
+        const nx = (x - 15.5) / 14, ny = (y - 19) / 15;
+        if (nx * nx + ny * ny > 1 || y > 19 + (Math.abs(nx) > 0.75 ? 1 : 0)) continue;
+        const lit = -nx * 0.5 - ny * 0.9;
+        let c = y >= 19 ? L[0] : lit > 0.75 ? L[2] : lit > 0.3 ? L[1] : L[0];
+        if (y < 19 && spots.some(([sx, sy, sr]) => Math.hypot(x - sx, y - sy) <= sr)) c = L[3];
+        P.set(x, y, c);
+      }
+      outline(P, pack('#1a0c1c'));
+      return P.canvas();
+    },
+
+    /** Broken column: a fluted shaft with a jagged top and moss near the ground. */
+    column(B) {
+      const P = Pix(24, 40);
+      const S = B.trunk.map(h => pack(h)), M = B.leaf.map(h => pack(h));
+      const mid = mixPack(B.trunk[0], B.trunk[1], 0.5);
+      for (let x = 6; x <= 17; x++) {
+        const top = 6 + Math.round(H(x >> 1, 3, 71) * 7);
+        for (let y = top; y <= 35; y++) {
+          let c = x <= 7 ? S[1] : x >= 16 ? S[0] : (x - 6) % 3 === 2 ? S[0] : x < 12 ? S[1] : mid;
+          if (y > 22 && H(x, y, 91) < (y - 22) * 0.03) c = M[H(x, y, 92) < 0.5 ? 1 : 2];
+          P.set(x, y, c);
+        }
+      }
+      for (let y = 36; y <= 38; y++) for (let x = 4 - (y - 36); x <= 19 + (y - 36); x++) P.set(x, y, y === 36 ? S[1] : x < 12 ? mid : S[0]);
+      outline(P, pack('#2a261e'));
+      return P.canvas();
+    },
+
+    /** Cactus: its own greens (a desert's "leaf" colours are dry browns). */
+    cactus() {
+      const P = Pix(24, 36);
+      const C = ['#2f6a3a', '#3f8a48', '#5aa85a', '#8acc7a'].map(h => pack(h));
+      const bar = (x0, x1, y0, y1) => {
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+          if ((y === y0) && (x === x0 || x === x1)) continue;             // rounded top
+          P.set(x, y, x === x0 ? C[2] : x === x1 ? C[0] : (x + y) % 5 === 0 ? C[3] : C[1]);
+        }
+      };
+      bar(9, 14, 5, 34);
+      bar(3, 6, 11, 21); for (let x = 6; x <= 9; x++) { P.set(x, 19, C[1]); P.set(x, 20, C[1]); P.set(x, 21, C[0]); }
+      bar(17, 20, 15, 25); for (let x = 14; x <= 17; x++) { P.set(x, 23, C[1]); P.set(x, 24, C[1]); P.set(x, 25, C[0]); }
+      const fl = pack('#ff8ad8'); P.set(11, 4, fl); P.set(12, 4, fl); P.set(11, 3, fl);
+      outline(P, pack('#14200f'));
+      return P.canvas();
+    },
+
+    /** Gravestone: a rounded slab with a cross, on a mound of earth. */
+    grave(B) {
+      const P = Pix(22, 28);
+      const R = B.rock.map(h => pack(h)), E = B.trunk.map(h => pack(h));
+      for (let y = 4; y <= 23; y++) for (let x = 5; x <= 16; x++) {
+        if (y < 8 && Math.hypot(x - 10.5, y - 9.5) > 6.2) continue;       // rounded top
+        P.set(x, y, x <= 6 ? R[2] : x >= 15 ? R[0] : R[1]);
+      }
+      for (let y = 9; y <= 17; y++) { P.set(10, y, R[0]); P.set(11, y, R[0]); }
+      for (let x = 8; x <= 13; x++) { P.set(x, 11, R[0]); P.set(x, 12, R[0]); }
+      for (let y = 23; y <= 26; y++) for (let x = 2 + (26 - y); x <= 19 - (26 - y); x++) P.set(x, y, y === 23 || x < 8 ? E[1] : E[0]);
       outline(P, pack('#0f0b09'));
       return P.canvas();
     },
@@ -680,6 +853,9 @@ G.Tiles = (() => {
       return P.canvas();
     }
   };
+  // The styles a biome's trees can be painted in (B.prop / B.prop2); 'tree' and 'maple' are PAINT.tree itself.
+  const PAINT_STYLE = { crystal: PAINT.crystal, dead: PAINT.deadtree, palm: PAINT.palm, pine: PAINT.pine,
+                        mushroom: PAINT.mushroom, column: PAINT.column, cactus: PAINT.cactus, grave: PAINT.grave };
 
   function clearProps() { propCache.clear(); }
 

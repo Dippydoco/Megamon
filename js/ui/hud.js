@@ -812,7 +812,17 @@ G.HUD = (() => {
         ctx.strokeText(inm, ix + S / 2, ly);
         ctx.fillStyle = '#ffd23f';
         ctx.fillText(inm, ix + S / 2, ly);
-        tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.BY[pl.item].desc] });
+        // Items you invest in (Macho Brace, Odd Keystone, Rusted Sword): their progress in the corner of the box.
+        // (Not while spectating a teammate: their progress isn't sent, only which item they hold.)
+        const own = pl.kills != null, inf = own && G.Items.BY[pl.item].info;
+        if (inf) {
+          ctx.font = F(800, Math.round(11 * K));
+          ctx.textAlign = 'right';
+          ctx.strokeText(inf(pl), ix + S - 3, iy + S - 4);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(inf(pl), ix + S - 3, iy + S - 4);
+        }
+        tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.descFor(pl.item, own ? pl : null)] });
       }
     }
 

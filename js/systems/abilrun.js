@@ -48,7 +48,7 @@ G.Abil = (() => {
   const hp = pl => pl.hp / Math.max(1, pl.maxHp);
   const say = (pl, txt, col = '#ffe08a') => G.FX.dmgText(pl.x, pl.y - pl.bodyH - 16, txt, col, true);
   const biomeName = () => { const b = G.World.biome; const B = typeof b === 'number' ? G.Tiles.BIOMES[b] : b; return (B && B.name) || ''; };
-  const forest = () => /Forest|Jungle|Meadow/.test(biomeName());
+  const forest = () => /Forest|Jungle|Meadow|Woods|Grove|Pines/.test(biomeName());
   const cave = () => /Cave|Grotto/.test(biomeName());
   const volcano = () => /Volcano/.test(biomeName());
   const wx = k => { const w = G.Weather.current; return !!(w && w.kind === k); };

@@ -205,6 +205,19 @@ G.Icons = (() => {
     lightclay: { pal: { t: '#e8c98a', d: '#b8955a', w: '#fff3d0', y: '#ffd23f' }, rows: [
       '.y........y.', '...kkkkkk...', '..kttttttk..', '.kwtttttttk.', 'kwtttttttttk', 'kttttyttttdk',
       'kttttttttddk', '.ktttttttddk', '..kddddddk..', '...kkkkkk...', '..y......y..', '............'] },
+    // ---------- items you invest in (15-11-2026) ----------
+    machobrace: { pal: { o: '#ff9a3d', d: '#b8601a', w: '#ffd9a8', y: '#ffd23f' }, rows: [
+      '............', '..kkkkkkkk..', '.kwoooooodk.', 'kwoooooooodk', 'kookkkkkkodk', 'kook....kodk',
+      'kook....kodk', 'kookkkkkkodk', 'kooyyyyooodk', '.kdyyyyddk..', '..kkkkkkk...', '............'] },
+    oddkeystone: { pal: { g: '#8a8478', d: '#5a554c', w: '#bdb7a8', p: '#a24dff', q: '#e0b8ff' }, rows: [
+      '.....pp.....', '....pqqp....', '..kkkppkkk..', '.kwggggggk..', 'kwggpppgggdk', 'kggpgggpggdk',
+      'kggpgqgpggdk', 'kggpggppggdk', 'kgggppgggddk', '.kggggggddk.', '..kkkkkkkk..', '............'] },
+    rustedsword: { pal: { r: '#9a6a48', d: '#6a4530', w: '#c9a27a', h: '#5a4a40' }, rows: [
+      '.........kk.', '........krwk', '.......krrk.', '......krrk..', '.....krdk...', '.k..krrk....',
+      'khkkrdk.....', '.khhrk......', '..khhk......', '.khkkhk.....', 'khk..kk.....', '.k..........'] },
+    crownedsword: { pal: { r: '#9fe8ff', d: '#4fb4ff', w: '#ffffff', h: '#ffd23f' }, rows: [
+      '.........kk.', '........krwk', '.......krrk.', '......krrk..', '.....krdk...', '.k..krrk....',
+      'khkkrdk.....', '.khhrk......', '..khhk......', '.khkkhk.....', 'khk..kk.....', '.k..........'] },
     // ---------- achievement medals (bronze, silver, gold) ----------
     medal1: { pal: { r: '#ff5f6d', q: '#b8283a', m: '#d08a4a', n: '#8a5226', w: '#ffd0a0', s: '#ffe8c8' }, rows: MEDAL },
     medal2: { pal: { r: '#4fb4ff', q: '#2a6fb0', m: '#c9d2de', n: '#7d8899', w: '#ffffff', s: '#ffffff' }, rows: MEDAL },

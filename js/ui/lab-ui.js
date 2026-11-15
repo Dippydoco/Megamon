@@ -424,7 +424,7 @@ G.LabUI = (() => {
     save.partner = cfg.mon;
     G.UI.hideAll();
     G.UI.chrome(false);
-    G.Game.startRun();
+    G.Game.startRun(null, null, { plain: true });
     G.Game.debugSpeed(0);              // the normal clock stops: only the lab moves the game (labStep)
     sandbox();
     G.EnemyMgr.clear();

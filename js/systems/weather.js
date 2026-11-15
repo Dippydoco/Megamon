@@ -84,7 +84,9 @@ G.Weather = (() => {
   }
 
   function pick(biome) {
-    const w = BIOME_W[biome % BIOME_W.length];
+    // (The newer biomes bring their own odds: `wx` in world/tiles.js.)
+    const B = G.Tiles.BIOMES[biome];
+    const w = (B && B.wx) || BIOME_W[biome % BIOME_W.length];
     let r = Math.random() * Object.values(w).reduce((a, b) => a + b, 0);
     for (const k in w) { r -= w[k]; if (r <= 0) return k; }
     return 'rain';
