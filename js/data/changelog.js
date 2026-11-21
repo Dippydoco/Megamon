@@ -9,6 +9,14 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-21', at: '2026-11-21T16:58Z', title: 'New Pokémon and sprites', new: [
+    'Three new Pokémon: Rolycoly, Cufant and Bombirdier, now that their Mystery Dungeon sprites exist. They can be pulled from the Galar and Paldea gacha banners.',
+    'Barraskewda and Naclstack now have shiny versions.',
+    'Megas, regional forms and other skins now have the same extra animations as the base Pokémon: sleeping, hopping, spinning and the rest when your partner wears them in the menu.'
+  ], chg: [
+    'Updated sprites for Cubone, Ditto and Naclstack, and the missing animations for shiny Pidgey.',
+    'Completing Galar or Paldea now also needs Rolycoly and Cufant (Galar) or Bombirdier (Paldea), for both the badge and its Shiny Charm.'
+  ] },
   { d: '2026-11-21', at: '2026-11-21T16:27Z', title: 'Eternamax Eternatus and its powers', new: [
     'At minute 15 of a survival run, Eternatus pulls the whole group into its lair for a three-phase boss fight. At two thirds of its health it becomes Eternamax Eternatus: a giant that stays in the middle of the arena and fires beams, rings and spirals. At one third it is enraged and uses everything it has. Hide behind the six monoliths.',
     'Beat it and each player chooses a power for the rest of the run. Gigantamax: grow huge for 12 seconds, take half damage, heal 30%, hit 30% harder and wider, and crush the foes you touch (recharges in 60 s). Z-Move: a huge attack of your Pokémon\'s main type, like Inferno Overdrive or Hydro Vortex, that hits every foe on screen, with bosses taking half (recharges in 45 s).',

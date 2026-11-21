@@ -7,6 +7,7 @@ Used by the main menu: Sleep for the backdrop's naps (js/game.js Backdrop), and 
 
     python tools/fetch_anims.py                  # every name in EXTRA
     python tools/fetch_anims.py Hop Rotate       # only these
+    python tools/fetch_anims.py --forms          # the same for the forms (Megas, regional...), then run fetch_forms.py
 
 For each Pokémon in js/data/sprites-meta.js (the normal Pokédex numbers, not 9718 or the forms), it reads its
 AnimData.xml, downloads {Name}-Anim.png (following CopyOf) to assets/pokemon/{dex}/{Name}.png and, when the Pokémon
@@ -25,7 +26,7 @@ import fetch_sprites as F
 
 
 EXTRA = ['Sleep', 'Hop', 'Rotate', 'Nod', 'Eat', 'LookUp', 'Sit', 'Pose', 'Twirl', 'Appeal', 'Dance']
-NAMES = [a for a in sys.argv[1:]] or EXTRA
+NAMES = [a for a in sys.argv[1:] if not a.startswith('--')] or EXTRA
 
 
 def one(job):
@@ -56,7 +57,62 @@ def one(job):
     return dex, res
 
 
+def one_form(o):
+    """(21-11-2026) A form's missing EXTRA animations, into its cached geometry (tools/cache_forms/{id}.json)."""
+    import fetch_forms as FF
+    cache_file = os.path.join(FF.CACHE, f'{o["id"]}.json')
+    if not os.path.exists(cache_file):
+        return o['id'], 0
+    meta = json.load(open(cache_file, encoding='utf-8'))
+    names = [n for n in NAMES if n not in meta['a']]
+    if not names:
+        return o['id'], 0
+    base = f'{F.BASE}/{o["path"]}'
+    xml = F.fetch(f'{base}/AnimData.xml')
+    if not xml:
+        return o['id'], 0
+    anims = F.parse_animdata(xml.decode('utf-8', 'replace'))[0]
+    out_dir = os.path.join(F.OUT_ASSETS, str(o['id']))
+    got = F.download_set(base, out_dir, anims, want=names)
+    if not got:
+        return o['id'], 0
+    meta['a'].update(got)
+    if meta.get('sh') and o['spath']:
+        sbase = f'{F.BASE}/{o["spath"]}'
+        sxml = F.fetch(f'{sbase}/AnimData.xml')
+        sanims = F.parse_animdata(sxml.decode('utf-8', 'replace'))[0] if sxml else anims
+        sgot = F.download_set(sbase, os.path.join(out_dir, 's'), sanims, got, want=list(got))
+        miss = [n for n in got if n not in sgot]
+        if miss:
+            meta['sm'] = sorted(set(meta.get('sm', [])) | set(miss))
+        diff = {n: sgot[n] for n in got if n in sgot and sgot[n] != got[n]}
+        if diff:
+            meta.setdefault('sa', {}).update(diff)
+    elif meta.get('sh'):
+        meta['sm'] = sorted(set(meta.get('sm', [])) | set(got))
+    with open(cache_file, 'w', encoding='utf-8') as fh:
+        json.dump(meta, fh, separators=(',', ':'))
+    return o['id'], len(got)
+
+
+def main_forms():
+    import fetch_forms as FF
+    tracker = json.loads(F.fetch(F.RAW + '/tracker.json').decode('utf-8'))
+    forms = FF.catalogue(tracker)
+    print(f'{len(forms)} forms')
+    added = done = 0
+    with ThreadPoolExecutor(max_workers=16) as ex:
+        for fid, n in ex.map(one_form, forms):
+            done += 1
+            added += n
+            if done % 50 == 0:
+                print(f'  {done}/{len(forms)}', flush=True)
+    print(f'{added} animations added to forms. Now run: python tools/fetch_forms.py')
+
+
 def main():
+    if '--forms' in sys.argv:
+        return main_forms()
     text = open(F.OUT_META, encoding='utf-8').read()
     lines = text.split('\n')
     entries = {}
