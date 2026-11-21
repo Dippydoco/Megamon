@@ -824,6 +824,40 @@ G.HUD = (() => {
         }
         tips.push({ x: ix, y: iy, w: S, h: S, title: G.Items.BY[pl.item].name, col: '#ffd23f', lines: [G.Items.descFor(pl.item, own ? pl : null)] });
       }
+
+      // ---------- Eternatus's power (systems/powers.js): a round button left of the item, filling as it charges ----------
+      const gm = !sv && ownPl.gimmick;
+      if (gm) {
+        const R = Math.round(S * 0.42), cx = ix - R - 14, cy = iy + S / 2;
+        const ready = gm.t <= 0, giant = ownPl.gmaxT > 0, now = performance.now();
+        const col = gm.kind === 'gmax' ? '#ff3b5c' : (G.U.TYPE_COLOR[gm.type] || '#ffd23f');
+        ctx.save();
+        if (ready && !giant) {                          // charged: a pulsing glow
+          ctx.globalAlpha = 0.35 + Math.sin(now / 180) * 0.2;
+          ctx.fillStyle = col;
+          ctx.beginPath(); ctx.arc(cx, cy, R + 7, 0, 6.2832); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        ctx.fillStyle = 'rgba(10,16,28,.85)';
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.fill();
+        // The ring: how charged it is (or, while giant, the time left).
+        const k = giant ? ownPl.gmaxT / (ownPl.gmaxDur || 12) : 1 - gm.t / gm.cd;
+        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(140,170,210,.25)';
+        ctx.beginPath(); ctx.arc(cx, cy, R - 2, 0, 6.2832); ctx.stroke();
+        ctx.strokeStyle = giant ? '#ffc2cc' : col;
+        ctx.beginPath(); ctx.arc(cx, cy, R - 2, -Math.PI / 2, -Math.PI / 2 + 6.2832 * Math.max(0, Math.min(1, k))); ctx.stroke();
+        ctx.globalAlpha = ready || giant ? 1 : 0.55;
+        G.Icons.draw(ctx, gm.kind, cx - R * 0.6, cy - R * 0.6, R * 1.2);
+        ctx.globalAlpha = 1;
+        ctx.font = F(800, Math.round(12 * K)); ctx.textAlign = 'center';
+        ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+        const lab = giant ? Math.ceil(ownPl.gmaxT) + ' s' : ready ? (touch ? 'TAP' : 'G') : Math.ceil(gm.t) + ' s';
+        ctx.strokeText(lab, cx, cy + R + 14); ctx.fillStyle = ready ? '#ffffff' : '#c8d4ea'; ctx.fillText(lab, cx, cy + R + 14);
+        ctx.restore();
+        G.Touch.addButton(cx - R, cy - R, R * 2, R * 2, () => G.Powers.fire(ownPl), 6);
+        tips.push({ x: cx - R, y: cy - R, w: R * 2, h: R * 2, title: gm.kind === 'gmax' ? 'Gigantamax' : 'Z-Move: ' + gm.name, col,
+                    lines: [G.Powers.info(gm.kind === 'gmax' ? 'gmax' : 'zmove', ownPl).desc, ready ? 'Ready: press G or tap it.' : 'Charging.'] });
+      }
     }
 
     pl = ownPl;
@@ -894,7 +928,7 @@ G.HUD = (() => {
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(180,200,230,.55)';
       ctx.fillText(touch ? 'Drag your finger to move · tap a move to switch'
-                         : 'WASD move · 1-4 / Q / E or click a move to switch · drag to reorder · Space burst · Esc pause', w / 2, h - 4);
+                         : 'WASD move · 1-4 / Q / E or click a move to switch · drag to reorder · Space burst' + (pl.gimmick ? ' · G power' : '') + ' · Esc pause', w / 2, h - 4);
     }
 
     ctx.restore();

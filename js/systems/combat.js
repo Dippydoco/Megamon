@@ -109,7 +109,8 @@ G.Combat = (() => {
   /** The move as this player casts it: same object, with area sizes scaled by Reach. */
   function sized(pl, m) {
     // Reach (level-up) and abilities that make moves reach further (Long Reach, Mega Launcher, Victory Star...).
-    const A = (pl.areaMul || 1) * (ghost ? 1 : G.Abil.reachK(pl, m));
+    // (Gigantamax: everything 30% wider while you're giant; teammates' copies too, so it looks the same.)
+    const A = (pl.areaMul || 1) * (ghost ? 1 : G.Abil.reachK(pl, m)) * (G.Powers.giant(pl) ? G.Powers.GMAX_AREA : 1);
     if (A === 1) return m;
     const s = Object.create(m);
     if (AREA_R.includes(m.kind) && m.radius) s.radius = m.radius * A;
@@ -142,6 +143,8 @@ G.Combat = (() => {
       case 'trail':      trailPatch(pl, m); break;
       case 'cone':       cone(pl, m); break;
       case 'burst':      burst(pl, m); break;
+      case 'gmax':
+      case 'zmove':      G.Powers.cast(pl, m, ghost); break;          // Eternatus's powers (systems/powers.js)
       case 'charge':     charge(pl, m); break;
       case 'ricochet':   ricochet(pl, m); break;
       case 'cage':       cage(pl, m); break;
@@ -1918,6 +1921,9 @@ G.Combat = (() => {
     }
   }
 
-  return { decoyFor, decoyTarget, netBreak, netHurt, reach, tick, fireNow, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
+  /** A hit by `pl` with move `m` from outside the moves (systems/powers.js): types, crits, abilities, the run log. */
+  const strike = (pl, e, dmg, col, dx, dy, knock, m) => hit(pl, e, dmg, col, dx, dy, knock, m);
+
+  return { decoyFor, decoyTarget, netBreak, netHurt, reach, tick, fireNow, strike, resolve, ghostCast, ghostOrbit, updateFields, drawGroundFields, drawAirFields, clearFields,
            get fieldCount() { return fields.length; } };
 })();

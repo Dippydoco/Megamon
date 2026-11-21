@@ -510,6 +510,25 @@ G.RunUI = (() => {
     G.UI.show('scr-item');
   }
 
+  /** Eternamax Eternatus beaten: Gigantamax or the Z-Move, for the rest of the run (systems/powers.js). */
+  function showPowers(pl, kinds, cb) {
+    const box = $('item-cards');
+    box.innerHTML = '';
+    kinds.forEach((k, i) => {
+      const it = G.Powers.info(k, pl);
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `<div class="ico">${G.Icons.html(it.icon, 36)}</div>
+        <div class="txt"><div class="nm">${it.name}</div><div class="ds">${it.desc}</div></div>
+        <div class="key">${i + 1}</div>`;
+      el.onclick = () => { G.UI.hide('scr-item'); cb(k); };
+      box.appendChild(el);
+    });
+    $('item-title').textContent = 'Eternatus\'s power!';
+    $('item-sub').innerHTML = 'Choose a power for the rest of this run · use it with <kbd>G</kbd> · keys <kbd>1</kbd>-<kbd>' + kinds.length + '</kbd>';
+    G.UI.show('scr-item');
+  }
+
   /** Spiritomb, the move tutor: one of 3 moves from outside your pool, or skip. */
   function showTutor(pl, ids, cb) {
     const box = $('item-cards');
@@ -704,5 +723,5 @@ G.RunUI = (() => {
     $('btn-quit').onclick = onQuit;
   }
 
-  return { showLevelUp, reroll, skip, banMode, pickAuto, showItemChoice, showArmoury, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
+  return { showLevelUp, reroll, skip, banMode, pickAuto, showItemChoice, showArmoury, showPowers, showTutor, showTutorForget, showMoveChoice, showBond, pickBond, bondBack, pick, setWaiting, closeLevelUp, showOver, refreshTeam, wirePause, showPause };
 })();

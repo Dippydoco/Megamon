@@ -499,7 +499,7 @@ G.Coop = (() => {
       case 'ha': hostAway = !!ev[1]; updateAway(); break;
       case 'shy': api.shiny(ev[1]); break;                       // (was 'sh', which the Substitute hit case above swallowed)
       case 'ov': { const cb = api.over; const d = ev[1]; end(); cb(d); break; }
-      case 'rift': case 'riftx': case 'arena': case 'zm': case 'aw': case 'al': G.Rift.onEvent(ev); break;
+      case 'rift': case 'riftx': case 'arena': case 'zm': case 'em': case 'e3': case 'aw': case 'al': G.Rift.onEvent(ev); break;
       case 'jd': case 'jk': G.Judgment.onEvent(ev); break;
       case 'tw': G.Tower.onEvent(ev); break;                     // Battle Tower (systems/tower.js)
       case 'wx': G.Weather.onEvent(ev); break;

@@ -114,7 +114,7 @@ G.Player = class Player {
   // Damage boosts (Power cards, items, buffs...) raise Attack and Sp. Atk alike.
   get dmgMul() {
     const b = this.buffs;
-    return this.atkMul * this.growthMul * this.levelMul * (1 + 0.01 * (this.braceLv || 0)) * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
+    return this.atkMul * this.growthMul * this.levelMul * (1 + 0.01 * (this.braceLv || 0)) * (this.gmaxT > 0 ? G.Powers.GMAX_DMG : 1) * (1 + b.atk.n * b.atk.amount) * (1 + b.fell.n * b.fell.amount) * (1 + b.surge.n * b.surge.amount);
   }
   /** Lower rarities grow stronger with each level (G.RARITY_GROWTH, in overrides.js). */
   get growth() { return (G.RARITY_GROWTH && G.RARITY_GROWTH[this.mon.rarity]) || 0; }
@@ -302,7 +302,7 @@ G.Player = class Player {
                    charge: 'Charge', ricochet: 'Shoot', cage: 'Charge', wall: 'Charge', burrow: 'Attack', swarm: 'Charge', roll: 'Walk',
                    throw: 'Attack', spin: 'Charge', counter: 'Attack', burst: 'Charge',
                    combo: 'Attack', thrust: 'Attack', pulse: 'Charge', vortex: 'Charge', wave: 'Attack', eruption: 'Charge',
-                   mark: 'Charge', tether: 'Shoot', focus: 'Attack', companion: 'Charge' }[m.kind] || 'Attack';
+                   mark: 'Charge', tether: 'Shoot', focus: 'Attack', companion: 'Charge', gmax: 'Charge', zmove: 'Charge' }[m.kind] || 'Attack';
     // The new families sound like the closest of the original ones.
     const SND = { boomerang: 'projectile', chain: 'beam', mine: 'nova', meteor: 'nova', turret: 'buff', dash: 'melee', trail: 'aura', cone: 'projectile',
                   charge: 'beam', ricochet: 'projectile', cage: 'aura', wall: 'buff', burrow: 'melee', swarm: 'buff', roll: 'melee', throw: 'melee',
@@ -350,7 +350,7 @@ G.Player = class Player {
     // In a rift arena the legendary's shots, beams and blasts do 25 % less to a melee build (it has to cross its fire to hit it).
     if (close < 1 && G.Rift.inArena && src && (src.k === 'shot' || src.k === 'beam' || src.k === 'zone')) close *= 0.75;
     // Playing on mobile (touch controls in use): a flat 25% less damage taken (24-10-2026), applied last, after everything else.
-    const mob = G.Touch && G.Touch.active ? 0.75 : 1;
+    const mob = (G.Touch && G.Touch.active ? 0.75 : 1) * (this.gmaxT > 0 ? G.Powers.GMAX_TAKEN : 1);   // (Gigantamax: half damage)
     const d = (pure ? Math.max(1, amount) : Math.max(1, amount * Math.max(0.15, (1 - this.reduction) * this.defMul) * close)) * mob;   // never below 15% (before the melee cut)
     // The stats only count health actually lost (the finishing blow from the
     // Arceus arena legendaries, which double without limit, doesn't add trillions of excess damage).
@@ -699,7 +699,23 @@ G.Player = class Player {
       ctx.restore();
     }
     const hop = this.introT > 0 ? Math.sin((1 - this.introT / 1.1) * Math.PI) * 12 : 0;      // Mastery 6 intro
+    // Gigantamax (systems/powers.js): drawn up to twice the size, with a red glow and clouds around the head.
+    const gk = G.Powers.giantK(this), s0 = this.anim.scale;
+    if (gk > 0) {
+      this.anim.scale = s0 * (1 + (G.Powers.GMAX_SCALE - 1) * gk);
+      const cy = this.y - this.bodyH * (1 + gk * 0.6), rr = this.r * 3.2 * (1 + gk);
+      ctx.save();
+      const g = ctx.createRadialGradient(this.x, cy, 0, this.x, cy, rr);
+      g.addColorStop(0, 'rgba(255,60,90,0.45)'); g.addColorStop(1, 'rgba(255,60,90,0)');
+      ctx.globalAlpha = gk * (0.8 + Math.sin(performance.now() / 160) * 0.2); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(this.x, cy, rr, 0, 6.2832); ctx.fill();
+      ctx.restore();
+    }
     this.anim.draw(ctx, this.x, this.y - hop, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
+    if (gk > 0) {
+      this.anim.scale = s0;
+      if (Math.random() < 0.35) G.FX.px(this.x + G.U.rand(-1.4, 1.4) * this.r * 2, this.y - this.bodyH * G.U.rand(1.6, 2.4) * gk, Math.random() < 0.5 ? '#ff3b5c' : '#ffc2cc', { vy: -30, life: 0.6 });
+    }
 
     // Protect: a shimmering bubble around you (it flickers in its last second).
     if (shielded) {

@@ -205,6 +205,13 @@ G.Icons = (() => {
     lightclay: { pal: { t: '#e8c98a', d: '#b8955a', w: '#fff3d0', y: '#ffd23f' }, rows: [
       '.y........y.', '...kkkkkk...', '..kttttttk..', '.kwtttttttk.', 'kwtttttttttk', 'kttttyttttdk',
       'kttttttttddk', '.ktttttttddk', '..kddddddk..', '...kkkkkk...', '..y......y..', '............'] },
+    // ---------- Eternatus's powers (21-11-2026, systems/powers.js) ----------
+    gmax: { pal: { r: '#ff3b5c', d: '#a8193a', w: '#ffc2cc', y: '#ffd23f' }, rows: [
+      '....kkkk....', '..kkrrrrkk..', '.krrwwrrrrk.', '.krwwrrrrdk.', 'krrrrkkrrrdk', 'krrrk..krrdk',
+      'krrrk..krrdk', 'krrrrkkrrrdk', '.krrrrrrrdk.', '.kdrrrrrddk.', '..kkddddkk..', '....kkkk....'] },
+    zmove: { pal: { y: '#ffd23f', o: '#d99a1f', w: '#fff6c8', p: '#c47bff' }, rows: [
+      '............', '.kkkkkkkkkk.', '.kwyyyyyyok.', '.kkkkkkyyok.', '.....kyyok..', '....kyyok...',
+      '...kyyok....', '..kyyok.....', '.kyyokkkkkk.', '.kyyyyyyyok.', '.kkkkkkkkkk.', '............'] },
     // ---------- items you invest in (15-11-2026) ----------
     machobrace: { pal: { o: '#ff9a3d', d: '#b8601a', w: '#ffd9a8', y: '#ffd23f' }, rows: [
       '............', '..kkkkkkkk..', '.kwoooooodk.', 'kwoooooooodk', 'kookkkkkkodk', 'kook....kodk',

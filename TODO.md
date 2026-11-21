@@ -29,6 +29,17 @@ Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor
   their state to guests (`'st'` messages) but have only been tested solo (`G.Tower.debugFloor(n, 'gauntlet')` in `?dev`).
 - **Sounds and music.** The tower reuses rift, boss and biome music and the generic boss sounds.
 
+## Eternamax Eternatus (added 2026-11-21)
+
+Code: `js/systems/rift.js` (the fight: `cfg.et`, `eternamax`, `etLast`), `js/systems/powers.js` (Gigantamax and Z-Moves),
+`js/entities/enemy.js` (`eternal` kit, `anchored`), the power choice in `js/game.js` (`offerPower`) and `js/ui/run-ui.js` (`showPowers`).
+
+- **Co-op check.** Only tested solo. Try it with 2+ players: everyone is pulled in at 15:00, the 'em' / 'e3' phase changes
+  reach guests, each player gets their own power choice, and teammates see a Gigantamax player grow and a Z-Move go off.
+- **Balance pass.** Its health (`ET_DPS_SECONDS`), the powers' numbers (`GMAX_*`, Z-Move `dmg`, recharge times) are first guesses.
+- **Sounds.** It reuses the boss, legend and rift sounds; Eternatus's cry and a Dynamax sound would help.
+- **Gigantamax look.** It scales the normal sprite ×2; SpriteCollab has no Gigantamax sprites with animations yet.
+
 ## Zygarde Portal (added 2026-10-18)
 
 - **Sound effects.** Right now the transformation reuses the generic boss sound (`G.Audio.sfx('boss')`,

@@ -263,7 +263,7 @@
         for (let i = 0; i < 3; i++) G.Pickups.drop('ticket', this.x + G.U.rand(-30, 30), this.y + G.U.rand(-20, 20), 1);
         for (let i = 0; i < 10; i++) G.Pickups.drop('coin', this.x + G.U.rand(-50, 50), this.y + G.U.rand(-35, 35), 8);
         if (this.hard) {
-          // Zygarde Portal bonus: a x10 ticket, 4 more tickets, 25 more coins and 2 items.
+          // Zygarde Portal and Eternamax Eternatus bonus: a x10 ticket, 4 more tickets, 25 more coins and 2 items.
           G.Pickups.drop('ticket10', this.x, this.y - 14, 1);
           for (let i = 0; i < 4; i++) G.Pickups.drop('ticket', this.x + G.U.rand(-34, 34), this.y + G.U.rand(-22, 22), 1);
           for (let i = 0; i < 25; i++) G.Pickups.drop('coin', this.x + G.U.rand(-60, 60), this.y + G.U.rand(-40, 40), 8);
@@ -554,6 +554,8 @@
         const extra = ['ring', 'cross', 'barrage', 'spiral'], k = Math.floor(G.U.hash(this.dex, 11, 13) * 4) % 4;
         ranged.push(extra[k], extra[(k + 1 + Math.floor(G.U.hash(this.dex, 17, 19) * 3)) % 4]);
       }
+      // Eternatus (systems/rift.js): its own kit, which grows with each phase there (phase 1 here).
+      if (this.eternal) { melee.splice(0, melee.length, 'slam', 'dash'); ranged.splice(0, ranged.length, 'beam', 'rain', 'nova', 'volley'); }
       const far = this.behavior === 'ranged';
       this.ai = { melee, ranged, farLike: far ? 0.65 : 0.35, mode: far ? 'far' : 'close', modeT: G.U.rand(6, 8),
                   cd: 1.6, cast: null, fury: false, side: Math.random() < 0.5 ? -1 : 1 };
@@ -591,6 +593,8 @@
         }
         if (id) this.bossStart(id, pl);
       }
+      // Eternamax Eternatus (rift.js): a giant that stays where it is and only attacks.
+      if (this.anchored) return [0, 0, 'Idle'];
       return [vx, vy, 'Walk'];
     }
 

@@ -31,7 +31,7 @@ G.Game = (() => {
    * order without sending anything. Left out: the Battle Tower hall, Arceus's ruins and the Zygarde Core.
    */
   function biomeAt(step) {
-    const T = G.Tiles, skip = ['tower', 'judgment', 'zygarde', 'zygarde2'];
+    const T = G.Tiles, skip = ['tower', 'judgment', 'zygarde', 'zygarde2', 'eternatus', 'eternatus2'];
     while (biomeSeq.length <= step) {
       const round = biomeSeq.length, bag = [];
       for (let i = 0; i < T.BIOMES.length; i++) if (i < T.ARENA || !skip.includes(T.ARENA_TYPES[i - T.ARENA])) bag.push(i);
@@ -594,6 +594,7 @@ G.Game = (() => {
       if (o.band) G.RunUI.showMoveChoice(pl, o.pick);              // Choice Band: which move to lock into
       else if (o.tutor) G.RunUI.showTutor(pl, o.tutor, o.take);   // Spiritomb's moves
       else if (o.tutorForget) G.RunUI.showTutorForget(pl, o.tutorForget, o.forget);
+      else if (o.power) G.RunUI.showPowers(pl, o.power, o.take);             // Eternatus's powers
       else if (o.list) G.RunUI.showArmoury(o.cur, o.list, o.take); else G.RunUI.showItemChoice(o.cur, o.next, o.take);
       return;
     }
@@ -640,8 +641,9 @@ G.Game = (() => {
   /** You picked up an item: if you aren't holding one you put it on; if you are, you choose. */
   function offerItem(id) {
     const tut = id && id.tutor ? id.tutor.filter(x => G.Moves.BY_ID[x]) : null;    // Spiritomb: moves, not items
+    const pw = id && id.power ? id.power.filter(k => G.Powers.KINDS[k]) : null;  // Eternatus: Gigantamax or Z-Move
     const list = Array.isArray(id) ? id.filter(x => G.Items.BY[x]) : null;      // Aegislash Armoury: several to choose from
-    if (!pl || (tut ? !tut.length : list ? !list.length : !G.Items.BY[id])) return;
+    if (!pl || (pw ? !pw.length || pl.gimmick : tut ? !tut.length : list ? !list.length : !G.Items.BY[id])) return;
     if (state === 'levelup' || G.UI.isOpen('scr-levelup') || G.UI.isOpen('scr-bond')) { laterItems.push(id); return; }
     // Another item choice (or the Choice Band move pick) is already open: this one waits its turn.
     // (Zygarde drops 3 items that are all pulled in at once: the third used to replace the second's screen,
@@ -682,6 +684,18 @@ G.Game = (() => {
       if (G.Coop.active) G.Coop.holdEnd();
       afterLevelUp();
     };
+    if (pw) {
+      // Eternamax Eternatus beaten: pick a power for the rest of the run (no skip).
+      if ((state === 'playing' || state === 'held') && !pl.dead) {
+        mine = true;
+        state = 'choice';
+        if (G.Coop.active) G.Coop.holdStart();
+      }
+      const pickPower = k => { openItem = null; if (k) G.Powers.grant(pl, k); finish(); };
+      openItem = { power: pw, take: pickPower, get mine() { return mine; } };
+      G.RunUI.showPowers(pl, pw, pickPower);
+      return;
+    }
     if (tut) {
       if ((state === 'playing' || state === 'held') && !pl.dead) {
         mine = true;
@@ -847,6 +861,8 @@ G.Game = (() => {
     if (G.Input.tap('keye') || G.Input.tap('tab')) pl.cycle(1);
     // Burst key: a ready Burst move goes off without switching to it.
     if (G.Input.tap('space') || G.Input.tap('keyf')) pl.fireBurst();
+    // Power key: Gigantamax or the Z-Move, once you have one (systems/powers.js).
+    if (G.Input.tap('keyg')) G.Powers.fire(pl);
   }
 
   // ---------------- bucle ----------------
@@ -980,6 +996,7 @@ G.Game = (() => {
     if (!G.Rift.inArena) time += dt;
     G.RunLog.tick(pl, time);
     G.Items.tick(pl);                    // Macho Brace, Odd Keystone: levels and knockouts while holding them
+    G.Powers.tick(pl, dt);               // Gigantamax / Z-Move (Eternatus's reward): recharging, the giant's timer
 
     const b = Math.floor(time / 240);
     if (b !== biome && !G.Rift.inArena && !G.Judgment.active && !G.Tower.active) {
@@ -1676,6 +1693,8 @@ G.Game = (() => {
   return {
     /** Aegislash event: everyone rolls their own 3 items to choose from (or skip). */
     armoury() { if (pl) offerItem(G.Items.rollMany(3, pl.item)); },       // downed players pick too (they keep it if revived)
+    /** Eternamax Eternatus beaten (systems/rift.js, on every player's computer): choose Gigantamax or the Z-Move. */
+    offerPower() { if (pl && !pl.gimmick) offerItem({ power: ['gmax', 'zmove'] }); },
     tutor() { if (pl) offerItem({ tutor: tutorMoves(pl) }); },             // Spiritomb: each player gets their own 3 moves
     init, startRun, everyone, levelXp, flash, offerBond, grantLevels, towerEnd,
     get pendingLevels() { return pendingLevels; },

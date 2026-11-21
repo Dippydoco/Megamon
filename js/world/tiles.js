@@ -118,6 +118,14 @@ G.Tiles = (() => {
     zygarde:  { name: 'Zygarde Core', floor: '#1b2a22', wall: '#0e1a15', liquid: 'poison', liq: '#2bd97c', foam: '#b8ffd6', prop: 'crystal',
                 leaf: '#3dff9a', trunk: '#1a3a2a', flowers: ['#3dff9a', '#d6ff5f', '#ffffff'], grass: '#2a5a40', rock: '#2a3f35',
                 pools: 0, pillars: 0, props: {}, weather: null, cells: true, glow: '#3dff9a', ring: true },
+    // Eternamax Eternatus's arena at minute 15 (systems/rift.js, et): dark rock with red Dynamax light in hexagon
+    // cells and six monoliths to hide behind. Phase 2 (Eternamax): the cells turn pink and red energy pools appear.
+    eternatus:  { name: 'Eternal Core', floor: '#2a1a24', wall: '#140a12', liquid: 'poison', liq: '#e0306a', foam: '#ffb0c8', prop: 'crystal',
+                  leaf: '#ff4d7a', trunk: '#3a1a2a', flowers: ['#ff4d7a', '#ff9ad0', '#ffffff'], grass: '#5a2a40', rock: '#4a2f3f',
+                  pools: 0, pillars: 0, props: {}, weather: null, cells: true, glow: '#ff3d6e', ring: true },
+    eternatus2: { name: 'Eternal Core (Eternamax)', floor: '#33101e', wall: '#1a0610', liquid: 'poison', liq: '#ff2d5a', foam: '#ffc2d2', prop: 'crystal',
+                  leaf: '#ff9ad0', trunk: '#4a1028', flowers: ['#ff2d5a', '#ffd0e0', '#ffffff'], grass: '#6a1a3a', rock: '#5a2238',
+                  pools: 0.3, pillars: 0, props: {}, weather: null, cells: true, glow: '#ff9ad0', ring: true },
     zygarde2: { name: 'Zygarde Core (Mega)', floor: '#231a33', wall: '#120c1c', liquid: 'poison', liq: '#a24dff', foam: '#e0b8ff', prop: 'crystal',
                 leaf: '#c27bff', trunk: '#2a1a3a', flowers: ['#c27bff', '#ff8ad8', '#ffffff'], grass: '#4a2a6a', rock: '#3a2f4a',
                 pools: 0.42, pillars: 0, props: {}, weather: null, cells: true, glow: '#c27bff', ring: true }

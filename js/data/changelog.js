@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-21', at: '2026-11-21T16:27Z', title: 'Eternamax Eternatus and its powers', new: [
+    'At minute 15 of a survival run, Eternatus pulls the whole group into its lair for a three-phase boss fight. At two thirds of its health it becomes Eternamax Eternatus: a giant that stays in the middle of the arena and fires beams, rings and spirals. At one third it is enraged and uses everything it has. Hide behind the six monoliths.',
+    'Beat it and each player chooses a power for the rest of the run. Gigantamax: grow huge for 12 seconds, take half damage, heal 30%, hit 30% harder and wider, and crush the foes you touch (recharges in 60 s). Z-Move: a huge attack of your Pokémon\'s main type, like Inferno Overdrive or Hydro Vortex, that hits every foe on screen, with bosses taking half (recharges in 45 s).',
+    'Use your power with G, or tap its round button next to your held item. It starts charged.',
+    'Eternatus also drops the big legendary reward: a ×10 ticket, extra tickets and coins, and 2 items. If you lose, you are sent back to the map without a power and the run carries on. No rift opens in the minute before it arrives, and it doesn\'t appear in the Battle Tower.'
+  ] },
   { d: '2026-11-21', at: '2026-11-21T16:00Z', title: 'Shining Badges and the Shining Dex', new: [
     'Shining Badges: own the shiny of every Pokémon from a region and its badge becomes a Shining Badge, with a rainbow hexagon and the region\'s legendary in its shiny colours. Goals → Badges shows your shiny progress for each region, and a Shining Badge shows as one on your public profile and when you feature it.',
     'Each Shining Badge gives a title: Kanto Shining Master, Johto Shining Master and so on. They are listed in a new Shining Badges tab under Achievements.',
