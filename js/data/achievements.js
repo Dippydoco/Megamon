@@ -5,6 +5,7 @@
  *   value(save) -> current progress (number) · goal -> what has to be reached
  *
  * There's also one achievement for EACH legendary: defeat it in a rift.
+ * And one per region for its Shining Badge (21-11-2026): own the shiny of every Pokémon of that generation.
  */
 G.AchDefs = (() => {
   const own = s => Object.keys(s.owned || {}).filter(d => G.DEX_BY[d]).length;
@@ -14,7 +15,8 @@ G.AchDefs = (() => {
   const count = k => s => Object.keys(s[k] || {}).length;
 
   const CATS = [['collection', 'Collection'], ['survival', 'Survival'], ['combat', 'Combat'],
-                ['rifts', 'Rifts'], ['legendaries', 'Legendaries'], ['forms', 'Forms & Mastery'], ['other', 'Missions & more']];
+                ['rifts', 'Rifts'], ['legendaries', 'Legendaries'], ['forms', 'Forms & Mastery'], ['shining', 'Shining Badges'],
+                ['other', 'Missions & more']];
   // Forms & Mastery (28-10-2026, systems/mastery.js and skins.js): titles only, no tickets (Mastery stays cosmetic).
   const mt = s => (G.Mastery ? G.Mastery.totals(s) : { levels: 0, mastered: 0 });
   const skinN = s => (G.Skins ? G.Skins.count(s) : 0);
@@ -94,6 +96,21 @@ G.AchDefs = (() => {
     if (n) LIST.push({ id: st.id, cat: 'forms', tier: 3, name: st.name, desc: `Unlock all ${n} ${G.DEX_BY[st.dex].name} skins.`,
                        value: setN(st.dex), goal: n, title: st.title });
   }
+
+  // Shining Badges (21-11-2026): one per region, for owning the shiny of every Pokémon of that generation that has
+  // a shiny sprite (a few don't yet, and can't be collected). Earning one gives the region's title, and the badge
+  // turns into its Shining Badge (Goals → Badges, the public profile). G.Charms.shining counts them for the screens.
+  // Titles only, no tickets (like Forms & Mastery). Region names are fixed here: titles are saved as text.
+  const REGIONS = ['Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unova', 'Kalos', 'Alola', 'Galar', 'Paldea'];
+  const canShine = p => !!(G.SPRITE_META[p.dex] && G.SPRITE_META[p.dex].sh);
+  REGIONS.forEach((region, i) => {
+    const gen = i + 1, list = G.DEX.filter(p => p.gen === gen && canShine(p));
+    if (!list.length) return;
+    LIST.push({ id: 'shine' + gen, cat: 'shining', tier: 3, shineGen: gen, name: region + ' Shining Badge',
+                desc: `Own the shiny of all ${list.length} Pokémon from ${region} (generation ${gen}).`,
+                value: s => (s.shiny ? list.filter(p => s.shiny[p.dex]).length : 0), goal: list.length,
+                title: region + ' Shining Master' });
+  });
 
   // One achievement per legendary: "Defeat Mewtwo"...
   for (const p of G.DEX.filter(p => p.leg && G.SPRITE_META[p.dex])) {

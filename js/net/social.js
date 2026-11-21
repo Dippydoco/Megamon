@@ -661,8 +661,9 @@ G.Social = (() => {
               // Featured achievements (fa) and badges (fb), and how many badges (25-10-2026). Inside `best` because
               // the profiles rule only allows a fixed set of top-level fields and checks nothing inside `best`.
               fa: (prof.featAch || []).filter(id => s.ach && s.ach[id]).slice(0, 6),
-              fb: (prof.featBadges || []).filter(g => G.Charms.has(g, s)).slice(0, 9),
+              fb: (prof.featBadges || []).filter(g => G.Charms.has(g, s) || G.Charms.shining(s).done.includes(g)).slice(0, 9),
               badges: G.Charms.list(s).length,
+              sb: G.Charms.shining(s).done,      // Shining Badges (21-11-2026): drawn shining wherever your badges show
               mm: G.Mastery.top(3, s) },          // top 3 Pokémon by Mastery [[dex, level]] (28-10-2026)
       medals
     };

@@ -5,7 +5,8 @@
  *   History       your last runs
  *   Missions      3 daily + 2 weekly, with a bar, reward and collect button
  *   Achievements  medals by category; legendaries one by one with their sprite
- *   Badges        one per generation, for owning every Pokémon of it (25-10-2026)
+ *   Badges        one per generation, for owning every Pokémon of it (25-10-2026); it turns into the region's Shining
+ *                 Badge once you own the shiny of every one of them too (21-11-2026), with a link to its Shining Dex
  *   Mastery       every Pokémon you've played, its Mastery level and reward track (28-10-2026, systems/mastery.js)
  *   Skins         how to unlock every skin that isn't sold at Smeargle's Studio: challenges, Mastery and Megas,
  *                 with your progress (29-10-2026, data/skins.js routes)
@@ -29,15 +30,19 @@
     const gens = Object.keys(all).map(Number).sort((a, b) => a - b);
     return { gens, all, have, earned: gens.filter(g => have[g] === all[g]) };
   }
-  /** The hexagon emblem with the region's legendary (a silhouette while not earned). */
-  function badgeEmblem(gen, ok, size = 64) {
+  /**
+   * The hexagon emblem with the region's legendary (a silhouette while not earned). `shine`: the Shining Badge,
+   * a rainbow hexagon with the legendary in its shiny colours.
+   */
+  function badgeEmblem(gen, ok, size = 64, shine = false) {
     const em = document.createElement('div');
-    em.className = 'badge-em' + (ok ? ' ok' : '');
+    em.className = 'badge-em' + (ok || shine ? ' ok' : '') + (shine ? ' shine' : '');
     em.style.width = em.style.height = size + 'px'; em.style.flexBasis = size + 'px';
     const mon = BADGE_MON[gen];
-    if (mon && G.DEX_BY[mon]) em.appendChild(G.UI.spriteCanvas(mon, size, Math.round(size * 0.875), { scale: 1, silhouette: !ok }));
+    if (mon && G.DEX_BY[mon]) em.appendChild(G.UI.spriteCanvas(mon, size, Math.round(size * 0.875), { scale: 1, silhouette: !ok && !shine, shiny: shine }));
     return em;
   }
+  const dateOf = t => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const FEAT_ACH = 6;          // featured achievements on the public profile (save.profile.featAch)
 
   // ======================= SCREEN =======================
@@ -263,23 +268,34 @@
     // One per generation: own every Pokémon of it. The same thing earns that region's Shiny Charm
     // (systems/charms.js), so a badge also shows the charm. save.charms[gen] is when it was first earned.
     function badges(box) {
-      const s = G.DB.save, { gens, all, have, earned } = badgeInfo(s);
-      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Badges ${earned.length} / ${gens.length}</h3></div>
-        <p class="sub">Own every Pokémon from a generation to earn its badge. Each badge also brings that region's Shiny Charm: shiny odds ×${G.Charms.MULT} for its Pokémon.</p>`);
+      const s = G.DB.save, { gens, all, have, earned } = badgeInfo(s), sh = G.Charms.shining(s);
+      box.insertAdjacentHTML('beforeend', `<div class="row between goals-h"><h3>Badges ${earned.length} / ${gens.length}${sh.done.length ? ` <span class="shine-txt">· Shining ${sh.done.length} / ${gens.length}</span>` : ''}</h3></div>
+        <p class="sub">Own every Pokémon from a generation to earn its badge. Each badge also brings that region's Shiny Charm: shiny odds ×${G.Charms.MULT} for its Pokémon.
+        Own the shiny of every one of them too and it becomes a Shining Badge, with its own title.</p>`);
       const grid = document.createElement('div');
       grid.className = 'badge-grid';
       for (const g of gens) {
         const n = have[g] || 0, ok = n === all[g], region = G.Charms.regionName(g);
         const col = ((G.Gacha.BANNERS[g - 1] || {}).color) || ['#3a4a6e', '#2a3a5e', '#1a2a4e'];
+        const shAll = sh.all[g] || 0, shN = sh.have[g] || 0, shine = shAll > 0 && sh.done.includes(g);
         const el = document.createElement('div');
-        el.className = 'badge-card' + (ok ? ' ok' : '');
+        el.className = 'badge-card' + (ok || shine ? ' ok' : '') + (shine ? ' shine' : '');
         el.style.setProperty('--b1', col[0]); el.style.setProperty('--b2', col[1]); el.style.setProperty('--b3', col[2]);
-        el.appendChild(badgeEmblem(g, ok));
-        const when = ok && s.charms && s.charms[g] ? new Date(s.charms[g]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-        el.insertAdjacentHTML('beforeend', `<div class="badge-txt"><b>${esc(region)} Badge</b>
+        el.appendChild(badgeEmblem(g, ok, 64, shine));
+        const when = ok && s.charms && s.charms[g] ? dateOf(s.charms[g]) : '';
+        const shWhen = G.Charms.shiningAt(g, s);
+        // The shiny line: progress towards the Shining Badge, or when it was earned.
+        const shLine = !shAll ? '' : shine
+          ? `<div class="badge-got shine-txt">${G.Icons.html('shiny', 12)} Shining Badge${shWhen ? ' ' + dateOf(shWhen) : ''} · ${esc(region)} Shining Master</div>`
+          : `<small class="badge-sh">${G.Icons.html('shiny', 12)} Shinies ${shN} / ${shAll}</small>`;
+        el.insertAdjacentHTML('beforeend', `<div class="badge-txt"><b>${esc(region)} ${shine ? 'Shining ' : ''}Badge</b>
           <small>Generation ${g} · own all ${all[g]} Pokémon</small>
           ${ok ? `<div class="badge-got">${G.Icons.html('shiny', 12)} Earned${when ? ' ' + when : ''} · Shiny Charm</div>`
-               : `<div class="bar"><i style="width:${(n / all[g] * 100).toFixed(1)}%"></i></div><small>${n} / ${all[g]}</small>`}</div>`);
+               : `<div class="bar"><i style="width:${(n / all[g] * 100).toFixed(1)}%"></i></div><small>${n} / ${all[g]}</small>`}
+          ${shLine}
+          ${shAll ? `<button class="btn small ghost badge-dex" type="button">Shining Dex</button>` : ''}</div>`);
+        const dx = el.querySelector('.badge-dex');
+        if (dx) dx.onclick = () => G.CodexUI.open('shining', g);
         grid.appendChild(el);
       }
       box.appendChild(grid);
@@ -597,8 +613,9 @@
       ch.onclick = pickAch;
       row.appendChild(ch);
       box.appendChild(row);
-      // Badges: every earned one as a toggle.
-      const { earned } = badgeInfo(s);
+      // Badges: every earned one as a toggle (a Shining Badge counts as earned too, and shows as one).
+      const shDone = G.Charms.shining(s).done;
+      const earned = [...new Set(badgeInfo(s).earned.concat(shDone))].sort((a, c) => a - c);
       const br = document.createElement('div');
       br.className = 'feat-row';
       if (!earned.length) br.innerHTML = '<p class="note" style="margin:0">Earn a badge (own every Pokémon of a generation) to feature it.</p>';
@@ -607,8 +624,8 @@
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'feat-badge' + (on.has(g) ? ' on' : '');
-        b.title = G.Charms.regionName(g) + ' Badge' + (on.has(g) ? ' (featured)' : '');
-        b.appendChild(badgeEmblem(g, true, 40));
+        b.title = G.Charms.regionName(g) + (shDone.includes(g) ? ' Shining' : '') + ' Badge' + (on.has(g) ? ' (featured)' : '');
+        b.appendChild(badgeEmblem(g, true, 40, shDone.includes(g)));
         b.insertAdjacentHTML('beforeend', `<small>${esc(G.Charms.regionName(g))}</small>`);
         b.onclick = () => {
           if (on.has(g)) on.delete(g); else on.add(g);
@@ -735,6 +752,9 @@
       showData(d, uid);
     }
 
+    /** A published profile's Shining Badges (best.sb, 21-11-2026; older profiles have none). */
+    const shineOf = b => (Array.isArray(b.sb) ? b.sb : []).map(Number).filter(g => BADGE_MON[g]);
+
     function showData(d, uid) {
       const b = d.best || {};
       const body = $('prof-body');
@@ -751,7 +771,7 @@
         </div>
         <div id="prof-mst" class="prof-feat hidden"><h3>Most mastered</h3><div class="mst-top" id="prof-mst-row"></div></div>
         <div id="prof-feat" class="prof-feat hidden"><h3>Featured</h3><div class="prof-feat-badges" id="prof-feat-b"></div><div class="prof-feat-ach" id="prof-feat-a"></div></div>
-        <h3>Medals <span class="sub">${b.medals || 0}</span>${b.badges ? ` · Badges <span class="sub">${b.badges} / 9</span>` : ''}</h3>
+        <h3>Medals <span class="sub">${b.medals || 0}</span>${b.badges ? ` · Badges <span class="sub">${b.badges} / 9</span>` : ''}${shineOf(b).length ? ` · <span class="shine-txt">Shining <span class="sub">${shineOf(b).length} / 9</span></span>` : ''}</h3>
         <div class="prof-medals" id="prof-medals"></div>
         ${uid ? '<div style="margin-top:10px"><button class="btn small" id="prof-hist-btn">Run history</button></div><div id="prof-hist" style="margin-top:8px"></div>' : ''}`;
       if ($('prof-copy')) $('prof-copy').onclick = () => G.UI.copyText(d.name, 'Name copied: paste it in Friends to add them');
@@ -804,11 +824,12 @@
       const fbg = (Array.isArray(b.fb) ? b.fb : []).map(Number).filter(g => BADGE_MON[g]).slice(0, 9);
       if (fa.length || fbg.length) {
         $('prof-feat').classList.remove('hidden');
+        const sb = shineOf(b);
         for (const g of fbg) {
-          const w = document.createElement('div');
-          w.className = 'pf-badge';
-          w.title = G.Charms.regionName(g) + ' Badge: every Pokémon of generation ' + g;
-          w.appendChild(badgeEmblem(g, true, 48));
+          const w = document.createElement('div'), shine = sb.includes(g);
+          w.className = 'pf-badge' + (shine ? ' shine' : '');
+          w.title = G.Charms.regionName(g) + (shine ? ' Shining Badge: the shiny of every Pokémon of generation ' : ' Badge: every Pokémon of generation ') + g;
+          w.appendChild(badgeEmblem(g, true, 48, shine));
           w.insertAdjacentHTML('beforeend', `<small>${esc(G.Charms.regionName(g))}</small>`);
           $('prof-feat-b').appendChild(w);
         }

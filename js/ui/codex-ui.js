@@ -7,6 +7,9 @@
  * Built to grow into the encyclopedia: each section (only "Moves" for now) is an entry in
  * SECTIONS with its own render(); add items, shrines... there and a tab appears for each.
  * Everything is read from the game data (G.Moves, G.LevelUp.STATS), so new moves show up on their own.
+ *
+ * Shining Dex (21-11-2026): one region at a time, every Pokémon's shiny (a shadow until you own it) with the date
+ * you got it and where from. Owning all of them earns the region's Shining Badge (systems/charms.js shining).
  */
 G.CodexUI = (() => {
   const CAT = { physical: 'Physical', special: 'Special' };   // uses Attack / Sp. Atk
@@ -292,9 +295,42 @@ G.CodexUI = (() => {
       cards.map(([t, d]) => `<div class="mech-card"><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join('') + '</div>').join('');
   }
 
+  // ---------------- Shining Dex (21-11-2026) ----------------
+  const sd = { gen: 1 };
+  const FROM = { gacha: 'Gacha', wild: 'Caught in a run', battle: 'Gacha Battle', code: 'Code', gift: 'Gift' };
+  const dateOf = t => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function renderShining() {
+    const s = G.DB.save || {}, sh = G.Charms.shining(s), gens = Object.keys(sh.all).map(Number).sort((a, b) => a - b);
+    if (!gens.includes(sd.gen)) sd.gen = gens[0] || 1;
+    const g = sd.gen, region = G.Charms.regionName(g), have = sh.have[g] || 0, all = sh.all[g] || 0, done = sh.done.includes(g);
+    $('cx-count').textContent = sh.done.length + ' / ' + gens.length + ' Shining Badges';
+    const chips = gens.map(k => `<button class="chip${k === g ? ' on' : ''}${sh.done.includes(k) ? ' sd-done' : ''}" data-gen="${k}">${esc(G.Charms.regionName(k))} <small>${sh.have[k] || 0}/${sh.all[k]}</small></button>`).join('');
+    const at = G.Charms.shiningAt(g, s);
+    const head = done
+      ? `<div class="sd-head shine">${G.Icons.html('shiny', 20)} <b>${esc(region)} Shining Badge</b><span>Earned${at ? ' ' + dateOf(at) : ''} · title: ${esc(region)} Shining Master</span></div>`
+      : `<div class="sd-head"><b>${esc(region)}: ${have} / ${all} shinies</b><div class="bar"><i style="width:${(have / Math.max(1, all) * 100).toFixed(1)}%"></i></div>
+         <span>Own all ${all} to earn the ${esc(region)} Shining Badge and the title ${esc(region)} Shining Master.</span></div>`;
+    const box = $('cx-sd');
+    box.innerHTML = `<div class="filters sd-gens">${chips}</div>${head}<div class="sd-grid" id="sd-grid"></div>`;
+    const grid = $('sd-grid');
+    for (const p of G.DEX.filter(p => p.gen === g && G.Sprites.hasShiny(p.dex)).sort((a, b) => a.dex - b.dex)) {
+      const got = s.shiny && s.shiny[p.dex];
+      const cell = document.createElement('div');
+      cell.className = 'sd-cell' + (got ? ' ok' : '');
+      const when = got && got.at ? dateOf(got.at) : '';
+      cell.title = p.name + (got ? ' · shiny' + (when ? ' since ' + when : '') + (FROM[got.from] ? ' · ' + FROM[got.from] : '') : ' · not found yet');
+      cell.appendChild(G.UI.spriteCanvas(p.dex, 64, 56, { scale: 1, shiny: !!got, silhouette: !got }));
+      cell.insertAdjacentHTML('beforeend', `<small class="sd-no">#${p.dex}</small><b>${esc(p.name)}</b><small>${got ? (when || 'Owned') : '—'}</small>`);
+      grid.appendChild(cell);
+    }
+    const left = (sh.left[g] || []).map(d => G.DEX_BY[d] && G.DEX_BY[d].name).filter(Boolean);
+    if (left.length) box.insertAdjacentHTML('beforeend', `<p class="sub">No shiny sprite yet, so not counted: ${esc(left.join(', '))}.</p>`);
+  }
+
   const SECTIONS = { moves: { label: 'Moves', icon: 'codex', render: renderMoves },
                      abilities: { label: 'Abilities', icon: 'star', render: renderAbilities },
-                     mech: { label: 'Mechanics', icon: 'gear', render: renderMech } };
+                     mech: { label: 'Mechanics', icon: 'gear', render: renderMech },
+                     shining: { label: 'Shining Dex', icon: 'shiny', render: renderShining } };
 
   function render() {
     const keys = Object.keys(SECTIONS);
@@ -304,6 +340,7 @@ G.CodexUI = (() => {
     for (const id of ['cx-tools', 'cx-types', 'cx-only', 'cx-split']) $(id).classList.toggle('hidden', !isMv);
     $('cx-ab').classList.toggle('hidden', st.section !== 'abilities');
     $('cx-mech').classList.toggle('hidden', st.section !== 'mech');
+    $('cx-sd').classList.toggle('hidden', st.section !== 'shining');
     SECTIONS[st.section].render();
   }
 
@@ -325,10 +362,14 @@ G.CodexUI = (() => {
     };
     $('cx-tabs').onclick = e => { const t = e.target.closest('[data-sec]'); if (!t) return; st.section = t.dataset.sec; G.Audio.sfx('click'); render(); };
     $('cx-ab-q').oninput = e => { ab.q = e.target.value; renderAbilities(); };
+    $('cx-sd').onclick = e => { const b = e.target.closest('[data-gen]'); if (!b) return; sd.gen = +b.dataset.gen; G.Audio.sfx('click'); renderShining(); };
     $('cx-ab-cats').onclick = e => { const b = e.target.closest('[data-cat]'); if (!b) return; ab.cat = b.dataset.cat; G.Audio.sfx('click'); renderAbilities(); };
   }
 
-  function open() {
+  /** @param section  a SECTIONS key to open at (e.g. 'shining' from a badge) · @param gen  the Shining Dex's region */
+  function open(section, gen) {
+    if (section && SECTIONS[section]) st.section = section;
+    if (gen) sd.gen = gen;
     G.UI.show('scr-codex');
     $('cx-q').value = st.q;
     render();

@@ -50,5 +50,28 @@ G.Charms = (() => {
     }, 300);
   }
 
-  return { MULT, list, has, mult, check, regionName };
+  /**
+   * Shining Badges (21-11-2026): the shiny of every Pokémon of a region that has a shiny sprite.
+   * → { all: gen -> how many count, have: gen -> how many you own, done: [gens], left: gen -> [dex without a shiny
+   * sprite] }. Cached like list(): shinies only ever grow. Earning one is an achievement (data/achievements.js
+   * 'shine<gen>'), which also gives its title; this only counts, for the screens and the public profile.
+   */
+  let shCache = null, shSave = null, shN = -1;
+  function shining(save = G.DB.save) {
+    const n = save && save.shiny ? Object.keys(save.shiny).length : 0;
+    if (shCache && shSave === save && shN === n) return shCache;
+    const all = {}, have = {}, left = {};
+    for (const p of G.DEX) {
+      if (!G.Sprites.hasShiny(p.dex)) { (left[p.gen] = left[p.gen] || []).push(p.dex); continue; }
+      all[p.gen] = (all[p.gen] || 0) + 1;
+      if (save && save.shiny && save.shiny[p.dex]) have[p.gen] = (have[p.gen] || 0) + 1;
+    }
+    const done = Object.keys(all).map(Number).filter(g => have[g] === all[g]).sort((a, b) => a - b);
+    shCache = { all, have, done, left }; shSave = save; shN = n;
+    return shCache;
+  }
+  /** When the region's Shining Badge was earned (its achievement), or 0. */
+  const shiningAt = (gen, save = G.DB.save) => (save && save.ach && save.ach['shine' + gen]) || 0;
+
+  return { MULT, list, has, mult, check, regionName, shining, shiningAt };
 })();

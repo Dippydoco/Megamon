@@ -1813,6 +1813,41 @@ a.btn { text-decoration: none; display: inline-block; color: var(--ink); }
 .badge-txt small { color: var(--muted); font-size: 14px; }
 .badge-card:not(.ok) .badge-txt b { color: var(--muted); }
 .badge-got { font-size: 14px; color: var(--gold); }
+/* Shining Badges (21-11-2026): a slow rainbow sheen on the hexagon and the card's border. */
+@keyframes shine-hue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+@keyframes shine-pan { from { background-position: 0% 50%; } to { background-position: 200% 50%; } }
+.badge-em.shine, .badge-card.shine .badge-em {
+  background: linear-gradient(120deg, #ff9ec4, #ffe27a, #8af0c8, #8ad0ff, #c9a6ff, #ff9ec4) 0% 50% / 200% 100%;
+  animation: shine-pan 6s linear infinite; }
+.badge-card.shine { border-color: transparent; position: relative;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--b1) 55%, transparent), rgba(0,0,0,.25)) padding-box,
+              linear-gradient(120deg, #ff9ec4, #ffe27a, #8af0c8, #8ad0ff, #c9a6ff, #ff9ec4) border-box;
+  border: 2px solid transparent; }
+.shine-txt { color: #ffd6f0; background: linear-gradient(90deg, #ff9ec4, #ffe27a, #8af0c8, #8ad0ff, #c9a6ff);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.badge-sh { color: var(--muted); font-size: 14px; }
+.badge-dex { align-self: flex-start; margin-top: 4px; }
+.pf-badge.shine small { color: #ffd6f0; }
+@media (prefers-reduced-motion: reduce) { .badge-em.shine, .badge-card.shine .badge-em { animation: none; } }
+
+/* ============ Codex: Shining Dex (js/ui/codex-ui.js renderShining) ============ */
+.sd-gens { margin-bottom: 8px; }
+.sd-gens .chip small { opacity: .7; }
+.sd-gens .chip.sd-done { border-color: #ffd6f0; color: #ffd6f0; }
+.sd-head { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; margin-bottom: 10px; border-radius: 10px;
+  background: rgba(0,0,0,.25); border: 2px solid rgba(244,248,255,.14); }
+.sd-head span { color: var(--muted); font-size: 14px; }
+.sd-head.shine { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px;
+  background: linear-gradient(120deg, rgba(255,158,196,.18), rgba(255,226,122,.18), rgba(138,240,200,.18), rgba(138,208,255,.18), rgba(201,166,255,.18));
+  border-color: #ffd6f0; }
+.sd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; max-height: 60vh; overflow-y: auto; padding: 2px; }
+.sd-cell { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border-radius: 8px; background: rgba(0,0,0,.25);
+  border: 2px solid transparent; text-align: center; min-width: 0; }
+.sd-cell.ok { border-color: rgba(255,214,240,.45); background: rgba(255,214,240,.06); }
+.sd-cell b { font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sd-cell:not(.ok) b { color: var(--muted); }
+.sd-cell small { font-size: 12px; color: var(--muted); }
+.sd-cell .sd-no { opacity: .7; }
 
 /* ============ Featured achievements and badges (profile editor and public profile) ============ */
 .feat-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }

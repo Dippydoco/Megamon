@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-21', at: '2026-11-21T16:00Z', title: 'Shining Badges and the Shining Dex', new: [
+    'Shining Badges: own the shiny of every Pokémon from a region and its badge becomes a Shining Badge, with a rainbow hexagon and the region\'s legendary in its shiny colours. Goals → Badges shows your shiny progress for each region, and a Shining Badge shows as one on your public profile and when you feature it.',
+    'Each Shining Badge gives a title: Kanto Shining Master, Johto Shining Master and so on. They are listed in a new Shining Badges tab under Achievements.',
+    'Shining Dex: a new Codex page showing every shiny of a region, with the date you got each one. Shinies you don\'t have yet show as shadows, so you can see what is left to find. Open it from the Codex or from the Shining Dex button on any badge.',
+    'A few Pokémon have no shiny sprite yet. They don\'t count towards a Shining Badge, and the Shining Dex lists them at the bottom.'
+  ] },
   { d: '2026-11-15', at: '2026-11-15T17:09Z', title: 'Terrain shapes', new: [
     'Every survival run now gets one of five terrain shapes, picked at random when it starts: Classic (the map as it was), Open Plains (wide open ground with few rocks), Islands (lots of water or lava, with land joined by winding causeways), Canyons (long rock ridges with gaps to slip through) and Ruins (broken buildings with doorways along streets). A message names the shape when the run starts, and a group always shares the same one.'
   ] },
