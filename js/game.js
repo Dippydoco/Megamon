@@ -131,7 +131,7 @@ G.Game = (() => {
     G.EnemyMgr.clear();
     G.Pickups.clear();
     G.Spawner.reset();
-    G.Rift.reset();
+    G.Rift.reset(true);                // (true: a new run, so Eternatus can come again at minute 15)
     G.Judgment.reset();
     G.Tower.reset();
     G.Events.reset();

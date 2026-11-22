@@ -40,16 +40,19 @@ G.Slots = (() => {
     cv.onclick = () => { fast = true; };
     st = {
       t: 0, lever: 0, reels: REEL_X.map(() => ({ off: Math.random() * 400, spin: false, sym: 'ball', bounce: 0, speed: 0 })),
-      ten: results.length === 10, tray: [], led: results.length === 10 ? 'PULL ×10' : 'GOOD LUCK!', ledCol: C.bulbOn, win: null, frenzy: 0, sparks: []
+      ten: results.length > 1, tray: [], led: results.length > 1 ? 'PULL ×' + results.length : 'GOOD LUCK!', ledCol: C.bulbOn, win: null, frenzy: 0, sparks: []
     };
     last = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(frame);
 
-    const ten = results.length === 10;
+    // Any multi-pull (2-10: "Use all tickets" or the slider with under 10, 22-11-2026) runs like a ×10: quick, with
+    // small balls in a row in the tray. It used to be only exactly 10, so 2-9 pulls played slow single pulls one
+    // after another with every ball drawn on top of the last.
+    const ten = results.length > 1;
     for (let i = 0; i < results.length; i++) {
       const r = results[i];
-      if (ten) st.led = 'PULL ' + (i + 1) + '/10';
+      if (ten) st.led = 'PULL ' + (i + 1) + '/' + results.length;
       // Palanca.
       G.Audio.sfx('ball');
       await tween(v => { st.lever = v; }, 0, 1, ten ? 0.12 : 0.22);

@@ -561,6 +561,12 @@
                   cd: 1.6, cast: null, fury: false, side: Math.random() < 0.5 ? -1 : 1 };
     }
 
+    /**
+     * Eternatus (rift.js, 22-11-2026): the lower its health, the more often it attacks (its cooldowns tick up to
+     * ×2.25 faster at the end) and the faster it winds up (down to 2/3 of the time). 1 for every other boss.
+     */
+    pace() { return this.eternal ? 1 + 1.25 * (1 - Math.max(0, this.hp) / this.maxHp) : 1; }
+
     bossMove(dt, pl, dist, dx, dy, spd) {
       if (!this.ai) this.bossInit();
       const ai = this.ai;
@@ -569,7 +575,7 @@
       if (!ai.fury && !this.noEnrage && this.hp < this.maxHp * 0.5) this.enrage();
       const k = ai.fury ? 1.25 : 1;
       if (ai.cast) return this.bossCast(dt, pl);
-      ai.modeT -= dt; ai.cd -= dt * k;
+      ai.modeT -= dt; ai.cd -= dt * k * this.pace();
       // It always alternates: it stays longer at its favourite distance (7-9 s) than at the other (4-5 s).
       if (ai.modeT <= 0) {
         ai.mode = ai.mode === 'far' ? 'close' : 'far';
@@ -608,7 +614,9 @@
     }
 
     bossStart(id, pl) {
-      const ai = this.ai, f = ai.fury ? 0.8 : 1, type = this.atkType;
+      // q: Eternatus winds up faster as it loses health (pace above); 1 for everyone else.
+      const q = this.eternal ? 1 / Math.sqrt(this.pace()) : 1;
+      const ai = this.ai, f = (ai.fury ? 0.8 : 1) * q, type = this.atkType;
       const col = G.U.TYPE_COLOR[type] || '#ff7a9e';
       const ang = Math.atan2(pl.y - this.y, pl.x - this.x);
       const c = ai.cast = { id, t: 0, wind: 0.6 * f, after: 0.35, ang };
@@ -635,7 +643,7 @@
           for (let i = 0; i < n; i++) {
             const a = i ? Math.random() * 6.2832 : 0, d = i ? G.U.rand(40, 120) : 0;
             G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x + Math.cos(a) * d, y: pl.y + Math.sin(a) * d * 0.8, r: 50,
-                            delay: 1.05 + i * 0.12, dmg: this.shotDmg() * 1.15, type, color: col });
+                            delay: (1.05 + i * 0.12) * q, dmg: this.shotDmg() * 1.15, type, color: col });
           }
           c.wind = 0.5; this.anim.play('Shoot');
           break;
@@ -644,9 +652,9 @@
           const n = ai.fury ? 5 : 3, sp = ai.fury ? 0.42 : 0.5;
           for (let i = 0; i < n; i++) {
             G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'beam', x: this.x, y: this.y, angle: ang + (i - (n - 1) / 2) * sp, len: 400, w: 26,
-                            delay: 1.0, dmg: this.shotDmg() * 1.2, type, color: col });
+                            delay: 1.0 * q, dmg: this.shotDmg() * 1.2, type, color: col });
           }
-          c.wind = 1.0; c.after = 0.25; this.anim.play('Charge', { speed: 1.1 });
+          c.wind = 1.0 * q; c.after = 0.25; this.anim.play('Charge', { speed: 1.1 });
           break;
         }
         case 'ring': {     // Battle Tower: a ring of blasts around itself (safe close in, or far out)
@@ -686,6 +694,8 @@
           G.FX.ring(this.x, this.y, this.r, this.r * 2.4, col, c.wind, 2);
           break;
       }
+      // Eternatus also recovers faster after each attack as it weakens (barrage and spiral keep their length).
+      if (q < 1 && ai.cast && ai.cast.id !== 'barrage' && ai.cast.id !== 'spiral') ai.cast.after *= q;
     }
 
     bossCast(dt, pl) {
@@ -701,11 +711,11 @@
       if ((c.id === 'barrage' || c.id === 'spiral') && c.t >= c.wind) {
         if ((c.next -= dt) <= 0) {
           if (c.id === 'barrage' && c.k < 4) {
-            c.next = 0.4; c.k++;
+            c.next = 0.4 / Math.sqrt(this.pace()); c.k++;
             G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x, y: pl.y, r: 58, delay: 0.8, dmg: this.shotDmg() * 1.2,
                             type: this.atkType, color: G.U.TYPE_COLOR[this.atkType] || '#ff7a9e' });
           } else if (c.id === 'spiral') {
-            c.next = 0.27; c.k++;
+            c.next = 0.27 / Math.sqrt(this.pace()); c.k++;
             const n = ai.fury ? 10 : 8, a = c.k * 0.21;
             this.shoot(Math.cos(a), Math.sin(a), 6.2832 * (n - 1) / n, n, 0.6);
           }
@@ -727,8 +737,9 @@
     bossEnd() {
       const ai = this.ai;
       ai.cast = null;
-      ai.cd = G.U.rand(1.3, 2.0);
+      ai.cd = G.U.rand(1.3, 2.0) / this.pace();
       if (ai.fury && Math.random() < 0.35) ai.cd = 0.3;    // chains another
+      if (this.eternal && Math.random() < 0.4 * (this.pace() - 1)) ai.cd = 0.3;   // Eternatus chains more as it weakens
       return [0, 0, 'Idle'];
     }
 

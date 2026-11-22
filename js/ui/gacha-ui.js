@@ -223,7 +223,7 @@ G.GachaUI = (() => {
       list = res.filter(r => r.isNew || r.shiny || r.rarity >= 3);
     }
     // Slower reveal for "Use all tickets" (about 220 ms each, never more than ~10 s in total); click to skip ahead.
-    const step = many ? Math.min(220, Math.max(60, 10000 / list.length)) : n === 10 ? 150 : 0;
+    const step = many ? Math.min(220, Math.max(60, 10000 / list.length)) : res.length > 1 ? 150 : 0;
     let fast = false;
     const speedUp = () => { fast = true; };
     fx.addEventListener('click', speedUp);

@@ -9,6 +9,12 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-22', at: '2026-11-22T08:15Z', title: 'Eternatus fixes and a gacha fix', chg: [
+    'Eternatus attacks more often and winds up faster the more health it loses: by the end of the fight it attacks about twice as often as at the start.'
+  ], fix: [
+    'Eternatus no longer pulls you into its lair a second time when Arceus\'s Judgment starts at minute 30. It only comes at minute 15.',
+    'Using all your tickets (or the slider) with fewer than 10 tickets no longer plays slow single pulls one after another with the balls piled on top of each other. It now runs quickly like a ×10 pull, with the balls lined up in the tray.'
+  ] },
   { d: '2026-11-21', at: '2026-11-21T16:58Z', title: 'New Pokémon and sprites', new: [
     'Three new Pokémon: Rolycoly, Cufant and Bombirdier, now that their Mystery Dungeon sprites exist. They can be pulled from the Galar and Paldea gacha banners.',
     'Barraskewda and Naclstack now have shiny versions.',

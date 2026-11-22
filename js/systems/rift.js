@@ -46,7 +46,7 @@ G.Rift = (() => {
   const arenaTime = () => (arena && arena.et ? ET_TIME : arena && arena.hard ? ZY_TIME : ARENA_TIME);
   let etDone = false, etWarned = false;
   /** A survival run that hasn't met Eternatus yet (no Battle Tower). */
-  const etDue = () => !etDone && !G.Tower.active;
+  const etDue = () => !etDone && !G.Tower.active && !G.Judgment.active;
   let rift = null;          // { x, y, ttl, t }
   const EXIT_SAFE = 3;      // seconds of immunity on leaving the rift
   let arena = null;         // { tx, ty, r, dex, shiny, x, y, back, biome, t, phase, endT, bossId }
@@ -61,7 +61,14 @@ G.Rift = (() => {
   const authority = () => !G.Coop.active || G.Coop.isHost;
   const TS = () => G.Tiles.T * G.Sprites.PX;
 
-  function reset() { rift = null; arena = null; checkT = CHECK; asked = false; downT = 0; misses = 0; wins = 0; etDone = false; etWarned = false; }
+  /**
+   * @param newRun  true only when a run starts (game.js): Eternatus comes once per run, so Arceus's Judgment, which
+   *                also calls reset() at minute 30, must not bring it back (22-11-2026: it pulled players in again).
+   */
+  function reset(newRun = false) {
+    rift = null; arena = null; checkT = CHECK; asked = false; downT = 0; misses = 0; wins = 0;
+    if (newRun) { etDone = false; etWarned = false; }
+  }
 
   // ---------------- rift on the map ----------------
 
