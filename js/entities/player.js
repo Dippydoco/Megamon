@@ -132,7 +132,7 @@ G.Player = class Player {
     return (c === 'physical' ? this.atk : c === 'special' ? this.spa : Math.max(this.atk, this.spa)) * G.Abil.pow(this, m);
   }
   get spd() {
-    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.tailwindT > 0 ? 1 + (this.tailwindK || 0.4) : 1) * (this.slowT > 0 && !G.Abil.slowImmune(this) ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1);
+    const s = this.baseSpd * this.spdMul * (1 + this.buffs.spd.n * this.buffs.spd.amount) * (this.tailwindT > 0 ? 1 + (this.tailwindK || 0.4) : 1) * (this.slowT > 0 && !G.Abil.slowImmune(this) ? 0.5 : 1) * (this.reviveBoostT > 0 ? Player.REVIVE_BOOST : 1) * G.Status.spdK(this);
     const w = G.Abil.wxSafe(this) ? 1 : G.Weather.speedFor(this.mon.types);
     const slow = this.inLiquid && !this.hasItem('heavyboots') && !G.Abil.waterSafe(this) ? G.World.liquidEffect(this.mon.types).slow || 1 : 1;
     return s * slow * w * G.Abil.spdK(this);
@@ -383,10 +383,14 @@ G.Player = class Player {
       this.anim.play('Faint', { hold: true });
       G.Projectiles.clearOrbs(this);
       this.reviveT = 0;
+      G.Status.clear(this);
     }
+    // Status conditions (systems/status.js): a hit wakes you up, and may leave the status of its type.
+    if (!this.dead) { G.Status.onHurt(this); G.Status.fromHit(this, type, src); }
   }
 
   heal(amount) {
+    amount *= G.Status.healK(this);                       // (Cursed: half)
     const before = this.hp;
     this.hp = Math.min(this.maxHp, this.hp + amount);
     const got = Math.round(this.hp - before);
@@ -485,14 +489,18 @@ G.Player = class Player {
       if (b.n > 0) { b.t -= dt; if (b.t <= 0) b.n = 0; }
     }
     if (this.slowT > 0) this.slowT -= dt;
-    if (this.bellHeal > 0) { const h = Math.min(this.bellHeal, 4 * dt); this.hp = Math.min(this.maxHp, this.hp + h); this.bellHeal -= h; }
-    if (this.drainHeal > 0) { const h = Math.min(this.drainHeal, this.maxHp * 0.025 * dt); this.hp = Math.min(this.maxHp, this.hp + h); this.drainHeal -= h; }
+    G.Status.update(this, dt);
+    const hk = G.Status.healK(this);                      // (Cursed: healing and regeneration halved)
+    if (this.bellHeal > 0) { const h = Math.min(this.bellHeal, 4 * dt); this.hp = Math.min(this.maxHp, this.hp + h * hk); this.bellHeal -= h; }
+    if (this.drainHeal > 0) { const h = Math.min(this.drainHeal, this.maxHp * 0.025 * dt); this.hp = Math.min(this.maxHp, this.hp + h * hk); this.drainHeal -= h; }
     if (this.power && (this.power.t -= dt) <= 0) { this.power.def.off(this); this.power = null; }
-    if (this.regen > 0) this.hp = Math.min(this.maxHp, this.hp + this.regen * dt);
+    if (this.regen > 0) this.hp = Math.min(this.maxHp, this.hp + this.regen * dt * hk);
 
     // --- movement with collisions ---
     // (In co-op pausing doesn't stop the game: you just stand still.)
-    const [ax, ay] = this.frozen ? [0, 0] : G.Input.axis();
+    // Asleep or locked up by paralysis: you can't move. Confused: your movement is reversed (systems/status.js).
+    let [ax, ay] = this.frozen || G.Status.stuck(this) ? [0, 0] : G.Input.axis();
+    if (G.Status.confused(this)) { ax = -ax; ay = -ay; }
     this.walking = ax !== 0 || ay !== 0;
     const s = this.spd;
     // Ice: you slide (the velocity changes slowly).
@@ -712,6 +720,7 @@ G.Player = class Player {
       ctx.restore();
     }
     this.anim.draw(ctx, this.x, this.y - hop, { flash: this.flash > 0, softFlash: true, alpha, color: '#ffcb3d' });
+    G.Status.draw(ctx, this);
     if (gk > 0) {
       this.anim.scale = s0;
       if (Math.random() < 0.35) G.FX.px(this.x + G.U.rand(-1.4, 1.4) * this.r * 2, this.y - this.bodyH * G.U.rand(1.6, 2.4) * gk, Math.random() < 0.5 ? '#ff3b5c' : '#ffc2cc', { vy: -30, life: 0.6 });

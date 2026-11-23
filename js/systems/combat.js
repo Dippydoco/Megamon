@@ -20,6 +20,7 @@ G.Combat = (() => {
 
   function tick(dt, pl, now) {
     if (pl.dead) return;
+    if (G.Status.stuck(pl)) return;           // asleep, or locked up by paralysis: no attacks (systems/status.js)
     // Bonds: every move in the active slot, each with its own cooldown.
     const group = pl.activeGroup();
     // Dig only hides you: the moves bonded with it keep attacking (it used to freeze the whole group).
@@ -48,7 +49,7 @@ G.Combat = (() => {
   const cdK = (pl, m) => G.Abil.cdK(pl, m) * (pl.tailwindT > 0 ? 0.75 : 1);
 
   function fireNow(pl, m) {
-    if (pl.dead || m.t > 0) return false;
+    if (pl.dead || m.t > 0 || G.Status.stuck(pl)) return false;
     m.t = Math.max(0.05, m.cd * pl.cdMul * cdK(pl, m));
     pl.cast(m);
     G.RunLog.cast(pl, m.id);

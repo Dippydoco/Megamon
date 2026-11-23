@@ -545,6 +545,9 @@
                  : has('fairy', 'ghost', 'water', 'flying') ? 'nova' : 'volley';
       const others = ['rain', 'beam', 'nova', 'volley'].filter(x => x !== pref);
       const ranged = [pref, others[Math.floor(G.U.hash(this.dex, 5, 9) * 3) % 3]];
+      // Every boss also lobs status pools (23-11-2026): puddles of its type's status that stay on the ground
+      // (sleep for most types; systems/status.js, systems/hazards.js).
+      ranged.push('pool');
       // Battle Tower bosses (not Gengar's clones) learn two more from the tower's set (2026-10-25):
       //   ring     a ring of blasts around itself: hug it or stay well away
       //   cross    a + of beams from where it stands, then an x
@@ -676,6 +679,17 @@
                             delay: (k % 2 ? 1.7 : 1.0) * f, dmg: this.shotDmg() * 1.2, type, color: col });
           }
           this.anim.play('Charge', { speed: 1.1 });
+          break;
+        }
+        case 'pool': {     // status pools: lobbed puddles that stay on the ground (sleep, poison, burn... by its type)
+          const st = G.Status.poolFor(type), n = ai.fury ? 3 : 2, pc = G.Status.DEFS[st].col;
+          for (let i = 0; i < n; i++) {
+            const a = i ? Math.random() * 6.2832 : 0, d = i ? G.U.rand(70, 130) : 0;
+            G.Hazards.add({ sd: this.dex, own: this.hzOwner(), from: this, kind: 'zone', x: pl.x + Math.cos(a) * d, y: pl.y + Math.sin(a) * d * 0.8, r: 54,
+                            delay: (1.1 + i * 0.15) * q, dmg: this.shotDmg() * 0.6, type, color: pc, st, lin: ai.fury ? 6 : 5 });
+          }
+          c.wind = 0.5; c.after = 0.4; this.anim.play('Shoot');
+          G.FX.ring(this.x, this.y, this.r, this.r * 2.4, pc, 0.5, 2);
           break;
         }
         case 'barrage':    // Battle Tower: blasts that follow you (placed in bossCast)

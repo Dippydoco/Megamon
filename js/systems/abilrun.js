@@ -113,7 +113,7 @@ G.Abil = (() => {
   // Immunity to being slowed (and to the pseudo-statuses).
   const noSlow = { noSlow: true };
   const noBurn = { noBurn: true }, noPoison = { noPoison: true };
-  const noStatus = { noSlow: true, noBurn: true, noPoison: true };
+  const noStatus = { noSlow: true, noBurn: true, noPoison: true, noSleep: true, noConf: true, noCurse: true };
   const noLava = { noLava: true };
   const noWx = { noWx: true };
 
@@ -248,7 +248,7 @@ G.Abil = (() => {
                   inc: (pl, S, h) => { if ((S.ill || 0) < 3 && h.e && !boss(h.e)) h.block = 'Illusion'; } },
     'immunity': merge(noPoison, dr(0.05)),
     'inner-focus': merge(noSlow, { noDebuff: true }),
-    'insomnia': { stat: (pl, S, o) => { o.regen += 0.3; } },
+    'insomnia': { noSleep: true, stat: (pl, S, o) => { o.regen += 0.3; } },
     'intimidate': { inc: (pl, S, h) => { if (h.e) h.amount *= boss(h.e) ? 0.92 : 0.85; } },
     'iron-barbs': { contact: (pl, S, e) => { e.hurt(e.dmg * (boss(e) ? 0.05 : 0.15) * 3, '#9aa6b5', e.x - pl.x, e.y - pl.y, 40); } },
     'rough-skin': { contact: (pl, S, e) => { e.hurt(e.dmg * (boss(e) ? 0.05 : 0.15) * 3, '#c8a070', e.x - pl.x, e.y - pl.y, 40); } },
@@ -266,7 +266,7 @@ G.Abil = (() => {
     'neutralizing-gas': { aura: (p, es) => { for (const e of es) if (e.shield > 0) { e.shield = 0; e.shieldT = 0; } } },
     'no-guard': { hit: (pl, S, e, c) => { c.pierce = true; }, noDodge: true },
     'overcoat': merge(noWx, { inc: (pl, S, h) => { if (h.src && (h.src.k === 'zone' || h.src.k === 'beam')) h.amount *= 0.9; } }),
-    'own-tempo': merge(noSlow, { stat: (pl, S, o) => { o.spd *= 1.05; } }),
+    'own-tempo': merge(noSlow, { noConf: true }, { stat: (pl, S, o) => { o.spd *= 1.05; } }),
     'pressure': { aura: (p, es, dt) => { for (const e of es) { if (e.shotCd > 0) e.shotCd += dt * 0.15; if (e.ai && e.ai.cd > 0) e.ai.cd += dt * 0.15; if (e.skillCd > 0) e.skillCd += dt * 0.15; } } },
     'purifying-salt': merge(noStatus, { inc: (pl, S, h) => { if (h.type === 'ghost') h.amount *= 0.7; } }),
     'rock-head': merge(dr(0.05), { noRecoil: true }),
@@ -291,7 +291,7 @@ G.Abil = (() => {
     'thick-fat': { inc: (pl, S, h) => { if (h.type === 'fire' || h.type === 'ice') h.amount *= 0.65; } },
     'unaware': { inc: (pl, S, h) => { if (boss(h.e)) h.amount *= 0.85; } },
     'unnerve': { inc: (pl, S, h) => { if (h.e) h.amount *= 0.9; } },
-    'vital-spirit': { cd: () => 0.95 },
+    'vital-spirit': { noSleep: true, cd: () => 0.95 },
     'water-compaction': { hurt: (pl, S, h) => { if (h.type === 'water') add(S, 'wcomp', 0.15, 8, 3); }, stat: (pl, S, o) => { o.dr += val(S, 'wcomp') + (pl.inLiquid ? 0.1 : 0); } },
     'water-veil': merge(noBurn, noLava),
     'well-baked-body': merge(noLava, absorb('fire', (pl, S) => add(S, 'baked', 0.1, 6, 3)), { stat: (pl, S, o) => { o.dr += val(S, 'baked'); } }),
@@ -349,6 +349,7 @@ G.Abil = (() => {
     'ice-body': merge(noWx, { stat: (pl, S, o) => { o.regen += wx('snow') || cave() ? 2 : 0.5; } }),
     'natural-cure': { tick: (pl, S, dt) => {
                         if (S.cureT > 0) S.cureT -= dt;
+                        if (S.cureSlot !== undefined && S.cureSlot !== pl.active && G.Status.id(pl)) { G.Status.clear(pl); say(pl, 'Natural Cure', '#5fe0b0'); }
                         if (S.cureSlot !== undefined && S.cureSlot !== pl.active && !(S.cureT > 0) && pl.hp < pl.maxHp) {
                           S.cureT = 6; pl.hp = Math.min(pl.maxHp, pl.hp + pl.maxHp * 0.04); say(pl, 'Natural Cure', '#5fe0b0');
                         }
@@ -417,7 +418,7 @@ G.Abil = (() => {
                     for (const m of G.Coop.mates) if (m.pl.dead && !S.recv.has(m.uid)) { S.recv.add(m.uid); say(pl, 'Receiver: +20%', '#ff8ad8'); }
                   },
                   stat: (pl, S, o) => { const k = 1 + 0.2 * (S.recv ? S.recv.size : 0); o.atk *= k; o.spa *= k; } },
-    'sweet-veil': merge(noSlow, { team: (me, mate, o) => { o.noStatus = true; } }),
+    'sweet-veil': merge(noSlow, { noSleep: true }, { team: (me, mate, o) => { o.noStatus = true; } }),
     'symbiosis': { onHeal: (pl, S, amt) => { if (G.Coop.active) G.Coop.healTeam(amt / Math.max(1, pl.maxHp) / 2, pl); } },
     'telepathy': { team: (me, mate, o) => { o.dr += 0.08; } },
     'victory-star': { stat: (pl, S, o) => { o.crit += 0.1; o.reach *= 1.1; }, team: (me, mate, o) => { o.crit += 0.1; o.reach *= 1.1; } },
@@ -592,6 +593,22 @@ G.Abil = (() => {
     return !!(s && (s.noSlow || (s.noSlowIf && s.noSlowIf(pl, S))));
   }
   function burnImmune(pl) { const s = spec(pl); return O(pl).noStatus || !!(s && (s.noBurn || (s.noBurnIf && s.noBurnIf(pl, pl.abS)))); }
+  /** Status conditions on you (systems/status.js): can this ability (or a teammate's veil) stop `id`? */
+  function statusImmune(pl, id) {
+    const s = spec(pl) || {};
+    if (O(pl).noStatus) return true;
+    switch (id) {
+      case 'brn': return burnImmune(pl);
+      case 'psn': case 'sed': return poisonImmune(pl);
+      case 'chl': case 'par': return slowImmune(pl);
+      case 'slp': return !!s.noSleep;
+      case 'cnf': return !!s.noConf;
+      case 'crs': return !!s.noCurse;
+    }
+    return false;
+  }
+  /** Early Bird: statuses wear off faster (the same as its slows). */
+  function statusK(pl) { const s = spec(pl); return (s && s.slowK) || 1; }
   function poisonImmune(pl) { const s = spec(pl); return O(pl).noStatus || !!(s && (s.noPoison || (s.noPoisonIf && s.noPoisonIf(pl, pl.abS)))); }
   /** No weather downsides (chip damage, snow slow, weakened types). */
   function wxSafe(pl) { const s = spec(pl); return O(pl).noWx || !!(s && (s.noWx || s.noWxOut)); }
@@ -693,7 +710,7 @@ G.Abil = (() => {
   function info(pl) { const id = pl && pl.ab; return id && G.ABILITIES[id] ? Object.assign({ id }, G.ABILITIES[id]) : null; }
 
   return { A, start, tick, hostTick, pow, cdK, reachK, extraShots, extraPierce, shotLife, crit, critMul, critFxK, spdK, drAdd, magnetK, healReach,
-           drainK, maxHpK, slowImmune, wxSafe, lavaSafe, waterSafe, defTypes, wxOut, wxIn, moveType, ticketK, enemyShotK, reviveK, reviveHeal,
+           drainK, maxHpK, slowImmune, statusImmune, statusK, debuff, wxSafe, lavaSafe, waterSafe, defTypes, wxOut, wxIn, moveType, ticketK, enemyShotK, reviveK, reviveHeal,
            noRecoil: pl => !!(spec(pl) || {}).noRecoil, onHit, beforeCast, afterCast, dances, incoming, hurt, lethal, death, contactHit, healK, afterHeal, enemyDmgK, info, terrainOn,
            berryDrop: () => (G.Game.everyone().some(p => p && (A[idOf(p)] || {}).berryDrop) ? 0.006 : 0) };
 })();

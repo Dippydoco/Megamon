@@ -120,7 +120,7 @@ G.LabUI = (() => {
     pl.atkMul = 1; pl.cdMul = 1; pl.critChance = 0; pl.areaMul = 1; pl.dmgReduce = 0; pl.regenFlat = 0; pl.regenPct = 0;
     pl.statsTaken = {};
     for (const k in pl.buffs) pl.buffs[k].n = 0;
-    pl.slowT = 0; pl.protectT = 0; pl.drainHeal = 0; pl.bellHeal = 0;
+    pl.slowT = 0; G.Status.clear(pl); pl.protectT = 0; pl.drainHeal = 0; pl.bellHeal = 0;
     pl.guardT = 0; pl.burrowT = 0; pl.rollMom = 0; pl.protectUntil = 0;
     // Back to the clearing: dashes and Dig move you, and the next test must start from the same open spot.
     if (home) { pl.x = home.x; pl.y = home.y; }

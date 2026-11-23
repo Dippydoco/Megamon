@@ -29,6 +29,18 @@ Code: `js/data/tower.js` (floors, Badges, BP shop), `js/systems/tower.js` (floor
   their state to guests (`'st'` messages) but have only been tested solo (`G.Tower.debugFloor(n, 'gauntlet')` in `?dev`).
 - **Sounds and music.** The tower reuses rift, boss and biome music and the generic boss sounds.
 
+## Status conditions on the player (added 2026-11-23)
+
+Code: `js/systems/status.js` (statuses, chances, immunities by type), the pools in `js/systems/hazards.js` (`st`, `lin`),
+the bosses' `pool` attack in `js/entities/enemy.js` (`bossStart`), ability immunities in `js/systems/abilrun.js` (`statusImmune`).
+
+- **Co-op check.** Each computer gives statuses only to its own Pokémon, and the pools travel with the hazards ('hz' now
+  carries `st` and `lin`). Only tested solo. Teammates don't see your status tag (it isn't synced).
+- **Balance pass.** Chances (`CHANCE`: 5% ordinary foes, 15% bosses, 25% boss warned attacks), durations, damage over
+  time and the grace times are first guesses. Watch paralysis and confusion in big hordes.
+- **Battle Tower scripted bosses and Eternatus** don't use the pool attack yet (they have their own kits).
+- **Sounds.** Statuses reuse no sound; a "fell asleep" / "burned" sting would help.
+
 ## Eternamax Eternatus (added 2026-11-21)
 
 Code: `js/systems/rift.js` (the fight: `cfg.et`, `eternamax`, `etLast`), `js/systems/powers.js` (Gigantamax and Z-Moves),

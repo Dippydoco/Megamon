@@ -9,6 +9,14 @@
  * Every text is plain English.
  */
 G.CHANGELOG = [
+  { d: '2026-11-23', at: '2026-11-23T17:10Z', title: 'Status conditions on your Pokémon', new: [
+    'Wild Pokémon can now leave a status on you when they hit you, depending on the type of the hit. Fire burns you and Poison or Bug poisons you, both taking a little health over time. Grass seeds you with Leech Seed, which also drains a little health. Ice chills you, so you move slower. Electric paralyzes you: you move a little slower and now and then can\'t move or attack for a moment. Psychic or Fairy confuses you and reverses your movement. Ghost or Dark curses you and halves your healing.',
+    'A tag over your Pokémon\'s head shows its status (BRN, PSN, PAR...) and blinks as it wears off. You only have one status at a time, and after one ends you are safe from a new one for a couple of seconds. Health lost to a status never knocks you out: it stops at 1.',
+    'Bosses are the most likely to leave a status, especially with their warned attacks. Ordinary foes only do it now and then.',
+    'Bosses have a new attack: they lob status pools that stay on the ground for about 5 seconds. Most types leave a sleep pool. While asleep you can\'t move or attack until something hits you, or for up to 4 seconds. After waking up you get a moment to walk out. Poison and Bug bosses leave poison pools, Fire burning pools, Ice and Water chilling pools, Electric and Steel paralyzing pools, and Ghost and Dark cursed pools. A boss\'s pools fade away when it falls.',
+    'Types are immune as in the games: Fire can\'t be burned, Poison and Steel can\'t be poisoned, Grass can\'t be seeded, Ice can\'t be chilled, Electric can\'t be paralyzed, Dark can\'t be confused and Normal can\'t be cursed.',
+    'Abilities: Insomnia, Vital Spirit and Sweet Veil prevent sleep. Own Tempo prevents confusion. Water Veil stops burns and Immunity stops poison. Abilities that stop slows (Limber, Clear Body...) also stop chills and paralysis. Comatose, Good as Gold, Purifying Salt, Shield Dust and Sweet Veil\'s team protection stop every status. Early Bird makes statuses wear off twice as fast, and Natural Cure clears your status when you switch moves.'
+  ] },
   { d: '2026-11-22', at: '2026-11-22T08:15Z', title: 'Eternatus fixes and a gacha fix', chg: [
     'Eternatus attacks more often and winds up faster the more health it loses: by the end of the fight it attacks about twice as often as at the start.'
   ], fix: [
